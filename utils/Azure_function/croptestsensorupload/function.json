@@ -1,0 +1,13 @@
+{
+  "scriptFile": "__init__.py",
+  "disabled": false,
+  "bindings": [
+    {
+      "name": "blobin",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "sensordata/{blobname}.{blobextension}",
+      "connection": "cropteststorage_STORAGE"
+    }
+  ]
+}
