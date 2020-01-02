@@ -1,6 +1,9 @@
 # SECRETS
 .secrets/
 
+# Terraform
+.terraform
+
 # PyTest
 __pycache__
 
