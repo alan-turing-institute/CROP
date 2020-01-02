@@ -1,3 +1,6 @@
+# SECRETS
+.secrets/
+
 # PyTest
 __pycache__
 
