@@ -3,6 +3,7 @@
 
 # Terraform
 .terraform
+terraform.tfstate
 
 # PyTest
 __pycache__
