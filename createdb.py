@@ -9,6 +9,7 @@ from sqlalchemy.sql import func
 
 print (sys.version)
 
+#engine = sqlalchemy.create_engine("postgres://postgres@/postgres")
 #engine = create_engine('postgresql+psycopg2://user:password@hostname/database_name')
 engine = create_engine('postgresql://postgres:crop@localhost:5433/postgres')
 connection = engine.connect()
