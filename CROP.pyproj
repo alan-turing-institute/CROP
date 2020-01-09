@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{aa5925dd-af92-4914-aa8a-ebfdb58a12aa}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>createdb.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -24,7 +24,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="createdb.py" />
-    <Compile Include="test.py" />
+    <Compile Include="main.py" />
+    <Compile Include="ReadData.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|cropdb" />

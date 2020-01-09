@@ -1,118 +1,105 @@
-import sys
-import os
-import csv
 import pandas as pd
 import numpy as np
 import datetime
 import psycopg2
-from sqlalchemy import (create_engine, Table, Float, Column, MetaData, Integer, String, DateTime, Text)
+from sqlalchemy import (create_engine, ForeignKey, MetaData, Table, Float, Column, Integer, String, DateTime, Text)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 
-print (sys.version)
 
-CWD = os.getcwd()
-#sqlite
-
+#NOTE: standard timestamp format from datetime:
 #print('Timestamp: {:%Y-%m-%d %H:%M:%S}'.format(datetime.sdatetime.now()))
 
-def Load_Data (filename):
-    print ("starting")
-    data= np.genfromtxt(file_name, delimiter=',', skipskip_header=1, conconverters= {0: lambda s: str(s)})
-    return data
-
-'''Create classes for sensors'''
+#Is used to tell SQL that the classes we create are db tables'''
 Base = declarative_base()
 
+'''CLASSES WHICH SQLALCHEMY USES TO DEFINE TABLES AND COLUMNS IN THE DB'''
+'''Class Sensor contains a list of all the sensors in the farm'''
 class Sensor (Base) :
-    #says the name of the new table in postgresql
-    __tablename__= 'sensor'
-
-    #Column names
-    ID = Column (Integer, primary_key =True)
-    SENSORTYPEID = Column (Integer)
-    LOCATIONID = Column (Integer)
-    READINGSID = Column (Integer)
-    INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #
-
-
-class SensorType (Base):
-    __tablename__= 'sensortype'
-
-    ID = Column(Integer, primary_key=True)
-    SENSORTYPE= Column(String(32))
-    DESCRIPTION= Column (Text) 
-   
-
-class Location (Base):
     #Tell SQLAlchemy what the table name is and if there's any table-specific arguments it should know about
-    __tablename__= 'location'
+    __tablename__= 'sensor'
     #__table_args__ = {'sqlite_autoincrement': True}
 
     #tell SQLAlchemy the name of column and its attributes:
+    ID = Column (Integer, primary_key =True)
+    #SENSORTYPES =   relationship('SensorType')
+    #SENSORTYPES_ID = Column(Integer, ForeignKey(SENSORTYPES.id))
+    LOCATIONID = Column(Integer)
+    READINGSID = Column(Integer)
+    INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #
+
+'''Class SensorType contains a list and characteristics of each type of sensor installed in the farm. eg. "Advantix" '''
+class SensorType (Base):
+    __tablename__= 'sensortype'
+
+    id = Column(Integer, primary_key=True)
+    #UUID =   Column(String(36), unique=True, nullable=False)
+    Battery = Column(Float)
+    sensortype= Column(String)
+    description= Column (String)
+   
+'''Class Location describes all the physical location in the farm. eg. Sensor A is found in the front section, in the left column , in the 3rd self. ''' 
+class Location (Base):
+    __tablename__= 'location'
+
     ID = Column (Integer, primary_key=True)
     SECTION = Column(Integer) #F/M/B
     COLUMN = Column (Integer) #L/R
     SELVE = Column (Integer) #U/M/D
-    
 
-
+'''Base class for the sensor Readings'''
 class Readings (Base):
-    #Tell SQLAlchemy what the table name is and if there's any table-specific arguments it should know about
     __tablename__= 'Sensorclass'
 
-    #tell SQLAlchemy the name of column and its attributes:
     ID = Column (Integer, primary_key=True, autoincrement=True)
     LOCATIONID = Column (Integer)
     TIME_CREATED = Column(DateTime(), server_default=func.now()) #when data are passed to the server
     TIME_UPDATED = Column(DateTime(), onupdate=func.now()) #when data are passed in the sensor <-- to check
     
+'''Class for reading the raw Advantix data'''
+class ReadingsAdvantix (Base):
+    __tablename__= 'Advantix'
 
-class ReadingsAdvantix (Readings):
-  
+    id = Column (Integer, primary_key=True, autoincrement=True)
     Battery = Column(Float)
     MODBUSID = Column (Integer)
     TEMPERATURE = Column(Integer)
 
-def Readings_Advantix ():
-    try:
-        #how to i turn this to a test?
-        #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
-        advantix_raw_path = CWD + "\\Data\\Raw\\raw-20191127-pt01.csv"
-        #data= pd.read_csv(advantix_cleaned)
-        advantix_raw= pd.read_csv(advantix_raw_path)
-        print (advantix_raw.head())
 
-    except:
-        print("Can't read advantix data")
-    return (advantix_raw)
-
-
-if __name__ == "__main__":
-    Advantix_Raw= Readings_Advantix ()
-
-    #Create the database: create_engine('postgresql+psycopg2://user:password@hostname/database_name')
-    
-    # switch to sqlite. 
+'''Function to create the database: create_engine('postgresql+psycopg2://user:password@hostname/database_name') '''
+#consider to switch to sqllite for easy dev in the beginning
+def Createdb(Advantix_Data, Sensor_Types_data):
     #connection = engine.connect() #<--dont know what this does... 
-
     try: 
+        #creates a connection to PostgreSQL
         engine = create_engine('postgresql://postgres:crop@localhost:5433/postgres')
+        #Creates the database with all the Base Classes
         Base.metadata.create_all(engine)
+    except:
+        print ("No connection to the db")
+    try: 
+        #Creates/Opens a new session (connection to the db)
         session = sessionmaker()
+        #binds the engine to this session
         session.configure(bind=engine)
         
         s = session()
-        #s.add(Rawdata)
+        #is used to add data generaly
+        #s.add(Rawdata) 
         
-        s.bulk_insert_mappings(ReadingsAdvantix, Advantix_Raw.to_dict(orient="records"))
+        #Bulks insterst the data to the database (fastest and best method)(matches names of headers autoatically as long as they are declared in the class)
+
+        # if one of these doesnt work, just delete the tables from the postgres
+        s.bulk_insert_mappings(ReadingsAdvantix, Advantix_Data.to_dict(orient="records"))
+        s.bulk_insert_mappings(SensorType, Sensor_Types_data.to_dict(orient="records"))   #with everychange in the csv, it doesnt replace data, it adds them in. probably need a uuid or delete everything before. 
+        #commits the changes of the session
         s.commit()
-      
-        
     except:
-        print ("didnt work")
+        print ("commits were not made")
+    
     finally:
+        #closses the session
         s.close()
 
 
@@ -124,4 +111,3 @@ if __name__ == "__main__":
 
         #data = Load_Data(file_name)
         #print (data)
-    
