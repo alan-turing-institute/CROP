@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import psycopg2
-from sqlalchemy import (create_engine, Table, Float, Column, MetaData, Integer, String, DateTime)
+from sqlalchemy import (create_engine, Table, Float, Column, MetaData, Integer, String, DateTime, Text)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import sessionmaker
@@ -26,13 +26,15 @@ def Load_Data (filename):
 Base = declarative_base()
 
 class Sensor (Base) :
+    #says the name of the new table in postgresql
     __tablename__= 'sensor'
 
+    #Column names
     ID = Column (Integer, primary_key =True)
     SENSORTYPEID = Column (Integer)
     LOCATIONID = Column (Integer)
     READINGSID = Column (Integer)
-    TIMESTAMP = Column(DateTime, default=datetime.datetime.utcnow)
+    INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #
 
 
 class SensorType (Base):
@@ -40,7 +42,7 @@ class SensorType (Base):
 
     ID = Column(Integer, primary_key=True)
     SENSORTYPE= Column(String(32))
-    PARAMETERS= Column (Integer)
+    DESCRIPTION= Column (Text) 
    
 
 class Location (Base):
@@ -50,36 +52,37 @@ class Location (Base):
 
     #tell SQLAlchemy the name of column and its attributes:
     ID = Column (Integer, primary_key=True)
-    SECTION = Column(Integer)
-    COLUMN = Column (Integer)
-    SELVE = Column (Integer)
-    #TIMESTAMP = Column(DateTime, default=datetime.datetime.utcnow)
+    SECTION = Column(Integer) #F/M/B
+    COLUMN = Column (Integer) #L/R
+    SELVE = Column (Integer) #U/M/D
+    
 
 
 class Readings (Base):
     #Tell SQLAlchemy what the table name is and if there's any table-specific arguments it should know about
-    __tablename__= 'readings'
+    __tablename__= 'Sensorclass'
 
     #tell SQLAlchemy the name of column and its attributes:
-    ID = Column (Integer, primary_key=True)
+    ID = Column (Integer, primary_key=True, autoincrement=True)
     LOCATIONID = Column (Integer)
+    TIME_CREATED = Column(DateTime(), server_default=func.now()) #when data are passed to the server
+    TIME_UPDATED = Column(DateTime(), onupdate=func.now()) #when data are passed in the sensor <-- to check
+    
+
+class ReadingsAdvantix (Readings):
+  
+    Battery = Column(Float)
     MODBUSID = Column (Integer)
-    TIMESTAMP = Column(DateTime, default=datetime.datetime.utcnow)
-    TIME_CREATED = Column(DateTime(timezone=True), server_default=func.now())
-    TIME_UPDATED = Column(DateTime(timezone=True), onupdate=func.now())
     TEMPERATURE = Column(Integer)
 
-class ReadingsAdvantix (Base):
-    __tablename__= 'readings2'
-    ID= Column (Integer, primary_key=True, autoincrement=True)
-    Battery = Column(Float)
-
-def Read_Advantix_Data ():
+def Readings_Advantix ():
     try:
+        #how to i turn this to a test?
         #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
         advantix_raw_path = CWD + "\\Data\\Raw\\raw-20191127-pt01.csv"
         #data= pd.read_csv(advantix_cleaned)
         advantix_raw= pd.read_csv(advantix_raw_path)
+        print (advantix_raw.head())
 
     except:
         print("Can't read advantix data")
@@ -87,7 +90,7 @@ def Read_Advantix_Data ():
 
 
 if __name__ == "__main__":
-    Rawdata= Read_Advantix_Data ()
+    Advantix_Raw= Readings_Advantix ()
 
     #Create the database: create_engine('postgresql+psycopg2://user:password@hostname/database_name')
     
@@ -103,7 +106,7 @@ if __name__ == "__main__":
         s = session()
         #s.add(Rawdata)
         
-        s.bulk_insert_mappings(ReadingsAdvantix, Rawdata.to_dict(orient="records"))
+        s.bulk_insert_mappings(ReadingsAdvantix, Advantix_Raw.to_dict(orient="records"))
         s.commit()
       
         
