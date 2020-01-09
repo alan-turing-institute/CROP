@@ -2,13 +2,12 @@
 import main
 
 #check if files are loaded in the dataframes
-def check(file):
+def checkloadcsv():
     try:
-        #main.Readings_Advantix ()
+        df= main.Readings_Advantix ()
         print ("itworked")
     except AssertionError:
-        assert False, "  cant read csv"
+        assert False, "Cant read csv"
 
-check(df)
-
+checkloadcsv()
 
