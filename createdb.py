@@ -8,6 +8,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import sessionmaker, relationship
 
 
+
 #NOTE: standard timestamp format from datetime:
 #print('Timestamp: {:%Y-%m-%d %H:%M:%S}'.format(datetime.sdatetime.now()))
 
@@ -16,49 +17,58 @@ Base = declarative_base()
 
 '''CLASSES WHICH SQLALCHEMY USES TO DEFINE TABLES AND COLUMNS IN THE DB'''
 '''Class Sensor contains a list of all the sensors in the farm'''
-class Sensor (Base) :
-    #Tell SQLAlchemy what the table name is and if there's any table-specific arguments it should know about
+class Sensor(Base) :
+    #Tells SQLAlchemy what the table name is and if there's any table-specific arguments it should know about
     __tablename__= 'sensor'
     #__table_args__ = {'sqlite_autoincrement': True}
 
     #tell SQLAlchemy the name of column and its attributes:
-    ID = Column (Integer, primary_key =True)
-    #SENSORTYPES =   relationship('SensorType')
-    #SENSORTYPES_ID = Column(Integer, ForeignKey(SENSORTYPES.id))
-    LOCATIONID = Column(Integer)
-    READINGSID = Column(Integer)
-    INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #
+    ID = Column (Integer, primary_key =True) 
+    TYPE= Column (Integer)
+    #TYPE = Column(Integer, ForeignKey('type.sensortype')) #many to one relationship, inherits the key from the other table. 
+    #type= relationship("Type")  #defines that is is a relationship
+    LOCATION = (Column (Integer))
+    #LOCATION = Column(Integer, ForeignKey('location.id'))
+    #location = relationship("Location") #many to one relationship
+
+    READINGS = Column(Integer)
+    #READINGS = relationship ("Readings") #one to many? biodirectional? 
+    INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #picks up current time. 
 
 '''Class SensorType contains a list and characteristics of each type of sensor installed in the farm. eg. "Advantix" '''
-class SensorType (Base):
+class Type(Base):
     __tablename__= 'sensortype'
 
     id = Column(Integer, primary_key=True)
     #UUID =   Column(String(36), unique=True, nullable=False)
-    Battery = Column(Float)
     sensortype= Column(String)
     description= Column (String)
    
 '''Class Location describes all the physical location in the farm. eg. Sensor A is found in the front section, in the left column , in the 3rd self. ''' 
-class Location (Base):
+class Location(Base):
     __tablename__= 'location'
 
     ID = Column (Integer, primary_key=True)
-    SECTION = Column(Integer) #F/M/B
-    COLUMN = Column (Integer) #L/R
-    SELVE = Column (Integer) #U/M/D
+    #SENSOR_ID= Column(Integer, ForeignKey('Sensor.LOCATION')) # inherits the id from the parent (Sensor class)
+    SECTION = Column(Integer) #A/B
+    COLUMN = Column (Integer) #no
+    SELVE = Column (Integer) #1-4
+    CODE = Column (String)
+
+
 
 '''Base class for the sensor Readings'''
-class Readings (Base):
+class Readings(Base):
     __tablename__= 'Sensorclass'
 
     ID = Column (Integer, primary_key=True, autoincrement=True)
-    LOCATIONID = Column (Integer)
+    #SENSOR = relationship("Sensor.ID")
+    #LOCATIONID = relationship("Sensor.LOCATION")
     TIME_CREATED = Column(DateTime(), server_default=func.now()) #when data are passed to the server
     TIME_UPDATED = Column(DateTime(), onupdate=func.now()) #when data are passed in the sensor <-- to check
     
 '''Class for reading the raw Advantix data'''
-class ReadingsAdvantix (Base):
+class ReadingsAdvantix(Base):
     __tablename__= 'Advantix'
 
     id = Column (Integer, primary_key=True, autoincrement=True)
@@ -73,7 +83,7 @@ def Createdb(Advantix_Data, Sensor_Types_data):
     #connection = engine.connect() #<--dont know what this does... 
     try: 
         #creates a connection to PostgreSQL
-        engine = create_engine('postgresql://postgres:crop@localhost:5433/postgres')
+        engine = create_engine('postgresql://postgres:crop@localhost:5433/cropdb')
         #Creates the database with all the Base Classes
         Base.metadata.create_all(engine)
     except:
@@ -92,7 +102,7 @@ def Createdb(Advantix_Data, Sensor_Types_data):
 
         # if one of these doesnt work, just delete the tables from the postgres
         s.bulk_insert_mappings(ReadingsAdvantix, Advantix_Data.to_dict(orient="records"))
-        s.bulk_insert_mappings(SensorType, Sensor_Types_data.to_dict(orient="records"))   #with everychange in the csv, it doesnt replace data, it adds them in. probably need a uuid or delete everything before. 
+        s.bulk_insert_mappings(Type, Sensor_Types_data.to_dict(orient="records"))   #with everychange in the csv, it doesnt replace data, it adds them in. probably need a uuid or delete everything before. 
         #commits the changes of the session
         s.commit()
     except:
