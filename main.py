@@ -1,31 +1,45 @@
+#files
+import createdb
+import createtables
+import ReadData 
+import populatedb
+#import test
+#libraries
 import os
 import sys
-import createdb as db
-import ReadData 
-import test
 
 print (sys.version)
 
 #gets the path of current working directory
 CWD = os.getcwd()
+#inputs
+dbname = 'test5' 
+tables= ["sensor", "sensortype", "location",  "readings", "advantix" ]
 
 if __name__ == "__main__":
-    #read the advantix data
+    
+    '''main check functions'''
+    #checks if the db and main tables exist and if not creates them
+    createdb.Check_db_Status(dbname, tables)
+
+
+    '''LOAD DATA IN DB'''
+    #read the data
     Advantix_data= ReadData.Readings_Advantix ()
     Sensor_Types_data= ReadData.Readings_SensorTypes()
     Sensors = ReadData.Sensors_List()
     Locations = ReadData.Locations_List()
-    #create the database
-    db.Createdb(Advantix_data, Sensor_Types_data)
-        #Create the database: create_engine('postgresql+psycopg2://user:password@hostname/database_name')
+
+    populatedb.populatesensors(dbname, Advantix_data, createtables.ReadingsAdvantix)
+    populatedb.populatesensors(dbname, Sensors, createtables.Sensor)
+    populatedb.populatesensors(dbname, Locations, createtables.Location)
+    populatedb.populatesensors(dbname, Sensor_Types_data, createtables.Type)
+
+
     
-    # switch to sqlite. 
-    #connection = engine.connect() #<--dont know what this does... 
+ 
 
  
 
 
 
-        #with open(advantix_raw) as csv_file:
-        #    csv_reader = csv.reader(csv_file, delimiter=',')
-        #    for row in csv_reader:
