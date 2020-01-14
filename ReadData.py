@@ -9,17 +9,41 @@ import test
 #gets the path of current working directory
 CWD = os.getcwd()
 
+def Sensors_List ():
+    try:
+        #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
+        sensors_path = CWD + "\\Data\\Sensors.csv"
+        #data= pd.read_csv(advantix_cleaned)
+        sensors= pd.read_csv(sensors_path)
+        print (sensors.head())
+        return (sensors)
+
+    except:
+        print("Can't read raw advantix readings csv")
+
+def Locations_List ():
+    try:
+        #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
+        locations_path = CWD + "\\Data\\locations.csv"
+        #data= pd.read_csv(advantix_cleaned)
+        locations= pd.read_csv(locations_path)
+        print (locations.head())
+        return (locations)
+
+    except:
+        print("Can't read raw advantix readings csv")
+
 def Readings_Advantix ():
     try:
         #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
         advantix_raw_path = CWD + "\\Data\\Raw\\raw-20191127-pt01.csv"
         #data= pd.read_csv(advantix_cleaned)
         advantix_raw= pd.read_csv(advantix_raw_path)
-        print (advantix_raw.head())
+        #print (advantix_raw.head())
         return (advantix_raw)
 
     except:
-        print("Can't read advantix data")
+        print("Can't read raw advantix readings csv")
 
 def Readings_SensorTypes ():
     try:
@@ -27,7 +51,7 @@ def Readings_SensorTypes ():
         sensortypes_path = CWD + "\\Data\\test.csv"
         #data= pd.read_csv(advantix_cleaned)
         sensortypes= pd.read_csv(sensortypes_path)
-        print (sensortypes.head(n=2))
+        #print (sensortypes.head(n=2))
         return (sensortypes)
 
     except:

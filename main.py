@@ -13,6 +13,8 @@ if __name__ == "__main__":
     #read the advantix data
     Advantix_data= ReadData.Readings_Advantix ()
     Sensor_Types_data= ReadData.Readings_SensorTypes()
+    Sensors = ReadData.Sensors_List()
+    Locations = ReadData.Locations_List()
     #create the database
     db.Createdb(Advantix_data, Sensor_Types_data)
         #Create the database: create_engine('postgresql+psycopg2://user:password@hostname/database_name')

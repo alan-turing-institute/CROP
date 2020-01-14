@@ -25,7 +25,16 @@
   <ItemGroup>
     <Compile Include="createdb.py" />
     <Compile Include="main.py" />
+    <Compile Include="1_createdb.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="temp.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ReadData.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="testrelationshipgraph.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests.py">
