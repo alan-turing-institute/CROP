@@ -3,6 +3,71 @@ A module for constants
 """
 import os
 
+# encoding: utf-8
+
+"""
+constants.py
+"""
+
+import os
+import pandas as pd
+
+# FILE STRUCTURE
+CONST_DATA_FOLDER = "data"
+CONST_TEST_FOLDER = "tests"
+CONST_ADVANTIX_FOLDER = "Advantix"
+
+CONST_TEST_DIR = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), 
+    "..",
+    CONST_TEST_FOLDER))
+
+CONST_TEST_DIR_DATA = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER)
+
+# ADVANTIX IMPORT
+CONST_ADVANTIX_COL_TIMESTAMP = "Timestamp"
+CONST_ADVANTIX_COL_MODBUSID = "Modbus ID"
+CONST_ADVANTIX_COL_TEMPERATURE = "Temperature"
+CONST_ADVANTIX_COL_HUMIDITY = "Humidity"
+CONST_ADVANTIX_COL_CO2LEVEL = "CO2 Level"
+CONST_ADVANTIX_COL_LIST = [
+    CONST_ADVANTIX_COL_TIMESTAMP,
+    CONST_ADVANTIX_COL_MODBUSID,
+    CONST_ADVANTIX_COL_TEMPERATURE,
+    CONST_ADVANTIX_COL_HUMIDITY,
+    CONST_ADVANTIX_COL_CO2LEVEL,   
+]
+
+CONST_ADVANTIX_TIMESTAMP_MIN = pd.to_datetime("2016-01-01")
+CONST_ADVANTIX_TIMESTAMP_MAX = pd.to_datetime("2031-12-31")
+CONST_ADVANTIX_MODBUSID_MIN = 1
+CONST_ADVANTIX_MODBUSID_MAX = 1000
+CONST_ADVANTIX_TEMPERATURE_MIN = -273
+CONST_ADVANTIX_TEMPERATURE_MAX = 100
+CONST_ADVANTIX_HUMIDITY_MIN = 0
+CONST_ADVANTIX_HUMIDITY_MAX = 100
+CONST_ADVANTIX_CO2LEVEL_MIN = 0
+CONST_ADVANTIX_CO2LEVEL_MAX = 1000
+
+# Advantix test data
+CONST_ADVANTIX_TEST_1 = "data-20190821-test1.csv" # Healthy data file
+CONST_ADVANTIX_TEST_2 = "data-20190821-test2.csv" # Few rows, one column is misspelled
+CONST_ADVANTIX_TEST_3 = "data-20190821-test3.csv" # Few rows, timestamp is wrong
+CONST_ADVANTIX_TEST_4 = "data-20190821-test4.csv" # Few rows, mobdusid is wrong
+CONST_ADVANTIX_TEST_5 = "data-20190821-test5.csv" # Few rows, temeprature is wrong
+CONST_ADVANTIX_TEST_6 = "data-20190821-test6.csv" # Few rows, humidity is wrong
+CONST_ADVANTIX_TEST_7 = "data-20190821-test7.csv" # Few rows, co2 level is wrong
+CONST_ADVANTIX_TEST_8 = "data-20190821-test8.csv" # Temperature and humidity empty
+CONST_ADVANTIX_TEST_9 = "data-20190821-test9.csv" # Duplicate values
+
+# Error messages
+ERR_IMPORT_ERROR_1 = "Import file does not contain all the necessary columns."
+ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)"
+ERR_IMPORT_ERROR_3 = "Data contains empty entries"
+ERR_IMPORT_ERROR_4 = "Data contains duplicates"
+ERR_IMPORT_ERROR_5 = "Data contains invalid values"
+
+
 # Create connection string
 SQL_ENGINE = "postgresql"
 SQL_DBNAME = "crop_db"
@@ -17,18 +82,3 @@ SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (SQL_ENGINE, SQL_USER, SQL_PASSWORD
 
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
-
-# connection_string = "%s://%s:%s@%s:%s/%s" % (engine,user_name,password,host,port,dbname )
-# connection_string_defaultdb = "%s://%s:%s@%s:%s/%s" % (engine,user_name,password,host,port,default_dbname )
-# #print (connection_string)
-
-# '''Create table list'''
-# tables= ["sensor", "sensortype", "location",  "readings", "advantix" ]
-
-# '''test datasets paths'''
-# #gets the path of current working directory
-# cwd = os.getcwd()
-# sensor_types_path = cwd+"\\Data\\Sensortypes.csv"
-# Sensors_path = cwd+"\\Data\\Sensors.csv"
-# locations_path = cwd+"\\Data\\locations.csv"
-# advantix_data_path =cwd+"\\Data\\Raw\\raw-20191127-pt01.csv"
