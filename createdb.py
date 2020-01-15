@@ -5,19 +5,24 @@ from sqlalchemy_utils import database_exists
 
 
 '''Checks if database exists, else it creates it and creates the tables.''' 
-def Check_db_Status(dbname, tables):
-    if not database_exists('postgresql://postgres:crop@localhost:5433/'+ dbname):
-        Create_Database(dbname) #function to create database
-        Test_Tables_Exist(dbname, tables) #fucntion to create the tables
-        print(dbname+ " database created")
+def Check_db_Status(db_string, defaultdb_string, tables):
+    if not database_exists(db_string):
+        Create_Database(defaultdb_string) #function to create database
+        Test_Tables_Exist(db_string, tables) #fucntion to create the tables
+        print(db_string+ " database created")
     else:
         print("db exists already")     
-        Test_Tables_Exist(dbname, tables) #function to test if all tables already exist
+        Test_Tables_Exist(db_string, tables) #function to test if all tables already exist
 
 '''Funtion to create a new database'''
-def Create_Database(dbname):
-    #On postgres, three databases are normally present by default. If you are able to connect as a superuser (eg, the postgres role), then you can connect to the postgres or template1 databases. The default pg_hba.conf permits only the unix user named postgres to use the postgres role, so the simplest thing is to just become that user. At any rate, create an engine as usual with a user that has the permissions to create a database
-    engine = sqla.create_engine('postgresql://postgres:crop@localhost:5433/postgres')
+def Create_Database(defaultdb_string):
+    #On postgres, three databases are normally present by default. If you are
+    # able to connect as a superuser (eg, the postgres role), then you can
+    # connect to the postgres or template1 databases. The default pg_hba.conf
+    # permits only the unix user named postgres to use the postgres role, so
+    # the simplest thing is to just become that user. At any rate, create an
+    # engine as usual with a user that has the permissions to create a database
+    engine = sqla.create_engine(defaultdb_string)
 
     #You cannot use engine.execute() however, because postgres does not allow you to create databases inside transactions, and sqlalchemy always tries to run queries in a transaction. To get around this, get the underlying connection from the engine:
     conn = engine.connect()
