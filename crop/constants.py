@@ -1,3 +1,8 @@
+"""
+A module for constants
+"""
+import os
+
 # encoding: utf-8
 
 """
@@ -61,3 +66,19 @@ ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)
 ERR_IMPORT_ERROR_3 = "Data contains empty entries"
 ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
+
+
+# Create connection string
+SQL_ENGINE = "postgresql"
+SQL_DBNAME = "crop_db"
+SQL_DEFAULT_DBNAME ='postgres'
+SQL_USER = os.environ['SQL_USER']
+SQL_PASSWORD = os.environ['SQL_PASS']
+SQL_HOST = "localhost"
+SQL_PORT = "5432"
+
+SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (SQL_ENGINE, SQL_USER, SQL_PASSWORD, 
+                                                 SQL_HOST, SQL_PORT)
+
+SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
+SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
