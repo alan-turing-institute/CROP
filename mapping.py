@@ -23,16 +23,16 @@ class Sensor(Base) :
     #__table_args__ = {'sqlite_autoincrement': True}
 
     #tell SQLAlchemy the name of column and its attributes:
-    ID = Column (Integer, primary_key =True) 
+    id = Column (Integer, primary_key =True) 
     TYPE= Column (String)
-    #TYPE = Column(Integer, ForeignKey('type.sensortype')) #many to one relationship, inherits the key from the other table. 
-    #type= relationship("Type")  #defines that is is a relationship
-    #LOCATION = Column(Integer, ForeignKey('location.id'))
-    #location = relationship("Location") #many to one relationship
+    TYPE = Column(Integer, ForeignKey('type.sensortype')) #many to one relationship, inherits the key from the other table. 
+    type= relationship("Type")  #defines that is is a relationship
+    LOCATION = Column(Integer, ForeignKey('location.id'))
+    location = relationship("Location") #many to one relationship
 
-    #READINGS = Column(Integer)
-    #READINGS = relationship ("Readings") #one to many? biodirectional? 
-    INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #picks up current time. 
+    READINGS = Column(Integer)
+    READINGS = relationship ("Readings") #one to many? biodirectional? 
+    #INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #picks up current time. 
 
 '''Class SensorType contains a list and characteristics of each type of sensor installed in the farm. eg. "Advantix" '''
 class Type(Base):
@@ -78,50 +78,12 @@ class ReadingsAdvantix(Base):
 
 
 '''Function to create the database: create_engine('postgresql+psycopg2://user:password@hostname/database_name') '''
-#consider to switch to sqllite for easy dev in the beginning
-
-
-
-def Createdb(Advantix_Data, Sensor_Types_data):
+def relationships(dbname):
     #connection = engine.connect() #<--dont know what this does... 
-    try: 
-        #creates a connection to PostgreSQL
-        engine = create_engine('postgresql://postgres:crop@localhost:5433/cropdb')
-        #Creates the database with all the Base Classes
-        Base.metadata.create_all(engine)
-    except:
-        print ("No connection to the db")
-    try: 
-        #Creates/Opens a new session (connection to the db)
-        session = sessionmaker()
-        #binds the engine to this session
-        session.configure(bind=engine)
-        
-        s = session()
-        #is used to add data generaly
-        #s.add(Rawdata) 
-        
-        #Bulks insterst the data to the database (fastest and best method)(matches names of headers autoatically as long as they are declared in the class)
 
-        # if one of these doesnt work, just delete the tables from the postgres
-        s.bulk_insert_mappings(ReadingsAdvantix, Advantix_Data.to_dict(orient="records"))
-        s.bulk_insert_mappings(Type, Sensor_Types_data.to_dict(orient="records"))   #with everychange in the csv, it doesnt replace data, it adds them in. probably need a uuid or delete everything before. 
-        #commits the changes of the session
-        s.commit()
-    except:
-        print ("commits were not made")
-    
-    finally:
-        #closses the session
-        s.close()
+    #creates a connection to PostgreSQL
+    engine = create_engine('postgresql://postgres:crop@localhost:5433/'+dbname)
+    #Creates the database with all the Base Classes
+    Base.metadata.create_all(engine)
 
-
-        #with open(advantix_raw) as csv_file:
-        #    csv_reader = csv.reader(csv_file, delimiter=',')
-        #    for row in csv_reader:
-        #       print(row)
-
-
-        #data = Load_Data(file_name)
-        #print (data)
-
+  
