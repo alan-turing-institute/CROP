@@ -1,3 +1,0 @@
-python 3.5
-
-https://www.postgresql.org/download/ v. 4.15
