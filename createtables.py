@@ -20,19 +20,21 @@ class Sensor(Base) :
     #__table_args__ = {'sqlite_autoincrement': True}
 
     #tell SQLAlchemy the name of column and its attributes:
-    ID = Column (Integer, primary_key =True) 
-    TYPE= Column (String)
-    LOCATION = (Column (Integer))
+    id = Column (Integer, primary_key =True) 
+    #TYPE= Column (String)
+    TYPE_ID= Column(Integer, ForeignKey('sensortype.id')) #many to one relationship, inherits the key from the other table
+    type= relationship("Type")  #defines that is is a relationship
+    
+    LOCATION = Column (Integer)
     READINGS = Column(Text)
     INSTALLATIONTIME = Column(DateTime, default=datetime.datetime.utcnow) #picks up current time. 
 
 '''Class SensorType contains a list and characteristics of each type of sensor installed in the farm. eg. "Advantix" '''
 class Type(Base):
     __tablename__= 'sensortype'
-
     id = Column(Integer, primary_key=True)
     #UUID =   Column(String(36), unique=True, nullable=False)
-    sensortype= Column(String)
+    TYPE= Column(String)
     description= Column (String)
    
 '''Class Location describes all the physical location in the farm. eg. Sensor A is found in the front section, in the left column , in the 3rd self. ''' 

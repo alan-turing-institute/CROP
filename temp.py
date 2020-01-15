@@ -3,18 +3,19 @@ from sqlalchemy import (create_engine, ForeignKey, MetaData, Table, Float, Colum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
+dbname="temp"
 Base = declarative_base()
 
 class Parent(Base):
     __tablename__ = 'Parent'
     id = Column(Integer, primary_key=True)
-    iddd = Column(Integer)
+    #iddd = Column(Integer)
     #child_id = Column (Integer)
-    #child_id = Column(Integer, ForeignKey('child1.id'))
-    #child1 = relationship("Child")
+    child_id = Column(Integer, ForeignKey('child2.id'))
+    child = relationship("Child")
 
 class Child(Base):
-    __tablename__ = 'child'
+    __tablename__ = 'child2'
     id = Column(Integer, primary_key=True)
 
 def createtables (dbname):
@@ -24,3 +25,5 @@ def createtables (dbname):
     #con = engine.connect()
   
     Base.metadata.create_all(engine)
+
+createtables (dbname)

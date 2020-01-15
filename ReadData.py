@@ -48,7 +48,7 @@ def Readings_Advantix ():
 def Readings_SensorTypes ():
     try:
         #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
-        sensortypes_path = CWD + "\\Data\\test.csv"
+        sensortypes_path = CWD + "\\Data\\Sensortypes.csv"
         #data= pd.read_csv(advantix_cleaned)
         sensortypes= pd.read_csv(sensortypes_path)
         #print (sensortypes.head(n=2))
