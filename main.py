@@ -3,19 +3,15 @@ import createdb
 import createtables
 import ReadData 
 import populatedb
-import mapping
+import constants
 #import test
 #libraries
-import os
+
 import sys
 
 print (sys.version)
 
-#gets the path of current working directory
-CWD = os.getcwd()
-#inputs
-dbname = 'test4' 
-tables= ["sensor", "sensortype", "location",  "readings", "advantix" ]
+
 
 if __name__ == "__main__":
     
@@ -25,10 +21,10 @@ if __name__ == "__main__":
 
     '''LOAD DATA IN DB'''
     #read the data
-    Advantix_data= ReadData.Readings_Advantix ()
-    Sensor_Types_data= ReadData.Readings_SensorTypes()
-    Sensors = ReadData.Sensors_List()
-    Locations = ReadData.Locations_List()
+    Advantix_data= ReadData.Load_Data ("\\Data\\Raw\\raw-20191127-pt01.csv")
+    Sensor_Types_data= ReadData.Load_Data("\\Data\\Sensortypes.csv")
+    Sensors = ReadData.Load_Data ("\\Data\\Sensors.csv")
+    Locations = ReadData.Load_Data("\\Data\\locations.csv")
 
     #populate with csv
     populatedb.populatesensors(dbname, Sensor_Types_data, createtables.Type)
@@ -37,8 +33,9 @@ if __name__ == "__main__":
     populatedb.populatesensors(dbname, Locations, createtables.Location)
     
 
-    '''Create relationships'''
-    #mapping.relationships(dbname)
+    '''Create relationships diagram'''
+    createtables.Creatediagram()
+    
 
     
 
