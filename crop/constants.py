@@ -1,3 +1,8 @@
+"""
+A module for constants
+"""
+import os
+
 # encoding: utf-8
 
 """
@@ -61,6 +66,7 @@ ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)
 ERR_IMPORT_ERROR_3 = "Data contains empty entries"
 ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
+
 
 # Create connection string
 SQL_ENGINE = "postgresql"
