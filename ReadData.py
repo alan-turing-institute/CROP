@@ -9,29 +9,17 @@ import test
 #gets the path of current working directory
 CWD = os.getcwd()
 
-def Sensors_List ():
+def Load_Data (csvpath):
+
     try:
-        #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
-        sensors_path = CWD + "\\Data\\Sensors.csv"
-        #data= pd.read_csv(advantix_cleaned)
-        sensors= pd.read_csv(sensors_path)
-        print (sensors.head())
-        return (sensors)
-
+        datapath = CWD + csvpath
+        df= pd.read_csv(datapath)
     except:
-        print("Can't read raw advantix readings csv")
+        print("Error with reading csv: ", csvpath)
+    print (df.head(n=2))
+    return (df)
 
-def Locations_List ():
-    try:
-        #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
-        locations_path = CWD + "\\Data\\locations.csv"
-        #data= pd.read_csv(advantix_cleaned)
-        locations= pd.read_csv(locations_path)
-        print (locations.head())
-        return (locations)
 
-    except:
-        print("Can't read raw advantix readings csv")
 
 def Readings_Advantix ():
     try:
@@ -45,22 +33,11 @@ def Readings_Advantix ():
     except:
         print("Can't read raw advantix readings csv")
 
-def Readings_SensorTypes ():
-    try:
-        #advantix_cleaned = CWD+ "\\Data\\Cleaned\\data-20190821-pt00.csv"
-        sensortypes_path = CWD + "\\Data\\Sensortypes.csv"
-        #data= pd.read_csv(advantix_cleaned)
-        sensortypes= pd.read_csv(sensortypes_path)
-        #print (sensortypes.head(n=2))
-        return (sensortypes)
 
-    except:
-        print("Can't read sensor type csv")
-    
-
+  
 
 '''this function reads csv using numpy without pandas (not used in this instance)'''
-def Load_Data (filename):
+def Load_Data_np (filename):
     print ("starting")
     data= np.genfromtxt(file_name, delimiter=',', skipskip_header=1, conconverters= {0: lambda s: str(s)})
     return data

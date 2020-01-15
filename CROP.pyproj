@@ -23,7 +23,10 @@
     <Content Include="text.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="mapping.py" />
+    <Compile Include="constants.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="oldscripts\mapping.py" />
     <Compile Include="createtables_test.py" />
     <Compile Include="main.py" />
     <Compile Include="createtables.py">
@@ -50,6 +53,9 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|cropdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="oldscripts\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

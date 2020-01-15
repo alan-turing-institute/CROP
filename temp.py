@@ -3,6 +3,10 @@ from sqlalchemy import (create_engine, ForeignKey, MetaData, Table, Float, Colum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
+#these two to create Relationship diagram
+import codecs
+import sadisplay
+
 dbname="temp"
 Base = declarative_base()
 
@@ -27,3 +31,13 @@ def createtables (dbname):
     Base.metadata.create_all(engine)
 
 createtables (dbname)
+
+desc = sadisplay.describe(globals().values())
+
+with codecs.open('schema.plantuml', 'w', encoding='utf-8') as f:
+     f.write(sadisplay.plantuml(desc))
+
+with codecs.open('schema.dot', 'w', encoding='utf-8') as f:
+     f.write(sadisplay.dot(desc))
+
+
