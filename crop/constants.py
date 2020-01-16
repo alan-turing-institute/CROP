@@ -62,7 +62,7 @@ ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
 SQL_ENGINE = "postgresql"
-SQL_DBNAME = "crop_db_test1"
+SQL_DBNAME = "crop_db_test7"
 SQL_DEFAULT_DBNAME = 'postgres'
 SQL_USER = "postgres" #os.environ['SQL_USER']
 SQL_PASSWORD = "crop" #os.environ['SQL_PASS']

@@ -36,15 +36,17 @@ def create_database(db_name):
 
         #And you can then proceed to create the database using the proper PostgreSQL command for it.
 
-        print ("looped")
+        print ("created new db")
         conn.execute("create database " + db_name)
 
-        BASE.metadata.create_all(engine)
+        newengine = create_engine(SQL_CONNECTION_STRING_CROP)
+        BASE.metadata.create_all(newengine)
 
         conn.close()
     
     else:
         engine = create_engine(SQL_CONNECTION_STRING_CROP)
         BASE.metadata.create_all(engine)
+        print (SQL_DBNAME)
 
 create_database(SQL_DBNAME)
