@@ -3,32 +3,30 @@ Module doc string
 '''
 
 #import psycopg2
-import sqlalchemy as sqla
+from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists
 
-from .constants import (
+from constants import (
     SQL_CONNECTION_STRING_DEFAULT,
-    SQL_CONNECTION_STRING_CROP
+    SQL_CONNECTION_STRING_CROP,
+    SQL_DBNAME
 )
 
-from .structure import BASE
+from structure import BASE
 
 def create_database(db_name):
     """
     Funtion to create a new database
-        dbname:
+        dbname:pip
     """
 
     if not database_exists(SQL_CONNECTION_STRING_CROP):
-        #On postgres, three databases are normally present by default. If you are able to connect
-        # as a superuser (eg, the postgres role), then you can connect to the postgres or template1
-        # databases. The default pg_hba.conf permits only the unix user named postgres to use the
-        # postgres role, so the simplest thing is to just become that user. At any rate, create an
-        # engine as usual with a user that has the permissions to create a database
-        engine = sqla.create_engine(SQL_CONNECTION_STRING_DEFAULT)
+        #On postgres, the postgres database is normally present by default. 
+        #Connecting as a superuser (eg, postgres), allows to connect and create a new db.
+        engine = create_engine(SQL_CONNECTION_STRING_DEFAULT)
 
-        #You cannot use engine.execute() however, because postgres does not allow you to create
-        # databases inside transactions, and sqlalchemy always tries to run queries in a transaction.
+        #You cannot use engine.execute() directly, because postgres does not allow to create
+        # databases inside transactions, inside which sqlalchemy always tries to run queries.
         # To get around this, get the underlying connection from the engine:
         conn = engine.connect()
 
@@ -37,9 +35,16 @@ def create_database(db_name):
         conn.execute("commit")
 
         #And you can then proceed to create the database using the proper PostgreSQL command for it.
-    
+
+        print ("looped")
         conn.execute("create database " + db_name)
-        
+
         BASE.metadata.create_all(engine)
 
         conn.close()
+    
+    else:
+        engine = create_engine(SQL_CONNECTION_STRING_CROP)
+        BASE.metadata.create_all(engine)
+
+create_database(SQL_DBNAME)

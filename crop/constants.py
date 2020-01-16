@@ -2,14 +2,6 @@
 A module for constants
 """
 import os
-
-# encoding: utf-8
-
-"""
-constants.py
-"""
-
-import os
 import pandas as pd
 
 # FILE STRUCTURE
@@ -18,7 +10,7 @@ CONST_TEST_FOLDER = "tests"
 CONST_ADVANTIX_FOLDER = "Advantix"
 
 CONST_TEST_DIR = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), 
+    os.path.dirname(os.path.realpath(__file__)),
     "..",
     CONST_TEST_FOLDER))
 
@@ -35,7 +27,7 @@ CONST_ADVANTIX_COL_LIST = [
     CONST_ADVANTIX_COL_MODBUSID,
     CONST_ADVANTIX_COL_TEMPERATURE,
     CONST_ADVANTIX_COL_HUMIDITY,
-    CONST_ADVANTIX_COL_CO2LEVEL,   
+    CONST_ADVANTIX_COL_CO2LEVEL,
 ]
 
 CONST_ADVANTIX_TIMESTAMP_MIN = pd.to_datetime("2016-01-01")
@@ -70,15 +62,22 @@ ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
 SQL_ENGINE = "postgresql"
-SQL_DBNAME = "crop_db"
-SQL_DEFAULT_DBNAME ='postgres'
-SQL_USER = os.environ['SQL_USER']
-SQL_PASSWORD = os.environ['SQL_PASS']
+SQL_DBNAME = "crop_db_test1"
+SQL_DEFAULT_DBNAME = 'postgres'
+SQL_USER = "postgres" #os.environ['SQL_USER']
+SQL_PASSWORD = "crop" #os.environ['SQL_PASS']
 SQL_HOST = "localhost"
-SQL_PORT = "5432"
+SQL_PORT = "5433"
 
-SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (SQL_ENGINE, SQL_USER, SQL_PASSWORD, 
+SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (SQL_ENGINE, SQL_USER, SQL_PASSWORD,
                                                  SQL_HOST, SQL_PORT)
 
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
+
+# SQL Table names
+SENSOR_TABLE_NAME = 'sensor'
+SENSOR_TYPE_TABLE_NAME = 'sensor_type'
+LOCATION_TABLE_NAME = 'location'
+ADVANTIX_READINGS_TABLE_NAME = 'advantix'
+
