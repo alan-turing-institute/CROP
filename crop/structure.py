@@ -34,7 +34,7 @@ class Sensor(BASE):
     type_id = Column(Integer, ForeignKey(SENSOR_TYPE_TABLE_NAME+'.id')) #many to one relationship
     type_relationship = relationship("Type")
     location_relationship = relationship("Location") #one to many relationship
-    advantix_readings_relationship = relationship("Readings") #one to many relationship
+    advantix_readings_relationship = relationship("Readings_Advantix") #one to many relationship
     installation_time = Column(DateTime, default=datetime.datetime.utcnow) #picks up current time.
 
 
@@ -67,7 +67,7 @@ class Location(BASE):
     code = Column(String)
 
 
-class Readings(BASE):
+class Readings_Advantix(BASE):
     """
     Base class for the sensor Readings
     """
@@ -78,34 +78,48 @@ class Readings(BASE):
     sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.id'))
     sensor_relationship = relationship(Sensor, back_populates="READINGS")
     modbusid = Column(Integer)
-    battery = Column(Float)
     temperature = Column(Integer)
     humidity = Column(Integer)
     co2levels = Column(Integer)
-    r_loggertimestamp = Column(DateTime)
-    r_deviceaddress = Column(String)
-    r_uptime = Column(Integer)
-    r_battery = Column(Integer)
-    r_validity = Column(Integer)
-    r_chone = Column(Integer)
-    r_chtwo = Column(Integer)
-    r_chthree = Column(Integer)
-    r_opt = Column(Integer)
-    r_cocozir = Column(Integer)
-    r_tempsht = Column(Integer)
-    r_humiditysht = Column(Integer)
-    r_tempds = Column(Integer)
     time_created = Column(DateTime(), server_default=func.now()) #when data are passed to the server
     time_updated = Column(DateTime(), onupdate=func.now()) #<-- to check
 
 
-class Readings_Advantix(BASE):
+class Readings_Tags(BASE):
     """
     Class for reading the raw Advantix data
     """
-    __tablename__ = "temp"
+    __tablename__ = "microtags"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    battery = Column(Float)
-    modbusid = Column(Integer)
+    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.id'))
+    sensor_relationship = relationship(Sensor, back_populates="READINGS")
+    loggertimestamp = Column(DateTime)
+    deviceaddress = Column(String)
+    uptime = Column(Integer)
+    battery = Column(Integer)
+    validity = Column(Integer)
+    ch1 = Column(Integer)
+    ch2 = Column(Integer)
+    ch3 = Column(Integer)
+    opt = Column(Integer)
+    co2cozir = Column(Integer)
+    tempsht = Column(Integer)
+    humiditysht = Column(Integer)
+    tempds = Column(Integer)
+    time_created = Column(DateTime(), server_default=func.now()) #when data are passed to the server
+    time_updated = Column(DateTime(), onupdate=func.now()) #<-- to check
+
+class Weather(BASE):
+    """
+    Class for reading the Met Weather API
+    """
+    __tablename__ = "weather"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
     temperature = Column(Integer)
+    windspeed = Column(Integer)
+    winddirection = Column(Integer)
+    weathertype = Column(String)
+    forecast = Column(Integer)
+    time_accessed = Column(DateTime(), server_default=func.now())
