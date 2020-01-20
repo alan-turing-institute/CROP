@@ -2,22 +2,22 @@
 Module doc string
 '''
 
-#import psycopg2
+import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists
 
-from constants import (
+from .constants import (
     SQL_CONNECTION_STRING_DEFAULT,
     SQL_CONNECTION_STRING_CROP,
     SQL_DBNAME
 )
 
-from structure import BASE
+from .structure import BASE
 
 def create_database(db_name):
     """
     Funtion to create a new database
-        dbname:pip
+        dbname:
     """
 
     if not database_exists(SQL_CONNECTION_STRING_CROP):
@@ -35,8 +35,6 @@ def create_database(db_name):
         conn.execute("commit")
 
         #And you can then proceed to create the database using the proper PostgreSQL command for it.
-
-        print ("created new db")
         conn.execute("create database " + db_name)
 
         newengine = create_engine(SQL_CONNECTION_STRING_CROP)
@@ -47,6 +45,4 @@ def create_database(db_name):
     else:
         engine = create_engine(SQL_CONNECTION_STRING_CROP)
         BASE.metadata.create_all(engine)
-        print (SQL_DBNAME)
 
-create_database(SQL_DBNAME)
