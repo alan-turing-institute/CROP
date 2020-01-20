@@ -13,13 +13,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
-from constants import (
+from .constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
     ADVANTIX_READINGS_TABLE_NAME
     )
-
 
 BASE = declarative_base()
 
