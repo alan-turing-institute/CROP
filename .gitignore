@@ -2,6 +2,7 @@
 CROP.pyproj
 CROP.sln
 CROP.tf
+.vs
 
 # SECRETS
 .secrets/
