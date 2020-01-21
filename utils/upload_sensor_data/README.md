@@ -1,10 +1,17 @@
-## upload_sensor_data.sh
+# upload_sensor_data.sh
 
-A script to upload data to Azure blob storage.
+Script to upload data to Azure blob storage.
+
+Depends on:
+  requirements.txt
+  
+Requires
 
 **Usage**
 
 upload_sensor_data.sh (full path to the file to be uploaded) (unique blob name)
+
+
 
 **Example**
 ```

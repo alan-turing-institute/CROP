@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+Script to upload data to Azure blob storage.
+
+"""
+
 import os
 import argparse
 from azure.storage.blob import BlockBlobService, PublicAccess
@@ -28,7 +33,7 @@ def check_blob_exists(block_blob_service, container_name, blob_name):
     return exist
 
 if __name__ == "__main__":
-    
+
     # Command line arguments
     parser = argparse.ArgumentParser(description="Uploads blobs to Azure")
 
