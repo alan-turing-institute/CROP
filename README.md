@@ -1,18 +1,11 @@
 # CROP
 CROP - Crop Research Observation Platform
 
-Requirements:
 
-python 3.5 >
+## utils
 
-Postgresql v. 4.15>  
-```
-https://www.postgresql.org/download/ 
-```
+Directory containing all the necessary scripts and tools for establishing
+infrastructure and data management.
 
-requirements.txt
 
-Python3 dependencies can be installed using pip:
-```
-pip3 install -r requirements.txt
-```
+`upload_sensor_data` - script to upload sensor data
