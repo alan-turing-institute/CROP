@@ -1,5 +1,0 @@
-{
-  "message": "The storage account named cropstorage is already taken.",
-  "nameAvailable": false,
-  "reason": "AlreadyExists"
-}
