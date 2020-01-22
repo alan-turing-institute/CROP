@@ -2,6 +2,16 @@
 
 # CONSTANTS
 CONST_LOCATION='uksouth'
+CONST_POSTGRES_V='9.6'
+CONST_POSTGRES_SERVER='B_Gen5_1'
+
+# Declare an array of string with the names of containers
+#   TODO: this probably needs to be extracted from the Python module
+declare -a ContainersArray=("advantixrawdata" "tinytagrawdata")
+
+###################################################################################
+# THE CODE BELOW SHOULD NOT BE MODIFIED
+###################################################################################
 
 # Setting the default subsciption
 az account set -s $ARM_SUBSCRIPTION_ID
@@ -47,10 +57,6 @@ fi
 # Getting the access key
 ACCESS_KEY=$(az storage account keys list --account-name $AZURE_STORAGE_ACCOUNT --resource-group $AZURE_RG_NAME --output tsv |head -1 | awk '{print $3}')
 
-# Declare an array of string with the names of containers
-#   TODO: this probably needs to be extracted from the Python module
-declare -a ContainersArray=("advantixrawdata" "tinytagrawdata")
-
 for container in ${ContainersArray[@]}; do
 
     # Checks if container exists
@@ -59,7 +65,7 @@ for container in ${ContainersArray[@]}; do
     exists=$(az storage container exists --name $container --account-name $AZURE_STORAGE_ACCOUNT --account-key $ACCESS_KEY | python -c 'import json,sys;obj=json.load(sys.stdin);print (obj["exists"])')
    
     if ! $exists; then
-        az storage container create  \
+        az storage container create \
             --name $container \
             --account-name $AZURE_STORAGE_ACCOUNT \
             --account-key $ACCESS_KEY \
@@ -68,3 +74,46 @@ for container in ${ContainersArray[@]}; do
         echo Container $container has been created.
     fi
 done
+
+###################################################################################
+# Creates PostgreSQL DB
+###################################################################################
+
+# Checks for postgres databases
+#   This is not a great implementation as it depends on Python to parse the json object.
+#   Changes are wellcome.
+
+exists=`az postgres server list -g $AZURE_RG_NAME`
+
+if [ ${#exists} = 2 ]; then
+    az postgres server create \
+        --resource-group $AZURE_RG_NAME \
+        --name $AZURE_SQL_SERVER \
+        --location $CONST_LOCATION \
+        --admin-user $AZURE_SQL_USER \
+        --admin-password $AZURE_SQL_PASS \
+        --sku-name $CONST_POSTGRES_SERVER \
+        --version $CONST_POSTGRES_V \
+        > /dev/null 2>&1
+
+    echo PostgreSQL DB $AZURE_SQL_SERVER has been created.
+
+    # Adding rules of allowed ip addresses
+    az postgres server firewall-rule create \
+        --resource-group $AZURE_RG_NAME \
+        --server-name $AZURE_SQL_SERVER \
+        -n wifi \
+        --start-ip-address  \
+        --end-ip-address  \
+        > /dev/null 2>&1
+
+    az postgres server firewall-rule create \
+        --resource-group $AZURE_RG_NAME \
+        --server-name $AZURE_SQL_SERVER \
+        -n cable \
+        --start-ip-address  \
+        --end-ip-address  \
+        > /dev/null 2>&1
+fi
+
+echo Finished.
