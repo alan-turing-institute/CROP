@@ -1,8 +1,6 @@
 psycopg2>=2.8.4
 SQLAlchemy-Utils>=0.36.1
-
-json>=2.0.9
-#azure-cli>=2.0.80
+azure-cli>=2.0.80
 
 # certifi==2018.8.24
 # DateTime==4.3
