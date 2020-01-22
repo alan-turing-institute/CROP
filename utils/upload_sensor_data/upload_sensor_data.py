@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+Script to upload data to Azure blob storage.
+
+"""
+
 import os
 import argparse
 from azure.storage.blob import BlockBlobService, PublicAccess
@@ -21,14 +26,14 @@ def check_blob_exists(block_blob_service, container_name, blob_name):
     generator = block_blob_service.list_blobs(container_name)
 
     for blob in generator:
-        if (blob.name == blob_name):
+        if blob.name == blob_name:
             exist = True
             break
 
     return exist
 
 if __name__ == "__main__":
-    
+
     # Command line arguments
     parser = argparse.ArgumentParser(description="Uploads blobs to Azure")
 
@@ -50,16 +55,16 @@ if __name__ == "__main__":
     blob_name = (args.target).strip()
 
     # connect's to the storage account's blob service using the connection string
-    block_blob_service = BlockBlobService(account_name=az_account, connection_string=az_connect_str)
+    blob_service = BlockBlobService(account_name=az_account, connection_string=az_connect_str)
 
     # checks if blob already exists
-    blob_exists = check_blob_exists(block_blob_service, az_container, blob_name)
+    blob_exists = check_blob_exists(blob_service, az_container, blob_name)
     if not blob_exists:
         try:
             # uploads a new blob
-            block_blob_service.create_blob_from_path(az_container, blob_name, file_path)
-        except ValueError as e:
-            raise RuntimeError(e)
+            blob_service.create_blob_from_path(az_container, blob_name, file_path)
+        except ValueError as error:
+            raise RuntimeError(error)
     else:
         raise RuntimeError("Blob named %s already exists!" % (blob_name))
 

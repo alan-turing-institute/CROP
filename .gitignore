@@ -2,6 +2,7 @@
 CROP.pyproj
 CROP.sln
 CROP.tf
+.vs
 
 # SECRETS
 .secrets/
@@ -38,7 +39,6 @@ parts/
 sdist/
 var/
 wheels/
-Data/
 *.egg-info/
 .installed.cfg
 *.egg

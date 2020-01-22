@@ -16,39 +16,26 @@ Region: (Europe) UK South
 
 ## 2. SQL database
 
-**Dashboard->New->Marketplace->SQL Database**
+**Dashboard->New->Marketplace->Azure Database for PostgreSQL**
 
 ```
-Project details
+Choose: Single server
+
+Project details:
   Subscription: Urban Agriculture
   Resource group: CROP
 
-Database details
-  Database name: CROP_DB_TEST
-  Server (new):
-    Server name: cropdbservertest
-    Server admin login: <>
-    Password: <>
-    Location: (Europe) UK South
+Server details:
+  Server name: cropserver
+  Data source: None
+  Admin username: <>
+  Password: <>
+  Location: (Europe) UK South
+  Version: 10
+  Compute + storage: Basic 1vCores, 5GB storage
 
-  Want to use SQL elastic pool? No
-  Compute + storage: Basic (2 GB storage)
 
-Network connectivity
-  Connectivity method: Public endpoint
-
-Firewall rules
-  Allow Azure services and resources to access this server: Yes
-  Add current client IP address: Yes
-
-Data source
-  Use existing data: None
-
-Database collation
-  Collation: SQL_Latin1_General_CP1_CI_AS
-
-Advanced data security
-  Enable advanced data security: Not now
+Added Turing IP address.
 
 ```
 

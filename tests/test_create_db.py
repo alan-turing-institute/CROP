@@ -5,7 +5,9 @@ from ..crop.constants import (
 )
 
 from ..crop.create_db import (
-    create_database
+    create_database,
+    connect_to_db,
+    disconnect_from_db
 )
 
 def test_create_database():

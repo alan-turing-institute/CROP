@@ -16,7 +16,7 @@ print (sys.version)
 if __name__ == "__main__":
     
     '''Checks if the db and main tables exist in postgres and if not creates them'''
-    createdb.Check_db_Status(dbname, tables)
+    createdb.Check_db_Status(constants.dbname constants.connection_string,constants.connection_string_defaultdb, constants.tables)
 
 
     '''LOAD DATA IN DB'''
