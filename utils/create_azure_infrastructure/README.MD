@@ -17,6 +17,7 @@
     ```
 
 2. Create PostgreSQL DB
+  
   - Execute from the command line
 
     ```
