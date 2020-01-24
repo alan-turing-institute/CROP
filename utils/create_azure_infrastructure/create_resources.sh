@@ -24,10 +24,9 @@ az account set -s $ARM_SUBSCRIPTION_ID
 if ! `az group exists -n $AZURE_RG_NAME`; then
 
     az group create --name $AZURE_RG_NAME \
-        --location $CONST_LOCATION \
-        > /dev/null 2>&1
+        --location $CONST_LOCATION
 
-    echo Group $AZURE_RG_NAME has been created.
+    echo CROPINFO: Group $AZURE_RG_NAME has been created.
 fi
 
 ###################################################################################
@@ -44,10 +43,9 @@ if [ $available = "True" ]; then
     az storage account create --name $AZURE_STORAGE_ACCOUNT \
         --location $CONST_LOCATION \
         --resource-group $AZURE_RG_NAME \
-        --sku Standard_LRS \
-        > /dev/null 2>&1
+        --sku Standard_LRS
 
-    echo Storage account $AZURE_STORAGE_ACCOUNT has been created.
+    echo CROPINFO: Storage account $AZURE_STORAGE_ACCOUNT has been created.
 fi
 
 ###################################################################################
@@ -68,10 +66,9 @@ for container in ${ContainersArray[@]}; do
         az storage container create \
             --name $container \
             --account-name $AZURE_STORAGE_ACCOUNT \
-            --account-key $ACCESS_KEY \
-            > /dev/null 2>&1
+            --account-key $ACCESS_KEY
 
-        echo Container $container has been created.
+        echo CROPINFO: Container $container has been created.
     fi
 done
 
@@ -93,10 +90,9 @@ if [ ${#exists} = 2 ]; then
         --admin-user $AZURE_SQL_USER \
         --admin-password $AZURE_SQL_PASS \
         --sku-name $CONST_POSTGRES_SERVER \
-        --version $CONST_POSTGRES_V \
-        > /dev/null 2>&1
+        --version $CONST_POSTGRES_V
 
-    echo PostgreSQL DB $AZURE_SQL_SERVER has been created.
+    echo CROPINFO: PostgreSQL DB $AZURE_SQL_SERVER has been created.
 
     # Adding rules of allowed ip addresses
     az postgres server firewall-rule create \
@@ -104,16 +100,39 @@ if [ ${#exists} = 2 ]; then
         --server-name $AZURE_SQL_SERVER \
         -n wifi \
         --start-ip-address  \
-        --end-ip-address  \
-        > /dev/null 2>&1
+        --end-ip-address
 
     az postgres server firewall-rule create \
         --resource-group $AZURE_RG_NAME \
         --server-name $AZURE_SQL_SERVER \
         -n cable \
         --start-ip-address  \
-        --end-ip-address  \
-        > /dev/null 2>&1
+        --end-ip-address
+
+    echo CROPINFO: PostgreSQL DB firewall rules created.
 fi
 
-echo Finished.
+###################################################################################
+# Creates Function App
+###################################################################################
+
+function='croptriggers'
+
+cwd=`pwd`
+cd ../$function
+
+az functionapp create \
+    --resource-group $AZURE_RG_NAME \
+    --consumption-plan-location $CONST_LOCATION \
+    --storage-account $AZURE_STORAGE_ACCOUNT \
+    --name $function \
+    --os-type Linux \
+    --runtime python \
+    --runtime-version 3.7
+
+echo CROPINFO: Function APP $function created.
+
+func azure functionapp publish $function --build-native-deps --build remote
+cd $cwd
+
+echo CROPINFO: Finished.

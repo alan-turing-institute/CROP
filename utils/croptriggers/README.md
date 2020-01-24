@@ -1,8 +1,6 @@
 ## Testing locally
 
-The example is written around the advantix sensor data upload function app, however, it could be used as a reference for other functions.
-
-- `cd advantixupload`
+- `cd croptriggers`
 - Modify `local.settings.json`
 
 ```json
@@ -20,3 +18,7 @@ The example is written around the advantix sensor data upload function app, howe
 `MyStorageConnectionString` - copy from storage->Access keys->Connection string
 
 - `func start`
+
+## Creating new function
+
+- e.g. `func new --name advantixupload --template "Azure Blob Storage trigger"`
