@@ -77,10 +77,11 @@ class Readings_Advantix(BASE):
     id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.id'))
     sensor_relationship = relationship(Sensor, back_populates="READINGS")
-    modbusid = Column(Integer)
-    temperature = Column(Integer)
-    humidity = Column(Integer)
-    co2levels = Column(Integer)
+    Timestamp = Column(DateTime)
+    Modbusid = Column(Integer)
+    Temperature = Column(Integer)
+    Humidity = Column(Integer)
+    Co2 = Column(Integer)
     time_created = Column(DateTime(), server_default=func.now()) #when data are passed to the server
     time_updated = Column(DateTime(), onupdate=func.now()) #<-- to check
 

@@ -4,6 +4,8 @@ A module for constants
 import os
 import pandas as pd
 
+CWD = os.getcwd()
+
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
 CONST_TEST_FOLDER = "tests"
@@ -27,8 +29,8 @@ CONST_ADVANTIX_COL_LIST = [
     CONST_ADVANTIX_COL_MODBUSID,
     CONST_ADVANTIX_COL_TEMPERATURE,
     CONST_ADVANTIX_COL_HUMIDITY,
-    CONST_ADVANTIX_COL_CO2LEVEL,
-]
+    CONST_ADVANTIX_COL_CO2LEVEL
+    ]
 
 CONST_ADVANTIX_TIMESTAMP_MIN = pd.to_datetime("2016-01-01")
 CONST_ADVANTIX_TIMESTAMP_MAX = pd.to_datetime("2031-12-31")
@@ -64,8 +66,8 @@ ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 SQL_ENGINE = "postgresql"
 SQL_DBNAME = "crop_db_test9"
 SQL_DEFAULT_DBNAME = 'postgres'
-SQL_USER = os.environ['SQL_USER']
-SQL_PASSWORD = os.environ['SQL_PASS']
+SQL_USER = "postgres" #os.environ['SQL_USER']
+SQL_PASSWORD = "crop" #os.environ['SQL_PASS']
 SQL_HOST = "localhost"
 SQL_PORT = "5433"
 
