@@ -4,7 +4,7 @@ Python module to perform data ingress operations
 """
 
 import pandas as pd
-from .constants import (
+from constants import (
     CONST_ADVANTIX_COL_LIST,
     CONST_ADVANTIX_COL_TIMESTAMP,
     CONST_ADVANTIX_COL_MODBUSID,
@@ -39,7 +39,7 @@ def advantix_import(file_path):
         log - error message
         advantix_df - pandas dataframe representing advantix data file, returns None if data is invalid
     """
-
+    print ("1. checks df")
     advantix_raw_df = advantix_read_csv(file_path)
     
     # Checks structure
@@ -54,6 +54,10 @@ def advantix_import(file_path):
     success, log = advantix_df_validity(advantix_df)
     if not success: return success, log, None
     
+    #converts column names
+    success, log, advantix_df = advantix_df_rename_headers(advantix_df)
+    if not success: return success, log, None
+
     return success, log, advantix_df
 
 def advantix_read_csv(file_path):
@@ -67,7 +71,7 @@ def advantix_read_csv(file_path):
     """
 
     df = pd.read_csv(file_path)
-
+    print ("2. read df")
     return df
 
 def advantix_check_structure(advantix_df):
@@ -85,7 +89,9 @@ def advantix_check_structure(advantix_df):
     for advantix_column in CONST_ADVANTIX_COL_LIST:
         if not advantix_column in advantix_df.columns:
             return False, ERR_IMPORT_ERROR_1
-
+    
+    print("3. check structure")
+    
     return True, None
 
 def advantix_convert(advantix_raw_df):
@@ -105,7 +111,7 @@ def advantix_convert(advantix_raw_df):
     log = None
 
     try:
-      advantix_df = advantix_raw_df[CONST_ADVANTIX_COL_LIST]
+        advantix_df = advantix_raw_df[CONST_ADVANTIX_COL_LIST]
     except:
         success = False
         log = ERR_IMPORT_ERROR_1 + ": " + ','.join(CONST_ADVANTIX_COL_LIST)
@@ -132,6 +138,7 @@ def advantix_convert(advantix_raw_df):
         advantix_df = None
         return success, log, advantix_df
 
+    print("4. converts to df")
     return success, log, advantix_df
 
 def advantix_df_validity(advantix_df):
@@ -167,7 +174,8 @@ def advantix_df_validity(advantix_df):
         print(col_name, col_min, col_max)
         success, log = advantix_df_check_range(advantix_df, col_name, col_min, col_max)
         if not success: return success, log
-   
+
+    print("5. validity")
     return success, log
 
 def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
@@ -196,5 +204,15 @@ def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
         log = ERR_IMPORT_ERROR_5 + " <" + col_name + \
             "> out of range (min = %f, max = %f)" % (col_min, col_max) + \
             " Entries: " + str(list(out_of_range_df.index))
-
+    print("6. range")
     return success, log
+
+def advantix_df_rename_headers (advantix_df):
+
+    success = True
+    log = ""
+
+    advantix_df.rename(columns = {CONST_ADVANTIX_COL_MODBUSID:'Modbusid',
+                                  CONST_ADVANTIX_COL_CO2LEVEL: 'Co2'}, inplace=True)
+
+    return success, log, advantix_df

@@ -35,10 +35,10 @@ def create_database(db_name):
         conn.execute("commit")
 
         #And you can then proceed to create the database using the proper PostgreSQL command for it.
-
-        print ("created new db")
         conn.execute("create database " + db_name)
+        print ("created db" + db_name)
 
+        #creates a new engine using the new database url and adds the defined tables and columns
         newengine = create_engine(SQL_CONNECTION_STRING_CROP)
         BASE.metadata.create_all(newengine)
 
@@ -46,7 +46,8 @@ def create_database(db_name):
     
     else:
         engine = create_engine(SQL_CONNECTION_STRING_CROP)
+        #metadata.drop_all(engine)
         BASE.metadata.create_all(engine)
         print (SQL_DBNAME)
 
-create_database(SQL_DBNAME)
+
