@@ -19,6 +19,6 @@
 
 - `func start`
 
-## Creating new function
+## Creating a new function
 
 - e.g. `func new --name advantixupload --template "Azure Blob Storage trigger"`
