@@ -64,12 +64,12 @@ ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
 SQL_ENGINE = "postgresql"
-SQL_DBNAME = "crop_db_test5"
 SQL_DEFAULT_DBNAME = 'postgres'
-SQL_USER = "postgres" #os.environ['SQL_USER']
-SQL_PASSWORD = "crop" #os.environ['SQL_PASS']
-SQL_HOST = "localhost"
-SQL_PORT = "5433"
+SQL_DBNAME = "crop_db_test5" # os.environ['AZURE_SQL_DBNAME']
+SQL_USER = os.environ['AZURE_SQL_USER']
+SQL_PASSWORD = os.environ['AZURE_SQL_PASS']
+SQL_HOST = os.environ['AZURE_SQL_SERVER']
+SQL_PORT = os.environ['AZURE_SQL_PORT']
 
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (SQL_ENGINE, SQL_USER, SQL_PASSWORD,
                                                  SQL_HOST, SQL_PORT)
