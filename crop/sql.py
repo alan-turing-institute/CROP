@@ -4,7 +4,8 @@ Python module to perform data ingress operations
 """
 
 import pandas as pd
-from ingress import advantix_df_checks
+from crop.ingress import advantix_df_checks
+from crop.create_db import create_database
 
 def advantix_SQL_insert(pd_df_raw, server, db, user, password, port):
     """
@@ -26,6 +27,17 @@ def advantix_SQL_insert(pd_df_raw, server, db, user, password, port):
     status = True
     error = ""
 
+
+    # Checks if db exists, if not tries to create it. 
+    status, error= create_database(db_name)
+    return status, error
+
+    # Try to establish connection to the db
+    status, error= connect_to_database(db), "cannot connect to database"
+    return status, error
+
+
+
     if not isinstance(pd_df_raw, pd.DataFrame):
         return False, "Not a pandas dataframe"
     
@@ -37,6 +49,5 @@ def advantix_SQL_insert(pd_df_raw, server, db, user, password, port):
     if not success: 
         return success, log
 
-    # Try to establish connection to the db
-
-    return status, error
+    
+ 

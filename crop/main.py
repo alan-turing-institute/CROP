@@ -3,7 +3,7 @@ import create_db
 import ingress
 import populate_db
 import structure
-import ReadData
+import read_data
 from sqlalchemy import create_engine
 from constants import (
     CWD,
@@ -39,9 +39,9 @@ if __name__ == "__main__":
     #ADVANTIX_DF= pd.read_csv(CWD+"\\data\\Advantix\\data-20190821-test1.csv")
     success, log, ADVANTIX_DF=ingress.advantix_import(CWD+"\\data\\Advantix\\"+"data-20190821-test9.csv")
     print (success, log, ADVANTIX_DF)
-    #Sensor_Types_data= ReadData.Load_Data("\\data\\Core\\Sensortypes.csv")
-    #Sensors = ReadData.Load_Data ("\\data\\Core\\Sensors.csv")
-    #Locations = ReadData.Load_Data("\\data\\Core\\locations.csv")
+    #Sensor_Types_data= read_data.Load_Data("\\data\\Core\\Sensortypes.csv")
+    #Sensors = read_data.Load_Data ("\\data\\Core\\Sensors.csv")
+    #Locations = read_data.Load_Data("\\data\\Core\\locations.csv")
 
     #populate with csv
     #populate_db.populatesensors(engine, ADVANTIX_DF, structure.Readings_Advantix)
