@@ -1,19 +1,40 @@
 import pytest
 import os
+import sys
+from pathlib import Path
 import pandas as pd
 
-from ..crop.sql import (
+file = Path(__file__).resolve()
+parent, root = file.parent, file.parents[1]
+sys.path.append(str(root))
+
+from crop.sql import (
     advantix_SQL_insert
 )
 
-from ..crop.constants import (
+from crop.constants import (
+    SQL_DBNAME,
     CONST_TEST_DIR_DATA,
     CONST_ADVANTIX_FOLDER,
     CONST_ADVANTIX_TEST_1,
     CONST_ADVANTIX_TEST_2
 )
 
-from ..crop.ingress import advantix_read_csv
+from crop.ingress import advantix_read_csv
+
+from crop.create_db import create_database
+
+
+def test_db_creation ():
+    success, error = create_database(SQL_DBNAME)
+    assert(success == True)
+    assert(len(error) == 0)
+
+def test_db_connection ():
+    result, error= database_exists(SQL_CONNECTION_STRING_CROP), "database does not exist"
+    assert(result == False)
+    assert(len(error) > 0)
+
 
 def test_advantix_SQL_insert():
 

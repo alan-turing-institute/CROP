@@ -4,7 +4,7 @@ Python module to perform data ingress operations
 """
 
 import pandas as pd
-from constants import (
+from crop.constants import (
     CONST_ADVANTIX_COL_LIST,
     CONST_ADVANTIX_COL_TIMESTAMP,
     CONST_ADVANTIX_COL_MODBUSID,
