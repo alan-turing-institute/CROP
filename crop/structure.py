@@ -44,7 +44,7 @@ class Type(BASE):
     """
     __tablename__ = SENSOR_TYPE_TABLE_NAME
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     #UUID =   Column(String(36), unique=True, nullable=False)
     sensor_type = Column(String)
     description = Column(Text)
@@ -58,10 +58,10 @@ class Location(BASE):
 
     __tablename__ = LOCATION_TABLE_NAME
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.id'))
     sensor_relationship = relationship(Sensor, back_populates="sensors")
-    section = Column(Integer) #A/B
+    section = Column(Integer) #1/2
     column = Column(Integer) #no
     shelf = Column(Integer) #1-4
     code = Column(String)
