@@ -1,16 +1,13 @@
-#files
-import createtables as tbls
-#libraries
-import datetime
-import psycopg2
-import sqlalchemy as sqla
+#import datetime
+#import psycopg2
+#import sqlalchemy as sqla
 from sqlalchemy.orm import sessionmaker, relationship
 
 # NOTE: switch to sqlite for convinience. 
     
-def populatesensors (dbname, Data, Class):
+def populatesensors (engine, Data, Class):
     #creates a connection to PostgreSQL
-    engine = sqla.create_engine('postgresql://postgres:crop@localhost:5433/'+dbname)
+    #engine = sqla.create_engine('postgresql://postgres:crop@localhost:5433/'+dbname)
     #Creates the database with all the Base Classes
     #Base.metadata.create_all(engine)
     
@@ -27,7 +24,7 @@ def populatesensors (dbname, Data, Class):
     # if one of these doesnt work, just delete the tables from the postgres
     #session bulk is the fastest and best way to import 
     s.bulk_insert_mappings(Class, Data.to_dict(orient="records"))
-    print ("stored: " , Data)
+    print (Data)
     #s.bulk_insert_mappings(Sensor, Data.to_dict(orient="records"))   #with everychange in the csv, it doesnt replace data, it adds them in. probably need a uuid or delete everything before. 
     #commits the changes of the session
     s.commit()
