@@ -6,7 +6,7 @@
       "type": "blobTrigger",
       "direction": "in",
       "path": "tinytagrawdata/{blobname}.{blobextension}",
-      "connection": "MyStorageConnectionString"
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }

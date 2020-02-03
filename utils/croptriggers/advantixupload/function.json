@@ -1,12 +1,15 @@
 {
   "scriptFile": "__init__.py",
+  "entryPoint": "advantix_upload",
   "bindings": [
     {
       "name": "blobin",
       "type": "blobTrigger",
       "direction": "in",
       "path": "advantixrawdata/{blobname}.{blobextension}",
-      "connection": "MyStorageConnectionString"
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }
+
+    
