@@ -14,7 +14,7 @@ declare -a ContainersArray=("advantixrawdata" "tinytagrawdata") # "advantixproce
 ###################################################################################
 
 # Setting the default subsciption
-az account set -s $ARM_SUBSCRIPTION_ID
+az account set -s $AZURE_SUBSCRIPTION_ID
 
 ###################################################################################
 # Creates RESOURCE GROUP
@@ -138,7 +138,6 @@ az functionapp create \
 az functionapp config appsettings set \
     --name croptriggers \
     --resource-group $AZURE_RG_NAME \
-    --subscription $ARM_SUBSCRIPTION_ID \
     --settings "AZURE_SQL_SERVER=$AZURE_SQL_SERVER" "AZURE_SQL_DBNAME=$AZURE_SQL_DBNAME" \
         "AZURE_SQL_USER=$AZURE_SQL_USER" "AZURE_SQL_PASS=$AZURE_SQL_PASS" "AZURE_SQL_PORT=$AZURE_SQL_PORT"
     
