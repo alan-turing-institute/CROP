@@ -27,8 +27,6 @@ def confirm(question):
 if __name__ == "__main__":
 
     if confirm("Create DB?"):
-
         create_database(SQL_DBNAME)
-
 
     print("Finished.")

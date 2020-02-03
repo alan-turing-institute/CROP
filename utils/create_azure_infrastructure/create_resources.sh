@@ -7,7 +7,7 @@ CONST_POSTGRES_SERVER='B_Gen5_1'
 
 # Declare an array of string with the names of containers
 #   TODO: this probably needs to be extracted from the Python module
-declare -a ContainersArray=("advantixrawdata" "advantixprocessed" "tinytagrawdata" "tinytagprocessed")
+declare -a ContainersArray=("advantixrawdata" "tinytagrawdata") # "advantixprocessed" "tinytagprocessed"
 
 ###################################################################################
 # THE CODE BELOW SHOULD NOT BE MODIFIED
@@ -47,6 +47,11 @@ if [ $available = "True" ]; then
 
     echo CROPINFO: Storage account $AZURE_STORAGE_ACCOUNT has been created.
 fi
+
+# Getting the first storage account key
+ACCESS_KEY=$(az storage account keys list --account-name $AZURE_STORAGE_ACCOUNT --resource-group $AZURE_RG_NAME --output tsv |head -1 | awk '{print $3}')
+# Creating a connection string
+CONNECTION_STRING="DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=${AZURE_STORAGE_ACCOUNT};AccountKey=${ACCESS_KEY}"
 
 ###################################################################################
 # Creates BLOB CONTAINERS
@@ -130,9 +135,25 @@ az functionapp create \
     --runtime python \
     --runtime-version 3.7
 
+az functionapp config appsettings set \
+    --name croptriggers \
+    --resource-group $AZURE_RG_NAME \
+    --subscription $ARM_SUBSCRIPTION_ID \
+    --settings "AZURE_SQL_SERVER=$AZURE_SQL_SERVER" "AZURE_SQL_DBNAME=$AZURE_SQL_DBNAME" \
+        "AZURE_SQL_USER=$AZURE_SQL_USER" "AZURE_SQL_PASS=$AZURE_SQL_PASS" "AZURE_SQL_PORT=$AZURE_SQL_PORT"
+    
 echo CROPINFO: Function APP $function created.
+
+# creating the utils/croptrigger/local.settings.json file
+python ../create_azure_infrastructure/create_json.py $CONNECTION_STRING local.settings.json
 
 func azure functionapp publish $function --build-native-deps --build remote
 cd $cwd
 
+echo CROPINFO: Function APP $function uploaded.
+
 echo CROPINFO: Finished.
+
+
+
+
