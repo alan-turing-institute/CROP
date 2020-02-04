@@ -50,6 +50,14 @@ def advantix_df_checks(advantix_raw_df):
     Return
     """
 
+    # Checks if df exists
+    if not isinstance(advantix_raw_df, pd.DataFrame):
+        return False, "Not a pandas dataframe", None
+    
+    # Checks if df is empty
+    if advantix_raw_df.empty:
+        return False, "Dataframe empty", None
+
     # Checks structure
     success, log = advantix_check_structure(advantix_raw_df)
     if not success: return success, log, None

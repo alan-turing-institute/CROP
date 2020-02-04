@@ -4,10 +4,19 @@ Python module to perform data ingress operations
 """
 
 import pandas as pd
+from sqlalchemy import create_engine
 from crop.ingress import advantix_df_checks
 from crop.create_db import create_database
+from crop.constants import (
+    CWD,
+    SQL_DBNAME,
+    SQL_CONNECTION_STRING,
+    CONST_ADVANTIX_TEST_1
+)
 
-def advantix_SQL_insert(pd_df_raw, server, db, user, password, port):
+
+
+def advantix_SQL_insert(server, user, password, host, port, db_name, pd_df_raw):
     """
     Function description
 
@@ -24,30 +33,28 @@ def advantix_SQL_insert(pd_df_raw, server, db, user, password, port):
         log - error message
     """
 
-    status = True
-    error = ""
+    error = False
+    log = ""
 
 
-    # Checks if db exists, if not tries to create it. 
-    status, error= create_database(db_name)
-    return status, error
-
-    # Try to establish connection to the db
-    status, error= connect_to_database(db), "cannot connect to database"
-    return status, error
-
-
-
-    if not isinstance(pd_df_raw, pd.DataFrame):
-        return False, "Not a pandas dataframe"
+    # Checks if db exists, if not creates it with tables. 
+    error, log = create_database(SQL_CONNECTION_STRING, db_name)
+    if error: return error, log
     
-    if pd_df_raw.empty:
-        return False, "Dataframe empty"
+    # Creates an engine
+    try: 
+        engine = create_engine(SQL_CONNECTION_STRING + db_name)
+    except:
+        error = True
+        log = "Error connecting to the database"
+        return error, log
 
     # Checks structure
+    #TODO
+
+    # Checks advantix ingress
     success, log, pd_df = advantix_df_checks(pd_df_raw)
-    if not success: 
-        return success, log
+    if not success: return success, log
 
     
  
