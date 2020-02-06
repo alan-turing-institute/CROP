@@ -19,11 +19,11 @@ def Load_Data (csvpath):
 
   
 
-'''this function reads csv using numpy without pandas (not used in this instance)'''
-def Load_Data_np (filename):
-    print ("starting")
-    data= np.genfromtxt(file_name, delimiter=',', skipskip_header=1, conconverters= {0: lambda s: str(s)})
-    return data
+#'''this function reads csv using numpy without pandas (not used in this instance)'''
+#def Load_Data_np (filename):
+#    print ("starting")
+#    data= np.genfromtxt(file_name, delimiter=',', skipskip_header=1, conconverters= {0: lambda s: str(s)})
+#    return data
 
 
 
