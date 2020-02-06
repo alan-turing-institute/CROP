@@ -37,6 +37,11 @@ def test_db_connection ():
         log = "Error connecting to the database"
         return error, log
 
+def test_sensor_exists():
+
+
+    sensor_type = "Advantix"
+    sensor_id = 333
 
 
     

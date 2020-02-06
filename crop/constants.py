@@ -4,19 +4,25 @@ A module for constants
 import os
 import pandas as pd
 
-CWD = os.getcwd()
+
 
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
 CONST_TEST_FOLDER = "tests"
 CONST_ADVANTIX_FOLDER = "Advantix"
+CONST_CORE_DATA_FOLDER = "data_core"
+
+CONST_COREDATA_DIR= os.path.abspath(os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    "..",
+    CONST_CORE_DATA_FOLDER))
 
 CONST_TEST_DIR = os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "..",
     CONST_TEST_FOLDER))
-
 CONST_TEST_DIR_DATA = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER)
+
 
 # ADVANTIX IMPORT
 CONST_ADVANTIX_COL_TIMESTAMP = "Timestamp"
@@ -43,6 +49,12 @@ CONST_ADVANTIX_HUMIDITY_MAX = 100
 CONST_ADVANTIX_CO2LEVEL_MIN = 0
 CONST_ADVANTIX_CO2LEVEL_MAX = 1000
 
+# Core data
+SENSOR_CSV = "Sensors.csv" # List of sensors
+SENSOR_TYPE_CSV = "Sensortypes.csv" # list of all available sensor types
+LOCATION_CSV = "locations.csv"  # List of locations in the farm 
+
+
 # Advantix test data
 CONST_ADVANTIX_TEST_1 = "data-20190821-test1.csv" # Healthy data file
 CONST_ADVANTIX_TEST_2 = "data-20190821-test2.csv" # Few rows, one column is misspelled
@@ -61,11 +73,10 @@ ERR_IMPORT_ERROR_3 = "Data contains empty entries"
 ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
-
 # Create connection string
+SQL_DBNAME = "crop_3" # os.environ['AZURE_SQL_DBNAME']
 SQL_ENGINE = "postgresql"
 SQL_DEFAULT_DBNAME = 'postgres'
-SQL_DBNAME = "crop_db_test5" # os.environ['AZURE_SQL_DBNAME']
 SQL_USER = os.environ['AZURE_SQL_USER']
 SQL_PASSWORD = os.environ['AZURE_SQL_PASS']
 SQL_HOST = os.environ['AZURE_SQL_SERVER']

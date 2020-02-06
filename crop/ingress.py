@@ -218,12 +218,15 @@ def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
 
     return success, log
 
+
+#dont rename create a new one. 
 def advantix_df_rename_headers (advantix_df):
 
     success = True
     log = ""
 
-    advantix_df.rename(columns = {CONST_ADVANTIX_COL_MODBUSID:'Modbusid',
+    advantix_df_copy= advantix_df.copy()
+    advantix_df_copy.rename(columns = {CONST_ADVANTIX_COL_MODBUSID:'Modbusid',
                                   CONST_ADVANTIX_COL_CO2LEVEL: 'Co2'}, inplace=True)
 
-    return success, log, advantix_df
+    return success, log, advantix_df_copy
