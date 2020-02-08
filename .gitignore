@@ -17,6 +17,9 @@ terraform.tfstate
 # PyTest
 __pycache__
 
+#Other files
+oldscripts/
+
 # VSCODE
 .vscode/
 .vs

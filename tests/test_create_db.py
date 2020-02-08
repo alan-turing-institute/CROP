@@ -8,9 +8,6 @@ file = Path(__file__).resolve()
 parent, root = file.parent, file.parents[1]
 sys.path.append(str(root))
 
-from crop.sql import (
-    advantix_SQL_insert
-)
 
 from crop.constants import (
     SQL_DBNAME,
@@ -22,35 +19,33 @@ from crop.constants import (
 
 from crop.create_db import (
     create_database,
-    check_table_exists
+    check_table_exists,
+    check_database_structure
 )
 
-
 def test_db_creation ():
-    error, log = create_database(SQL_CONNECTION_STRING, SQL_DBNAME)
-    print(log)
-    assert error == False, log
+    created, log = create_database(SQL_CONNECTION_STRING, SQL_DBNAME)
+    assert created, log
 
-def test_check_table_exists():
+#def test_check_table_exists():
+
+#    conn_string = "{}{}".format(SQL_CONNECTION_STRING, SQL_DBNAME)
+
+#    table_name_list = [ADVANTIX_READINGS_TABLE_NAME] #reads the advantix tablename from constants
+#    for table_name in table_name_list:
+#        exists, log = check_table_exists(conn_string, table_name)
+#        assert exists, log
+    
+#    exists, log = check_table_exists(conn_string, "_")
+#    assert exists, log
+
+#    exists, error = check_table_exists("REG SERVER", "_")
+#    assert exists == False
+
+
+def test_check_database_structure():
 
     conn_string = "{}{}".format(SQL_CONNECTION_STRING, SQL_DBNAME)
-
-    table_name_list = [ADVANTIX_READINGS_TABLE_NAME] #reads the advantix tablename from constants
-    for table_name in table_name_list:
-        exists, _ = check_table_exists(conn_string, table_name)
-        assert exists == True
     
-    exists, error = check_table_exists(conn_string, "_")
-    assert exists == False
-    assert (len(error) > 0) == True
-
-    exists, error = check_table_exists("REG SERVER", "_")
-    assert exists == False
-    assert (len(error) > 0) == True
-
-
-
-#def test_check_database_structure ():
-#    error, log = check_database_structure (SQL_CONNECTION_STRING, SQL_DBNAME)
-#    assert error == False, log
-    
+    exists, log = check_database_structure (conn_string)
+    assert exists, log
