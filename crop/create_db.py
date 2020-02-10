@@ -22,18 +22,20 @@ def create_database(sql_connection_string, db_name):
     Function to create a new database
         dbname:pip
     """
-   
+    #Create connection string
+    conn_string = "{}{}".format(sql_connection_string, db_name)
+
     # Check if database exists
-    if not database_exists(sql_connection_string + db_name):
+    if not database_exists(conn_string):
         try: 
             #On postgres, the postgres database is normally present by default. 
             #Connecting as a superuser (eg, postgres), allows to connect and create a new db.
-            engine = create_engine(sql_connection_string + SQL_DEFAULT_DBNAME)
+            def_engine = create_engine(sql_connection_string + SQL_DEFAULT_DBNAME)
 
             #You cannot use engine.execute() directly, because postgres does not allow to create
             # databases inside transactions, inside which sqlalchemy always tries to run queries.
             # To get around this, get the underlying connection from the engine:
-            conn = engine.connect()
+            conn = def_engine.connect()
 
             #But the connection will still be inside a transaction, so you have to end the open
             # transaction with a commit:
@@ -44,43 +46,38 @@ def create_database(sql_connection_string, db_name):
             print ("created db " + db_name)
 
             #creates a new engine using the new database url and adds the defined tables and columns
-            newengine = create_engine(sql_connection_string + db_name)
-            BASE.metadata.create_all(newengine)
             
+            engine = create_engine(conn_string)
+            BASE.metadata.create_all(engine)
+
             conn.close()
         except: 
             return False, "Error creating a new database"
+        
     return True, None
 
-
-#create_database(SQL_CONNECTION_STRING, SQL_DBNAME)
-
-def check_table_exists(sql_connection_string, table_name):
+def connect_db(sql_connection_string, db_name):
     """
-    Checks if table exists..
-    args:
-    returns:
+    Function to connect to a database
+        dbname: name of database
     """
-
-    # Creates a connection to the db with name db_name
-    try: 
-        engine = create_engine(sql_connection_string)
-    except: 
-        return False, "Cannot find db"
-
-    # Accesses databases
-    iengine = inspect(engine)
-
-    # Accesses tables
-    tables = iengine.get_table_names()
-
-    if table_name in tables:
-        return True, None
-    else: 
-        return False, "Table <{}> not found".format(table_name)
+    # Create connection string
+    conn_string = "{}{}".format(sql_connection_string, db_name)
+    
+    # Connect to an engine
+    try:
+       engine = create_engine(conn_string)
+    except:
+        return False, "Cannot connect to db: %s" % db_name, None
+    
+    # Check if database has the expected tables and columns
+    success, log = check_database_structure (sql_connection_string, engine)
+    if not success: return False, log, None
+    
+    return True, None, engine
 
 
-def check_database_structure (sql_connection_string):
+def check_database_structure (conn_string, engine):
 
     """Check whether the current database matches the models declared in model base.
 
@@ -96,13 +93,6 @@ def check_database_structure (sql_connection_string):
 
     :return: True if all declared models have corresponding tables and columns.
     """
-
-
-    #Creates a connection to the db with name db_name
-    try: 
-        engine = create_engine(sql_connection_string)
-    except: 
-        return False, "Cannot find db with connection: %s" % sql_connection_string
 
     # Accesses sql db
     iengine = inspect(engine)
@@ -151,3 +141,27 @@ def check_database_structure (sql_connection_string):
 
 #conn_string = "{}{}".format(SQL_CONNECTION_STRING, SQL_DBNAME)
 #check_database_structure(conn_string)
+
+#def check_table_exists(sql_connection_string, table_name):
+#    """
+#    Checks if table exists..
+#    args:
+#    returns:
+#    """
+
+#    # Creates a connection to the db with name db_name
+#    try:
+#        engine = create_engine(sql_connection_string)
+#    except:
+#        return False, "Cannot find db"
+
+#    # Accesses databases
+#    iengine = inspect(engine)
+
+#    # Accesses tables
+#    tables = iengine.get_table_names()
+
+#    if table_name in tables:
+#        return True, None
+#    else: 
+#        return False, "Table <{}> not found".format(table_name)

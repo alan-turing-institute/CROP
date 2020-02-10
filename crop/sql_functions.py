@@ -2,6 +2,7 @@
 #import psycopg2
 #import sqlalchemy as sqla
 import pandas as pd
+from crop.structure import Sensor
 from sqlalchemy.orm import sessionmaker, relationship
 
 # NOTE: switch to sqlite for convinience. 
@@ -16,10 +17,10 @@ def read_core_csv(csv_path):
     try:
         df= pd.read_csv(csv_path)
         print (df.head(n=2))
-        return True, "", df
     except:
         return False, "Error reading csv with path: %s" % csv_path, None
-
+    
+    return True, "", df
 
 def bulk_insert_df (engine, Data, Class):
     """
@@ -86,7 +87,7 @@ def merge_df (engine, Data, Class):
     s = session()
     
     #TODO: TRY TO FIND A SOLUTION FOR UPDATING DATA
-    for row in Data: 
+    for row in Data:
         s.add(Class, row)
     
     s.bulk_update_mappings(Class, Data.to_dict(orient="records"))
@@ -96,7 +97,7 @@ def merge_df (engine, Data, Class):
     return (Data)
 
 
-def check_sensor_exists (device_id, type_id, df_type, df_device_id):
+def check_sensor_exists (type, advantix_df, device_id, type_class, engine):
     """
     Checks if a sensor exists in the db. 
     """
@@ -106,14 +107,29 @@ def check_sensor_exists (device_id, type_id, df_type, df_device_id):
     
     # Binds the engine to this session
     session.configure(bind=engine)
-    s = session()
+    session = Session()
 
-    # Accesses databases
-    iengine = inspect(engine)
+    ## Accesses databases
+    # iengine = inspect(engine)
 
-    #print (tables)
-    sensors_list = session.query(type_id).filter_by(name=str(df_type)).scalar() is not None
-    print (sensors_list)
+    # print (tables)
+    #sensors_list = session.query(type_id).filter_by(name=str(df_type)).scalar() is not None
+    #print (sensors_list)
+
+    # query session
+    # print (session.query(Sensor).filter(Sensor.device_id==4))
+
+    for modbusid in advantix_df['Modbus ID']:
+        for value in session.query(Sensor).filter(Sensor.device_id==4):
+            if modbusid == value:
+                print (modebusid)
+            else: 
+                print ("sensor cannot be found")
+
+    #print (columnData)
+    #print('Colunm Name : ', columnName)
+    #print('Column Contents : ', columnData.values)
+    return success, log
 
 #def Populatedb():
 #    try: 
