@@ -4,6 +4,8 @@ Python module to perform data ingress operations
 """
 
 import pandas as pd
+import os
+from crop.create_db import create_database
 from crop.constants import (
     CONST_ADVANTIX_COL_LIST,
     CONST_ADVANTIX_COL_TIMESTAMP,
@@ -25,8 +27,15 @@ from crop.constants import (
     CONST_ADVANTIX_HUMIDITY_MIN,
     CONST_ADVANTIX_HUMIDITY_MAX,
     CONST_ADVANTIX_CO2LEVEL_MIN,
-    CONST_ADVANTIX_CO2LEVEL_MAX
+    CONST_ADVANTIX_CO2LEVEL_MAX,
+    CONST_TEST_DIR_DATA,
+    CONST_ADVANTIX_FOLDER,
+    CONST_ADVANTIX_TEST_1,
+    SQL_CONNECTION_STRING, 
+    SQL_DBNAME
 )
+
+file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
 
 def advantix_import(file_path):
     """
@@ -49,7 +58,6 @@ def advantix_df_checks(advantix_raw_df):
     Args
     Return
     """
-
     # Checks if df exists
     if not isinstance(advantix_raw_df, pd.DataFrame):
         return False, "Not a pandas dataframe", None
@@ -69,7 +77,7 @@ def advantix_df_checks(advantix_raw_df):
     # Checks for validity
     success, log = advantix_df_validity(advantix_df)
     if not success: return success, log, None
-    
+
     #converts column names
     success, log, advantix_df = advantix_df_rename_headers(advantix_df)
     if not success: return success, log, None
@@ -230,3 +238,5 @@ def advantix_df_rename_headers (advantix_df):
                                   CONST_ADVANTIX_COL_CO2LEVEL: 'Co2'}, inplace=True)
 
     return success, log, advantix_df_copy
+
+advantix_import(file_path)

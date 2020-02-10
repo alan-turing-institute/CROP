@@ -34,3 +34,6 @@ def test_bulk_insert_df ():
     for table_name in table_name_list:
         exists, _ = check_table_exists(conn_string, table_name)
         assert exists == True
+
+def test_merge_df ():
+    Data= merge_df (engine, Data, Class)

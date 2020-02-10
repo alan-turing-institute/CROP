@@ -3,7 +3,13 @@ Test ingress.py module
 """
 
 import os
+import sys
 import pytest
+from pathlib import Path
+
+file = Path(__file__).resolve()
+parent, root = file.parent, file.parents[1]
+sys.path.append(str(root))
 
 from ..crop.constants import (
     CONST_TEST_DIR_DATA,
@@ -127,3 +133,7 @@ def test_advantix_df_validity():
 
     success, log = advantix_df_validity(data_df)
     assert(True == success)
+
+def test_check_sensor_exists():
+    success, log = check_sensor_exists ()
+    assert success, log

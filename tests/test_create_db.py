@@ -23,8 +23,8 @@ from crop.create_db import (
     check_database_structure
 )
 
-def test_db_creation ():
-    created, log = create_database(SQL_CONNECTION_STRING, SQL_DBNAME)
+def test_db_connection ():
+    created, log, engine = connect_database(SQL_CONNECTION_STRING, SQL_DBNAME)
     assert created, log
 
 #def test_check_table_exists():
