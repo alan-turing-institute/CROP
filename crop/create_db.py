@@ -1,8 +1,7 @@
 '''
-Module doc string
+Module 
 '''
 
-#import psycopg2
 from sqlalchemy import create_engine, inspect
 from sqlalchemy_utils import database_exists
 from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
@@ -20,7 +19,10 @@ from crop.structure import BASE
 def create_database(sql_connection_string, db_name):
     """
     Function to create a new database
-        dbname:pip
+        sql_connection_string: a string that holds an address to the db
+        dbname: name of the db (string)
+
+
     """
     #Create connection string
     conn_string = "{}{}".format(sql_connection_string, db_name)
@@ -46,7 +48,6 @@ def create_database(sql_connection_string, db_name):
             print ("created db " + db_name)
 
             #creates a new engine using the new database url and adds the defined tables and columns
-            
             engine = create_engine(conn_string)
             BASE.metadata.create_all(engine)
 
