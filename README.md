@@ -5,6 +5,8 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3662779.svg)](https://doi.org/10.5281/zenodo.3662779)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.org/alan-turing-institute/CROP.svg?branch=master)](https://travis-ci.org/alan-turing-institute/CROP)
+[![Build Status](https://travis-ci.org/alan-turing-institute/CROP.svg?branch=develop)](https://travis-ci.org/alan-turing-institute/CROP)
 
 
 TBC
