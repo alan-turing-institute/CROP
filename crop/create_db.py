@@ -15,8 +15,7 @@ from crop.constants import (
 
 from crop.structure import BASE
 
-
-def create_database(sql_connection_string, db_name):
+def create_database(conn_string, db_name_str):
     """
     Function to create a new database
         sql_connection_string: a string that holds an address to the db
@@ -24,15 +23,18 @@ def create_database(sql_connection_string, db_name):
 
 
     """
+
+    db_name = db_name_str.lower()
+
     #Create connection string
-    conn_string = "{}{}".format(sql_connection_string, db_name)
+    db_conn_string = "{}{}".format(conn_string, db_name)
 
     # Check if database exists
-    if not database_exists(conn_string):
+    if not database_exists(db_conn_string):
         try: 
             #On postgres, the postgres database is normally present by default. 
             #Connecting as a superuser (eg, postgres), allows to connect and create a new db.
-            def_engine = create_engine(sql_connection_string + SQL_DEFAULT_DBNAME)
+            def_engine = create_engine(conn_string + SQL_DEFAULT_DBNAME)
 
             #You cannot use engine.execute() directly, because postgres does not allow to create
             # databases inside transactions, inside which sqlalchemy always tries to run queries.
@@ -45,10 +47,9 @@ def create_database(sql_connection_string, db_name):
 
             #And you can then proceed to create the database using the proper PostgreSQL command for it.
             conn.execute("create database " + db_name)
-            print ("created db " + db_name)
 
             #creates a new engine using the new database url and adds the defined tables and columns
-            engine = create_engine(conn_string)
+            engine = create_engine(db_conn_string)
             BASE.metadata.create_all(engine)
 
             conn.close()
@@ -57,28 +58,24 @@ def create_database(sql_connection_string, db_name):
         
     return True, None
 
-def connect_db(sql_connection_string, db_name):
+def connect_db(conn_string, db_name):
     """
     Function to connect to a database
         dbname: name of database
     """
     # Create connection string
-    conn_string = "{}{}".format(sql_connection_string, db_name)
+    db_conn_string = "{}{}".format(conn_string, db_name)
     
     # Connect to an engine
     try:
-       engine = create_engine(conn_string)
+        engine = create_engine(db_conn_string)
     except:
         return False, "Cannot connect to db: %s" % db_name, None
-    
-    # Check if database has the expected tables and columns
-    success, log = check_database_structure (sql_connection_string, engine)
-    if not success: return False, log, None
-    
+
     return True, None, engine
 
 
-def check_database_structure (conn_string, engine):
+def check_database_structure(engine):
 
     """Check whether the current database matches the models declared in model base.
 
@@ -100,7 +97,6 @@ def check_database_structure (conn_string, engine):
 
     # gets table names from sql server in python list
     sql_tables = iengine.get_table_names()
-    #print (sql_tables)
 
     if (len(sql_tables))>0:
         #goes through the sqlalchemy classes
@@ -117,17 +113,14 @@ def check_database_structure (conn_string, engine):
                 #gets the column names of each table in sql 
                 columns = [c["name"] for c in iengine.get_columns(tablename)]
 
-                #print ("columns: ", columns)
                 #gets all objects in each class in the form of: Readings_Advantix.sensor_relationship
                 mapper = inspect(sql_class)
                 for object in mapper.attrs:
-                    print (object)
                     #checks if the object is a relationship
                     if isinstance(object, RelationshipProperty):
                         #To do add checks for relations
                         pass
                     else: 
-                        print (object.key)
                         #assume normal flat column
                         if not object.key in columns:
                             return False, "Model %s declares column %s which does not exist in db" % (sql_class_class, columns.key)
@@ -136,7 +129,6 @@ def check_database_structure (conn_string, engine):
                 return False, "Model %s declares table %s which does not exist in db", sql_class, tablename
         
     else: return False, "No tables found in the db"
-    #print ("it worked")
 
     return True, None
 

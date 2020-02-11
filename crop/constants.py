@@ -74,7 +74,7 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
-SQL_DBNAME = "crop_3" # os.environ['AZURE_SQL_DBNAME']
+SQL_DBNAME = (os.environ['AZURE_SQL_DBNAME']).lower()
 SQL_ENGINE = "postgresql"
 SQL_DEFAULT_DBNAME = 'postgres'
 SQL_USER = os.environ['AZURE_SQL_USER']

@@ -27,6 +27,18 @@ from crop.structure import (
     Readings_Advantix
     )
 
+from crop.create_db import (
+    connect_db
+)
+
+
+def import_test_data(conn_string, db_name):
+    """
+    Imports test data to the database
+    """
+
+     = connect_db(conn_string, db_name)
+
 
 
 def SQL_insert_data(db_name, csv_path):
@@ -62,9 +74,9 @@ def SQL_insert_data(db_name, csv_path):
     if not success: print (log)
 
     if df.empty != True:
-        update_df (engine, df, Type)
+        #update_df (engine, df, Type)
         print (df)
-        #bulk_insert_df(engine, df, Type)
+        bulk_insert_df(engine, df, Type)
     else: 
         error = True
         log = "dataframe empty"

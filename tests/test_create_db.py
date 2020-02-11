@@ -1,13 +1,9 @@
 import pytest
 import os
 import sys
-from pathlib import Path
 import pandas as pd
 
-file = Path(__file__).resolve()
-parent, root = file.parent, file.parents[1]
-sys.path.append(str(root))
-
+from sqlalchemy import create_engine
 
 from crop.constants import (
     SQL_DBNAME,
@@ -19,33 +15,32 @@ from crop.constants import (
 
 from crop.create_db import (
     create_database,
-    check_table_exists,
     check_database_structure
 )
 
-def test_db_connection ():
-    created, log, engine = connect_database(SQL_CONNECTION_STRING, SQL_DBNAME)
+def test_create_database():
+
+    test_db_name = "test_db_2"
+    test_db_name_bad = "test_db_bad"
+    created, log = create_database(SQL_CONNECTION_STRING, test_db_name)
     assert created, log
 
-#def test_check_table_exists():
+    # TODO: check if the structure is correct
+    db_conn_string = "{}{}".format(SQL_CONNECTION_STRING, test_db_name)
+    engine = create_engine(db_conn_string)
 
-#    conn_string = "{}{}".format(SQL_CONNECTION_STRING, SQL_DBNAME)
+    good, log = check_database_structure(engine)
+    assert good, log
 
-#    table_name_list = [ADVANTIX_READINGS_TABLE_NAME] #reads the advantix tablename from constants
-#    for table_name in table_name_list:
-#        exists, log = check_table_exists(conn_string, table_name)
-#        assert exists, log
-    
-#    exists, log = check_table_exists(conn_string, "_")
-#    assert exists, log
+     # TODO: check if the structure is correct
+    db_conn_string = "{}{}".format(SQL_CONNECTION_STRING, test_db_name_bad)
+    engine = create_engine(db_conn_string)
 
-#    exists, error = check_table_exists("REG SERVER", "_")
-#    assert exists == False
+    # FIXME: should be none
+    assert(engine == None)
+
+    # TODO: needs a function to drop test database
 
 
-def test_check_database_structure():
-
-    conn_string = "{}{}".format(SQL_CONNECTION_STRING, SQL_DBNAME)
-    
-    exists, log = check_database_structure (conn_string)
-    assert exists, log
+# TODO: write a test for check_database_structure where structure is incorrect
+# TODO: write a test for connect_db

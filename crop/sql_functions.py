@@ -96,8 +96,7 @@ def merge_df (engine, Data, Class):
     s.close()
     return (Data)
 
-
-def check_sensor_exists (type, advantix_df, device_id, type_class, engine):
+def check_sensor_exists(type, advantix_df, device_id, type_class, engine):
     """
     Checks if a sensor exists in the db. 
     """
@@ -109,6 +108,8 @@ def check_sensor_exists (type, advantix_df, device_id, type_class, engine):
     session.configure(bind=engine)
     session = Session()
 
+    
+
     ## Accesses databases
     # iengine = inspect(engine)
 
@@ -118,17 +119,20 @@ def check_sensor_exists (type, advantix_df, device_id, type_class, engine):
 
     # query session
     # print (session.query(Sensor).filter(Sensor.device_id==4))
-
+    success =  False
+ 
     for modbusid in advantix_df['Modbus ID']:
         for value in session.query(Sensor).filter(Sensor.device_id==4):
             if modbusid == value:
-                print (modebusid)
-            else: 
-                print ("sensor cannot be found")
 
-    #print (columnData)
-    #print('Colunm Name : ', columnName)
-    #print('Column Contents : ', columnData.values)
+                success = True
+                break
+
+
+        if success == True:
+            break
+
+ 
     return success, log
 
 #def Populatedb():

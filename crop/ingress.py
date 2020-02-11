@@ -78,10 +78,6 @@ def advantix_df_checks(advantix_raw_df):
     success, log = advantix_df_validity(advantix_df)
     if not success: return success, log, None
 
-    #converts column names
-    success, log, advantix_df = advantix_df_rename_headers(advantix_df)
-    if not success: return success, log, None
-
     return success, log, advantix_df
 
 def advantix_read_csv(file_path):
@@ -228,15 +224,32 @@ def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
 
 
 #dont rename create a new one. 
-def advantix_df_rename_headers (advantix_df):
+# def advantix_df_rename_headers(advantix_df):
 
-    success = True
-    log = ""
+#     success = True
+#     log = ""
 
-    advantix_df_copy= advantix_df.copy()
-    advantix_df_copy.rename(columns = {CONST_ADVANTIX_COL_MODBUSID:'Modbusid',
-                                  CONST_ADVANTIX_COL_CO2LEVEL: 'Co2'}, inplace=True)
+#     advantix_df_copy= advantix_df.copy()
+#     advantix_df_copy.rename(columns = {CONST_ADVANTIX_COL_MODBUSID:'Modbusid',
+#                                   CONST_ADVANTIX_COL_CO2LEVEL: 'Co2'}, inplace=True)
 
-    return success, log, advantix_df_copy
+#     return success, log, advantix_df_copy
 
-advantix_import(file_path)
+def advantix_prep_for_import(advantix_df):
+    """
+    The function will take the raw advantix data frame and find sensor id with respect 
+    to modbusid and sensor type and 
+
+    """
+
+    result = None
+
+    # find unique modbus ids
+
+    unq_modbus_ids = advantix_df[CONST_ADVANTIX_COL_MODBUSID].unique()
+
+
+    # match modbus ids and sernsor type with sensor ids
+    # create new df
+
+    return result
