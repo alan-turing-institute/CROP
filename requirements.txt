@@ -1,3 +1,6 @@
+pip
+pytest
+
 psycopg2>=2.8.4
 SQLAlchemy-Utils>=0.36.1
 
@@ -19,3 +22,4 @@ SQLAlchemy-Utils>=0.36.1
 # wheel==0.31.1
 # wincertstore==0.2
 # zope.interface==4.7.1
+
