@@ -1,26 +1,30 @@
-# CROP
-CROP - Crop Research Observation Platform
+# CROP <img src="https://pngimage.net/wp-content/uploads/2018/06/logo-placeholder-png.png" width="200" align="right">
 
-Controlled Enviroment Argicuture 
+## Summary
+**Crop** is a Research Observations Platform designed and created by [Tomas Lazauskas](https://github.com/tomaslaz) and [Flora Roumpani](https://github.com/misspawty).
 
-Urban Building Integrated 
-
-U-crop
-Web Analytics for Smart Agriculture Building Information
-
-Original code for Energy model: 
-https://github.com/alsgregory/Inversion
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3662779.svg)](https://doi.org/10.5281/zenodo.3662779)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
-Shared point for data
+TBC
 
+## Disclaimer
 
-Briefs: 
+CROP is a **development** code and we recommend that you do not deploy this **prototype** application in a production setting. The implementation is only for demonstration purposes only and make no warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the web app, backend infrastructure or the information.
 
-https://github.com/alan-turing-institute/UrbanAgriculture/blob/master/data_summary/data_prep_process.md
-https://github.com/alan-turing-institute/UrbanAgriculture/blob/master/data_summary/dataprocess.pdf
-https://github.com/alan-turing-institute/UrbanAgriculture/tree/master/data_summary
+## Requirements
 
+TBC
 
-Met office weather API:
-https://www.metoffice.gov.uk/binaries/content/assets/metofficegovuk/pdf/data/datapoint_api_reference.pdf
+## Installation
+
+TBC
+
+## Getting help
+
+If you found a bug or need support, please submit an issue [here](https://github.com/alan-turing-institute/CROP/issues/new).
+
+## How to contribute
+
+We welcome contributions! If you are willing to propose new features or have bug fixes to contribute, please submit a pull request [here](https://github.com/alan-turing-institute/CROP/pulls).
