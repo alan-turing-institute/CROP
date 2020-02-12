@@ -3,9 +3,12 @@ Module
 '''
 
 from sqlalchemy import create_engine, inspect
-from sqlalchemy_utils import database_exists
+from sqlalchemy_utils import database_exists, drop_database
 from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
 from sqlalchemy.orm import RelationshipProperty, sessionmaker
+#from sqlalchemy.engine.url import make_url
+
+
 
 from crop.constants import (
     SQL_DEFAULT_DBNAME,
@@ -15,18 +18,15 @@ from crop.constants import (
 
 from crop.structure import BASE
 
-def create_database(conn_string, db_name_str):
+
+def create_database(conn_string, db_name):
     """
     Function to create a new database
         sql_connection_string: a string that holds an address to the db
         dbname: name of the db (string)
-
-
     """
 
-    db_name = db_name_str.lower()
-
-    #Create connection string
+    # Create connection string
     db_conn_string = "{}{}".format(conn_string, db_name)
 
     # Check if database exists
@@ -48,8 +48,9 @@ def create_database(conn_string, db_name_str):
             #And you can then proceed to create the database using the proper PostgreSQL command for it.
             conn.execute("create database " + db_name)
 
-            #creates a new engine using the new database url and adds the defined tables and columns
-            engine = create_engine(db_conn_string)
+            #Connects to the engine using the new database url
+            status, log, engine = connect_db(conn_string, db_name)
+            #Adds the tables and columns from the classes in module structure 
             BASE.metadata.create_all(engine)
 
             conn.close()
@@ -61,18 +62,43 @@ def create_database(conn_string, db_name_str):
 def connect_db(conn_string, db_name):
     """
     Function to connect to a database
-        dbname: name of database
+        conn_string: the string that holds the connection to postgres
+        dbname: name of the database
     """
     # Create connection string
     db_conn_string = "{}{}".format(conn_string, db_name)
     
+    # Check if db already exists:
+    if not database_exists(db_conn_string):
+        return False, "Cannot find db: %s" % db_name, None
     # Connect to an engine
-    try:
-        engine = create_engine(db_conn_string)
-    except:
-        return False, "Cannot connect to db: %s" % db_name, None
+    else:
+        try:
+            engine = create_engine(db_conn_string)
+        except:
+            return False, "Cannot connect to db: %s" % db_name, None
 
     return True, None, engine
+
+
+
+def drop_db (conn_string, db_name):
+    """
+    Function to drop db
+    engine: the db engine
+    """
+    db_conn_string = "{}{}".format(conn_string, db_name)
+    if not database_exists(db_conn_string):
+        return False, "Database: %s does not exists" % db_name
+    else: 
+        #connects to the db that needs to be droped
+        #status, log, engine = connect_db(conn_string, db_name)
+        ##drops db
+        drop_database(db_conn_string)
+        #drop_database(engine.url)
+        return True, "done"
+
+    #TODO: disconnect all users
 
 
 def check_database_structure(engine):
