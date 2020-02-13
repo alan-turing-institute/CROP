@@ -1,19 +1,18 @@
 import pytest
-import os
-import sys
 import pandas as pd
+from sqlalchemy.orm import sessionmaker, relationship
 
-#resolve paths
-from pathlib import Path
-file = Path(__file__).resolve()
-parent, root = file.parent, file.parents[1]
-sys.path.append(str(root))
-
-
-import crop.structure as structure
+from crop.structure import(
+    Type,
+    Location,
+    Sensor
+    )
 
 from crop.constants import (
+    SQL_DBNAME,
     CONST_COREDATA_DIR,
+    CONST_ADVANTIX_DIR,
+    CONST_ADVANTIX_TEST_1,
     SQL_CONNECTION_STRING
 )
 from crop.db import (
@@ -21,10 +20,14 @@ from crop.db import (
 )
 
 from crop.populate_db import (
-    merge_df,
+    session_open,
+    session_close,
+    insert_type_data,
+    insert_sensor_data,
+    insert_location_data,
+    insert_advantix_data
 )
 
-# TODO: upload test data to the database
 
 def read_core_csv(csv_path):
     """
@@ -41,25 +44,123 @@ def read_core_csv(csv_path):
     return True, "", df
 
 
-def test_load_type_data ():
+def test_insert_type_data():
     
-    sensortype_test_csv = "Sensortypes.csv"
+    test_csv = "Sensortypes.csv"
     
     #test reading type data
-    success, log, df = read_core_csv("%s\\%s" % (CONST_COREDATA_DIR, sensortype_test_csv))
+    success, log, type_df = read_core_csv("%s\\%s" % (CONST_COREDATA_DIR, test_csv))
+    assert success, log
+    assert type_df.empty == False
+
+    # Try to connect to an engine that exists
+    test_db_name = SQL_DBNAME
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+    assert status, log
+
+    #Creates/Opens a new connection to the db and binds the engine
+    session = session_open (engine)
+    insert_type_data (session, type_df)
+    session_close (session)
+
+def test_insert_sensor_data():
+    
+    test_csv = "Sensors.csv"
+    
+    #test reading type data
+    success, log, sensor_df = read_core_csv("%s\\%s" % (CONST_COREDATA_DIR, test_csv))
+    assert success, log
+    assert sensor_df.empty == False
+
+    # Try to connect to an engine that exists
+    test_db_name = SQL_DBNAME
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+    assert status, log
+
+     #Creates/Opens a new connection to the db and binds the engine
+    session = session_open (engine)
+    #test loading sensor data to db
+    insert_sensor_data (session, sensor_df)  
+    session_close (session)
+   
+def test_insert_location_data():
+    
+    test_csv = "Locations.csv"
+    
+    #test reading type data
+    success, log, df = read_core_csv("%s\\%s" % (CONST_COREDATA_DIR, test_csv))
     assert success, log
     assert df.empty == False
 
     # Try to connect to an engine that exists
-    test_db_name = "test_db_3"
+    test_db_name = SQL_DBNAME
     status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
     assert status, log
 
-    Class = structure.Type
-    #test loading type data to db
-    merge_df (engine, df, Class)
+    #Creates/Opens a new connection to the db and binds the engine
+    session = session_open (engine)
+    #test loading sensor data to db
+    insert_location_data (session, df)  
+    session_close (session)
+   
+def test_insert_advantix_data():
+    #TODO: PUT THE ADVANTIX INGRESS DATA
+    test_csv = CONST_ADVANTIX_TEST_1
+    
+    #test reading type data
+    success, log, df = read_core_csv("%s\\%s" % (CONST_ADVANTIX_DIR, test_csv))
+    assert success, log
+    assert df.empty == False
 
-test_load_type_data ()
+    # Try to connect to an engine that exists
+    test_db_name = SQL_DBNAME
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+    assert status, log
+
+    #Creates/Opens a new connection to the db and binds the engine
+    session = session_open (engine)
+    #test loading sensor data to db
+    insert_advantix_data (session, df)
+    session_close (session)
+
+test_insert_advantix_data()
+#test_insert_type_data()
+#test_insert_sensor_data()
+#test_insert_location_data()
+
+#def test_load_location_data ():
+    
+#    locations_test_csv = "locations.csv"
+    
+#    #test reading type data
+#    success, log, type_df = read_core_csv("%s\\%s" % (CONST_COREDATA_DIR, locations_test_csv))
+#    assert success, log
+#    assert type_df.empty == False
+
+#    # Try to connect to an engine that exists
+#    test_db_name = "test_db_3"
+#    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+#    assert status, log
+
+#    #test loading type data to db
+#    bulk_update_df (engine, type_df, Location)
+
+#def test_load_sensor_data ():
+    
+#    sensors_test_csv = "Sensors.csv"
+    
+#    #test reading type data
+#    success, log, type_df = read_core_csv("%s\\%s" % (CONST_COREDATA_DIR, sensors_test_csv))
+#    assert success, log
+#    assert type_df.empty == False
+
+#    # Try to connect to an engine that exists
+#    test_db_name = "test_db_3"
+#    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+#    assert status, log
+
+#    #test loading type data to db
+#    bulk_update_df (engine, type_df, Sensor)
 
 #def test_check_sensor_exists():
     

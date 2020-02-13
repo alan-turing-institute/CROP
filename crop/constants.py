@@ -12,17 +12,15 @@ CONST_TEST_FOLDER = "tests"
 CONST_ADVANTIX_FOLDER = "Advantix"
 CONST_CORE_DATA_FOLDER = "Import"
 
-CONST_COREDATA_DIR= os.path.abspath(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "..",CONST_TEST_FOLDER,CONST_DATA_FOLDER,
-    CONST_CORE_DATA_FOLDER))
-
 CONST_TEST_DIR = os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "..",
     CONST_TEST_FOLDER))
 CONST_TEST_DIR_DATA = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER)
-
+CONST_COREDATA_DIR = os.path.join(CONST_TEST_DIR, 
+    CONST_DATA_FOLDER,CONST_CORE_DATA_FOLDER)
+CONST_ADVANTIX_DIR = os.path.join(CONST_TEST_DIR, 
+    CONST_DATA_FOLDER, CONST_ADVANTIX_FOLDER)
 
 # ADVANTIX IMPORT
 CONST_ADVANTIX_COL_TIMESTAMP = "Timestamp"
@@ -74,7 +72,7 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
-SQL_DBNAME = "".join((os.environ['AZURE_SQL_DBNAME']).split()).lower()
+SQL_DBNAME = "test1"#"".join((os.environ['AZURE_SQL_DBNAME']).split()).lower()
 SQL_ENGINE = "postgresql"
 SQL_DEFAULT_DBNAME = 'postgres'
 SQL_USER = os.environ['AZURE_SQL_USER']
