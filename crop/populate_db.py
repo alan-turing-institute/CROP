@@ -4,6 +4,7 @@ Python module to perform data ingress operations
 """
 
 import pandas as pd
+import datetime as dt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -19,55 +20,94 @@ from crop.db import (
     connect_db
 )
 
-
-def update_df (engine, Data, Class):
-    """
-    Bulk update data into the database. 
-    Can update values based on id but cant insert new.
-    """
-    #Creates/Opens a new session (connection to the db)
-    session = sessionmaker()
-    #binds the engine to this session
-    session.configure(bind=engine)
-    s = session()
-
-    #listentries
-    #dict = Data.to_dict(orient="records")
-
-        #entry = Class(type_id=5, sensor_type="hola", description = "sldkjfsldkj")
-    #s.add(Class(type_id=5, sensor_type="hola", description = "sldkjfsldkj"))
-    #s.add_all(Class(Data.to_dict(orient="records")))
-    #s.bulk_update_mappings(Class, Data.to_dict(orient="records"))
-
-    s.commit()
-    s.close()
-    return (Data)
- 
-def merge_df (engine, df, Class):
-    """
-    Bulk update data into the database. 
-    Can update values based on id but cant insert new.
-    """
+def session_open (engine):
     
-    #Creates/Opens a new session (connection to the db)
+    #Creates/Opens a new connection to the db and binds the engine
     Session = sessionmaker()
-    #binds the engine to this session
     Session.configure(bind=engine)
     session = Session()
-    
-    #TODO: TRY TO FIND A SOLUTION FOR UPDATING DATA
-    #first option: bulk insert
-    session.bulk_update_mappings(Type, df.to_dict(orient="records"))
-    #second option insert by row. 
-    #for i,row in df.iterrows():
-        #pass
-        #type = Type(type_id = row["type_id"], sensor_type = row["sensor_type"], description = row["description"])
-        #session.add(type)
-        
+    return session
 
+def session_close (session):
     session.commit()
     session.close()
-    return True, df
+
+def insert_advantix_data(session, df):
+    """
+    Insert data into the database. 
+    -engine: the db engine
+    -type_df: dataframe containing the type values
+    """
+
+    #Populates with type data
+    last_timestamp_entry = session.query(Readings_Advantix).first().Timestamp
+    for _,row in df.iterrows():
+        #queries db and returns false if doesnt exist
+        # get sensor id from type and modbusid.
+        #print (row['Timestamp'], " ", pd.to_datetime(row['Timestamp']))
+        if not last_timestamp_entry == pd.to_datetime(row['Timestamp']):
+            advantix_type_id = session.query(Type).filter(Type.sensor_type=='Advantix').first().type_id
+            #print (advantix_type_id)
+            device_id = row["Modbus ID"]
+            sensorx_id = session.query(Sensor).filter(Sensor.device_id == str(device_id)).first().sensor_id
+            data = Readings_Advantix(sensor_id = sensorx_id, Timestamp = row["Timestamp"], Temperature = row["Temperature"], Humidity = row["Humidity"], Co2 = row["CO2 Level"])
+            session.add(data)
+        else: pass
+    return True
+
+def insert_type_data(session, type_df):
+    """
+    Insert data into the database. 
+    -engine: the db engine
+    -type_df: dataframe containing the type values
+    """
+
+    #Populates with type data
+    for _,row in type_df.iterrows():
+        #queries db and returns false if doesnt exist
+        exists = session.query(Type).filter(Type.type_id==row['type_id']).scalar()
+        if not exists:
+            type = Type(type_id = row["type_id"], sensor_type = row["sensor_type"], description = row["description"])
+            session.add(type)
+        else: pass
+    return True
+
+def insert_sensor_data (session, sensor_df):
+    """
+    Insert data into the database. 
+    -engine: the db engine
+    -df: dataframe containing the sensor values
+    """
+   
+    #Populates with type data
+    for _,row in sensor_df.iterrows():
+        #queries db and returns false if doesnt exist
+        print (row)
+        exists = session.query(Sensor).filter(Sensor.sensor_id==row['sensor_id']).scalar()
+        if not exists:
+            sensor = Sensor(sensor_id = row["sensor_id"], type_id = row["type_id"], device_id = row["device_id"], installation_date = row ["installation_date"])
+            session.add(sensor)
+        else: pass
+    return True
+
+def insert_location_data (session, location_df):
+    """
+    Insert data into the database. 
+    -session: the db engine
+    -location_df: dataframe containing the sensor values
+    """
+   
+    #Populates with type data
+    for _,row in location_df.iterrows():
+        #queries db and returns false if doesnt exist
+        print (row)
+        exists = session.query(Location).filter(Location.sensor_id==row['sensor_id']).scalar()
+        if not exists:
+            locations = Location(sensor_id = row["sensor_id"], section = row["section"], column = row["column"], shelf = row ["shelf"])
+            session.add(locations)
+        else: pass
+    return True
+
 
 
 
