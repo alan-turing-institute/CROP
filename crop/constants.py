@@ -10,11 +10,11 @@ import pandas as pd
 CONST_DATA_FOLDER = "data"
 CONST_TEST_FOLDER = "tests"
 CONST_ADVANTIX_FOLDER = "Advantix"
-CONST_CORE_DATA_FOLDER = "data_core"
+CONST_CORE_DATA_FOLDER = "Import"
 
 CONST_COREDATA_DIR= os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
-    "..",
+    "..",CONST_TEST_FOLDER,CONST_DATA_FOLDER,
     CONST_CORE_DATA_FOLDER))
 
 CONST_TEST_DIR = os.path.abspath(os.path.join(
