@@ -8,19 +8,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 # NOTE: switch to sqlite for convinience. 
 
 
-def read_core_csv(csv_path):
-    """
-    Reads and loads csv data to a pandas df. 
-    Used to load the synthetic core data such as sensors or locations.  
-    """
-    print (csv_path)
-    try:
-        df= pd.read_csv(csv_path)
-        print (df.head(n=2))
-    except:
-        return False, "Error reading csv with path: %s" % csv_path, None
-    
-    return True, "", df
+
 
 def bulk_insert_df (engine, Data, Class):
     """
