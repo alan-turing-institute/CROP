@@ -33,9 +33,6 @@ def update_df (engine, Data, Class):
 
     #listentries
     #dict = Data.to_dict(orient="records")
-    #print (dict)
-    
-    
 
         #entry = Class(type_id=5, sensor_type="hola", description = "sldkjfsldkj")
     #s.add(Class(type_id=5, sensor_type="hola", description = "sldkjfsldkj"))
@@ -71,8 +68,6 @@ def merge_df (engine, df, Class):
     session.commit()
     session.close()
     return True, df
-
-
 
 
 
