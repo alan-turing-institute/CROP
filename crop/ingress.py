@@ -5,7 +5,7 @@ Python module to perform data ingress operations
 
 import pandas as pd
 import os
-from crop.create_db import create_database
+#from crop.db import create_database
 from crop.constants import (
     CONST_ADVANTIX_COL_LIST,
     CONST_ADVANTIX_COL_TIMESTAMP,
@@ -222,8 +222,7 @@ def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
 
     return success, log
 
-
-#dont rename create a new one. 
+# dont rename create a new one. 
 # def advantix_df_rename_headers(advantix_df):
 
 #     success = True
@@ -235,21 +234,21 @@ def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
 
 #     return success, log, advantix_df_copy
 
-def advantix_prep_for_import(advantix_df):
-    """
-    The function will take the raw advantix data frame and find sensor id with respect 
-    to modbusid and sensor type and 
+#def advantix_prep_for_import(advantix_df):
+#    """
+#    The function will take the raw advantix data frame and find sensor id with respect 
+#    to modbusid and sensor type and 
 
-    """
+#    """
 
-    result = None
+#    result = None
 
-    # find unique modbus ids
+#    # find unique modbus ids
 
-    unq_modbus_ids = advantix_df[CONST_ADVANTIX_COL_MODBUSID].unique()
+#    unq_modbus_ids = advantix_df[CONST_ADVANTIX_COL_MODBUSID].unique()
 
 
-    # match modbus ids and sernsor type with sensor ids
-    # create new df
+#    # match modbus ids and sernsor type with sensor ids
+#    # create new df
 
-    return result
+#    return result

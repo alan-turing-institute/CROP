@@ -34,11 +34,12 @@ def session_close (session):
 
 def insert_advantix_data(session, df):
     """
-    Insert data into the database. 
+    The function will take the prepared advantix data frame from the ingress module
+    and find sensor id with respect to modbusid and sensor type and insert data into the db. 
     -engine: the db engine
     -type_df: dataframe containing the type values
     """
-
+    log= ""
     #Populates with type data
     last_timestamp_entry = session.query(Readings_Advantix).first().Timestamp
     for _,row in df.iterrows():
@@ -53,7 +54,7 @@ def insert_advantix_data(session, df):
             data = Readings_Advantix(sensor_id = sensorx_id, Timestamp = row["Timestamp"], Temperature = row["Temperature"], Humidity = row["Humidity"], Co2 = row["CO2 Level"])
             session.add(data)
         else: pass
-    return True
+    return True, log
 
 def insert_type_data(session, type_df):
     """

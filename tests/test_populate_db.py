@@ -1,5 +1,6 @@
 import pytest
 import pandas as pd
+import os
 from sqlalchemy.orm import sessionmaker, relationship
 
 from crop.structure import(
@@ -13,10 +14,13 @@ from crop.constants import (
     CONST_COREDATA_DIR,
     CONST_ADVANTIX_DIR,
     CONST_ADVANTIX_TEST_1,
-    SQL_CONNECTION_STRING
+    SQL_CONNECTION_STRING,
 )
 from crop.db import (
     connect_db
+)
+from crop.ingress import (
+    advantix_import
 )
 
 from crop.populate_db import (
@@ -105,23 +109,28 @@ def test_insert_location_data():
    
 def test_insert_advantix_data():
     #TODO: PUT THE ADVANTIX INGRESS DATA
-    test_csv = CONST_ADVANTIX_TEST_1
     
-    #test reading type data
-    success, log, df = read_core_csv("%s\\%s" % (CONST_ADVANTIX_DIR, test_csv))
+    file_path = os.path.join(CONST_ADVANTIX_DIR, CONST_ADVANTIX_TEST_1)
+    success,log,test_ingress_df = advantix_import(file_path)
     assert success, log
-    assert df.empty == False
 
-    # Try to connect to an engine that exists
-    test_db_name = SQL_DBNAME
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
-    assert status, log
+    if isinstance(test_ingress_df, pd.DataFrame):
+        # Try to connect to an engine that exists
+        test_db_name = SQL_DBNAME
+        status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+        assert status, log
 
-    #Creates/Opens a new connection to the db and binds the engine
-    session = session_open (engine)
-    #test loading sensor data to db
-    insert_advantix_data (session, df)
-    session_close (session)
+        #Creates/Opens a new connection to the db and binds the engine
+        session = session_open (engine)
+        #stest loading sensor data to db
+        success, log = insert_advantix_data (session, test_ingress_df)
+        assert success, log
+
+        session_close (session)
+    else: 
+        print("its not a dataframe")
+    
+    
 
 test_insert_advantix_data()
 #test_insert_type_data()
