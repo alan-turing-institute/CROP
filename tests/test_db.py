@@ -13,19 +13,19 @@ from crop.db import (
     check_database_structure
 )
 
-def test_create_database():
+test_db_name = "test_drop"
 
-    test_db_name = SQL_DBNAME
+@pytest.mark.order1
+def test_create_database():
 
     #Test create new db
     created, log = create_database(SQL_CONNECTION_STRING, test_db_name)
     assert created, log
 
-
+@pytest.mark.order2
 def test_connect_db():
     
     # Try to connect to an engine that exists
-    test_db_name = SQL_DBNAME
     status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
     assert status, log
     
@@ -35,9 +35,9 @@ def test_connect_db():
     assert status == False, log
     assert engine == None
 
+@pytest.mark.order3
 def test_check_database_structure():
 
-    test_db_name = SQL_DBNAME
     status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
     assert status, log
     assert engine != None
@@ -45,11 +45,9 @@ def test_check_database_structure():
     good, log = check_database_structure(engine)
     assert good, log
 
+@pytest.mark.order4
 def test_drop_db():
 
     #Test create new db
-    test_db_name = "test_drop"
-    created, log = create_database(SQL_CONNECTION_STRING, test_db_name)
-
     success, log = drop_db(SQL_CONNECTION_STRING, test_db_name)
     assert success, log
