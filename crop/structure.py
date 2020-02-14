@@ -84,7 +84,7 @@ class Readings_Advantix(BASE):
     id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.sensor_id'), nullable=False)
     sensor_relationship = relationship(Sensor)
-    Timestamp = Column(DateTime, nullable=False, unique=True)
+    Timestamp = Column(DateTime, nullable=False)
     Temperature = Column(Integer, nullable=False)
     Humidity = Column(Integer, nullable=False)
     Co2 = Column(Integer, nullable=False)

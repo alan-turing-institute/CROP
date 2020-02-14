@@ -19,6 +19,16 @@ from crop.db import (
     connect_db
 )
 
+from crop.constants import (
+    CONST_ADVANTIX_COL_MODBUSID,
+    CONST_ADVANTIX,
+    ADVANTIX_READINGS_TABLE_NAME,
+    CONST_ADVANTIX_COL_TIMESTAMP,
+    CONST_ADVANTIX_COL_TEMPERATURE,
+    CONST_ADVANTIX_COL_HUMIDITY,
+    CONST_ADVANTIX_COL_CO2LEVEL
+)
+
 def session_open(engine):
     """
     Opens a new connection/session to the db and binds the engine
@@ -45,85 +55,56 @@ def insert_advantix_data(session, df):
     -type_df: dataframe containing the type values
     """
 
+    result = True
     log = ""
-    last_timestamp_entry = session.query(Readings_Advantix).first().Timestamp
-
-#    if df.empty != True:
-#        #update_df (engine, df, Type)
-#        #print (df)
-#        bulk_insert_df(engine, df, Type)
-#        bulk_insert_df(engine, df, Type)
-#    else:
-#        error = True
-#        log = "dataframe empty"
-#        return error, log
+    
+    try:
+        adv_type_id = session.query(Type).filter(Type.sensor_type == CONST_ADVANTIX).first().type_id
+    except:
+        result = False
+        log = "Sensor type {} was not found.".format(CONST_ADVANTIX)
+        return result, log    
 
     for _, row in df.iterrows():
-        # Checks the last's entry timestamp and checks if exists in the current df
-        #if it already exists it passes
-        if not last_timestamp_entry == pd.to_datetime(row['Timestamp']):
+        
+        adv_device_id = row[CONST_ADVANTIX_COL_MODBUSID]
+        adv_timestamp = row[CONST_ADVANTIX_COL_TIMESTAMP]
 
-            #Checks if the type id is advantix and gets its type_id
-            advantix_type_id = session.query(Type).filter(Type.sensor_type == 'Advantix').first().type_id
-            device_id = row["Modbus ID"]
+        # Gets the id of the sensor with type=advantix and device_id=modbusid
+        try:
+            adv_sensor_id = session.query(Sensor).\
+                            filter(Sensor.device_id == str(adv_device_id)).\
+                            filter(Sensor.type_id == adv_type_id).\
+                            first().sensor_id
 
-            #Gets the id of the sensor with type=advantix and device_id=modbusid
-            sensorx_id = session.query(Sensor).filter(Sensor.device_id == str(device_id)).first().sensor_id
+        except:
+            adv_sensor_id = -1
+            result = False
+            log = "{} sensor with {} = {} was not found.".format(CONST_ADVANTIX, CONST_ADVANTIX_COL_MODBUSID, str(adv_device_id))
+            break
 
-            #Prepares the data and adds them in the database
-            data = Readings_Advantix(sensor_id=sensorx_id, Timestamp=row["Timestamp"], Temperature=row["Temperature"], Humidity=row["Humidity"], Co2=row["CO2 Level"])
-            session.add(data)
-        else: pass
-    return True, log
+        if adv_sensor_id != -1:
+            # check if data entry already exists
+            try:
+                entry_id = session.query(ADVANTIX_READINGS_TABLE_NAME).\
+                                filter(Readings_Advantix.sensor_id == adv_sensor_id).\
+                                filter(Readings_Advantix.Timestamp == adv_timestamp).\
+                                first().id
+            except:
+                entry_id = -1
 
-def insert_type_data(session, type_df):
-    """
-    Insert test Type data into the database.
-    -engine: the db engine
-    -type_df: dataframe containing the type values
-    """
+            if entry_id == -1:
+                data = Readings_Advantix(
+                    sensor_id=adv_sensor_id, 
+                    Timestamp=adv_timestamp, 
+                    Temperature=row[CONST_ADVANTIX_COL_TEMPERATURE], 
+                    Humidity=row[CONST_ADVANTIX_COL_HUMIDITY], 
+                    Co2=row[CONST_ADVANTIX_COL_CO2LEVEL])
 
-    for _, row in type_df.iterrows():
+                session.add(data)
 
-        #Queries db and returns false if doesnt exist
-        exists = session.query(Type).filter(Type.type_id == row['type_id']).scalar()
-
-        if not exists:
-            type = Type(type_id=row["type_id"], sensor_type=row["sensor_type"], description=row["description"])
-            session.add(type)
-        else: pass
-    return True
-
-def insert_sensor_data (session, sensor_df):
-    """
-    Insert test Sensor data into the database.
-    -engine: the db engine
-    -df: dataframe containing the sensor values
-    """
-   
-    #Populates with type data
-    for _, row in sensor_df.iterrows():
-        #queries db and returns false if doesnt exist
-        print (row)
-        exists = session.query(Sensor).filter(Sensor.sensor_id == row['sensor_id']).scalar()
-        if not exists:
-            sensor = Sensor(sensor_id=row["sensor_id"], type_id=row["type_id"], device_id=row["device_id"], installation_date=row ["installation_date"])
-            session.add(sensor)
-        else: pass
-    return True
-W
-def insert_location_data (session, location_df):
-    """
-    Insert test location data into the database.
-    -session: the db engine
-    -location_df: dataframe containing the sensor values
-    """
-
-    for _, row in location_df.iterrows():
-        #queries db and returns false if doesnt exist
-        exists = session.query(Location).filter(Location.sensor_id == row['sensor_id']).scalar()
-        if not exists:
-            locations = Location(sensor_id=row["sensor_id"], section=row["section"], column=row["column"], shelf=row ["shelf"])
-            session.add(locations)
-        else: pass
-    return True
+            #else: Duplicate???
+            
+        # TODO: session commit 
+           
+    return result, log
