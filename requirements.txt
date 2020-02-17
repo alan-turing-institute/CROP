@@ -1,5 +1,7 @@
 pip
 pytest
+sphinx
+recommonmark
 
 psycopg2>=2.8.4
 SQLAlchemy-Utils>=0.36.1
@@ -23,4 +25,3 @@ azure-cli>=2.0.80
 # wheel==0.31.1
 # wincertstore==0.2
 # zope.interface==4.7.1
-

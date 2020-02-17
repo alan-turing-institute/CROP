@@ -2,7 +2,6 @@
 
 A schematic representation of the CROP infrastructure:
 ![](infrastructure.png)
-Image is created using draw.io, source file: `infrastructure.drawio`
 
 - **(1)** (*Outside action*) Sensor data is uploaded to the Azure storage account.
 
@@ -50,7 +49,7 @@ Image is created using draw.io, source file: `infrastructure.drawio`
 
   3. Enter a preferred display name for the storage account, e.g. `CROP`.
 
-  4. Enter the __connection string__ 
+  4. Enter the __connection string__
 
   5. click __Next__ and __Connect__.
 
