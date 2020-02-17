@@ -7,9 +7,9 @@ CROP.tf
 # SECRETS
 .secrets/
 
-# Terraform
-.terraform
-terraform.tfstate
+# Azure function
+local.settings.json
+.python_packages
 
 # PyTest
 __pycache__
