@@ -3,9 +3,10 @@ Python module to perform data ingress operations
 
 """
 
+from datetime import date
 import datetime as dt
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, cast, DATE, DateTime
 from sqlalchemy.orm import sessionmaker, relationship
 
 from crop.structure import (
@@ -26,7 +27,8 @@ from crop.constants import (
     CONST_ADVANTIX_COL_TIMESTAMP,
     CONST_ADVANTIX_COL_TEMPERATURE,
     CONST_ADVANTIX_COL_HUMIDITY,
-    CONST_ADVANTIX_COL_CO2LEVEL
+    CONST_ADVANTIX_COL_CO2LEVEL,
+    CONST_ADVANTIX_TEST_10
 )
 
 def session_open(engine):
@@ -57,6 +59,7 @@ def insert_advantix_data(session, df):
 
     result = True
     log = ""
+    cnt_dupl = 0
     
     try:
         adv_type_id = session.query(Type).filter(Type.sensor_type == CONST_ADVANTIX).first().type_id
@@ -76,7 +79,6 @@ def insert_advantix_data(session, df):
                             filter(Sensor.device_id == str(adv_device_id)).\
                             filter(Sensor.type_id == adv_type_id).\
                             first().sensor_id
-
         except:
             adv_sensor_id = -1
             result = False
@@ -85,26 +87,58 @@ def insert_advantix_data(session, df):
 
         if adv_sensor_id != -1:
             # check if data entry already exists
-            try:
-                entry_id = session.query(ADVANTIX_READINGS_TABLE_NAME).\
-                                filter(Readings_Advantix.sensor_id == adv_sensor_id).\
-                                filter(Readings_Advantix.Timestamp == adv_timestamp).\
-                                first().id
-            except:
-                entry_id = -1
 
-            if entry_id == -1:
+            #print ("Timestamp: ", adv_timestamp, type(dt.datetime.fromtimestamp(adv_timestamp.timestamp())))
+            #print ("db daytime: ", Readings_Advantix.Timestamp)
+
+            #year = dt.datetime.fromtimestamp(adv_timestamp.timestamp()).year
+            #month = dt.datetime.fromtimestamp(adv_timestamp.timestamp()).month
+            #day = dt.datetime.fromtimestamp(adv_timestamp.timestamp()).day
+            #hour = dt.datetime.fromtimestamp(adv_timestamp.timestamp()).hour
+            #minute = dt.datetime.fromtimestamp(adv_timestamp.timestamp()).minute
+            #second = dt.datetime.fromtimestamp(adv_timestamp.timestamp()).second
+            #micros = dt.datetime.fromtimestamp(adv_timestamp.timestamp()).microsecond 
+            #print (adv_timestamp)
+
+            #print(session.query(ADVANTIX_READINGS_TABLE_NAME).filter(cast(Readings_Advantix.Timestamp, DateTime) == dt.datetime(2019,8,21,6,44,1,659000)).all() )
+
+            #2019-08-21 15:22:42.862000
+            #2019-08-21 06:44:01.659000
+
+            #print(dt.datetime.fromtimestamp(adv_timestamp.timestamp()))
+            #print(session.query(ADVANTIX_READINGS_TABLE_NAME).filter(Readings_Advantix.time_stamp == dt.datetime.fromtimestamp(adv_timestamp.timestamp())).all())
+            #print(session.query(ADVANTIX_READINGS_TABLE_NAME).filter(Readings_Advantix.time_stamp == adv_timestamp).all())
+            #
+            #try:
+            #entry_id = 
+            found = False
+            try:
+                query_result = session.query(ADVANTIX_READINGS_TABLE_NAME).\
+                                filter(Readings_Advantix.sensor_id == adv_sensor_id).\
+                                filter(Readings_Advantix.time_stamp == adv_timestamp).\
+                                first()
+
+                if query_result is not None:
+                    found = True
+
+            except:
+                found = False
+
+ 
+            if not found:
                 data = Readings_Advantix(
                     sensor_id=adv_sensor_id, 
-                    Timestamp=adv_timestamp, 
-                    Temperature=row[CONST_ADVANTIX_COL_TEMPERATURE], 
-                    Humidity=row[CONST_ADVANTIX_COL_HUMIDITY], 
-                    Co2=row[CONST_ADVANTIX_COL_CO2LEVEL])
-
+                    time_stamp=adv_timestamp, 
+                    temperature=row[CONST_ADVANTIX_COL_TEMPERATURE], 
+                    humidity=row[CONST_ADVANTIX_COL_HUMIDITY], 
+                    co2=row[CONST_ADVANTIX_COL_CO2LEVEL])
                 session.add(data)
-
-            #else: Duplicate???
-            
+ 
+            else: cnt_dupl += 1
         # TODO: session commit 
-           
+       
+    if cnt_dupl != 0:
+        result = False
+        log = "Cannot insert {} duplicate values".format(cnt_dupl)
+
     return result, log
