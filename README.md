@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation Status](https://readthedocs.org/projects/crop/badge/?version=latest)](https://crop.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/alan-turing-institute/CROP.svg?branch=master)](https://travis-ci.org/alan-turing-institute/CROP)
-[![Build Status](https://travis-ci.org/alan-turing-institute/CROP.svg?branch=develop)](https://travis-ci.org/alan-turing-institute/CROP)
+<!-- [![Build Status](https://travis-ci.org/alan-turing-institute/CROP.svg?branch=develop)](https://travis-ci.org/alan-turing-institute/CROP) -->
 
 
 TBC
