@@ -21,11 +21,13 @@ from crop.constants import(
     CONST_ADVANTIX_TEST_10,
     SQL_CONNECTION_STRING,
 )
+
 from crop.db import(
     create_database,
     connect_db,
     drop_db
 )
+
 from crop.ingress import(
     advantix_import
 )
@@ -37,7 +39,7 @@ from crop.populate_db import(
 )
 
 # Test database name
-test_db_name = "fake_db"
+test_db_name = "fake_db1"
 
 @pytest.mark.order1
 def test_create_database():
@@ -63,9 +65,14 @@ def test_insert_type_data():
 
     #Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
-
-    session.bulk_insert_mappings(Type, type_df.to_dict(orient='records'))
-    assert session.query(Type).count() == len(type_df.index)
+    
+    # Check if table is empty and bulk inserts if it is
+    first_entry = session.query(Type).first()
+    if first_entry == None: 
+        session.bulk_insert_mappings(Type, type_df.to_dict(orient='records'))
+        assert session.query(Type).count() == len(type_df.index)
+    else:
+        assert session.query(Type).count() == len(type_df.index)
 
     session_close(session)
 
@@ -87,8 +94,13 @@ def test_insert_sensor_data():
     #Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
 
-    session.bulk_insert_mappings(Sensor, sensor_df.to_dict(orient='records'))
-    assert session.query(Sensor).count() == len(sensor_df.index)
+    # Check if table is empty and bulk inserts if it is
+    first_entry = session.query(Sensor).first()
+    if first_entry == None: 
+        session.bulk_insert_mappings(Sensor, sensor_df.to_dict(orient='records'))
+        assert session.query(Sensor).count() == len(sensor_df.index)
+    else:
+        assert session.query(Sensor).count() == len(sensor_df.index)
 
     session_close(session)
 
@@ -111,8 +123,13 @@ def test_insert_location_data():
     #Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
 
-    session.bulk_insert_mappings(Location, loc_df.to_dict(orient='records'))
-    assert session.query(Location).count() == len(loc_df.index)
+    # Check if table is empty and bulk inserts if it is
+    first_entry = session.query(Location).first()
+    if first_entry == None: 
+        session.bulk_insert_mappings(Location, loc_df.to_dict(orient='records'))
+        assert session.query(Location).count() == len(loc_df.index)
+    else:
+        assert session.query(Location).count() == len(loc_df.index)
 
     session_close(session)
 
