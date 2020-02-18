@@ -64,7 +64,7 @@ CONST_ADVANTIX_TEST_6 = "data-20190821-test6.csv" # Few rows, humidity is wrong
 CONST_ADVANTIX_TEST_7 = "data-20190821-test7.csv" # Few rows, co2 level is wrong
 CONST_ADVANTIX_TEST_8 = "data-20190821-test8.csv" # Temperature and humidity empty
 CONST_ADVANTIX_TEST_9 = "data-20190821-test9.csv" # Duplicate values
-CONST_ADVANTIX_TEST_10 = "data-20190821-test10.csv" # Multiple sensors (duplicate values)
+CONST_ADVANTIX_TEST_10 = "data-20190821-test10.csv" # Wrong sensor id
 
 # Error messages
 ERR_IMPORT_ERROR_1 = "Import file does not contain all the necessary columns."
