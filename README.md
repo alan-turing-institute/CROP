@@ -3,7 +3,7 @@
 ## Summary
 **Crop** is a Research Observations Platform designed and created by [Tomas Lazauskas](https://github.com/tomaslaz) and [Flora Roumpani](https://github.com/misspawty).
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3662779.svg)](https://doi.org/10.5281/zenodo.3662779)
+<!-- [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3662779.svg)](https://doi.org/10.5281/zenodo.3662779) -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation Status](https://readthedocs.org/projects/crop/badge/?version=latest)](https://crop.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/alan-turing-institute/CROP.svg?branch=master)](https://travis-ci.org/alan-turing-institute/CROP)
