@@ -20,7 +20,6 @@ from crop.constants import (
     ADVANTIX_READINGS_TABLE_NAME
     )
 
-
 BASE = declarative_base()
 
 class Sensor(BASE):
