@@ -8,12 +8,12 @@ Module to define the structure of the database. Each Class, defines a table in t
 
 import datetime
 
-from sqlalchemy import (ForeignKey, Float, Column, Integer, String, DateTime, Text)
+from sqlalchemy import (ForeignKey, Float, Column, Integer, String, DateTime, Text, Unicode, UniqueConstraint)
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
-from .constants import (
+from crop.constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
@@ -29,13 +29,17 @@ class Sensor(BASE):
 
     __tablename__ = SENSOR_TABLE_NAME
 
-    id = Column(Integer, primary_key=True)
-    type_id = Column(Integer, ForeignKey(SENSOR_TYPE_TABLE_NAME+'.id')) #many to one relationship
+    sensor_id = Column(Integer, primary_key=True)
+    type_id = Column(Integer, ForeignKey(SENSOR_TYPE_TABLE_NAME+'.type_id')) #many to one relationship
+    device_id = Column (Unicode(100), nullable=False)
+    __table_args__ = (UniqueConstraint('type_id', 'device_id', name='_type_device_uc'),)
+    #advantix_id = Column(String(100), unique=True, nullable=True) # Modbusid
+    #tinytag_id = Column(String(100), unique=True, nullable=True)
+    installation_date = Column(DateTime, nullable=False)
+
     type_relationship = relationship("Type")
     location_relationship = relationship("Location") #one to many relationship
     advantix_readings_relationship = relationship("Readings_Advantix") #one to many relationship
-    installation_time = Column(DateTime, default=datetime.datetime.utcnow) #picks up current time.
-
 
 class Type(BASE):
     """
@@ -43,10 +47,13 @@ class Type(BASE):
     """
     __tablename__ = SENSOR_TYPE_TABLE_NAME
 
-    id = Column(Integer, primary_key=True)
+    type_id = Column(Integer, primary_key=True, unique=True, nullable=False)
     #UUID =   Column(String(36), unique=True, nullable=False)
-    sensor_type = Column(String)
-    description = Column(Text)
+    sensor_type = Column(String(100), nullable=False, unique=True)
+    description = Column(Text, nullable=False)
+
+    def __repr__(self):
+        return "<Type(type_id='%d', sensor_type = %s, description = %s)>" % (self.type_id, self.sensor_type, self.description)
 
 
 class Location(BASE):
@@ -57,12 +64,12 @@ class Location(BASE):
 
     __tablename__ = LOCATION_TABLE_NAME
 
-    id = Column(Integer, primary_key=True)
-    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.id'))
-    sensor_relationship = relationship(Sensor, back_populates="sensors")
-    section = Column(Integer) #A/B
-    column = Column(Integer) #no
-    shelf = Column(Integer) #1-4
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.sensor_id'), nullable=False)
+    sensor_relationship = relationship(Sensor)
+    section = Column(Integer, nullable=False) #Farm 1/2
+    column = Column(Integer, nullable=False) #no
+    shelf = Column(String(50), nullable=False) #top/middle/bottom
     code = Column(String)
 
 
@@ -74,12 +81,12 @@ class Readings_Advantix(BASE):
     __tablename__ = ADVANTIX_READINGS_TABLE_NAME
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.id'))
-    sensor_relationship = relationship(Sensor, back_populates="READINGS")
-    modbusid = Column(Integer)
-    temperature = Column(Integer)
-    humidity = Column(Integer)
-    co2levels = Column(Integer)
+    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.sensor_id'), nullable=False)
+    sensor_relationship = relationship(Sensor)
+    time_stamp = Column(DateTime, nullable=False)
+    temperature = Column(Integer, nullable=False)
+    humidity = Column(Integer, nullable=False)
+    co2 = Column(Integer, nullable=False)
     time_created = Column(DateTime(), server_default=func.now()) #when data are passed to the server
     time_updated = Column(DateTime(), onupdate=func.now()) #<-- to check
 
@@ -91,8 +98,8 @@ class Readings_Tags(BASE):
     __tablename__ = "microtags"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.id'))
-    sensor_relationship = relationship(Sensor, back_populates="READINGS")
+    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME+'.sensor_id'))
+    sensor_relationship = relationship(Sensor)  #back_populates="READINGS"
     loggertimestamp = Column(DateTime)
     deviceaddress = Column(String)
     uptime = Column(Integer)
