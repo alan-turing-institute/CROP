@@ -160,6 +160,6 @@ def test_insert_advantix_data():
     assert isinstance(test_ingress_df, pd.DataFrame)
 
     success, log = insert_advantix_data(session, test_ingress_df)
-    assert not success, log
+    assert success, log
 
     session_close(session)
