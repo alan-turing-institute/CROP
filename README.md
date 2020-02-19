@@ -1,18 +1,30 @@
-# CROP
-CROP - Crop Research Observation Platform
+# CROP <img src="https://pngimage.net/wp-content/uploads/2018/06/logo-placeholder-png.png" width="200" align="right">
 
-Requirements:
+## Summary
+**Crop** is a Research Observations Platform designed and created by [Tomas Lazauskas](https://github.com/tomaslaz) and [Flora Roumpani](https://github.com/misspawty).
 
-python 3.5 >
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3662779.svg)](https://doi.org/10.5281/zenodo.3662779)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Postgresql v. 4.15>  
-```
-https://www.postgresql.org/download/ 
-```
 
-requirements.txt
+TBC
 
-Python3 dependencies can be installed using pip:
-```
-pip3 install -r requirements.txt
-```
+## Disclaimer
+
+CROP is a **development** code and we recommend that you do not deploy this **prototype** application in a production setting. The implementation is only for demonstration purposes only and make no warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the web app, backend infrastructure or the information.
+
+## Requirements
+
+TBC
+
+## Installation
+
+TBC
+
+## Getting help
+
+If you found a bug or need support, please submit an issue [here](https://github.com/alan-turing-institute/CROP/issues/new).
+
+## How to contribute
+
+We welcome contributions! If you are willing to propose new features or have bug fixes to contribute, please submit a pull request [here](https://github.com/alan-turing-institute/CROP/pulls).
