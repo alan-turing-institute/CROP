@@ -2,10 +2,13 @@
 CROP.pyproj
 CROP.sln
 CROP.tf
-.vs
+CROP.pyproj.user
 
 # SECRETS
 .secrets/
+
+# Data
+data/ 
 
 # Terraform
 .terraform
@@ -14,8 +17,12 @@ terraform.tfstate
 # PyTest
 __pycache__
 
+#Other files
+oldscripts/
+
 # VSCODE
 .vscode/
+.vs
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

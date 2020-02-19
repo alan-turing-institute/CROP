@@ -3,15 +3,17 @@ Test ingress.py module
 """
 
 import os
+import sys
+import pytest
 
-from ..crop.constants import (
+from crop.constants import (
     CONST_TEST_DIR_DATA,
     CONST_ADVANTIX_FOLDER,
     CONST_ADVANTIX_TEST_1,
     CONST_ADVANTIX_TEST_2,
-    CONST_ADVANTIX_TEST_3, 
+    CONST_ADVANTIX_TEST_3,
     CONST_ADVANTIX_TEST_4,
-    CONST_ADVANTIX_TEST_5, 
+    CONST_ADVANTIX_TEST_5,
     CONST_ADVANTIX_TEST_6,
     CONST_ADVANTIX_TEST_7,
     CONST_ADVANTIX_TEST_8,
@@ -19,12 +21,13 @@ from ..crop.constants import (
     ERR_IMPORT_ERROR_3
 )
 
-from ..crop.ingress import (
+from crop.ingress import (
     advantix_read_csv,
     advantix_check_structure,
     advantix_import,
     advantix_convert,
-    advantix_df_validity
+    advantix_df_validity,
+    advantix_prep_for_import
 )
 
 def test_advantix_read_csv():
@@ -126,3 +129,18 @@ def test_advantix_df_validity():
 
     success, log = advantix_df_validity(data_df)
     assert(True == success)
+
+# def test_check_sensor_exists():
+#     success, log = check_sensor_exists ()
+#     assert success, log
+
+#def test_advantix_prep_for_import():
+
+#    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
+#    success, _, data_df = advantix_import(file_path)
+
+#    good_df = advantix_prep_for_import(data_df)
+
+#    assert(good_df != None)
+
+

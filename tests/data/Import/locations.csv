@@ -1,7 +1,5 @@
-uuid,Section,Column,Self
-1,A,1,4
-2,A,5,2
-3,A,10,3
-4,B,3,1
-5,B,6,1
-6,B,9,2
+sensor_id,section,column,shelf
+1,1,2,top
+2,2,2,middle
+3,1,13,bottom
+5,2,20,top
