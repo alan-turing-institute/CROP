@@ -24,7 +24,6 @@ def create_database(conn_string, db_name):
 
     # Create connection string
     db_conn_string = "{}{}".format(conn_string, db_name)
-    print ("yolo")
     # Create a new database
     if not database_exists(db_conn_string):
         try:
