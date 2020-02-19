@@ -1,8 +1,6 @@
 import pytest
 
-
 from crop.constants import (
-    SQL_DBNAME,
     SQL_CONNECTION_STRING,
 )
 
@@ -20,7 +18,7 @@ def test_create_database():
 
     #Test create new db
     created, log = create_database(SQL_CONNECTION_STRING, test_db_name)
-    assert created, log
+    assert created, log.py
 
 @pytest.mark.order2
 def test_connect_db():
