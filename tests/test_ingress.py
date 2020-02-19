@@ -26,8 +26,7 @@ from crop.ingress import (
     advantix_check_structure,
     advantix_import,
     advantix_convert,
-    advantix_df_validity,
-    advantix_prep_for_import
+    advantix_df_validity
 )
 
 def test_advantix_read_csv():

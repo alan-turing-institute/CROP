@@ -30,8 +30,8 @@ def session_open(engine):
     """
     Session = sessionmaker()
     Session.configure(bind=engine)
-    session = Session()
-    return session
+    return Session()
+
 
 def session_close(session):
     """
@@ -53,6 +53,7 @@ def insert_advantix_data(session, adv_df):
     result = True
     log = ""
     cnt_dupl = 0
+    duplicates_assert = False
 
     # Gets the the assigned int id of the "Advantix" type
     try:
@@ -94,20 +95,23 @@ def insert_advantix_data(session, adv_df):
 
             except:
                 found = False
+            try:
+                if not found:
+                    data = Readings_Advantix(
+                        sensor_id=adv_sensor_id,
+                        time_stamp=adv_timestamp,
+                        temperature=row[CONST_ADVANTIX_COL_TEMPERATURE],
+                        humidity=row[CONST_ADVANTIX_COL_HUMIDITY],
+                        co2=row[CONST_ADVANTIX_COL_CO2LEVEL])
+                    session.add(data)
 
-            if not found:
-                data = Readings_Advantix(
-                    sensor_id=adv_sensor_id,
-                    time_stamp=adv_timestamp,
-                    temperature=row[CONST_ADVANTIX_COL_TEMPERATURE],
-                    humidity=row[CONST_ADVANTIX_COL_HUMIDITY],
-                    co2=row[CONST_ADVANTIX_COL_CO2LEVEL])
-                session.add(data)
-
-            else: cnt_dupl += 1
+                else: cnt_dupl += 1
+            except:
+                result = False
+                log = "Cannot insert new data to database"
 
     if cnt_dupl != 0:
-        result = False
+        result = True
         log = "Cannot insert {} duplicate values".format(cnt_dupl)
 
     return result, log
