@@ -23,13 +23,14 @@ def create_database(conn_string, db_name):
     """
 
     # Create connection string
-    db_conn_string = "{}{}".format(conn_string, db_name)
+    db_conn_string = "{}/{}".format(conn_string, db_name)
+
     # Create a new database
     if not database_exists(db_conn_string):
-        try:
+        # try:
             #On postgres, the postgres database is normally present by default.
             #Connecting as a superuser (eg, postgres), allows to connect and create a new db.
-            def_engine = create_engine(conn_string + SQL_DEFAULT_DBNAME)
+            def_engine = create_engine("{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
 
             #You cannot use engine.execute() directly, because postgres does not allow to create
             # databases inside transactions, inside which sqlalchemy always tries to run queries.
@@ -49,8 +50,8 @@ def create_database(conn_string, db_name):
             BASE.metadata.create_all(engine)
 
             conn.close()
-        except:
-            return False, "Error creating a new database"
+        # except:
+        #     return False, "Error creating a new database"
     return True, None
 
 def connect_db(conn_string, db_name):
@@ -62,7 +63,7 @@ def connect_db(conn_string, db_name):
             engine: returns the engine object
     """
     # Create connection string
-    db_conn_string = "{}{}".format(conn_string, db_name)
+    db_conn_string = "{}/{}".format(conn_string, db_name)
 
     # Connect to an engine
     if database_exists(db_conn_string):
@@ -84,7 +85,7 @@ def drop_db(conn_string, db_name):
     """
 
     # Connection string
-    db_conn_string = "{}{}".format(conn_string, db_name)
+    db_conn_string = "{}/{}".format(conn_string, db_name)
 
     if database_exists(db_conn_string):
         from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT

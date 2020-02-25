@@ -74,22 +74,31 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
-SQL_DBNAME = os.environ['AZURE_SQL_DBNAME'].strip().lower()
-SQL_ENGINE = "postgresql"
-SQL_DEFAULT_DBNAME = 'postgres'
+
+
+# Create connection string
 SQL_USER = os.environ['AZURE_SQL_USER']
 SQL_PASSWORD = os.environ['AZURE_SQL_PASS']
+SQL_SERVER = os.environ['AZURE_SQL_SERVER']
 SQL_HOST = os.environ['AZURE_SQL_HOST']
+SQL_ENGINE = "postgresql"
+SQL_DBNAME = os.environ['AZURE_SQL_DBNAME'].strip().lower()
+SQL_DEFAULT_DBNAME = 'postgres'
 SQL_PORT = os.environ['AZURE_SQL_PORT']
 SQL_SSLMODE = "require"
 
-SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s/" % (SQL_ENGINE, SQL_USER, SQL_PASSWORD,
+SQL_HOST = "{}.{}".format(SQL_SERVER, SQL_HOST)
+
+SQL_USER_SERVER = "{}@{}".format(SQL_USER, SQL_SERVER)
+
+SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (SQL_ENGINE, SQL_USER_SERVER, SQL_PASSWORD,
                                               SQL_HOST, SQL_PORT)
 
-SQL_CONNECTION_STRING_DEFAULT = "%s%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
-#SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
+SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
+SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
 
-PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password={3} sslmode={4}".format(SQL_HOST, SQL_USER, SQL_DEFAULT_DBNAME, SQL_PASSWORD, SQL_SSLMODE)
+PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password={3} sslmode={4}".format(SQL_HOST, SQL_USER_SERVER, SQL_DEFAULT_DBNAME, SQL_PASSWORD, SQL_SSLMODE)
+
 
 # SQL Table names
 SENSOR_TABLE_NAME = 'sensor'
