@@ -6,7 +6,7 @@ Python module to perform data ingress operations
 import os
 import pandas as pd
 
-#from crop.db import create_database
+# from crop.db import create_database
 from crop.constants import (
     CONST_ADVANTIX_COL_LIST,
     CONST_ADVANTIX_COL_TIMESTAMP,
@@ -34,7 +34,10 @@ from crop.constants import (
     CONST_ADVANTIX_TEST_1,
 )
 
-file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
+file_path = os.path.join(
+    CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
+)
+
 
 def advantix_import(file_path):
     """
@@ -52,6 +55,7 @@ def advantix_import(file_path):
     advantix_raw_df = advantix_read_csv(file_path)
 
     return advantix_df_checks(advantix_raw_df)
+
 
 def advantix_df_checks(advantix_raw_df):
     """
@@ -83,6 +87,7 @@ def advantix_df_checks(advantix_raw_df):
 
     return success, log, advantix_df
 
+
 def advantix_read_csv(file_path):
     """
     Reads in advantix csv file as pandas data frame.
@@ -96,6 +101,7 @@ def advantix_read_csv(file_path):
     df = pd.read_csv(file_path)
 
     return df
+
 
 def advantix_check_structure(advantix_df):
     """
@@ -114,6 +120,7 @@ def advantix_check_structure(advantix_df):
             return False, ERR_IMPORT_ERROR_1
 
     return True, None
+
 
 def advantix_convert(advantix_raw_df):
     """
@@ -135,7 +142,7 @@ def advantix_convert(advantix_raw_df):
         advantix_df = advantix_raw_df[CONST_ADVANTIX_COL_LIST]
     except:
         success = False
-        log = ERR_IMPORT_ERROR_1 + ": " + ','.join(CONST_ADVANTIX_COL_LIST)
+        log = ERR_IMPORT_ERROR_1 + ": " + ",".join(CONST_ADVANTIX_COL_LIST)
         advantix_df = None
         return success, log, advantix_df
 
@@ -143,15 +150,19 @@ def advantix_convert(advantix_raw_df):
     try:
         advantix_df[CONST_ADVANTIX_COL_TIMESTAMP] = pd.to_datetime(
             advantix_df[CONST_ADVANTIX_COL_TIMESTAMP], format="%Y-%m-%dT%H:%M:%S.%f"
-            )
+        )
         advantix_df[CONST_ADVANTIX_COL_MODBUSID] = advantix_df[
-            CONST_ADVANTIX_COL_MODBUSID].astype('int16')
+            CONST_ADVANTIX_COL_MODBUSID
+        ].astype("int16")
         advantix_df[CONST_ADVANTIX_COL_TEMPERATURE] = advantix_df[
-            CONST_ADVANTIX_COL_TEMPERATURE].astype('float64')
+            CONST_ADVANTIX_COL_TEMPERATURE
+        ].astype("float64")
         advantix_df[CONST_ADVANTIX_COL_HUMIDITY] = advantix_df[
-            CONST_ADVANTIX_COL_HUMIDITY].astype('float64')
+            CONST_ADVANTIX_COL_HUMIDITY
+        ].astype("float64")
         advantix_df[CONST_ADVANTIX_COL_CO2LEVEL] = advantix_df[
-            CONST_ADVANTIX_COL_CO2LEVEL].astype('float64')
+            CONST_ADVANTIX_COL_CO2LEVEL
+        ].astype("float64")
     except:
         success = False
         log = ERR_IMPORT_ERROR_2
@@ -166,6 +177,7 @@ def advantix_convert(advantix_raw_df):
         return success, log, advantix_df
 
     return success, log, advantix_df
+
 
 def advantix_df_validity(advantix_df):
     """
@@ -185,19 +197,35 @@ def advantix_df_validity(advantix_df):
     duplicates = advantix_df[advantix_df.duplicated()]
     if len(duplicates) > 0:
         success = False
-        log = ERR_IMPORT_ERROR_4 + ". Check the following entries: " + str(list(duplicates.index))
+        log = (
+            ERR_IMPORT_ERROR_4
+            + ". Check the following entries: "
+            + str(list(duplicates.index))
+        )
     if not success:
         return success, log
 
-    col_names = [CONST_ADVANTIX_COL_TIMESTAMP, CONST_ADVANTIX_COL_MODBUSID,
-                 CONST_ADVANTIX_COL_TEMPERATURE, CONST_ADVANTIX_COL_HUMIDITY,
-                 CONST_ADVANTIX_COL_CO2LEVEL]
-    col_mins = [CONST_ADVANTIX_TIMESTAMP_MIN, CONST_ADVANTIX_MODBUSID_MIN,
-                CONST_ADVANTIX_TEMPERATURE_MIN, CONST_ADVANTIX_HUMIDITY_MIN,
-                CONST_ADVANTIX_CO2LEVEL_MIN]
-    col_maxs = [CONST_ADVANTIX_TIMESTAMP_MAX, CONST_ADVANTIX_MODBUSID_MAX,
-                CONST_ADVANTIX_TEMPERATURE_MAX, CONST_ADVANTIX_HUMIDITY_MAX,
-                CONST_ADVANTIX_CO2LEVEL_MAX]
+    col_names = [
+        CONST_ADVANTIX_COL_TIMESTAMP,
+        CONST_ADVANTIX_COL_MODBUSID,
+        CONST_ADVANTIX_COL_TEMPERATURE,
+        CONST_ADVANTIX_COL_HUMIDITY,
+        CONST_ADVANTIX_COL_CO2LEVEL,
+    ]
+    col_mins = [
+        CONST_ADVANTIX_TIMESTAMP_MIN,
+        CONST_ADVANTIX_MODBUSID_MIN,
+        CONST_ADVANTIX_TEMPERATURE_MIN,
+        CONST_ADVANTIX_HUMIDITY_MIN,
+        CONST_ADVANTIX_CO2LEVEL_MIN,
+    ]
+    col_maxs = [
+        CONST_ADVANTIX_TIMESTAMP_MAX,
+        CONST_ADVANTIX_MODBUSID_MAX,
+        CONST_ADVANTIX_TEMPERATURE_MAX,
+        CONST_ADVANTIX_HUMIDITY_MAX,
+        CONST_ADVANTIX_CO2LEVEL_MAX,
+    ]
 
     # Check every column
     for col_name, col_min, col_max in zip(col_names, col_mins, col_maxs):
@@ -206,6 +234,7 @@ def advantix_df_validity(advantix_df):
             return success, log
 
     return success, log
+
 
 def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
     """
@@ -226,13 +255,18 @@ def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
     log = ""
 
     out_of_range_df = advantix_df[
-        (advantix_df[col_name] < col_min) |
-        (advantix_df[col_name] > col_max)]
+        (advantix_df[col_name] < col_min) | (advantix_df[col_name] > col_max)
+    ]
 
     if len(out_of_range_df) > 0:
         success = False
-        log = ERR_IMPORT_ERROR_5 + " <" + col_name + \
-            "> out of range (min = %f, max = %f)" % (col_min, col_max) + \
-            " Entries: " + str(list(out_of_range_df.index))
+        log = (
+            ERR_IMPORT_ERROR_5
+            + " <"
+            + col_name
+            + "> out of range (min = %f, max = %f)" % (col_min, col_max)
+            + " Entries: "
+            + str(list(out_of_range_df.index))
+        )
 
     return success, log

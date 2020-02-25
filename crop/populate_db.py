@@ -53,7 +53,7 @@ def insert_advantix_data(session, adv_df):
     result = True
     log = ""
     cnt_dupl = 0
-    duplicates_assert = False
+    
 
     # Gets the the assigned int id of the "Advantix" type
     try:
@@ -92,9 +92,9 @@ def insert_advantix_data(session, adv_df):
 
                 if query_result is not None:
                     found = True
-
             except:
                 found = False
+                
             try:
                 if not found:
                     data = Readings_Advantix(
