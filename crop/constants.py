@@ -84,17 +84,28 @@ SQL_HOST = os.environ['AZURE_SQL_HOST']
 SQL_PORT = os.environ['AZURE_SQL_PORT']
 SQL_SSLMODE = "require"
 
-SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (SQL_ENGINE, SQL_USER, SQL_PASSWORD,
-                                              SQL_HOST, SQL_PORT)
+# FIXME: I am not quite sure, for this one seems to be messing up the connection
+# string as it is the same as the constant name above
+#SQL_HOST = "{}.{}".format(SQL_SERVER, SQL_HOST)
 
-SQL_CONNECTION_STRING_DEFAULT = "%s%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
-#SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
+SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
+    SQL_ENGINE,
+    SQL_USER,
+    SQL_PASSWORD,
+    SQL_HOST,
+    SQL_PORT,
+)
 
-PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password={3} sslmode={4}".format(SQL_HOST, SQL_USER, SQL_DEFAULT_DBNAME, SQL_PASSWORD, SQL_SSLMODE)
+SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
+SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
+
+# FIXME: Missing engine? or i messed up the above string
+PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password={3} sslmode={4}".format(
+    SQL_HOST, SQL_USER, SQL_DEFAULT_DBNAME, SQL_PASSWORD, SQL_SSLMODE
+)
 
 # SQL Table names
 SENSOR_TABLE_NAME = 'sensor'
 SENSOR_TYPE_TABLE_NAME = 'sensor_type'
 LOCATION_TABLE_NAME = 'location'
 ADVANTIX_READINGS_TABLE_NAME = 'advantix'
-
