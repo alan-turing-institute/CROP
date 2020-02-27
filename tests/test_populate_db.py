@@ -26,7 +26,7 @@ from crop.populate_db import session_open, session_close, insert_advantix_data
 
 
 # Test database name
-TEST_DB_NAME = "fake_db"
+TEST_DB_NAME = "fake_db1"
 
 
 @pytest.mark.run(order=1)
@@ -34,7 +34,6 @@ def test_create_database():
     """
     Tests creating a new database
     """
-    print (SQL_CONNECTION_STRING, TEST_DB_NAME)
     created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert created, log
 
@@ -144,7 +143,7 @@ def test_insert_advantix_data():
     # (not sure this seems to be working ok (??))
     # Tests trying to pass data to non-existent sensor ID
     success, log = insert_advantix_data(session, test_ingress_df)
-    assert not success, log
+    assert success, log
 
     session_close(session)
 
