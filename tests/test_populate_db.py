@@ -8,13 +8,9 @@ import pytest
 import pandas as pd
 
 
-from crop.structure import(
-    Type,
-    Location,
-    Sensor
-    )
+from crop.structure import Type, Location, Sensor
 
-from crop.constants import(
+from crop.constants import (
     CONST_COREDATA_DIR,
     CONST_ADVANTIX_DIR,
     CONST_ADVANTIX_TEST_1,
@@ -22,34 +18,28 @@ from crop.constants import(
     SQL_CONNECTION_STRING,
 )
 
-from crop.db import(
-    create_database,
-    connect_db,
-    drop_db
-)
+from crop.db import create_database, connect_db, drop_db
 
-from crop.ingress import(
-    advantix_import
-)
+from crop.ingress import advantix_import
 
-from crop.populate_db import(
-    session_open,
-    session_close,
-    insert_advantix_data
-)
+from crop.populate_db import session_open, session_close, insert_advantix_data
+
 
 # Test database name
-test_db_name = "fake_db1"
+TEST_DB_NAME = "fake_db"
 
-@pytest.mark.order1
+
+@pytest.mark.run(order=1)
 def test_create_database():
     """
     Tests creating a new database
     """
-    created, log = create_database(SQL_CONNECTION_STRING, test_db_name)
+    print (SQL_CONNECTION_STRING, TEST_DB_NAME)
+    created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert created, log
 
-@pytest.mark.order2
+
+@pytest.mark.run(order=2)
 def test_insert_type_data():
     """
     Tests bulk inserting test type data
@@ -60,23 +50,20 @@ def test_insert_type_data():
     assert type_df.empty == False
 
     # Try to connect to an engine that exists
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert status, log
 
-    #Creates/Opens a new connection to the db and binds the engine
+    # Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
-    
+
     # Check if table is empty and bulk inserts if it is
-    first_entry = session.query(Type).first()
-    if first_entry == None: 
-        session.bulk_insert_mappings(Type, type_df.to_dict(orient='records'))
-        assert session.query(Type).count() == len(type_df.index)
-    else:
-        assert session.query(Type).count() == len(type_df.index)
+    session.bulk_insert_mappings(Type, type_df.to_dict(orient="records"))
+    assert session.query(Type).count() == len(type_df.index)
 
     session_close(session)
 
-@pytest.mark.order3
+
+@pytest.mark.run(order=3)
 def test_insert_sensor_data():
     """
     Tests bulk inserting test sensor data
@@ -88,23 +75,20 @@ def test_insert_sensor_data():
     assert sensor_df.empty == False
 
     # Try to connect to an engine that exists
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert status, log
 
-    #Creates/Opens a new connection to the db and binds the engine
+    # Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
 
     # Check if table is empty and bulk inserts if it is
-    first_entry = session.query(Sensor).first()
-    if first_entry == None: 
-        session.bulk_insert_mappings(Sensor, sensor_df.to_dict(orient='records'))
-        assert session.query(Sensor).count() == len(sensor_df.index)
-    else:
-        assert session.query(Sensor).count() == len(sensor_df.index)
+    session.bulk_insert_mappings(Sensor, sensor_df.to_dict(orient="records"))
+    assert session.query(Sensor).count() == len(sensor_df.index)
 
     session_close(session)
 
-@pytest.mark.order4
+
+@pytest.mark.run(order=4)
 def test_insert_location_data():
     """
     Tests bulk inserting test location data
@@ -112,31 +96,28 @@ def test_insert_location_data():
 
     test_csv = "Locations.csv"
 
-    #test reading type data
+    # test reading type data
     loc_df = pd.read_csv(os.path.join(CONST_COREDATA_DIR, test_csv))
     assert loc_df.empty == False
 
     # Try to connect to an engine that exists
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert status, log
 
-    #Creates/Opens a new connection to the db and binds the engine
+    # Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
 
     # Check if table is empty and bulk inserts if it is
-    first_entry = session.query(Location).first()
-    if first_entry == None: 
-        session.bulk_insert_mappings(Location, loc_df.to_dict(orient='records'))
-        assert session.query(Location).count() == len(loc_df.index)
-    else:
-        assert session.query(Location).count() == len(loc_df.index)
+    session.bulk_insert_mappings(Location, loc_df.to_dict(orient="records"))
+    assert session.query(Location).count() == len(loc_df.index)
 
     session_close(session)
 
-@pytest.mark.order5
+
+@pytest.mark.run(order=5)
 def test_insert_advantix_data():
     """
-    Tests  add inserting test advantix data
+    Tests inserting test advantix data
     """
 
     file_path = os.path.join(CONST_ADVANTIX_DIR, CONST_ADVANTIX_TEST_1)
@@ -145,12 +126,12 @@ def test_insert_advantix_data():
     assert isinstance(test_ingress_df, pd.DataFrame)
 
     # Try to connect to an engine that exists
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, test_db_name)
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert status, log
 
-    #Creates/Opens a new connection to the db and binds the engine
+    # Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
-    #stest loading sensor data to db
+    # tests loading sensor data to db
     success, log = insert_advantix_data(session, test_ingress_df)
     assert success, log
 
@@ -159,7 +140,16 @@ def test_insert_advantix_data():
     assert success, log
     assert isinstance(test_ingress_df, pd.DataFrame)
 
+    # FIXME this test should not pass
+    # (not sure this seems to be working ok (??))
+    # Tests trying to pass data to non-existent sensor ID
     success, log = insert_advantix_data(session, test_ingress_df)
     assert not success, log
 
     session_close(session)
+
+
+@pytest.mark.run(order=6)
+def test_drop_db():
+    success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
+    assert success, log

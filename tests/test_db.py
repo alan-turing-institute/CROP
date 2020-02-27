@@ -45,9 +45,9 @@ def test_check_database_structure():
     good, log = check_database_structure(engine)
     assert good, log
 
-#@pytest.mark.order4
-#def test_drop_db():
+@pytest.mark.order4
+def test_drop_db():
 
-#    #Test create new db
-#    success, log = drop_db(SQL_CONNECTION_STRING, test_db_name)
-#    assert success, log
+   #Test drop db
+   success, log = drop_db(SQL_CONNECTION_STRING, test_db_name)
+   assert success, log
