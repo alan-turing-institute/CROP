@@ -18,6 +18,8 @@ from sqlalchemy import (
     Text,
     Unicode,
     UniqueConstraint,
+    BLOB,
+    LargeBinary
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -161,3 +163,17 @@ class Weather(BASE):
     weathertype = Column(String)
     forecast = Column(Integer)
     time_accessed = Column(DateTime(), server_default=func.now())
+
+
+class User(BASE):
+    """
+    Class for user data
+    """
+
+    __tablename__ = "User"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, unique=True)
+    email = Column(String, unique=True)
+    password = Column(LargeBinary, nullable=False)
+
