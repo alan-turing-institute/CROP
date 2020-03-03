@@ -18,7 +18,7 @@ from crop.constants import (
     CONST_ADVANTIX_TEST_7,
     CONST_ADVANTIX_TEST_8,
     CONST_ADVANTIX_TEST_9,
-    ERR_IMPORT_ERROR_3
+    ERR_IMPORT_ERROR_3,
 )
 
 from crop.ingress import (
@@ -26,120 +26,149 @@ from crop.ingress import (
     advantix_check_structure,
     advantix_import,
     advantix_convert,
-    advantix_df_validity
+    advantix_df_validity,
 )
+
 
 def test_advantix_read_csv():
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
+    )
     data_df = advantix_read_csv(file_path)
     # counting the number of entries
-    assert (len(data_df.index) == 75)
+    assert len(data_df.index) == 75
+
 
 def test_advantix_check_structure():
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
+    # checks healthy data file
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
+    )
     data_df = advantix_read_csv(file_path)
     success, _ = advantix_check_structure(data_df)
-    assert(True == success)
+    assert True == success
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_2)
+    # checks if data with mispelled column fails
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_2
+    )
     data_df = advantix_read_csv(file_path)
     success, _ = advantix_check_structure(data_df)
-    assert(False == success)
+    assert False == success
+
 
 def test_advantix_convert():
-    
+
     # Good data
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
+    )
     data_df = advantix_read_csv(file_path)
     success, _, data_df = advantix_convert(data_df)
-    assert(True == success)
+    assert True == success
 
     # One column is misppeled, the checks should pick this up and return None
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_2)
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_2
+    )
     data_df = advantix_read_csv(file_path)
     success, _, data_df = advantix_convert(data_df)
-    assert(False == success)
-    assert(None == data_df)
+    assert False == success
+    assert None == data_df
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_3)
+    # Timestamp is wrong, the checks should return None
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_3
+    )
     data_df = advantix_read_csv(file_path)
     success, _, data_df = advantix_convert(data_df)
-    assert(False == success)
-    assert(None == data_df)
-    
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_4)
-    data_df = advantix_read_csv(file_path)
-    success, _, data_df = advantix_convert(data_df)
-    assert(False == success)
+    assert False == success
+    assert None == data_df
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_5)
+    # Modbus ID is wrong
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_4
+    )
     data_df = advantix_read_csv(file_path)
     success, _, data_df = advantix_convert(data_df)
-    assert(False == success)
+    assert False == success
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_6)
+    # Temperature values are wrong
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_5
+    )
     data_df = advantix_read_csv(file_path)
     success, _, data_df = advantix_convert(data_df)
-    assert(False == success)
+    assert False == success
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_7)
+    # Humidity values are wrong
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_6
+    )
     data_df = advantix_read_csv(file_path)
     success, _, data_df = advantix_convert(data_df)
-    assert(False == success)
+    assert False == success
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_8)
+    # Co2 values are wrong
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_7
+    )
+    data_df = advantix_read_csv(file_path)
+    success, _, data_df = advantix_convert(data_df)
+    assert False == success
+
+    # Temp and humidity empty values, assert error 3
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_8
+    )
     data_df = advantix_read_csv(file_path)
     success, log, _ = advantix_convert(data_df)
-    assert(False == success)
-    assert(ERR_IMPORT_ERROR_3 == log)
+    assert False == success
+    assert ERR_IMPORT_ERROR_3 == log
+
 
 def test_advantix_import():
 
     # One column is misppeled, the checks should pick this up and return None
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_2)
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_2
+    )
     success, _, data_df = advantix_import(file_path)
-    assert(False == success)
-    assert(None == data_df)
+    assert False == success
+    assert None == data_df
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
+    )
     success, _, data_df = advantix_import(file_path)
 
     # counting the number of entries
-    assert (len(data_df.index) == 75)
+    assert len(data_df.index) == 75
+
 
 def test_advantix_df_validity():
-    
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_9)
+
+    # Duplicate values test
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_9
+    )
     data_df = advantix_read_csv(file_path)
 
     success, _, data_df = advantix_convert(data_df)
-    assert(success)
+    assert success
 
     success, _ = advantix_df_validity(data_df)
-    assert(False == success)
+    assert False == success
 
-    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
+    file_path = os.path.join(
+        CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
+    )
     data_df = advantix_read_csv(file_path)
 
     success, _, data_df = advantix_convert(data_df)
     assert(success)
 
     success, log = advantix_df_validity(data_df)
-    assert(True == success)
-
-# def test_check_sensor_exists():
-#     success, log = check_sensor_exists ()
-#     assert success, log
-
-#def test_advantix_prep_for_import():
-
-#    file_path = os.path.join(CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1)
-#    success, _, data_df = advantix_import(file_path)
-
-#    good_df = advantix_prep_for_import(data_df)
-
-#    assert(good_df != None)
-
-
+    assert(True == success), log
