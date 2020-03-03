@@ -7,11 +7,12 @@ Advantix sensor data
 from sqlalchemy.orm import sessionmaker
 
 from crop.structure import (
-    Sensor,
-    Type,
-    Readings_Advantix
+    SensorClass,
+    TypeClass,
+    ReadingsAdvantixClass
 )
 
+from crop.structure import TypeClass, LocationClass, SensorClass
 
 from crop.constants import (
     CONST_ADVANTIX_COL_MODBUSID,
@@ -54,10 +55,9 @@ def insert_advantix_data(session, adv_df):
     log = ""
     cnt_dupl = 0
     
-
     # Gets the the assigned int id of the "Advantix" type
     try:
-        adv_type_id = session.query(Type).filter(Type.sensor_type == CONST_ADVANTIX).first().type_id
+        adv_type_id = session.query(TypeClass).filter(TypeClass.sensor_type == CONST_ADVANTIX).first().id
     except:
         result = False
         log = "Sensor type {} was not found.".format(CONST_ADVANTIX)
@@ -70,10 +70,10 @@ def insert_advantix_data(session, adv_df):
         adv_timestamp = row[CONST_ADVANTIX_COL_TIMESTAMP]
 
         try:
-            adv_sensor_id = session.query(Sensor).\
-                            filter(Sensor.device_id == str(adv_device_id)).\
-                            filter(Sensor.type_id == adv_type_id).\
-                            first().sensor_id
+            adv_sensor_id = session.query(SensorClass).\
+                            filter(SensorClass.device_id == str(adv_device_id)).\
+                            filter(SensorClass.type_id == adv_type_id).\
+                            first().id
         except:
             adv_sensor_id = -1
             result = False
@@ -85,9 +85,9 @@ def insert_advantix_data(session, adv_df):
         if adv_sensor_id != -1:
             found = False
             try:
-                query_result = session.query(ADVANTIX_READINGS_TABLE_NAME).\
-                                filter(Readings_Advantix.sensor_id == adv_sensor_id).\
-                                filter(Readings_Advantix.time_stamp == adv_timestamp).\
+                query_result = session.query(ReadingsAdvantixClass).\
+                                filter(ReadingsAdvantixClass.sensor_id == adv_sensor_id).\
+                                filter(ReadingsAdvantixClass.time_stamp == adv_timestamp).\
                                 first()
 
                 if query_result is not None:
@@ -97,7 +97,7 @@ def insert_advantix_data(session, adv_df):
                 
             try:
                 if not found:
-                    data = Readings_Advantix(
+                    data = ReadingsAdvantixClass(
                         sensor_id=adv_sensor_id,
                         time_stamp=adv_timestamp,
                         temperature=row[CONST_ADVANTIX_COL_TEMPERATURE],
@@ -111,7 +111,7 @@ def insert_advantix_data(session, adv_df):
                 log = "Cannot insert new data to database"
 
     if cnt_dupl != 0:
-        result = True
+        result = False
         log = "Cannot insert {} duplicate values".format(cnt_dupl)
 
     return result, log
