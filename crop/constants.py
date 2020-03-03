@@ -75,14 +75,14 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
-SQL_USER = os.environ["AZURE_SQL_USER"]
-SQL_PASSWORD = os.environ["AZURE_SQL_PASS"]
-SQL_SERVER = os.environ["AZURE_SQL_SERVER"]
-SQL_HOST = os.environ["AZURE_SQL_HOST"]
+SQL_USER = os.environ["CROP_SQL_USER"]
+SQL_PASSWORD = os.environ["CROP_SQL_PASS"]
+SQL_SERVER = os.environ["CROP_SQL_SERVER"]
+SQL_HOST = os.environ["CROP_SQL_HOST"]
 SQL_ENGINE = "postgresql"
-SQL_DBNAME = os.environ["AZURE_SQL_DBNAME"].strip().lower()
+SQL_DBNAME = os.environ["CROP_SQL_DBNAME"].strip().lower()
 SQL_DEFAULT_DBNAME = "postgres"
-SQL_PORT = os.environ["AZURE_SQL_PORT"]
+SQL_PORT = os.environ["CROP_SQL_PORT"]
 SQL_SSLMODE = "require"
 
 # FIXME: I am not quite sure, for this one seems to be messing up the connection
@@ -106,7 +106,10 @@ PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password=
 )
 
 # SQL Table names
-SENSOR_TABLE_NAME = 'sensor'
-SENSOR_TYPE_TABLE_NAME = 'sensor_type'
-LOCATION_TABLE_NAME = 'location'
-ADVANTIX_READINGS_TABLE_NAME = 'advantix'
+SENSOR_TABLE_NAME = "sensors"
+SENSOR_TYPE_TABLE_NAME = "sensor_types"
+LOCATION_TABLE_NAME = "locations"
+ADVANTIX_READINGS_TABLE_NAME = "advantix_data"
+TINYTAGS_READINGS_TABLE_NAME = "microtag_data"
+
+ID_COL_NAME = "id"

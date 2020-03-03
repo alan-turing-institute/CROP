@@ -158,7 +158,9 @@ def check_database_structure(engine):
                 # gets objects in each class in the form of:
                 # Readings_Advantix.sensor_relationship
                 mapper = inspect(sql_class)
+
                 for obj in mapper.attrs:
+
                     # checks if the object is a relationship
                     if isinstance(obj, RelationshipProperty):
                         # To do add checks for relations
