@@ -85,13 +85,13 @@ SQL_DEFAULT_DBNAME = "postgres"
 SQL_PORT = os.environ["CROP_SQL_PORT"]
 SQL_SSLMODE = "require"
 
-SQL_HOST = "{}.{}".format(SQL_SERVER, SQL_HOST)
-
-SQL_USER_SERVER = "{}@{}".format(SQL_USER, SQL_SERVER)
+# FIXME: I am not quite sure, for this one seems to be messing up the connection
+# string as it is the same as the constant name above
+#SQL_HOST = "{}.{}".format(SQL_SERVER, SQL_HOST)
 
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_ENGINE,
-    SQL_USER_SERVER,
+    SQL_USER,
     SQL_PASSWORD,
     SQL_HOST,
     SQL_PORT,
@@ -100,8 +100,9 @@ SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
 
+# FIXME: Missing engine? or i messed up the above string
 PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password={3} sslmode={4}".format(
-    SQL_HOST, SQL_USER_SERVER, SQL_DEFAULT_DBNAME, SQL_PASSWORD, SQL_SSLMODE
+    SQL_HOST, SQL_USER, SQL_DEFAULT_DBNAME, SQL_PASSWORD, SQL_SSLMODE
 )
 
 # SQL Table names

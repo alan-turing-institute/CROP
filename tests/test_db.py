@@ -8,14 +8,14 @@ from crop.db import create_database, connect_db, drop_db, check_database_structu
 
 TEST_DB_NAME = "fake_db"
 
-
+@pytest.mark.order1
 def test_create_database():
 
     # Test create new db
     created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert created, log.py
 
-
+@pytest.mark.order2
 def test_connect_db():
 
     # Try to connect to an engine that exists
@@ -28,7 +28,7 @@ def test_connect_db():
     assert status == False, log
     assert engine == None
 
-
+@pytest.mark.order3
 def test_check_database_structure():
 
     status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
@@ -38,8 +38,9 @@ def test_check_database_structure():
     good, log = check_database_structure(engine)
     assert good, log
 
-
+@pytest.mark.order4
 def test_drop_db():
 
-    success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
-    assert success, log
+   #Test drop db
+   success, log = drop_db(SQL_CONNECTION_STRING, test_db_name)
+   assert success, log

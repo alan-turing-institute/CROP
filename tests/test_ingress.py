@@ -42,6 +42,7 @@ def test_advantix_read_csv():
 
 def test_advantix_check_structure():
 
+    # checks healthy data file
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
     )
@@ -49,6 +50,7 @@ def test_advantix_check_structure():
     success, _ = advantix_check_structure(data_df)
     assert True == success
 
+    # checks if data with mispelled column fails
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_2
     )
@@ -76,6 +78,7 @@ def test_advantix_convert():
     assert False == success
     assert None == data_df
 
+    # Timestamp is wrong, the checks should return None
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_3
     )
@@ -84,6 +87,7 @@ def test_advantix_convert():
     assert False == success
     assert None == data_df
 
+    # Modbus ID is wrong
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_4
     )
@@ -91,6 +95,7 @@ def test_advantix_convert():
     success, _, data_df = advantix_convert(data_df)
     assert False == success
 
+    # Temperature values are wrong
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_5
     )
@@ -98,6 +103,7 @@ def test_advantix_convert():
     success, _, data_df = advantix_convert(data_df)
     assert False == success
 
+    # Humidity values are wrong
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_6
     )
@@ -105,6 +111,7 @@ def test_advantix_convert():
     success, _, data_df = advantix_convert(data_df)
     assert False == success
 
+    # Co2 values are wrong
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_7
     )
@@ -112,6 +119,7 @@ def test_advantix_convert():
     success, _, data_df = advantix_convert(data_df)
     assert False == success
 
+    # Temp and humidity empty values, assert error 3
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_8
     )
@@ -142,6 +150,7 @@ def test_advantix_import():
 
 def test_advantix_df_validity():
 
+    # Duplicate values test
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_9
     )
@@ -159,7 +168,7 @@ def test_advantix_df_validity():
     data_df = advantix_read_csv(file_path)
 
     success, _, data_df = advantix_convert(data_df)
-    assert success
+    assert(success)
 
-    success, _ = advantix_df_validity(data_df)
-    assert True == success
+    success, log = advantix_df_validity(data_df)
+    assert(True == success), log
