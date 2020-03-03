@@ -105,7 +105,10 @@ PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password=
 )
 
 # SQL Table names
-SENSOR_TABLE_NAME = "sensor"
-SENSOR_TYPE_TABLE_NAME = "sensor_type"
-LOCATION_TABLE_NAME = "location"
-ADVANTIX_READINGS_TABLE_NAME = "advantix"
+SENSOR_TABLE_NAME = "sensors"
+SENSOR_TYPE_TABLE_NAME = "sensor_types"
+LOCATION_TABLE_NAME = "locations"
+ADVANTIX_READINGS_TABLE_NAME = "advantix_data"
+TINYTAGS_READINGS_TABLE_NAME = "microtag_data"
+
+ID_COL_NAME = "id"
