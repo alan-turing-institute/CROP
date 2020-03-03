@@ -26,7 +26,7 @@ from crop.populate_db import session_open, session_close, insert_advantix_data
 
 
 # Test database name
-TEST_DB_NAME = "app_db"
+TEST_DB_NAME = "fake_db"
 
 
 @pytest.mark.run(order=1)
