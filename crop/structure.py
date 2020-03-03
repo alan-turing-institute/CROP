@@ -6,11 +6,8 @@ Module to define the structure of the database. Each Class, defines a table in t
     should inherit. When the class definition is completed, a new Table and mapper() is generated.
 """
 
-import datetime
-
 from sqlalchemy import (
     ForeignKey,
-    Float,
     Column,
     Integer,
     String,
@@ -18,8 +15,7 @@ from sqlalchemy import (
     Text,
     Unicode,
     UniqueConstraint,
-    BLOB,
-    LargeBinary
+    LargeBinary,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -30,56 +26,63 @@ from crop.constants import (
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
     ADVANTIX_READINGS_TABLE_NAME,
+    TINYTAGS_READINGS_TABLE_NAME,
+    ID_COL_NAME,
 )
 
 BASE = declarative_base()
 
 
-class Sensor(BASE):
-    """
-    This class contains a list of all the sensors in the farm
-    """
-
-    __tablename__ = SENSOR_TABLE_NAME
-
-    sensor_id = Column(Integer, primary_key=True)
-    type_id = Column(
-        Integer, ForeignKey(SENSOR_TYPE_TABLE_NAME + ".type_id")
-    )  # many to one relationship
-    device_id = Column(Unicode(100), nullable=False)
-    __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
-    # advantix_id = Column(String(100), unique=True, nullable=True) # Modbusid
-    # tinytag_id = Column(String(100), unique=True, nullable=True)
-    installation_date = Column(DateTime, nullable=False)
-
-    type_relationship = relationship("Type")
-    location_relationship = relationship("Location")  # one to many relationship
-    advantix_readings_relationship = relationship(
-        "Readings_Advantix"
-    )  # one to many relationship
-
-
-class Type(BASE):
+class TypeClass(BASE):
     """
     This class contains a list and characteristics of each type of sensor installed eg. "Advantix"
     """
 
     __tablename__ = SENSOR_TYPE_TABLE_NAME
 
-    type_id = Column(Integer, primary_key=True, unique=True, nullable=False)
-    # UUID =   Column(String(36), unique=True, nullable=False)
+    # columns
+    id = Column(Integer, primary_key=True)
     sensor_type = Column(String(100), nullable=False, unique=True)
     description = Column(Text, nullable=False)
 
-    def __repr__(self):
-        return "<Type(type_id='%d', sensor_type = %s, description = %s)>" % (
-            self.type_id,
-            self.sensor_type,
-            self.description,
-        )
+    # relationshionships (One-To-Many)
+    sensors_relationship = relationship("SensorClass")
 
 
-class Location(BASE):
+class SensorClass(BASE):
+    """
+    This class contains a list of all the sensors in the farm
+    """
+
+    __tablename__ = SENSOR_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    type_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TYPE_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    device_id = Column(Unicode(100), nullable=False)
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    installation_date = Column(DateTime, nullable=False)
+
+    # relationshionships (One-To-Many)
+    advantix_readings_relationship = relationship("ReadingsAdvantixClass")
+    tinytags_readings_relationship = relationship("ReadingsTinyTagsClass")
+
+    # relationshionships (Many-To-One)
+    location_relationship = relationship("LocationClass")
+
+    # arguments
+    __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
+
+
+class LocationClass(BASE):
     """
     This class describes all the physical locations in the farm. eg. Sensor x is found in
     the front section, in the left column , in the 3rd self.
@@ -87,93 +90,100 @@ class Location(BASE):
 
     __tablename__ = LOCATION_TABLE_NAME
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    sensor_id = Column(
-        Integer, ForeignKey(SENSOR_TABLE_NAME + ".sensor_id"), nullable=False
-    )
-    sensor_relationship = relationship(Sensor)
+    # columns
+    id = Column(Integer, primary_key=True)
+
     section = Column(Integer, nullable=False)  # Farm 1/2
     column = Column(Integer, nullable=False)  # no
     shelf = Column(String(50), nullable=False)  # top/middle/bottom
-    code = Column(String)
+    code = Column(String, nullable=False)
 
 
-class Readings_Advantix(BASE):
+class ReadingsAdvantixClass(BASE):
     """
-    Base class for the sensor Readings
+    Base class for the Advantix sensor readings
     """
 
     __tablename__ = ADVANTIX_READINGS_TABLE_NAME
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    # columns
+    id = Column(Integer, primary_key=True)
     sensor_id = Column(
-        Integer, ForeignKey(SENSOR_TABLE_NAME + ".sensor_id"), nullable=False
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
     )
-    sensor_relationship = relationship(Sensor)
+
     time_stamp = Column(DateTime, nullable=False)
     temperature = Column(Integer, nullable=False)
     humidity = Column(Integer, nullable=False)
     co2 = Column(Integer, nullable=False)
-    time_created = Column(
-        DateTime(), server_default=func.now()
-    )  # when data are passed to the server
-    time_updated = Column(DateTime(), onupdate=func.now())  # <-- to check
+
+    # TODO: not convinced about these columns
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
 
-class Readings_Tags(BASE):
+class ReadingsTinyTagsClass(BASE):
     """
     Class for reading the raw Advantix data
     """
 
-    __tablename__ = "microtags"
+    __tablename__ = TINYTAGS_READINGS_TABLE_NAME
 
+    # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
-    sensor_id = Column(Integer, ForeignKey(SENSOR_TABLE_NAME + ".sensor_id"))
-    sensor_relationship = relationship(Sensor)  # back_populates="READINGS"
-    loggertimestamp = Column(DateTime)
-    deviceaddress = Column(String)
-    uptime = Column(Integer)
-    battery = Column(Integer)
-    validity = Column(Integer)
-    ch1 = Column(Integer)
-    ch2 = Column(Integer)
-    ch3 = Column(Integer)
-    opt = Column(Integer)
-    co2cozir = Column(Integer)
-    tempsht = Column(Integer)
-    humiditysht = Column(Integer)
-    tempds = Column(Integer)
-    time_created = Column(
-        DateTime(), server_default=func.now()
-    )  # when data are passed to the server
-    time_updated = Column(DateTime(), onupdate=func.now())  # <-- to check
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    loggertimestamp = Column(DateTime, nullable=False)
+    deviceaddress = Column(String, nullable=False)
+    uptime = Column(Integer, nullable=False)
+    battery = Column(Integer, nullable=False)
+    validity = Column(Integer, nullable=False)
+    ch1 = Column(Integer, nullable=False)
+    ch2 = Column(Integer, nullable=False)
+    ch3 = Column(Integer, nullable=False)
+    opt = Column(Integer, nullable=False)
+    co2cozir = Column(Integer, nullable=False)
+    tempsht = Column(Integer, nullable=False)
+    humiditysht = Column(Integer, nullable=False)
+    tempds = Column(Integer, nullable=False)
+
+    # TODO: not convinced about these columns
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
 
-class Weather(BASE):
-    """
-    Class for reading the Met Weather API
-    """
-
-    __tablename__ = "weather"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    temperature = Column(Integer)
-    windspeed = Column(Integer)
-    winddirection = Column(Integer)
-    weathertype = Column(String)
-    forecast = Column(Integer)
-    time_accessed = Column(DateTime(), server_default=func.now())
-
-
-class User(BASE):
+class UserClass(BASE):
     """
     Class for user data
     """
 
     __tablename__ = "User"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String, unique=True)
-    email = Column(String, unique=True)
+    id = Column(Integer, primary_key=True)
+
+    username = Column(String, nullable=False, unique=True)
+    email = Column(String, nullable=False, unique=True)
     password = Column(LargeBinary, nullable=False)
 
+
+# class Weather(BASE):
+#     """
+#     Class for reading the Met Weather API
+#     """
+
+#     __tablename__ = "weather"
+
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+
+#     temperature = Column(Integer)
+#     windspeed = Column(Integer)
+#     winddirection = Column(Integer)
+#     weathertype = Column(String)
+#     forecast = Column(Integer)
+#     time_accessed = Column(DateTime(), server_default=func.now())
