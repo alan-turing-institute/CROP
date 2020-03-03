@@ -1,5 +1,6 @@
 pip
 pytest
+pytest-ordering>=0.6
 
 psycopg2>=2.8.4
 SQLAlchemy-Utils>=0.36.1
