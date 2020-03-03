@@ -119,7 +119,6 @@ class ReadingsAdvantixClass(BASE):
     humidity = Column(Integer, nullable=False)
     co2 = Column(Integer, nullable=False)
 
-    # TODO: not convinced about these columns
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
@@ -153,7 +152,6 @@ class ReadingsTinyTagsClass(BASE):
     humiditysht = Column(Integer, nullable=False)
     tempds = Column(Integer, nullable=False)
 
-    # TODO: not convinced about these columns
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
