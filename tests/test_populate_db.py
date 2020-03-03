@@ -26,7 +26,7 @@ from crop.populate_db import session_open, session_close, insert_advantix_data
 
 
 # Test database name
-TEST_DB_NAME = "fake_db1"
+TEST_DB_NAME = "app_db"
 
 
 @pytest.mark.run(order=1)
@@ -152,14 +152,14 @@ def test_insert_advantix_data():
     success, log = insert_advantix_data(session, test_ingress_df)
     assert success, log
 
-    file_path = os.path.join(CONST_ADVANTIX_DIR, CONST_ADVANTIX_TEST_10)
-    success, log, test_ingress_df = advantix_import(file_path)
-    assert success, log
-    assert isinstance(test_ingress_df, pd.DataFrame)
+    # file_path = os.path.join(CONST_ADVANTIX_DIR, CONST_ADVANTIX_TEST_10)
+    # success, log, test_ingress_df = advantix_import(file_path)
+    # assert success, log
+    # assert isinstance(test_ingress_df, pd.DataFrame)
 
-    # FIXME this test should not pass
-    success, log = insert_advantix_data(session, test_ingress_df)
-    assert success, log
+    # # FIXME this test should not pass
+    # success, log = insert_advantix_data(session, test_ingress_df)
+    # assert success, log
 
     session_close(session)
 
