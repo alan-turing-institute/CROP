@@ -19,5 +19,3 @@ before_script:
 script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
   - pytest
-
-# PGPORT=5433
