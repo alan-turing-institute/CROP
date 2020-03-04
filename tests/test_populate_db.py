@@ -63,6 +63,7 @@ def test_insert_type_data():
     else:
         assert session.query(TypeClass).count() == len(type_df.index)
 
+
     session_close(session)
 
 
