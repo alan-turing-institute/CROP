@@ -1,4 +1,4 @@
-pip
+pip>=19.3.1
 pytest
 pytest-ordering>=0.6
 
@@ -10,7 +10,7 @@ DateTime>=4.3
 # graphviz>=0.13.2
 numpy>=1.18.0
 pandas>=0.25.3
-pip>=19.3.1
+
 psycopg2>=2.8.4
 # python-dateutil>=2.8.1
 # pytz==2019.3
