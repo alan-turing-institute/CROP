@@ -46,6 +46,9 @@ class TypeClass(BASE):
     sensor_type = Column(String(100), nullable=False, unique=True)
     description = Column(Text, nullable=False)
 
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
     # relationshionships (One-To-Many)
     sensors_relationship = relationship("SensorClass")
 
@@ -65,6 +68,9 @@ class SensorClass(BASE):
         nullable=False,
     )
     device_id = Column(Unicode(100), nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
@@ -92,6 +98,9 @@ class LocationClass(BASE):
     shelf = Column(String(50), nullable=False)  # top/middle/bottom
 
     code = Column(String, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
@@ -187,6 +196,7 @@ class SensorLocationClass(BASE):
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
 
+
 class UserClass(BASE):
     """
     Class for user data
@@ -200,6 +210,8 @@ class UserClass(BASE):
     email = Column(String, nullable=False, unique=True)
     password = Column(LargeBinary, nullable=False)
 
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
 # class Weather(BASE):
 #     """
