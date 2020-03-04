@@ -13,6 +13,8 @@ CONST_TEST_FOLDER = "tests"
 CONST_ADVANTIX_FOLDER = "Advantix"
 CONST_CORE_DATA_FOLDER = "Import"
 
+CONST_SENSOR_LOCATION_TESTS = "sensor_location_tests"
+
 CONST_TEST_DIR = os.path.abspath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", CONST_TEST_FOLDER)
 )
@@ -77,17 +79,12 @@ ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 # Create connection string
 SQL_USER = os.environ["CROP_SQL_USER"]
 SQL_PASSWORD = os.environ["CROP_SQL_PASS"]
-SQL_SERVER = os.environ["CROP_SQL_SERVER"]
 SQL_HOST = os.environ["CROP_SQL_HOST"]
 SQL_ENGINE = "postgresql"
 SQL_DBNAME = os.environ["CROP_SQL_DBNAME"].strip().lower()
 SQL_DEFAULT_DBNAME = "postgres"
 SQL_PORT = os.environ["CROP_SQL_PORT"]
 SQL_SSLMODE = "require"
-
-# FIXME: I am not quite sure, for this one seems to be messing up the connection
-# string as it is the same as the constant name above
-#SQL_HOST = "{}.{}".format(SQL_SERVER, SQL_HOST)
 
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_ENGINE,
@@ -100,6 +97,7 @@ SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
 
+
 # FIXME: Missing engine? or i messed up the above string
 PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password={3} sslmode={4}".format(
     SQL_HOST, SQL_USER, SQL_DEFAULT_DBNAME, SQL_PASSWORD, SQL_SSLMODE
@@ -109,6 +107,7 @@ PSYCOPG2_SQL_CONNECTION_STRING_DEFAULT = "host={0} user={1} dbname={2} password=
 SENSOR_TABLE_NAME = "sensors"
 SENSOR_TYPE_TABLE_NAME = "sensor_types"
 LOCATION_TABLE_NAME = "locations"
+SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 ADVANTIX_READINGS_TABLE_NAME = "advantix_data"
 TINYTAGS_READINGS_TABLE_NAME = "microtag_data"
 
