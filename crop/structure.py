@@ -25,6 +25,7 @@ from crop.constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
+    SENSOR_LOCATION_TABLE_NAME,
     ADVANTIX_READINGS_TABLE_NAME,
     TINYTAGS_READINGS_TABLE_NAME,
     ID_COL_NAME,
@@ -45,6 +46,9 @@ class TypeClass(BASE):
     sensor_type = Column(String(100), nullable=False, unique=True)
     description = Column(Text, nullable=False)
 
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
     # relationshionships (One-To-Many)
     sensors_relationship = relationship("SensorClass")
 
@@ -64,19 +68,15 @@ class SensorClass(BASE):
         nullable=False,
     )
     device_id = Column(Unicode(100), nullable=False)
-    location_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-    installation_date = Column(DateTime, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
     # relationshionships (One-To-Many)
+    sensor_locations_relationship = relationship("SensorLocationClass")
+
     advantix_readings_relationship = relationship("ReadingsAdvantixClass")
     tinytags_readings_relationship = relationship("ReadingsTinyTagsClass")
-
-    # relationshionships (Many-To-One)
-    location_relationship = relationship("LocationClass")
 
     # arguments
     __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
@@ -96,7 +96,17 @@ class LocationClass(BASE):
     section = Column(Integer, nullable=False)  # Farm 1/2
     column = Column(Integer, nullable=False)  # no
     shelf = Column(String(50), nullable=False)  # top/middle/bottom
+
     code = Column(String, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # relationshionships (One-To-Many)
+    sensor_locations_relationship = relationship("SensorLocationClass")
+
+    # arguments
+    __table_args__ = (UniqueConstraint("section", "column", "shelf"),)
 
 
 class ReadingsAdvantixClass(BASE):
@@ -156,6 +166,37 @@ class ReadingsTinyTagsClass(BASE):
     time_updated = Column(DateTime(), onupdate=func.now())
 
 
+class SensorLocationClass(BASE):
+    """
+    Class for storing sensor location history.
+    """
+
+    __tablename__ = SENSOR_LOCATION_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    installation_date = Column(DateTime, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
+
+
 class UserClass(BASE):
     """
     Class for user data
@@ -169,6 +210,8 @@ class UserClass(BASE):
     email = Column(String, nullable=False, unique=True)
     password = Column(LargeBinary, nullable=False)
 
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
 # class Weather(BASE):
 #     """
