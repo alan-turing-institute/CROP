@@ -6,6 +6,13 @@ services:
 install:
   - pip install -r requirements.txt
 
+env:
+  -CROP_SQL_HOST="localhost"
+  -CROP_SQL_USER="testuser"
+  -CROP_SQL_PASS="testpassword"
+  -CROP_SQL_DBNAME="cropdb"
+  -CROP_SQL_PORT="5432"
+
 before_script:
   - psql -c "CREATE DATABASE cropdb;" -U postgres
   - psql -c "CREATE USER testuser WITH PASSWORD 'testpassword';" -U postgres
@@ -13,3 +20,5 @@ before_script:
 script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
   - pytest
+
+# PGPORT=5433
