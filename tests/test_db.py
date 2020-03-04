@@ -14,7 +14,6 @@ def test_create_database():
     created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
     print("Assert result: ", log)
     assert (created==True)
-    
     #, log.py
 
 def test_connect_db():
