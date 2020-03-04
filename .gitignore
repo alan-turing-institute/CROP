@@ -8,7 +8,7 @@ CROP.pyproj.user
 .secrets/
 
 # Data
-data/ 
+/data/ 
 
 # Terraform
 .terraform
