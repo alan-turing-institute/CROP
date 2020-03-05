@@ -31,6 +31,7 @@ from crop.constants import (
     ID_COL_NAME,
 )
 
+
 BASE = declarative_base()
 
 
@@ -42,7 +43,7 @@ class TypeClass(BASE):
     __tablename__ = SENSOR_TYPE_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_type = Column(String(100), nullable=False, unique=True)
     description = Column(Text, nullable=False)
 
@@ -61,7 +62,7 @@ class SensorClass(BASE):
     __tablename__ = SENSOR_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     type_id = Column(
         Integer,
         ForeignKey("{}.{}".format(SENSOR_TYPE_TABLE_NAME, ID_COL_NAME)),
@@ -91,7 +92,7 @@ class LocationClass(BASE):
     __tablename__ = LOCATION_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     section = Column(Integer, nullable=False)  # Farm 1/2
     column = Column(Integer, nullable=False)  # no
@@ -117,7 +118,7 @@ class ReadingsAdvantixClass(BASE):
     __tablename__ = ADVANTIX_READINGS_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_id = Column(
         Integer,
         ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
@@ -174,7 +175,7 @@ class SensorLocationClass(BASE):
     __tablename__ = SENSOR_LOCATION_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     sensor_id = Column(
         Integer,
@@ -204,7 +205,7 @@ class UserClass(BASE):
 
     __tablename__ = "User"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     username = Column(String, nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
@@ -212,6 +213,7 @@ class UserClass(BASE):
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
+
 
 # class Weather(BASE):
 #     """
