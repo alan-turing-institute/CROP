@@ -1,3 +1,7 @@
-UUID,TYPE_ID,start_period,LOCATION,DESCRIPTION
-1,1,Mar-16,1,rrr
-2,1,Mar-16,6,jjj
+id,type_id,device_id
+1,1,1
+2,1,2
+3,1,3
+4,1,4
+5,2,2
+6,2,1
