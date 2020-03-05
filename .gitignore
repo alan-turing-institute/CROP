@@ -10,9 +10,10 @@ CROP.pyproj.user
 # Data
 /data/ 
 
-# Terraform
-.terraform
-terraform.tfstate
+# Azure function
+local.settings.json
+.python_packages
+
 
 # PyTest
 __pycache__

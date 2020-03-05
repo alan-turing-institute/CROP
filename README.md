@@ -1,7 +1,8 @@
 # CROP <img src="https://pngimage.net/wp-content/uploads/2018/06/logo-placeholder-png.png" width="200" align="right">
 
 ## Summary
-**Crop** is a Research Observations Platform designed and created by [Tomas Lazauskas](https://github.com/tomaslaz) and [Flora Roumpani](https://github.com/misspawty) and Collaborators.
+
+**Crop** is a Research Observations Platform designed and created by [Tomas Lazauskas](https://github.com/tomaslaz), [Flora Roumpani](https://github.com/misspawty) and Collaborators.
 
 <!-- [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3662779.svg)](https://doi.org/10.5281/zenodo.3662779) -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
