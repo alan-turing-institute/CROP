@@ -1,16 +1,13 @@
-#files
-import createtables as tbls
-#libraries
-import datetime
-import psycopg2
-import sqlalchemy as sqla
+#import datetime
+#import psycopg2
+#import sqlalchemy as sqla
 from sqlalchemy.orm import sessionmaker, relationship
 
 # NOTE: switch to sqlite for convinience. 
     
-def populatesensors (dbname, Data, Class):
+def populatesensors (engine, Data, Class):
     #creates a connection to PostgreSQL
-    engine = sqla.create_engine('postgresql://postgres:crop@localhost:5433/'+dbname)
+    #engine = sqla.create_engine('postgresql://postgres:crop@localhost:5433/'+dbname)
     #Creates the database with all the Base Classes
     #Base.metadata.create_all(engine)
     
