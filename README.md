@@ -1,4 +1,4 @@
-# CROP <img src="https://pngimage.net/wp-content/uploads/2018/06/logo-placeholder-png.png" width="200" align="right">
+# CROP <img src="media/logo.png" width="200" align="right">
 
 ## Summary
 
