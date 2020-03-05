@@ -1,4 +1,4 @@
-# CROP <img src="media/logo.png" width="160" align="right">
+# CROP <img src="media/logo.png" width="180" align="right">
 
 ## Summary
 
