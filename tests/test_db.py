@@ -12,7 +12,7 @@ def test_create_database():
 
     # Test create new db
     created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
-    assert created, log.py
+    assert created, log
 
 def test_connect_db():
 

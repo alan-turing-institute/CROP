@@ -74,7 +74,7 @@ def test_insert_location_data():
     Tests bulk inserting test location data
     """
 
-    test_csv = "Locations.csv"
+    test_csv = "locations.csv"
 
     # test reading type data
     loc_df = pd.read_csv(os.path.join(CONST_COREDATA_DIR, test_csv))
