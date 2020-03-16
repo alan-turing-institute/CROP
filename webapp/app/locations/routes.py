@@ -4,10 +4,11 @@ from flask_login import login_required
 
 from flask import request
 
-from app import db
-from app.structure import LocationClass
-
 from sqlalchemy import exc
+
+from crop.structure import db
+from crop.structure import LocationClass
+
 
 CONST_ACTION_ADD = "Add"
 CONST_ACTION_EDIT = "Edit"
