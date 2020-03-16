@@ -15,13 +15,15 @@ from sqlalchemy import (
     Text,
     Unicode,
     UniqueConstraint,
-    LargeBinary,
+    Binary,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+
+from bcrypt import gensalt, hashpw
 
 from crop.constants import (
     SENSOR_TABLE_NAME,
@@ -111,6 +113,14 @@ class LocationClass(BASE):
 
     # arguments
     __table_args__ = (UniqueConstraint("section", "column", "shelf"),)
+
+    # constructor
+    def __init__(self, section, column, shelf, code):
+
+        self.section = section
+        self.column = column
+        self.shelf = shelf
+        self.code = code
 
 
 class ReadingsAdvantixClass(BASE):
@@ -218,18 +228,44 @@ class SensorLocationClass(BASE):
 #     time_accessed = Column(DateTime(), server_default=func.now())
 
 
-class UserClass(BASE):
+class UserClass(BASE, UserMixin):
     """
-    Class for user data
+    Class for storing user credentials.
     """
 
     __tablename__ = "User"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-
     username = Column(String, nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
-    password = Column(LargeBinary, nullable=False)
+    password = Column(Binary, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
+
+    def __init__(self, **kwargs):
+        for prop, value in kwargs.items():
+            # depending on whether value is an iterable or not, we must
+            # unpack it's value (when **kwargs is request.form, some values
+            # will be a 1-element list)
+            if hasattr(value, "__iter__") and not isinstance(value, str):
+                # the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+                value = value[0]
+            if prop == "password":
+                value = hashpw(value.encode("utf8"), gensalt())
+            setattr(self, prop, value)
+
+    def __repr__(self):
+        """
+        Computes a string reputation of the object.
+
+        """
+
+        return str(self.username)
+
+    def serialize(self):
+        """
+        Serialization of the object.
+        """
+
+        return {"id": self.id, "username": self.username, "email": self.email}

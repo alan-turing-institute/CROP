@@ -7,10 +7,12 @@ from flask_login import (
     logout_user
 )
 
-from app import db, login_manager
+from crop.structure import db
+from app import login_manager
+from crop.structure import UserClass
+
 from app.base import blueprint
 from app.base.forms import LoginForm, CreateAccountForm
-from app.base.models import User
 
 
 @blueprint.route('/')
@@ -44,7 +46,7 @@ def login():
     if 'login' in request.form:
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
+        user = UserClass.query.filter_by(username=username).first()
         if user and checkpw(password.encode('utf8'), user.password):
             login_user(user)
             return redirect(url_for('base_blueprint.route_default'))
@@ -60,7 +62,7 @@ def login():
 
 @blueprint.route('/create_user', methods=['POST'])
 def create_user():
-    user = User(**request.form)
+    user = UserClass(**request.form)
     db.session.add(user)
     db.session.commit()
     return jsonify('success')

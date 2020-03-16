@@ -1,12 +1,25 @@
 from flask import Flask, url_for
 from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
+
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 
-db = SQLAlchemy()
+from crop.structure import db
+from crop.structure import UserClass
+
 login_manager = LoginManager()
+
+@login_manager.user_loader
+def user_loader(id):
+    return UserClass.query.filter_by(id=id).first()
+
+
+@login_manager.request_loader
+def request_loader(request):
+    username = request.form.get('username')
+    user = UserClass.query.filter_by(username=username).first()
+    return user if user else None
 
 
 def register_extensions(app):
