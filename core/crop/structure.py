@@ -21,6 +21,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
+from flask_sqlalchemy import SQLAlchemy
+
 from crop.constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
@@ -32,7 +34,8 @@ from crop.constants import (
 )
 
 
-BASE = declarative_base()
+db = SQLAlchemy()
+BASE = db.Model
 
 
 class TypeClass(BASE):
