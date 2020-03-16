@@ -246,6 +246,7 @@ def test_import_sensor_location():
 
     session_close(session)
 
+
 def test_drop_db():
     success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert success, log
