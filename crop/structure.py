@@ -198,6 +198,23 @@ class SensorLocationClass(BASE):
     __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
 
 
+# class WeatherClass(BASE):
+#     """
+#     Class for reading the Met Weather API
+#     """
+
+#     __tablename__ = "weather"
+
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+
+#     temperature = Column(Integer)
+#     windspeed = Column(Integer)
+#     winddirection = Column(Integer)
+#     weathertype = Column(String)
+#     forecast = Column(Integer)
+#     time_accessed = Column(DateTime(), server_default=func.now())
+
+
 class UserClass(BASE):
     """
     Class for user data
@@ -213,20 +230,3 @@ class UserClass(BASE):
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
-
-
-# class Weather(BASE):
-#     """
-#     Class for reading the Met Weather API
-#     """
-
-#     __tablename__ = "weather"
-
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-
-#     temperature = Column(Integer)
-#     windspeed = Column(Integer)
-#     winddirection = Column(Integer)
-#     weathertype = Column(String)
-#     forecast = Column(Integer)
-#     time_accessed = Column(DateTime(), server_default=func.now())
