@@ -9,6 +9,7 @@ Module to define the structure of the database. Each Class, defines a table in t
 from sqlalchemy import (
     ForeignKey,
     Column,
+    column_property,
     Integer,
     Float,
     DECIMAL,
@@ -50,7 +51,11 @@ class TypeClass(BASE):
     # columns
     id = Column(Integer, primary_key=True)
     sensor_type = Column(String(100), nullable=False, unique=True)
-    description = Column(Text, nullable=False)
+    source = Column(String(100), nullable=False)
+    origin = Column(String(100), nullable=False)
+    frequency = Column(String(100), nullable= False)
+    data = Column(String(100), nullable=False)
+    description = Column(Text)
 
     # relationshionships (One-To-Many)
     sensors_relationship = relationship("SensorClass")
@@ -103,10 +108,11 @@ class LocationClass(BASE):
     # columns
     id = Column(Integer, primary_key=True)
 
-    section = Column(Integer, nullable=False)  # Farm 1/2
+    zone = Column(String(50), nullable=False) #farm zone
+    section = Column(String(50), nullable=False)  # Seciton A/B
     column = Column(Integer, nullable=False)  # no
-    shelf = Column(String(50), nullable=False)  # top/middle/bottom
-    code = Column(String, nullable=False)
+    shelf = Column(Integer, nullable=False)  # 1,2,3,4 / top/middle/bottom
+    code = column_property(section + column + shelf) #generated code of location
 
 
 class ReadingsAdvantixClass(BASE):
