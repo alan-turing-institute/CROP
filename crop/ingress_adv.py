@@ -1,5 +1,6 @@
 """
 Python module to perform data ingress operations
+for the Advanticsys sensors
 
 """
 
