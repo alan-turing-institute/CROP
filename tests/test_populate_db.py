@@ -20,7 +20,7 @@ from crop.constants import (
 
 from crop.db import create_database, connect_db, drop_db
 
-from crop.ingress import advantix_import
+from crop.ingress_adv import advantix_import
 
 from crop.populate_db import session_open, session_close, insert_advantix_data
 

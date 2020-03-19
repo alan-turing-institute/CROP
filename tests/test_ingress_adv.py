@@ -21,7 +21,7 @@ from crop.constants import (
     ERR_IMPORT_ERROR_3,
 )
 
-from crop.ingress import (
+from crop.ingress_adv import (
     advantix_read_csv,
     advantix_check_structure,
     advantix_import,
