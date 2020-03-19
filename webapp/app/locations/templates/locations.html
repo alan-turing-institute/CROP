@@ -1,0 +1,101 @@
+{% extends "base_site.html" %}
+
+{% block title %} LOCATIONS {% endblock title %}
+
+{% block stylesheets %}
+  {{ super() }}
+  <link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      
+      <div class="page-title">
+        <div class="title_left">
+            <h3>List of Locations</h3>
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <br />
+            <h3 id="header">{{ loc_message }}</h3>
+            <br />
+
+            <div class="x_content">
+
+              <table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Section</th>
+                    <th>Column</th>
+                    <th>Shelf</th>
+                    <th>Code</th>
+                    <th class="column-title no-link last"><span class="nobr">Action</span>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                    {% for t_location in locations %}
+                    <tr class='clickable-row' method = POST>
+                      <td>{{ t_location.id }}</td>
+                      <td>{{ t_location.section }}</td>
+                      <td>{{ t_location.column }}</td>
+                      <td>{{ t_location.shelf }}</td>
+                      <td>{{ t_location.code }}</td>
+                      <td class=" last"><a href="/locations/location_form?query={{ t_location.id }}">Edit</a>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+              </table>
+
+              <!-- <div class="x_content">
+                <button type="button" class="btn btn-success">Add</button>
+                <button type="button" class="btn btn-primary">Edit</button>
+                <button type="button" class="btn btn-danger">Delete</button>
+              </div> -->
+            </div>
+          </div>
+        </div>
+
+        <div class="clearfix"></div>
+
+      </div>
+
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ super() }}
+  <!-- Datatables -->
+  <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.flash.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-keytable/js/dataTables.keyTable.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-scroller/js/dataTables.scroller.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
+  <!-- Parsley -->
+  <script src="{{ url_for('static', filename='vendors/parsleyjs/dist/parsley.min.js') }}"></script>
+{% endblock javascripts %}
