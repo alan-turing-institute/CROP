@@ -15,7 +15,7 @@ from sqlalchemy import (
     Text,
     Unicode,
     UniqueConstraint,
-    Binary,
+    LargeBinary,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -238,7 +238,7 @@ class UserClass(BASE, UserMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String, nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
-    password = Column(Binary, nullable=False)
+    password = Column(LargeBinary, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
