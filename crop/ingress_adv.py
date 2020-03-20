@@ -9,94 +9,94 @@ import pandas as pd
 
 # from crop.db import create_database
 from crop.constants import (
-    CONST_ADVANTIX_COL_LIST,
-    CONST_ADVANTIX_COL_TIMESTAMP,
-    CONST_ADVANTIX_COL_MODBUSID,
-    CONST_ADVANTIX_COL_TEMPERATURE,
-    CONST_ADVANTIX_COL_HUMIDITY,
-    CONST_ADVANTIX_COL_CO2LEVEL,
+    CONST_ADVANTICSYS_COL_LIST,
+    CONST_ADVANTICSYS_COL_TIMESTAMP,
+    CONST_ADVANTICSYS_COL_MODBUSID,
+    CONST_ADVANTICSYS_COL_TEMPERATURE,
+    CONST_ADVANTICSYS_COL_HUMIDITY,
+    CONST_ADVANTICSYS_COL_CO2LEVEL,
     ERR_IMPORT_ERROR_1,
     ERR_IMPORT_ERROR_2,
     ERR_IMPORT_ERROR_3,
     ERR_IMPORT_ERROR_4,
     ERR_IMPORT_ERROR_5,
-    CONST_ADVANTIX_TIMESTAMP_MIN,
-    CONST_ADVANTIX_TIMESTAMP_MAX,
-    CONST_ADVANTIX_MODBUSID_MIN,
-    CONST_ADVANTIX_MODBUSID_MAX,
-    CONST_ADVANTIX_TEMPERATURE_MIN,
-    CONST_ADVANTIX_TEMPERATURE_MAX,
-    CONST_ADVANTIX_HUMIDITY_MIN,
-    CONST_ADVANTIX_HUMIDITY_MAX,
-    CONST_ADVANTIX_CO2LEVEL_MIN,
-    CONST_ADVANTIX_CO2LEVEL_MAX,
+    CONST_ADVANTICSYS_TIMESTAMP_MIN,
+    CONST_ADVANTICSYS_TIMESTAMP_MAX,
+    CONST_ADVANTICSYS_MODBUSID_MIN,
+    CONST_ADVANTICSYS_MODBUSID_MAX,
+    CONST_ADVANTICSYS_TEMPERATURE_MIN,
+    CONST_ADVANTICSYS_TEMPERATURE_MAX,
+    CONST_ADVANTICSYS_HUMIDITY_MIN,
+    CONST_ADVANTICSYS_HUMIDITY_MAX,
+    CONST_ADVANTICSYS_CO2LEVEL_MIN,
+    CONST_ADVANTICSYS_CO2LEVEL_MAX,
     CONST_TEST_DIR_DATA,
-    CONST_ADVANTIX_FOLDER,
-    CONST_ADVANTIX_TEST_1,
+    CONST_ADVANTICSYS_FOLDER,
+    CONST_ADVANTICSYS_TEST_1,
 )
 
 file_path = os.path.join(
-    CONST_TEST_DIR_DATA, CONST_ADVANTIX_FOLDER, CONST_ADVANTIX_TEST_1
+    CONST_TEST_DIR_DATA, CONST_ADVANTICSYS_FOLDER, CONST_ADVANTICSYS_TEST_1
 )
 
 
-def advantix_import(file_path):
+def advanticsys_import(file_path):
     """
-    Reads in advantix csv file as pandas data frame and performs checks
+    Reads in advanticsys csv file as pandas data frame and performs checks
 
     Args:
-        file_path - full path to an advantix csv file
+        file_path - full path to an advanticsys csv file
     Returns:
         success - status
         log - error message
-        advantix_df - pandas dataframe representing advantix data file,
+        advanticsys_df - pandas dataframe representing advanticsys data file,
         returns None if data is invalid
     """
 
-    advantix_raw_df = advantix_read_csv(file_path)
+    advanticsys_raw_df = advanticsys_read_csv(file_path)
 
-    return advantix_df_checks(advantix_raw_df)
+    return advanticsys_df_checks(advanticsys_raw_df)
 
 
-def advantix_df_checks(advantix_raw_df):
+def advanticsys_df_checks(advanticsys_raw_df):
     """
     Args
     Return
     """
     # Checks if df exists
-    if not isinstance(advantix_raw_df, pd.DataFrame):
+    if not isinstance(advanticsys_raw_df, pd.DataFrame):
         return False, "Not a pandas dataframe", None
 
     # Checks if df is empty
-    if advantix_raw_df.empty:
+    if advanticsys_raw_df.empty:
         return False, "Dataframe empty", None
 
     # Checks structure
-    success, log = advantix_check_structure(advantix_raw_df)
+    success, log = advanticsys_check_structure(advanticsys_raw_df)
     if not success:
         return success, log, None
 
-    # converts data and uses only columns from CONST_ADVANTIX_COL_LIST
-    success, log, advantix_df = advantix_convert(advantix_raw_df)
+    # converts data and uses only columns from CONST_ADVANTICSYS_COL_LIST
+    success, log, advanticsys_df = advanticsys_convert(advanticsys_raw_df)
     if not success:
         return success, log, None
 
     # Checks for validity
-    success, log = advantix_df_validity(advantix_df)
+    success, log = advanticsys_df_validity(advanticsys_df)
     if not success:
         return success, log, None
 
-    return success, log, advantix_df
+    return success, log, advanticsys_df
 
 
-def advantix_read_csv(file_path):
+def advanticsys_read_csv(file_path):
     """
-    Reads in advantix csv file as pandas data frame.
+    Reads in advanticsys csv file as pandas data frame.
 
     Args:
-        file_path - full path to an advantix csv file
+        file_path - full path to an advanticsys csv file
     Returns:
-        df - pandas dataframe representing advantix data file
+        df - pandas dataframe representing advanticsys data file
     """
 
     df = pd.read_csv(file_path)
@@ -104,88 +104,88 @@ def advantix_read_csv(file_path):
     return df
 
 
-def advantix_check_structure(advantix_df):
+def advanticsys_check_structure(advanticsys_df):
     """
-    Checks if advantix dataframe has expected structure
+    Checks if advanticsys dataframe has expected structure
 
     Args:
-        advantix_df - pandas dataframe representing advantix data file
+        advanticsys_df - pandas dataframe representing advanticsys data file
     Returns:
         True/False depending on whether the dataframe has the correct structure
         Error message
     """
 
     # Check if all the nessecary columns are present in the dataframe
-    for advantix_column in CONST_ADVANTIX_COL_LIST:
-        if not advantix_column in advantix_df.columns:
+    for advanticsys_column in CONST_ADVANTICSYS_COL_LIST:
+        if not advanticsys_column in advanticsys_df.columns:
             return False, ERR_IMPORT_ERROR_1
 
     return True, None
 
 
-def advantix_convert(advantix_raw_df):
+def advanticsys_convert(advanticsys_raw_df):
     """
     Prepares Adavantix dataframe to be imported to database by selecting only neccessary columns
         and converting to correct data types.
 
     Args:
-        advantix_raw_df - pandas dataframe representing advantix data file
+        advanticsys_raw_df - pandas dataframe representing advanticsys data file
     Returns:
         success - status
         log - error message
-        advantix_df - converted pandas dataframe
+        advanticsys_df - converted pandas dataframe
     """
 
     success = True
     log = None
 
     try:
-        advantix_df = advantix_raw_df[CONST_ADVANTIX_COL_LIST]
+        advanticsys_df = advanticsys_raw_df[CONST_ADVANTICSYS_COL_LIST]
     except:
         success = False
-        log = ERR_IMPORT_ERROR_1 + ": " + ",".join(CONST_ADVANTIX_COL_LIST)
-        advantix_df = None
-        return success, log, advantix_df
+        log = ERR_IMPORT_ERROR_1 + ": " + ",".join(CONST_ADVANTICSYS_COL_LIST)
+        advanticsys_df = None
+        return success, log, advanticsys_df
 
     # convert to expected types
     try:
-        advantix_df[CONST_ADVANTIX_COL_TIMESTAMP] = pd.to_datetime(
-            advantix_df[CONST_ADVANTIX_COL_TIMESTAMP], format="%Y-%m-%dT%H:%M:%S.%f"
+        advanticsys_df[CONST_ADVANTICSYS_COL_TIMESTAMP] = pd.to_datetime(
+            advanticsys_df[CONST_ADVANTICSYS_COL_TIMESTAMP], format="%Y-%m-%dT%H:%M:%S.%f"
         )
-        advantix_df[CONST_ADVANTIX_COL_MODBUSID] = advantix_df[
-            CONST_ADVANTIX_COL_MODBUSID
+        advanticsys_df[CONST_ADVANTICSYS_COL_MODBUSID] = advanticsys_df[
+            CONST_ADVANTICSYS_COL_MODBUSID
         ].astype("int16")
-        advantix_df[CONST_ADVANTIX_COL_TEMPERATURE] = advantix_df[
-            CONST_ADVANTIX_COL_TEMPERATURE
+        advanticsys_df[CONST_ADVANTICSYS_COL_TEMPERATURE] = advanticsys_df[
+            CONST_ADVANTICSYS_COL_TEMPERATURE
         ].astype("float64")
-        advantix_df[CONST_ADVANTIX_COL_HUMIDITY] = advantix_df[
-            CONST_ADVANTIX_COL_HUMIDITY
+        advanticsys_df[CONST_ADVANTICSYS_COL_HUMIDITY] = advanticsys_df[
+            CONST_ADVANTICSYS_COL_HUMIDITY
         ].astype("float64")
-        advantix_df[CONST_ADVANTIX_COL_CO2LEVEL] = advantix_df[
-            CONST_ADVANTIX_COL_CO2LEVEL
+        advanticsys_df[CONST_ADVANTICSYS_COL_CO2LEVEL] = advanticsys_df[
+            CONST_ADVANTICSYS_COL_CO2LEVEL
         ].astype("float64")
     except:
         success = False
         log = ERR_IMPORT_ERROR_2
-        advantix_df = None
-        return success, log, advantix_df
+        advanticsys_df = None
+        return success, log, advanticsys_df
 
     # check for missing values
-    if advantix_df.isnull().values.any():
+    if advanticsys_df.isnull().values.any():
         success = False
         log = ERR_IMPORT_ERROR_3
-        advantix_df = None
-        return success, log, advantix_df
+        advanticsys_df = None
+        return success, log, advanticsys_df
 
-    return success, log, advantix_df
+    return success, log, advanticsys_df
 
 
-def advantix_df_validity(advantix_df):
+def advanticsys_df_validity(advanticsys_df):
     """
-    Checks if advantix dataframe has expected structure
+    Checks if advanticsys dataframe has expected structure
 
     Args:
-        advantix_df - pandas dataframe representing advantix data file
+        advanticsys_df - pandas dataframe representing advanticsys data file
     Returns:
         True/False depending on whether the dataframe has the correct stricture
         Error message
@@ -195,7 +195,7 @@ def advantix_df_validity(advantix_df):
     log = ""
 
     # Checking for duplicates
-    duplicates = advantix_df[advantix_df.duplicated()]
+    duplicates = advanticsys_df[advanticsys_df.duplicated()]
     if len(duplicates) > 0:
         success = False
         log = (
@@ -207,43 +207,43 @@ def advantix_df_validity(advantix_df):
         return success, log
 
     col_names = [
-        CONST_ADVANTIX_COL_TIMESTAMP,
-        CONST_ADVANTIX_COL_MODBUSID,
-        CONST_ADVANTIX_COL_TEMPERATURE,
-        CONST_ADVANTIX_COL_HUMIDITY,
-        CONST_ADVANTIX_COL_CO2LEVEL,
+        CONST_ADVANTICSYS_COL_TIMESTAMP,
+        CONST_ADVANTICSYS_COL_MODBUSID,
+        CONST_ADVANTICSYS_COL_TEMPERATURE,
+        CONST_ADVANTICSYS_COL_HUMIDITY,
+        CONST_ADVANTICSYS_COL_CO2LEVEL,
     ]
     col_mins = [
-        CONST_ADVANTIX_TIMESTAMP_MIN,
-        CONST_ADVANTIX_MODBUSID_MIN,
-        CONST_ADVANTIX_TEMPERATURE_MIN,
-        CONST_ADVANTIX_HUMIDITY_MIN,
-        CONST_ADVANTIX_CO2LEVEL_MIN,
+        CONST_ADVANTICSYS_TIMESTAMP_MIN,
+        CONST_ADVANTICSYS_MODBUSID_MIN,
+        CONST_ADVANTICSYS_TEMPERATURE_MIN,
+        CONST_ADVANTICSYS_HUMIDITY_MIN,
+        CONST_ADVANTICSYS_CO2LEVEL_MIN,
     ]
     col_maxs = [
-        CONST_ADVANTIX_TIMESTAMP_MAX,
-        CONST_ADVANTIX_MODBUSID_MAX,
-        CONST_ADVANTIX_TEMPERATURE_MAX,
-        CONST_ADVANTIX_HUMIDITY_MAX,
-        CONST_ADVANTIX_CO2LEVEL_MAX,
+        CONST_ADVANTICSYS_TIMESTAMP_MAX,
+        CONST_ADVANTICSYS_MODBUSID_MAX,
+        CONST_ADVANTICSYS_TEMPERATURE_MAX,
+        CONST_ADVANTICSYS_HUMIDITY_MAX,
+        CONST_ADVANTICSYS_CO2LEVEL_MAX,
     ]
 
     # Check every column
     for col_name, col_min, col_max in zip(col_names, col_mins, col_maxs):
-        success, log = advantix_df_check_range(advantix_df, col_name, col_min, col_max)
+        success, log = advanticsys_df_check_range(advanticsys_df, col_name, col_min, col_max)
         if not success:
             return success, log
 
     return success, log
 
 
-def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
+def advanticsys_df_check_range(advanticsys_df, col_name, col_min, col_max):
     """
     Checks if value in a dataframe for a specific column are within a range.
     If not creates an error message.
 
     Args:
-        advantix_df - pandas dataframe representing advantix data file
+        advanticsys_df - pandas dataframe representing advanticsys data file
         col_name - column name
         col_min - minimum value
         col_max - maximum value
@@ -255,8 +255,8 @@ def advantix_df_check_range(advantix_df, col_name, col_min, col_max):
     success = True
     log = ""
 
-    out_of_range_df = advantix_df[
-        (advantix_df[col_name] < col_min) | (advantix_df[col_name] > col_max)
+    out_of_range_df = advanticsys_df[
+        (advanticsys_df[col_name] < col_min) | (advanticsys_df[col_name] > col_max)
     ]
 
     if len(out_of_range_df) > 0:

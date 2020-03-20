@@ -26,7 +26,7 @@ from crop.constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
-    ADVANTIX_READINGS_TABLE_NAME,
+    ADVANTICSYS_READINGS_TABLE_NAME,
     TINYTAG_READINGS_TABLE_NAME,
     AIR_VELOCITY_READINGS_TABLE_NAME,
     ENVIRONMENTAL_READINGS_TABLE_NAME,
@@ -41,7 +41,7 @@ BASE = declarative_base()
 
 class TypeClass(BASE):
     """
-    This class contains a list and characteristics of each type of sensor installed eg. "Advantix"
+    This class contains a list and characteristics of each type of sensor installed eg. "Advanticsys"
     """
 
     __tablename__ = SENSOR_TYPE_TABLE_NAME
@@ -82,7 +82,7 @@ class SensorClass(BASE):
     installation_date = Column(DateTime, nullable=False)
 
     # relationshionships (One-To-Many)
-    advantix_readings_relationship = relationship("ReadingsAdvantixClass")
+    advanticsys_readings_relationship = relationship("ReadingsAdvanticsysClass")
     tinytag_readings_relationship = relationship("ReadingsTinyTagClass")
     airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
     environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
@@ -113,12 +113,12 @@ class LocationClass(BASE):
     #code = column_property(section + column + shelf) #generated code of location
 
 
-class ReadingsAdvantixClass(BASE):
+class ReadingsAdvanticsysClass(BASE):
     """
-    Base class for the Advantix sensor readings
+    Base class for the Advanticsys sensor readings
     """
 
-    __tablename__ = ADVANTIX_READINGS_TABLE_NAME
+    __tablename__ = ADVANTICSYS_READINGS_TABLE_NAME
 
     # columns
     id = Column(Integer, primary_key=True)
