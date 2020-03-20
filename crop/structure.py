@@ -87,7 +87,6 @@ class SensorClass(BASE):
     airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
     environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
 
-
     # relationshionships (Many-To-One)
     location_relationship = relationship("LocationClass")
 
@@ -107,11 +106,14 @@ class LocationClass(BASE):
     id = Column(Integer, primary_key=True)
 
     zone = Column(String(50), nullable=False) #farm zone
-    section = Column(String(50), nullable=False)  # Seciton A/B
+    aisle = Column(String(50), nullable=False)  # Seciton A/B
     column = Column(Integer, nullable=False)  # no
     shelf = Column(Integer, nullable=False)  # 1,2,3,4 / top/middle/bottom
+    #FIXME: the following is not working with orm
     #code = column_property(section + column + shelf) #generated code of location
 
+    # relationshionships (One-To-Many)
+    crop_growth_relationship = relationship("CropGrowthClass")
 
 class ReadingsAdvanticsysClass(BASE):
     """
@@ -249,6 +251,10 @@ class CropGrowthClass(BASE):
     column = Column(Integer, nullable=False)
     aisle = Column(String, nullable=False)
     shelf = Column(Integer, nullable=False)
+    location_id = Column(Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False
+    )
     trays = Column(Integer, nullable=False)
     m2 = Column(Float, nullable=False)
     supplier = Column(String, nullable=False)
