@@ -160,6 +160,7 @@ def check_database_structure(engine):
                 mapper = inspect(sql_class)
 
                 for obj in mapper.attrs:
+                    print (obj)
 
                     # checks if the object is a relationship
                     if isinstance(obj, RelationshipProperty):

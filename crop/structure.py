@@ -9,7 +9,6 @@ Module to define the structure of the database. Each Class, defines a table in t
 from sqlalchemy import (
     ForeignKey,
     Column,
-    column_property,
     Integer,
     Float,
     String,
@@ -19,7 +18,7 @@ from sqlalchemy import (
     UniqueConstraint,
     LargeBinary,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, column_property
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
@@ -84,9 +83,9 @@ class SensorClass(BASE):
 
     # relationshionships (One-To-Many)
     advantix_readings_relationship = relationship("ReadingsAdvantixClass")
-    tinytags_readings_relationship = relationship("ReadingsTinyTagsClass")
-    airvelocity_readings_relationship = relationship("ReadingsAirVelocity")
-    new_sensor_readings_relationship = relationship("NewSensorClass")
+    tinytag_readings_relationship = relationship("ReadingsTinyTagClass")
+    airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
+    environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
 
 
     # relationshionships (Many-To-One)
@@ -111,7 +110,7 @@ class LocationClass(BASE):
     section = Column(String(50), nullable=False)  # Seciton A/B
     column = Column(Integer, nullable=False)  # no
     shelf = Column(Integer, nullable=False)  # 1,2,3,4 / top/middle/bottom
-    code = column_property(section + column + shelf) #generated code of location
+    #code = column_property(section + column + shelf) #generated code of location
 
 
 class ReadingsAdvantixClass(BASE):
@@ -251,16 +250,16 @@ class CropGrowthClass(BASE):
     aisle = Column(String, nullable=False)
     shelf = Column(Integer, nullable=False)
     trays = Column(Integer, nullable=False)
-    m2 = Column(Integer, nullable=False)
+    m2 = Column(Float, nullable=False)
     supplier = Column(String, nullable=False)
     batch_no = Column(String, nullable=False)
     date_underlight = Column(DateTime, nullable=False)
     week_harvested = Column(DateTime, nullable=False)
     harvest_date = Column(DateTime, nullable=False)
     traceability = Column(String, nullable=False)
-    surplus_waste_trays = Column(Integer, nullable=False)
-    est_disease_trays = Column(Integer, nullable=False)
-    mass_harvested = Column(Integer, nullable=False)
+    surplus_waste_trays = Column(Float, nullable=False)
+    est_disease_trays = Column(Float, nullable=False)
+    mass_harvested = Column(Float, nullable=False)
     total_waste_p = Column(Float, nullable=False) #percentages (?)
     surplus_waste_p = Column(Float, nullable=False)
     total_waste_m2 = Column (String, nullable=False)
