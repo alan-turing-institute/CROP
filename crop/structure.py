@@ -12,7 +12,6 @@ from sqlalchemy import (
     column_property,
     Integer,
     Float,
-    DECIMAL,
     String,
     DateTime,
     Text,
@@ -29,12 +28,12 @@ from crop.constants import (
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
     ADVANTIX_READINGS_TABLE_NAME,
-    TINYTAGS_READINGS_TABLE_NAME,
+    TINYTAG_READINGS_TABLE_NAME,
     AIR_VELOCITY_READINGS_TABLE_NAME,
-    NEW_SENSOR_TABLE_NAME,
+    ENVIRONMENTAL_READINGS_TABLE_NAME,
     ENERGY_READINGS_TABLE_NAME,
-    CROP_SHEET_TABLE_NAME,
-    OTHER_SHEET_TABLE_NAME,
+    CROP_GROWTH_TABLE_NAME,
+    INFRASTRUCTURE_TABLE_NAME,
     ID_COL_NAME,
 )
 
@@ -139,7 +138,7 @@ class ReadingsAdvantixClass(BASE):
     time_updated = Column(DateTime(), onupdate=func.now())
 
 
-class ReadingsAirVelocity(BASE):
+class ReadingsAirVelocityClass(BASE):
     """
     Base class for the raw Air Velocity data readings
     """
@@ -154,19 +153,19 @@ class ReadingsAirVelocity(BASE):
     )
 
     time_stamp = Column(DateTime, nullable=False)
-    temperature = Column(Integer, nullable=False)
-    velocity = Column(Integer, nullable=False)
+    temperature = Column(Float, nullable=False)
+    velocity = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
 
-class NewSensorClass(BASE):
+class ReadingsEnvironmentalClass(BASE):
     """
-    Class for reading the raw tiny tag data
+    Class for reading the custom made Environmental sensor data
     """
 
-    __tablename__ = NEW_SENSOR_TABLE_NAME
+    __tablename__ = ENVIRONMENTAL_READINGS_TABLE_NAME
 
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -195,12 +194,12 @@ class NewSensorClass(BASE):
     time_updated = Column(DateTime(), onupdate=func.now())
 
 
-class ReadingsTinyTagsClass(BASE):
+class ReadingsTinyTagClass(BASE):
     """
     Class for reading the raw tiny tag data
     """
 
-    __tablename__ = TINYTAGS_READINGS_TABLE_NAME
+    __tablename__ = TINYTAG_READINGS_TABLE_NAME
 
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -235,13 +234,13 @@ class ReadingsEnergyClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
-class CropDataClass(BASE):
+class CropGrowthClass(BASE):
     """
     Class for reading the crop data
     (from google sheets)
     """
 
-    __tablename__ = CROP_SHEET_TABLE_NAME
+    __tablename__ = CROP_GROWTH_TABLE_NAME
 
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -262,33 +261,33 @@ class CropDataClass(BASE):
     surplus_waste_trays = Column(Integer, nullable=False)
     est_disease_trays = Column(Integer, nullable=False)
     mass_harvested = Column(Integer, nullable=False)
-    total_waste_p = Column(DECIMAL(5, 2), nullable=False) #percentages (?)
-    surplus_waste_p = Column(DECIMAL(5, 2), nullable=False)
+    total_waste_p = Column(Float, nullable=False) #percentages (?)
+    surplus_waste_p = Column(Float, nullable=False)
     total_waste_m2 = Column (String, nullable=False)
-    total_waste_p = Column(DECIMAL(5,2), nullable=False)
+    total_waste_p = Column(Float, nullable=False)
     waste_explanation = Column(String, nullable=False) #no ref on what that is
-    yield_m2 = Column(Integer, nullable=False)
-    propagation_days = Column(Integer, nullable=False)
-    days_under_lights = Column(Integer, nullable=False)
+    yield_m2 = Column(Float, nullable=False)
+    propagation_days = Column(Float, nullable=False)
+    days_under_lights = Column(Float, nullable=False)
     unique_code = Column(String, nullable=False)
-    surplus_wasted = Column(Integer, nullable=False)
-    x_g = Column(Integer, nullable=False)
-    total_waste_g = Column(Integer, nullable=False)
-    projected_yeild_m = Column(Integer, nullable=False)
-    projected_yield_tot = Column(Integer, nullable=False)
+    surplus_wasted = Column(Float, nullable=False)
+    x_g = Column(Float, nullable=False)
+    total_waste_g = Column(Float, nullable=False)
+    projected_yeild_m = Column(Float, nullable=False)
+    projected_yield_tot = Column(Float, nullable=False)
     num_trays_wasted = Column(String, nullable=True)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
-class OtherDataClass(BASE):
+class InfrastructureClass(BASE):
     """
     Class for reading the crop data
     (from google sheets)
     """
     # TODO: this dataset needs some explaination. Lots of unused data here. 
 
-    __tablename__ = OTHER_SHEET_TABLE_NAME
+    __tablename__ = INFRASTRUCTURE_TABLE_NAME
 
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -297,7 +296,8 @@ class OtherDataClass(BASE):
     tank_ph = Column(Float, nullable=False)
     tank_ec = Column(Float)
     tank_clox = Column(Float)
-    tank_water_temp = Column(Integer)
+    tank_water_temp = Column(Float)
+    #TODO:add entrances 
 
 
 class UserClass(BASE):
@@ -314,7 +314,7 @@ class UserClass(BASE):
     password = Column(LargeBinary, nullable=False)
 
 
-class Weather(BASE):
+class APIWeatherClass(BASE):
     """
     Class for reading the Met Weather API
     """
@@ -325,11 +325,11 @@ class Weather(BASE):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    temperature = Column(Integer)
-    rainfall = Column(Integer)
-    humidity = Column(Integer)
-    windspeed = Column(Integer)
-    winddirection = Column(Integer)
+    temperature = Column(Float)
+    rainfall = Column(Float)
+    humidity = Column(Float)
+    windspeed = Column(Float)
+    winddirection = Column(Float)
     weathertype = Column(String)
-    forecast = Column(Integer)
+    forecast = Column(Float)
     time_accessed = Column(DateTime(), server_default=func.now())
