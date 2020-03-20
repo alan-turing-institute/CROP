@@ -17,5 +17,6 @@ before_script:
   - psql -c "CREATE DATABASE cropdb;" -U postgres
 
 script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)/CROP/core
+  - cd core
   - pytest
