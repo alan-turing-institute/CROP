@@ -1,6 +1,6 @@
 """
 Module to test creating a database and populating it with
-test sensor, sensor type, location and advantix data.
+test sensor, sensor type, location and advanticsys data.
 """
 
 import os
@@ -12,17 +12,17 @@ from crop.structure import TypeClass, LocationClass, SensorClass
 
 from crop.constants import (
     CONST_COREDATA_DIR,
-    CONST_ADVANTIX_DIR,
-    CONST_ADVANTIX_TEST_1,
-    CONST_ADVANTIX_TEST_10,
+    CONST_ADVANTICSYS_DIR,
+    CONST_ADVANTICSYS_TEST_1,
+    CONST_ADVANTICSYS_TEST_10,
     SQL_CONNECTION_STRING,
 )
 
 from crop.db import create_database, connect_db, drop_db
 
-from crop.ingress_adv import advantix_import
+from crop.ingress_adv import advanticsys_import
 
-from crop.populate_db import session_open, session_close, insert_advantix_data
+from crop.populate_db import session_open, session_close, insert_advanticsys_data
 
 
 # Test database name
@@ -127,13 +127,13 @@ def test_insert_sensor_data():
 
 
 @pytest.mark.run(order=5)
-def test_insert_advantix_data():
+def test_insert_advanticsys_data():
     """
-    Tests inserting test advantix data
+    Tests inserting test advanticsys data
     """
 
-    file_path = os.path.join(CONST_ADVANTIX_DIR, CONST_ADVANTIX_TEST_1)
-    success, log, test_ingress_df = advantix_import(file_path)
+    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_1)
+    success, log, test_ingress_df = advanticsys_import(file_path)
     assert success, log
     assert isinstance(test_ingress_df, pd.DataFrame)
 
@@ -145,19 +145,19 @@ def test_insert_advantix_data():
     session = session_open(engine)
 
     # tests loading sensor data to db
-    success, log = insert_advantix_data(session, test_ingress_df)
+    success, log = insert_advanticsys_data(session, test_ingress_df)
     assert success, log
 
     # trying to import the same data twice
-    success, log = insert_advantix_data(session, test_ingress_df)
+    success, log = insert_advanticsys_data(session, test_ingress_df)
     assert success == False, log
 
-    file_path = os.path.join(CONST_ADVANTIX_DIR, CONST_ADVANTIX_TEST_10)
-    success, log, test_ingress_df = advantix_import(file_path)
+    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_10)
+    success, log, test_ingress_df = advanticsys_import(file_path)
     assert success, log
     assert isinstance(test_ingress_df, pd.DataFrame)
 
-    success, log = insert_advantix_data(session, test_ingress_df)
+    success, log = insert_advanticsys_data(session, test_ingress_df)
     assert success == False, log
 
     session_close(session)

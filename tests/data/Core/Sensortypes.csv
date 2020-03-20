@@ -1,5 +1,5 @@
 id,sensor_type,source,origin,data,frequency,description
-1,Advantix,Raspi1 and Raspi 2,Engineering server,"Temperature, relative humidity, CO2",Every 2 hours,https://www.advanticsys.com/
+1,Advanticsys,Raspi1 and Raspi 2,Engineering server,"Temperature, relative humidity, CO2",Every 2 hours,https://www.advanticsys.com/
 2,Air Velocity,Raspi6 and Raspi 7,Engineering server,"Temperature, Air velocity",Every 6 hours,
 3,New Environmental,Raspi 8,Engineering server,"Temperature, relative humidity, CO2, light",hourly,
 4,Tinytag,Offline sensors,stored locally,Temperature,Every 15 min,
