@@ -77,22 +77,36 @@ CONST_ADVANTIX_TEST_10 = "data-20190821-test10.csv"  # Wrong sensor id
 CONST_AIR_VELOCITY_TEST_1 = "data-20200128-test1.csv"
 
 # New environmental sensors IMPORT
+CONST_NEW_ENV_COL_TIMESTAMP = "Logger timestamp"
+CONST_NEW_ENV_COL_DEVICE = "Device Address"
+CONST_NEW_ENV_COL_UPTIME = "Uptime"
+CONST_NEW_ENV_COL_BATTERY = "Battery"
+CONST_NEW_ENV_COL_VALIDITY = "Validity"
+CONST_NEW_ENV_COL_CH0 = "Ch.0"
+CONST_NEW_ENV_COL_CH1 = "Ch.1"
+CONST_NEW_ENV_COL_CH2 = "Ch.2"
+CONST_NEW_ENV_COL_CH3 = "Ch.3"
+CONST_NEW_ENV_COL_OPT3001 = "OPT3001"
+CONST_NEW_ENV_COL_CO2 = "Cozir CO2"
+CONST_NEW_ENV_COL_TEMPERATURE = "SHT21 Temp"
+CONST_NEW_ENV_COL_HUMIDITY = "SHT21 Humid"
+CONST_NEW_ENV_COL_DS_TEMP = "DS3231 Temp"
 CONST_NEW_ENV_COL_LIST = [
-    "Logger timestamp",
-    "Device Address",
-    "Device timestamp",
-    "Uptime",
-    "Battery",
-    "Validity",
-    "Ch.0",
-    "Ch.1",
-    "Ch.2",
-    "Ch.3",
-    "OPT3001",
-    "Cozir CO2",
-    "SHT21 Temp",
-    "SHT21 Humid",
-    "DS3231 Temp"
+    CONST_NEW_ENV_COL_TIMESTAMP,
+    CONST_NEW_ENV_COL_DEVICE,
+    CONST_NEW_ENV_COL_UPTIME,
+    CONST_NEW_ENV_COL_UPTIME,
+    CONST_NEW_ENV_COL_BATTERY,
+    CONST_NEW_ENV_COL_VALIDITY,
+    CONST_NEW_ENV_COL_CH0,
+    CONST_NEW_ENV_COL_CH1,
+    CONST_NEW_ENV_COL_CH2,
+    CONST_NEW_ENV_COL_CH3,
+    CONST_NEW_ENV_COL_OPT3001,
+    CONST_NEW_ENV_COL_CO2,
+    CONST_NEW_ENV_COL_TEMPERATURE,
+    CONST_NEW_ENV_COL_HUMIDITY,
+    CONST_NEW_ENV_COL_DS_TEMP
 ]
 
 # New Environmental sensors test data

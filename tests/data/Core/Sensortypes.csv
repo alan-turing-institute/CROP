@@ -1,0 +1,10 @@
+id,sensor_type,source,origin,data,frequency,description
+1,Advanticsys,Raspi1 and Raspi 2,Engineering server,"Temperature, relative humidity, CO2",Every 2 hours,https://www.advanticsys.com/
+2,Air Velocity,Raspi6 and Raspi 7,Engineering server,"Temperature, Air velocity",Every 6 hours,
+3,New Environmental,Raspi 8,Engineering server,"Temperature, relative humidity, CO2, light",hourly,
+4,Tinytag,Offline sensors,stored locally,Temperature,Every 15 min,
+5,Energy meter,API from Stark Energy,API Stark,Energy metre reading at Clapham Common and Carpenter's Place,daily,
+6,Weather,Email notification,Metoffice,"Temperature, relative humidity, rainfall",6 months,
+7,Weather forecast,Metoffice API,Metoffice,"Temperature, relative humidity, rainfall forecast",hourly,
+8,DAT 08,crop growing log,GU google sheet,"Crop propagation, underlights, harvest date, name, location, yield, waste",daily,
+9,DAT 09,Farm setting log,GU google sheet,"Water reading, ventilation setting, water tests, comments",daily,
