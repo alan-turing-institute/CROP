@@ -163,7 +163,7 @@ def test_insert_advanticsys_data():
     session_close(session)
 
 
-@pytest.mark.run(order=6)
-def test_drop_db():
-    success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
-    assert success, log
+# @pytest.mark.run(order=6)
+# def test_drop_db():
+#     success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
+#     assert success, log

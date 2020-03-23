@@ -6,7 +6,7 @@ from crop.constants import SQL_CONNECTION_STRING
 from crop.db import create_database, connect_db, drop_db, check_database_structure
 
 
-TEST_DB_NAME = "fake_db3"
+TEST_DB_NAME = "fake_db"
 
 @pytest.mark.order1
 def test_create_database():
