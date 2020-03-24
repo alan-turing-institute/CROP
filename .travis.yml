@@ -1,7 +1,29 @@
 language: python
 
+services:
+  - postgresql
+
 install:
-  - pip install -r requirements.txt
+  - pip install -r core/requirements.txt
+
+env:
+  -CROP_SQL_HOST="localhost"
+  -CROP_SQL_USER="postgres"
+  -CROP_SQL_PASS="postgres"
+  -CROP_SQL_DBNAME="cropdb"
+  -CROP_SQL_PORT="5432"
+
+git:
+  submodules: false
+
+before_install:
+   - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+   - git submodule update --init --recursive
+  
+before_script:
+  - psql -c "CREATE DATABASE cropdb;" -U postgres
 
 script:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)/CROP/core
+  - cd core
   - pytest
