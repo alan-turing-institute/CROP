@@ -8,7 +8,7 @@ import os
 import pandas as pd
 
 # from crop.db import create_database
-from crop.constants import (
+from core.crop.constants import (
     CONST_ADVANTICSYS_COL_LIST,
     CONST_ADVANTICSYS_COL_TIMESTAMP,
     CONST_ADVANTICSYS_COL_MODBUSID,

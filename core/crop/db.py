@@ -8,9 +8,9 @@ from sqlalchemy_utils import database_exists, drop_database
 from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
 
-from crop.constants import SQL_DEFAULT_DBNAME
+from core.crop.constants import SQL_DEFAULT_DBNAME
 
-from crop.structure import BASE
+from core.crop.structure import BASE
 
 
 def create_database(conn_string, db_name):

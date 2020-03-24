@@ -8,9 +8,9 @@ import pytest
 import pandas as pd
 
 
-from crop.structure import TypeClass, LocationClass, SensorClass, SensorLocationClass
+from core.crop.structure import TypeClass, LocationClass, SensorClass, SensorLocationClass
 
-from crop.constants import (
+from core.crop.constants import (
     CONST_COREDATA_DIR,
     CONST_ADVANTICSYS_DIR,
     CONST_ADVANTICSYS_TEST_1,
@@ -20,11 +20,11 @@ from crop.constants import (
     CONST_SENSOR_LOCATION_TESTS
 )
 
-from crop.db import create_database, connect_db, drop_db
+from core.crop.db import create_database, connect_db, drop_db
 
-from crop.ingress_adv import advanticsys_import
+from core.crop.ingress_adv import advanticsys_import
 
-from crop.populate_db import session_open, session_close, insert_advanticsys_data
+from core.crop.populate_db import session_open, session_close, insert_advanticsys_data
 
 
 # Test database name

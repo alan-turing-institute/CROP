@@ -6,15 +6,15 @@ Advanticsys sensor data
 
 from sqlalchemy.orm import sessionmaker
 
-from crop.structure import (
+from core.crop.structure import (
     SensorClass,
     TypeClass,
     ReadingsAdvanticsysClass
 )
 
-from crop.structure import TypeClass, LocationClass, SensorClass
+from core.crop.structure import TypeClass, LocationClass, SensorClass
 
-from crop.constants import (
+from core.crop.constants import (
     CONST_ADVANTICSYS_COL_MODBUSID,
     CONST_ADVANTICSYS,
     ADVANTICSYS_READINGS_TABLE_NAME,
@@ -99,7 +99,7 @@ def insert_advanticsys_data(session, adv_df):
                 if not found:
                     data = ReadingsAdvanticsysClass(
                         sensor_id=adv_sensor_id,
-                        time_stamp=adv_timestamp,
+                        timestamp=adv_timestamp,
                         temperature=row[CONST_ADVANTICSYS_COL_TEMPERATURE],
                         humidity=row[CONST_ADVANTICSYS_COL_HUMIDITY],
                         co2=row[CONST_ADVANTICSYS_COL_CO2LEVEL])
