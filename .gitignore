@@ -1,4 +1,15 @@
+
+# Visual Studio
+CROP.pyproj
+CROP.sln
+CROP.tf
+CROP.pyproj.user
+
+# SECRETS
 /.secrets/
+
+# Data
+/data/ 
 
 # PyTest
 __pycache__
