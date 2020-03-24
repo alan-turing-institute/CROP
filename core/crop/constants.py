@@ -121,7 +121,7 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
-SQL_ENGINE = "postgresql"
+SQL_SERVER = "postgresql"
 SQL_USER = os.environ["CROP_SQL_USER"]
 SQL_PASSWORD = os.environ["CROP_SQL_PASS"]
 SQL_HOST = os.environ["CROP_SQL_HOST"]
@@ -131,7 +131,7 @@ SQL_DEFAULT_DBNAME = "postgres"
 SQL_SSLMODE = "require"
 
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
-    SQL_ENGINE,
+    SQL_SERVER,
     SQL_USER,
     SQL_PASSWORD,
     SQL_HOST,

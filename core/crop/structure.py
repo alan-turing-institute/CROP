@@ -22,7 +22,7 @@ from sqlalchemy.orm import relationship, column_property
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
-from crop.constants import (
+from core.crop.constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
