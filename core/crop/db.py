@@ -156,10 +156,11 @@ def check_database_structure(engine):
                 columns = [c["name"] for c in iengine.get_columns(tablename)]
 
                 # gets objects in each class in the form of:
-                # Readings_Advantix.sensor_relationship
+                # Readings_Advanticsys.sensor_relationship
                 mapper = inspect(sql_class)
 
                 for obj in mapper.attrs:
+                    print (obj)
 
                     # checks if the object is a relationship
                     if isinstance(obj, RelationshipProperty):
