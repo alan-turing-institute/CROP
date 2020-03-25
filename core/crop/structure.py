@@ -44,11 +44,10 @@ from core.crop.constants import (
 
 from sqlalchemy.ext.declarative import declarative_base
 
-#FIXME: this doesnt work for me
-#db = SQLAlchemy()
-#BASE = db.Model
+db = SQLAlchemy()
+BASE = db.Model
 
-BASE = declarative_base()
+#BASE = declarative_base()
 
 class TypeClass(BASE):
     """
