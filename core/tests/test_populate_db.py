@@ -30,15 +30,13 @@ from core.crop.populate_db import session_open, session_close, insert_advanticsy
 # Test database name
 TEST_DB_NAME = "fake_db"
 
-
 def test_create_database():
     """
     Tests creating a new database
     """
-    
+
     created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert created, log
-
 
 def test_insert_type_data():
     """
@@ -64,7 +62,6 @@ def test_insert_type_data():
         assert session.query(TypeClass).count() == len(type_df.index)
     else:
         assert session.query(TypeClass).count() == len(type_df.index)
-
 
     session_close(session)
 
@@ -122,42 +119,6 @@ def test_insert_sensor_data():
         assert session.query(SensorClass).count() == len(sensor_df.index)
     else:
         assert session.query(SensorClass).count() == len(sensor_df.index)
-
-    session_close(session)
-
-
-def test_insert_advanticsys_data():
-    """
-    Tests inserting test advanticsys data
-    """
-
-    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_1)
-    success, log, test_ingress_df = advanticsys_import(file_path)
-    assert success, log
-    assert isinstance(test_ingress_df, pd.DataFrame)
-
-    # Try to connect to an engine that exists
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
-    assert status, log
-
-    # Creates/Opens a new connection to the db and binds the engine
-    session = session_open(engine)
-
-    # tests loading sensor data to db
-    success, log = insert_advanticsys_data(session, test_ingress_df)
-    assert success, log
-
-    # trying to import the same data twice
-    success, log = insert_advanticsys_data(session, test_ingress_df)
-    assert success == False, log
-
-    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_10)
-    success, log, test_ingress_df = advanticsys_import(file_path)
-    assert success, log
-    assert isinstance(test_ingress_df, pd.DataFrame)
-
-    success, log = insert_advanticsys_data(session, test_ingress_df)
-    assert success == False, log
 
     session_close(session)
 
@@ -246,6 +207,41 @@ def test_import_sensor_location():
 
     session_close(session)
 
+
+def test_insert_advanticsys_data():
+    """
+    Tests inserting test advanticsys data
+    """
+
+    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_1)
+    success, log, test_ingress_df = advanticsys_import(file_path)
+    assert success, log
+    assert isinstance(test_ingress_df, pd.DataFrame)
+
+    # Try to connect to an engine that exists
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
+    assert status, log
+
+    # Creates/Opens a new connection to the db and binds the engine
+    session = session_open(engine)
+
+    # tests loading sensor data to db
+    success, log = insert_advanticsys_data(session, test_ingress_df)
+    assert success, log
+
+    # trying to import the same data twice
+    success, log = insert_advanticsys_data(session, test_ingress_df)
+    assert success == False, log
+
+    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_10)
+    success, log, test_ingress_df = advanticsys_import(file_path)
+    assert success, log
+    assert isinstance(test_ingress_df, pd.DataFrame)
+
+    success, log = insert_advanticsys_data(session, test_ingress_df)
+    assert success == False, log
+
+    session_close(session)
 
 def test_drop_db():
     success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)

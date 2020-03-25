@@ -18,9 +18,14 @@ from sqlalchemy import (
     UniqueConstraint,
     LargeBinary,
 )
-from sqlalchemy.orm import relationship, column_property
-from sqlalchemy.ext.declarative import declarative_base
+
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+
+from bcrypt import gensalt, hashpw
 
 from core.crop.constants import (
     SENSOR_TABLE_NAME,
@@ -33,11 +38,17 @@ from core.crop.constants import (
     ENERGY_READINGS_TABLE_NAME,
     CROP_GROWTH_TABLE_NAME,
     INFRASTRUCTURE_TABLE_NAME,
+    SENSOR_LOCATION_TABLE_NAME,
     ID_COL_NAME,
 )
 
-BASE = declarative_base()
+from sqlalchemy.ext.declarative import declarative_base
 
+#FIXME: this doesnt work for me
+#db = SQLAlchemy()
+#BASE = db.Model
+
+BASE = declarative_base()
 
 class TypeClass(BASE):
     """
@@ -54,6 +65,9 @@ class TypeClass(BASE):
     frequency = Column(String(100), nullable= False)
     data = Column(String(100), nullable=False)
     description = Column(Text)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
 
     # relationshionships (One-To-Many)
     sensors_relationship = relationship("SensorClass")
@@ -74,21 +88,22 @@ class SensorClass(BASE):
         nullable=False,
     )
     device_id = Column(Unicode(100), nullable=False)
-    location_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
     installation_date = Column(DateTime, nullable=False)
 
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    #FIXME:One sensor to many loc?
     # relationshionships (One-To-Many)
+    sensor_locations_relationship = relationship("SensorLocationClass")
+
     advanticsys_readings_relationship = relationship("ReadingsAdvanticsysClass")
     tinytag_readings_relationship = relationship("ReadingsTinyTagClass")
     airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
     environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
 
     # relationshionships (Many-To-One)
-    location_relationship = relationship("LocationClass")
+    #location_relationship = relationship("LocationClass")
 
     # arguments
     __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
@@ -118,7 +133,21 @@ class LocationClass(BASE):
     #code = column_property(section + column + shelf) #generated code of location
 
     # relationshionships (One-To-Many)
+    sensor_locations_relationship = relationship("SensorLocationClass")
     crop_growth_relationship = relationship("CropGrowthClass")
+
+     # arguments
+    __table_args__ = (UniqueConstraint("zone", "aisle", "column", "shelf"),)
+
+    # constructor
+    def __init__(self, zone, aisle, column, shelf, code):
+
+        self.zone = zone
+        self.aisle = aisle
+        self.column = column
+        self.shelf = shelf
+        self.code = code
+
 
 class ReadingsAdvanticsysClass(BASE):
     """
@@ -132,7 +161,7 @@ class ReadingsAdvanticsysClass(BASE):
     sensor_id = Column(
         Integer,
         ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
+        nullable=False
     )
 
     timestamp = Column(DateTime, nullable=False)
@@ -320,20 +349,35 @@ class InfrastructureClass(BASE):
     tank_water_temp = Column(Float)
     #TODO:add entrances 
 
-
-class UserClass(BASE):
+class SensorLocationClass(BASE):
     """
-    Class for user data
+    Class for storing sensor location history.
     """
 
-    __tablename__ = "User"
+    __tablename__ = SENSOR_LOCATION_TABLE_NAME
 
-    id = Column(Integer, primary_key=True)
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
-    username = Column(String, nullable=False, unique=True)
-    email = Column(String, nullable=False, unique=True)
-    password = Column(LargeBinary, nullable=False)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
 
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    installation_date = Column(DateTime, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
 
 class WeatherClass(BASE):
     """
@@ -356,3 +400,44 @@ class WeatherClass(BASE):
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
+
+class UserClass(BASE, UserMixin):
+    """
+    Class for storing user credentials.
+    """
+
+    __tablename__ = "User"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, nullable=False, unique=True)
+    email = Column(String, nullable=False, unique=True)
+    password = Column(LargeBinary, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    def __init__(self, **kwargs):
+        for prop, value in kwargs.items():
+            # depending on whether value is an iterable or not, we must
+            # unpack it's value (when **kwargs is request.form, some values
+            # will be a 1-element list)
+            if hasattr(value, "__iter__") and not isinstance(value, str):
+                # the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+                value = value[0]
+            if prop == "password":
+                value = hashpw(value.encode("utf8"), gensalt())
+            setattr(self, prop, value)
+
+    def __repr__(self):
+        """
+        Computes a string reputation of the object.
+        """
+
+        return str(self.username)
+
+    def serialize(self):
+        """
+        Serialization of the object.
+        """
+
+        return {"id": self.id, "username": self.username, "email": self.email}
