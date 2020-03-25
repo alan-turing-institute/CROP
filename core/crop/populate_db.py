@@ -84,16 +84,17 @@ def insert_advanticsys_data(session, adv_df):
         # check if data entry already exists
         if adv_sensor_id != -1:
             found = False
+
             try:
                 query_result = session.query(ReadingsAdvanticsysClass).\
                                 filter(ReadingsAdvanticsysClass.sensor_id == adv_sensor_id).\
-                                filter(ReadingsAdvanticsysClass.time_stamp == adv_timestamp).\
+                                filter(ReadingsAdvanticsysClass.timestamp == adv_timestamp).\
                                 first()
-
                 if query_result is not None:
                     found = True
             except:
-                found = False
+                result = False
+                log = "cannot perform query"
                 
             try:
                 if not found:

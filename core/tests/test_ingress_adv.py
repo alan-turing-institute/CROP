@@ -6,7 +6,7 @@ import os
 import sys
 import pytest
 
-from crop.constants import (
+from core.crop.constants import (
     CONST_TEST_DIR_DATA,
     CONST_ADVANTICSYS_FOLDER,
     CONST_ADVANTICSYS_TEST_1,
@@ -21,7 +21,7 @@ from crop.constants import (
     ERR_IMPORT_ERROR_3,
 )
 
-from crop.ingress_adv import (
+from core.crop.ingress_adv import (
     advanticsys_read_csv,
     advanticsys_check_structure,
     advanticsys_import,
