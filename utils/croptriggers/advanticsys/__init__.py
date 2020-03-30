@@ -5,9 +5,9 @@ import azure.functions as func
 from io import StringIO
 import pandas as pd
 
-SERVER_TYPE = "advantix"
+SERVER_TYPE = "advanticsys"
 
-def advantix_upload(blobin: func.InputStream):
+def advanticsys_import(blobin: func.InputStream):
 
     logging.info(f"Starting advantix sensor data import process: \n"
                  f"Name: {blobin.name}\n"
@@ -19,11 +19,11 @@ def advantix_upload(blobin: func.InputStream):
     data_df = pd.read_csv(data_stream)
 
     # TODO: Upload data to the sql server.
-    server = "{}".format(os.environ["AZURE_SQL_SERVER"].strip())
-    db = "{}".format(os.environ["AZURE_SQL_DBNAME"].strip())
-    user = "{}".format(os.environ["AZURE_SQL_USER"].strip())
-    password = "{}".format(os.environ["AZURE_SQL_PASS"].strip())
-    port = "{}".format(os.environ["AZURE_SQL_PORT"].strip())
+    server = "{}".format(os.environ["CROP_SQL_SERVER"].strip())
+    db = "{}".format(os.environ["CROP_SQL_DBNAME"].strip())
+    user = "{}".format(os.environ["CROP_SQL_USER"].strip())
+    password = "{}".format(os.environ["CROP_SQL_PASS"].strip())
+    port = "{}".format(os.environ["CROP_SQL_PORT"].strip())
 
     # data ingress function
     # status, error = function(data_df, SERVER_TYPE, server, db, user, password, port)

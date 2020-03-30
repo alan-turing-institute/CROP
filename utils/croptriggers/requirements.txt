@@ -1,2 +1,2 @@
-azure-functions
-pandas
+azure-functions>=1.2.0
+#pandas
