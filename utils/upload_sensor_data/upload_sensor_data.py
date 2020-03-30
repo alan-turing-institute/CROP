@@ -1,13 +1,12 @@
 #!/usr/bin/python
 
 """
-Script to upload data to Azure blob storage.
-
+A script to uploads a file as a blob to a container in Azure storage account.
 """
 
-import os
 import argparse
-from azure.storage.blob import BlockBlobService, PublicAccess
+from azure.storage.blob import BlockBlobService
+
 
 def check_blob_exists(block_blob_service, container_name, blob_name):
     """
@@ -32,40 +31,50 @@ def check_blob_exists(block_blob_service, container_name, blob_name):
 
     return exist
 
+
 if __name__ == "__main__":
 
     # Command line arguments
-    parser = argparse.ArgumentParser(description="Uploads blobs to Azure")
+    parser = argparse.ArgumentParser(
+        description="Uploads a file as a blob to a container in Azure storage account."
+    )
 
-    parser.add_argument("--source", default=None, help="Full path to the file to be uploaded")
-    parser.add_argument("--target", default=None, help="A unique target (blob) name")
+    parser.add_argument("storageacc", default=None, help="Storage account name.")
+    parser.add_argument(
+        "container",
+        default=None,
+        help="Container name (each sensor type has its own container).",
+    )
+    parser.add_argument(
+        "connectionstr",
+        default=None,
+        help="Connection string with write and list permissions.",
+    )
+    parser.add_argument(
+        "source", default=None, help="Full path to the file to be uploaded."
+    )
+    parser.add_argument("target", default=None, help="A unique target (blob) name.")
+
     args = parser.parse_args()
-
-    if not args.source or not args.target:
-        raise RuntimeError("Source file and/or target name were not specified.")
-
-    try:
-        az_account = os.environ['AZURE_STORAGE_ACCOUNT']
-        az_container = os.environ['AZURE_CONTAINER']
-        az_connect_str = os.environ['AZURE_CONNECTION_STRING']
-    except:
-        raise RuntimeError("Cannot read azure storage account settings.")
 
     file_path = (args.source).strip()
     blob_name = (args.target).strip()
 
-    # connect's to the storage account's blob service using the connection string
-    blob_service = BlockBlobService(account_name=az_account, connection_string=az_connect_str)
+    # connects to the storage account's blob service using the connection string
+    blob_service = BlockBlobService(
+        account_name=args.storageacc, connection_string=args.connectionstr
+    )
 
     # checks if blob already exists
-    blob_exists = check_blob_exists(blob_service, az_container, blob_name)
+    blob_exists = check_blob_exists(blob_service, args.container, blob_name)
+
     if not blob_exists:
         try:
             # uploads a new blob
-            blob_service.create_blob_from_path(az_container, blob_name, file_path)
+            blob_service.create_blob_from_path(args.container, blob_name, file_path)
         except ValueError as error:
             raise RuntimeError(error)
     else:
         raise RuntimeError("Blob named %s already exists!" % (blob_name))
 
-    print("Finised.")
+    print("Success.")
