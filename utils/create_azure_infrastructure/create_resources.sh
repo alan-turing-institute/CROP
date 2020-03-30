@@ -7,7 +7,7 @@ CONST_POSTGRES_SERVER='B_Gen5_1'
 
 # Declare an array of string with the names of containers
 #   TODO: this probably needs to be extracted from the Python module
-declare -a ContainersArray=("advantixrawdata" "tinytagrawdata") # "advantixprocessed" "tinytagprocessed"
+declare -a ContainersArray=("advanticsys-raw-data" "advanticsys-processed-data") 
 
 ###################################################################################
 # THE CODE BELOW SHOULD NOT BE MODIFIED
