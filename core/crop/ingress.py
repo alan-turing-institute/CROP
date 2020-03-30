@@ -3,24 +3,11 @@
 Module to import sensor data to a postgres database.
 """
 
-from core.crop.db import create_database, connect_db, drop_db
-
-from core.crop.ingress_adv import advanticsys_import, advanticsys_df_checks
+from core.crop.db import connect_db
 
 from core.crop.populate_db import session_open, session_close, insert_advanticsys_data
 
-from core.crop.constants import (
-    SQL_SERVER,
-    SQL_USER,
-    SQL_PASSWORD,
-    SQL_HOST,
-    SQL_PORT,
-    CONST_ADVANTICSYS_DIR,
-    CONST_ADVANTICSYS_TEST_1,
-    SQL_CONNECTION_STRING
-)
-
-def import_data (pd_df, sensor_type, server, user, password, host, port, db_name):
+def import_data(pd_df, sensor_type, server, user, password, host, port, db_name):
     """
     This function will take the checked sensor data (pd_df)
     perform data checks and insert them into the db.
