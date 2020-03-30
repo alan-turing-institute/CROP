@@ -13,7 +13,7 @@ declare -a ContainersArray=("advanticsys-raw-data" "advanticsys-processed-data")
 # THE CODE BELOW SHOULD NOT BE MODIFIED
 ###################################################################################
 
-az login
+# az login
 
 # Setting the default subsciption
 az account set -s $CROP_SUBSCRIPTION_ID
@@ -39,8 +39,6 @@ fi
 #   This is not a great implementation as it depends on Python to parse the json object.
 #   Changes are wellcome.
 available=`az storage account check-name --name $CROP_STORAGE_ACCOUNT | python -c 'import json,sys;obj=json.load(sys.stdin);print (obj["nameAvailable"])'`
-
-echo available: $available
 
 if [ $available = "True" ]; then
 
@@ -107,10 +105,11 @@ if [ ${#exists} = 2 ]; then
     declare -a IPArray=($CROP_SQL_WHITEIPS) 
 
     for ip in ${IPArray[@]}; do
+
         az postgres server firewall-rule create \
             --resource-group $CROP_RG_NAME \
             --server-name $CROP_SQL_SERVER \
-            -n $ip \
+            -n whitelistedip \
             --start-ip-address $ip \
             --end-ip-address $ip
     done
