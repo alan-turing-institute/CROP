@@ -17,11 +17,11 @@ if __name__ == "__main__":
     data["Values"] = {
         "FUNCTIONS_WORKER_RUNTIME": "python",
         "AzureWebJobsStorage": conn_string,
-        "AZURE_SQL_SERVER": os.environ["AZURE_SQL_SERVER"],
-        "AZURE_SQL_USER": os.environ["AZURE_SQL_USER"],
-        "AZURE_SQL_PASS": os.environ["AZURE_SQL_PASS"],
-        "AZURE_SQL_DBNAME": os.environ["AZURE_SQL_DBNAME"],
-        "AZURE_SQL_PORT": os.environ["AZURE_SQL_PORT"]
+        "CROP_SQL_SERVER": os.environ["CROP_SQL_SERVER"],
+        "CROP_SQL_USER": os.environ["CROP_SQL_USER"],
+        "CROP_SQL_PASS": os.environ["CROP_SQL_PASS"],
+        "CROP_SQL_DBNAME": os.environ["CROP_SQL_DBNAME"],
+        "CROP_SQL_PORT": os.environ["CROP_SQL_PORT"]
     }
 
     with open(rel_file_path, 'w') as outfile:
