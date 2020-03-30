@@ -3,17 +3,18 @@
 0. Prerequisites
 
   - install latest version of Python3 and pip3
-  - `pip3 install -r ../../requirements.txt`
+  - install dependencies
+    `pip install -r ../../core/requirements.txt`
 
 1. Create Azure resources
 
-  - Modify `../../.secrets/azure.sh`
+  - Modify `../../.secrets/crop.sh`
   - Modify `create_resources.sh`
-    - Add IP addresses to whitelist
     - Check settings
+    - Add IP addresses to whitelist (Future)
   - Execute from the command line
     ```{bash}
-    source ../../.secrets/azure.sh ; ./create_resources.sh
+    source ../../.secrets/crop.sh ; ./create_resources.sh
     ```
 
 2. Create PostgreSQL DB
@@ -21,5 +22,5 @@
   - Execute from the command line
 
     ```
-    source ../../.secrets/azure.sh ; python3 create_db.py
+    source ../../.secrets/crop.sh ; python create_db.py
     ```

@@ -5,7 +5,7 @@ import azure.functions as func
 from io import StringIO
 import pandas as pd
 
-SERVER_TYPE = "advanticsys"
+from crop.constants import CONST_ADVANTICSYS
 
 def advanticsys_import(blobin: func.InputStream):
 
@@ -28,6 +28,10 @@ def advanticsys_import(blobin: func.InputStream):
     # data ingress function
     # status, error = function(data_df, SERVER_TYPE, server, db, user, password, port)
     
+    logging.info(f"!!!!!!")
+    logging.info(f"{CONST_ADVANTICSYS}")
+    logging.info(f"!!!!!!")
+
     status = False
     error = "test error"
 
