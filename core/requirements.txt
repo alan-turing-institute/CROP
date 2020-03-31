@@ -14,3 +14,5 @@ bcrypt>=3.1.7
 
 black>=19.10b0
 pylint>=2.4.4
+
+azure-functions>=1.2.0
