@@ -5,7 +5,7 @@ import azure.functions as func
 from io import StringIO
 import pandas as pd
 
-from crop.constants import CONST_ADVANTICSYS
+from __app__.crop.constants import CONST_ADVANTICSYS
 
 def advanticsys_import(blobin: func.InputStream):
 
