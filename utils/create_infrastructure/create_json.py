@@ -8,8 +8,8 @@ Creates local.settings.json file for Azure Function App
 
 if __name__ == "__main__":
 
-    conn_string = sys.argv[1].strip()
-    rel_file_path = sys.argv[2].strip()
+    conn_string = sys.argv[0].strip()
+    rel_file_path = sys.argv[1].strip()
 
     data = {}
 
@@ -17,6 +17,7 @@ if __name__ == "__main__":
     data["Values"] = {
         "FUNCTIONS_WORKER_RUNTIME": "python",
         "AzureWebJobsStorage": conn_string,
+        "CROP_SQL_HOST": os.environ["CROP_SQL_HOST"],
         "CROP_SQL_SERVER": os.environ["CROP_SQL_SERVER"],
         "CROP_SQL_USER": os.environ["CROP_SQL_USER"],
         "CROP_SQL_PASS": os.environ["CROP_SQL_PASS"],
@@ -27,4 +28,4 @@ if __name__ == "__main__":
     with open(rel_file_path, 'w') as outfile:
         json.dump(data, outfile)
     
-    print("Finished.")
+    print("local.settings.json file has been created.")

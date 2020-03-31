@@ -121,38 +121,43 @@ declare -a ContainersArray=("advanticsys-raw-data" "advanticsys-processed-data")
 # Creates Function App
 ###################################################################################
 
-function_name='croptriggers'
+function_name=$CROP_RG_NAME"functionapp"
 
 cwd=`pwd`
-cd ../$function_name
+cd ../../__app__
 
 az functionapp create \
     --resource-group $CROP_RG_NAME \
     --consumption-plan-location $CONST_LOCATION \
     --storage-account $CROP_STORAGE_ACCOUNT \
-    --name $CROP_RG_NAME"functionapp" \
+    --name $function_name \
     --os-type Linux \
     --runtime python \
     --runtime-version 3.7 \
     --functions-version 2
 
 az functionapp config appsettings set \
-    --name $CROP_RG_NAME"functionapp" \
+    --name $function_name \
     --resource-group $CROP_RG_NAME \
-    --settings "CROP_SQL_SERVER=$CROP_SQL_SERVER" \
+    --settings "CROP_SQL_HOST=$CROP_SQL_HOST" \
+    "CROP_SQL_SERVER=$CROP_SQL_SERVER" \
     "CROP_SQL_DBNAME=$CROP_SQL_DBNAME" \
     "CROP_SQL_USER=$CROP_SQL_USER" \
     "CROP_SQL_PASS=$CROP_SQL_PASS" \
     "CROP_SQL_PORT=$CROP_SQL_PORT"
+
     
-echo CROP BUILD INFO: Function APP $function created.
+# echo CROP BUILD INFO: Function APP $function created.
 
 # creating the utils/croptrigger/local.settings.json file
-python ../create_azure_infrastructure/create_json.py $CONNECTION_STRING local.settings.json
+python $cwd/create_json.py $CONNECTION_STRING local.settings.json
 
-func azure functionapp publish $function --build-native-deps --build remote
-cd $cwd
+# publishing function app
+func azure functionapp publish $function_name --build-native-deps --build remote
 
 echo CROP BUILD INFO: Function APP $function uploaded.
+
+echo "cd: "$cwd
+cd $cwd
 
 echo CROP BUILD INFO: Finished.
