@@ -21,7 +21,9 @@ TBC
 
 ## Installation
 
-TBC
+### Deploying Azure Infrastructe
+
+Steps how to deploy the infrastructure on Azure are documented [here](utils/create_azure_infrastructure/README.md)
 
 ## Getting help
 
