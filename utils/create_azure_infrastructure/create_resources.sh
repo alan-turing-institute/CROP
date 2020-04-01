@@ -7,7 +7,7 @@ CONST_POSTGRES_SERVER='B_Gen5_1'
 
 # Declare an array of string with the names of containers
 # TODO: this probably needs to be extracted from the Python module
-declare -a ContainersArray=("advanticsys-raw-data" "advanticsys-processed-data") 
+declare -a ContainersArray=("advanticsys-raw-data" "advanticsys-processed-data")
 
 # az login
 
@@ -70,7 +70,7 @@ for container in ${ContainersArray[@]}; do
     #   This is not a great implementation as it depends on Python to parse the json object.
     #   Changes are wellcome.
     exists=$(az storage container exists --name $container --account-name $CROP_STORAGE_ACCOUNT --account-key $ACCESS_KEY | python -c 'import json,sys;obj=json.load(sys.stdin);print (obj["exists"])')
-   
+
     if ! $exists; then
         az storage container create \
             --name $container \
@@ -107,7 +107,7 @@ if [ ${#exists} = 2 ]; then
     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER has been created."
 
     # Adding rules of allowed ip addresses
-    declare -a IPArray=($CROP_SQL_WHITEIPS) 
+    declare -a IPArray=($CROP_SQL_WHITEIPS)
 
     for ip in ${IPArray[@]}; do
 
@@ -174,7 +174,7 @@ python $cwd/create_json.py $CONNECTION_STRING local.settings.json
 echo "CROP BUILD INFO: local.settings.json file updated."
 
 # publishing function app
-#func azure functionapp publish $function_name --build-native-deps --build remote
+func azure functionapp publish $function_name --build-native-deps --build remote
 
 echo CROP BUILD INFO: Function APP $function uploaded.
 
