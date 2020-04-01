@@ -6,11 +6,8 @@ Script to initialise CROP database.
 
 import sys
 
-from crop.create_db import (
-    create_database
-)
-
-from crop.constants import SQL_DBNAME
+from crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from crop.db import create_database
 
 def confirm(question):
     """
@@ -22,11 +19,12 @@ def confirm(question):
 
     while answer not in ["y", "n"]:
         answer = input("{0} [Y/N]? ".format(question)).lower()
+        
     return answer == "y"
 
 if __name__ == "__main__":
 
     if confirm("Create DB?"):
-        create_database(SQL_DBNAME)
+        create_database(SQL_CONNECTION_STRING, SQL_DBNAME)
 
     print("Finished.")

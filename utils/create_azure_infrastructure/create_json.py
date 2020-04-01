@@ -8,8 +8,8 @@ Creates local.settings.json file for Azure Function App
 
 if __name__ == "__main__":
 
-    conn_string = sys.argv[0].strip()
-    rel_file_path = sys.argv[1].strip()
+    conn_string = sys.argv[1].strip()
+    rel_file_path = sys.argv[2].strip()
 
     data = {}
 
@@ -27,5 +27,3 @@ if __name__ == "__main__":
 
     with open(rel_file_path, 'w') as outfile:
         json.dump(data, outfile)
-    
-    print("local.settings.json file has been created.")

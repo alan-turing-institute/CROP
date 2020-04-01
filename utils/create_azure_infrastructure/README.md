@@ -1,26 +1,47 @@
-# Steps to create Azure infrastructure
+# CROP infrastructure
 
-0. Prerequisites
+**Azure** cloud platform is used to host the CROP infrastructure, i.e. webapp, storage, serverless applications. The creation of the infrastructure is an automated process that can be performed by following few simple steps outlined below.
 
-  - install latest version of Python3 and pip3
-  - install dependencies
-    `pip install -r ../../core/requirements.txt`
+### Step 0. Prerequisites
+  - Azure subscription to host the infrastructure
+  - Latest versions of Python (3.7 or greater) and pip
+  - Installed Python dependencies
 
-1. Create Azure resources
+    `pip install -r ../../__app__/requirements.txt`
 
-  - Modify `../../.secrets/crop.sh`
-  - Modify `create_resources.sh`
-    - Check settings
-    - Add IP addresses to whitelist (Future)
-  - Execute from the command line
+  - Created and configured environmental parameters file (`../../.secrets/crop.sh`). Template for reference: `../../.secrets/template_crop.sh`
+
+### Step 1. Create Azure infrastructure
+
+  - Navigate to _utils/create_azure_infrastructure_ directory:
     ```{bash}
-    source ../../.secrets/crop.sh ; ./create_resources.sh
+    cd CROP/utils/create_azure_infrastructure`
     ```
-
-2. Create PostgreSQL DB
-  
-  - Execute from the command line
-
+  - Read and execute environmental parameters file:
+    ```{bash}
+    source ../../.secrets/crop.sh`
     ```
-    source ../../.secrets/crop.sh ; python create_db.py
+  - Execute the infrastructure creation script:
+    ```{bash}
+    ./create_resources.sh
+    ```
+    The script will:
+      - create (if it doesn't exist):
+        - Resource group
+        - Storage account (if it doesn't exist)
+        - Storage containers (if they don't exist)
+        - PostgreSQL DB (if it doesn't exist)
+        - Function apps (if they don't exist)
+      - Update:
+        - Function app configuration
+        - local.settings.json
+      - Upload:
+        - Function app
+
+### Step 2. Initialise DB
+
+  - Execute the database initialisation script and type "Y"
+
+    ```{bash}
+    python initialise_db.py
     ```
