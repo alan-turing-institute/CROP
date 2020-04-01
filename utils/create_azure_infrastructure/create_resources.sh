@@ -9,14 +9,15 @@ CONST_POSTGRES_SERVER='B_Gen5_1'
 # TODO: this probably needs to be extracted from the Python module
 declare -a ContainersArray=("advanticsys-raw-data" "advanticsys-processed-data") 
 
+# az login
+
 ###################################################################################
 # THE CODE BELOW SHOULD NOT BE MODIFIED
 ###################################################################################
 
-# az login
-
 # Setting the default subsciption
 az account set -s $CROP_SUBSCRIPTION_ID
+echo "CROP BUILD INFO: default subscription set to $CROP_SUBSCRIPTION_ID"
 
 ###################################################################################
 # Creates RESOURCE GROUP
@@ -28,7 +29,9 @@ if ! `az group exists -n $CROP_RG_NAME`; then
     az group create --name $CROP_RG_NAME \
         --location $CONST_LOCATION
 
-    echo CROP BUILD INFO: Group $CROP_RG_NAME has been created.
+    echo "CROP BUILD INFO: resource group $CROP_RG_NAME has been created."
+else
+    echo "CROP BUILD INFO: resource group $CROP_RG_NAME already exists. Skipping."
 fi
 
 ###################################################################################
@@ -47,7 +50,9 @@ if [ $available = "True" ]; then
         --resource-group $CROP_RG_NAME \
         --sku Standard_LRS
 
-    echo CROP BUILD INFO: Storage account $CROP_STORAGE_ACCOUNT has been created.
+    echo "CROP BUILD INFO: storage account $CROP_STORAGE_ACCOUNT has been created."
+else
+    echo "CROP BUILD INFO: storage account $CROP_STORAGE_ACCOUNT already exists. Skipping."
 fi
 
 # Getting the first storage account key
@@ -58,9 +63,6 @@ CONNECTION_STRING="DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.ne
 ###################################################################################
 # Creates BLOB CONTAINERS
 ###################################################################################
-
-# Getting the access key
-ACCESS_KEY=$(az storage account keys list --account-name $CROP_STORAGE_ACCOUNT --resource-group $CROP_RG_NAME --output tsv |head -1 | awk '{print $3}')
 
 for container in ${ContainersArray[@]}; do
 
@@ -75,7 +77,9 @@ for container in ${ContainersArray[@]}; do
             --account-name $CROP_STORAGE_ACCOUNT \
             --account-key $ACCESS_KEY
 
-        echo CROP BUILD INFO: Container $container has been created.
+        echo "CROP BUILD INFO: Container $container has been created."
+    else
+        echo "CROP BUILD INFO: Container $container already exists. Skipping."
     fi
 done
 
@@ -89,6 +93,7 @@ done
 
 exists=`az postgres server list -g $CROP_RG_NAME`
 
+# Checks the lenght of the query result. 2 means there were no results.
 if [ ${#exists} = 2 ]; then
     az postgres server create \
         --resource-group $CROP_RG_NAME \
@@ -99,7 +104,7 @@ if [ ${#exists} = 2 ]; then
         --sku-name $CONST_POSTGRES_SERVER \
         --version $CONST_POSTGRES_V
 
-    echo CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER has been created.
+    echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER has been created."
 
     # Adding rules of allowed ip addresses
     declare -a IPArray=($CROP_SQL_WHITEIPS) 
@@ -114,7 +119,9 @@ if [ ${#exists} = 2 ]; then
             --end-ip-address $ip
     done
 
-    echo CROP BUILD INFO: PostgreSQL DB firewall rules created.
+    echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER firewall rules created."
+else
+    echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER already exists. Skipping."
 fi
 
 ###################################################################################
@@ -124,17 +131,29 @@ fi
 function_name=$CROP_RG_NAME"functionapp"
 
 cwd=`pwd`
+
+echo "cd: ../../__app__"
 cd ../../__app__
 
-az functionapp create \
-    --resource-group $CROP_RG_NAME \
-    --consumption-plan-location $CONST_LOCATION \
-    --storage-account $CROP_STORAGE_ACCOUNT \
-    --name $function_name \
-    --os-type Linux \
-    --runtime python \
-    --runtime-version 3.7 \
-    --functions-version 2
+exists=`az functionapp list --subscription $CROP_SUBSCRIPTION_ID --resource-group $CROP_RG_NAME --query "[?name=='$function_name']"`
+
+# Checks the lenght of the query result. 2 means there were no results.
+if [ ${#exists} = 2 ]; then
+    az functionapp create \
+        --subscription $CROP_SUBSCRIPTION_ID \
+        --resource-group $CROP_RG_NAME \
+        --consumption-plan-location $CONST_LOCATION \
+        --storage-account $CROP_STORAGE_ACCOUNT \
+        --name $function_name \
+        --os-type Linux \
+        --runtime python \
+        --runtime-version 3.7 \
+        --functions-version 2
+
+    echo "CROP BUILD INFO: Function APP $function_name created."
+else
+    echo "CROP BUILD INFO: Function APP $function_name already exists. Skipping."
+fi
 
 az functionapp config appsettings set \
     --name $function_name \
@@ -144,16 +163,18 @@ az functionapp config appsettings set \
     "CROP_SQL_DBNAME=$CROP_SQL_DBNAME" \
     "CROP_SQL_USER=$CROP_SQL_USER" \
     "CROP_SQL_PASS=$CROP_SQL_PASS" \
-    "CROP_SQL_PORT=$CROP_SQL_PORT"
+    "CROP_SQL_PORT=$CROP_SQL_PORT" \
+    > /dev/null
 
-    
-echo CROP BUILD INFO: Function APP $function created.
+echo CROP BUILD INFO: Function APP $function_name configuration updated.
 
 # creating the utils/croptrigger/local.settings.json file
 python $cwd/create_json.py $CONNECTION_STRING local.settings.json
 
+echo "CROP BUILD INFO: local.settings.json file updated."
+
 # publishing function app
-func azure functionapp publish $function_name --build-native-deps --build remote
+#func azure functionapp publish $function_name --build-native-deps --build remote
 
 echo CROP BUILD INFO: Function APP $function uploaded.
 
