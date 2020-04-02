@@ -6,23 +6,21 @@ Advanticsys sensor data
 
 from sqlalchemy.orm import sessionmaker
 
-from core.crop.structure import (
+from crop.structure import (
     SensorClass,
     TypeClass,
-    ReadingsAdvanticsysClass
+    ReadingsAdvanticsysClass,
 )
 
-from core.crop.structure import TypeClass, LocationClass, SensorClass
-
-from core.crop.constants import (
+from crop.constants import (
     CONST_ADVANTICSYS_COL_MODBUSID,
     CONST_ADVANTICSYS,
-    ADVANTICSYS_READINGS_TABLE_NAME,
     CONST_ADVANTICSYS_COL_TIMESTAMP,
     CONST_ADVANTICSYS_COL_TEMPERATURE,
     CONST_ADVANTICSYS_COL_HUMIDITY,
     CONST_ADVANTICSYS_COL_CO2LEVEL,
 )
+
 
 def session_open(engine):
     """
@@ -42,6 +40,7 @@ def session_close(session):
     session.commit()
     session.close()
 
+
 def insert_advanticsys_data(session, adv_df):
     """
     The function will take the prepared advanticsys data frame from the ingress module
@@ -54,10 +53,15 @@ def insert_advanticsys_data(session, adv_df):
     result = True
     log = ""
     cnt_dupl = 0
-    
+
     # Gets the the assigned int id of the "Advanticsys" type
     try:
-        adv_type_id = session.query(TypeClass).filter(TypeClass.sensor_type == CONST_ADVANTICSYS).first().id
+        adv_type_id = (
+            session.query(TypeClass)
+            .filter(TypeClass.sensor_type == CONST_ADVANTICSYS)
+            .first()
+            .id
+        )
     except:
         result = False
         log = "Sensor type {} was not found.".format(CONST_ADVANTICSYS)
@@ -70,15 +74,19 @@ def insert_advanticsys_data(session, adv_df):
         adv_timestamp = row[CONST_ADVANTICSYS_COL_TIMESTAMP]
 
         try:
-            adv_sensor_id = session.query(SensorClass).\
-                            filter(SensorClass.device_id == str(adv_device_id)).\
-                            filter(SensorClass.type_id == adv_type_id).\
-                            first().id
+            adv_sensor_id = (
+                session.query(SensorClass)
+                .filter(SensorClass.device_id == str(adv_device_id))
+                .filter(SensorClass.type_id == adv_type_id)
+                .first()
+                .id
+            )
         except:
             adv_sensor_id = -1
             result = False
             log = "{} sensor with {} = {} was not found.".format(
-                CONST_ADVANTICSYS, CONST_ADVANTICSYS_COL_MODBUSID, str(adv_device_id))
+                CONST_ADVANTICSYS, CONST_ADVANTICSYS_COL_MODBUSID, str(adv_device_id)
+            )
             break
 
         # check if data entry already exists
@@ -86,16 +94,18 @@ def insert_advanticsys_data(session, adv_df):
             found = False
 
             try:
-                query_result = session.query(ReadingsAdvanticsysClass).\
-                                filter(ReadingsAdvanticsysClass.sensor_id == adv_sensor_id).\
-                                filter(ReadingsAdvanticsysClass.timestamp == adv_timestamp).\
-                                first()
+                query_result = (
+                    session.query(ReadingsAdvanticsysClass)
+                    .filter(ReadingsAdvanticsysClass.sensor_id == adv_sensor_id)
+                    .filter(ReadingsAdvanticsysClass.timestamp == adv_timestamp)
+                    .first()
+                )
                 if query_result is not None:
                     found = True
             except:
                 result = False
                 log = "cannot perform query"
-                
+
             try:
                 if not found:
                     data = ReadingsAdvanticsysClass(
@@ -103,10 +113,12 @@ def insert_advanticsys_data(session, adv_df):
                         timestamp=adv_timestamp,
                         temperature=row[CONST_ADVANTICSYS_COL_TEMPERATURE],
                         humidity=row[CONST_ADVANTICSYS_COL_HUMIDITY],
-                        co2=row[CONST_ADVANTICSYS_COL_CO2LEVEL])
+                        co2=row[CONST_ADVANTICSYS_COL_CO2LEVEL],
+                    )
                     session.add(data)
 
-                else: cnt_dupl += 1
+                else:
+                    cnt_dupl += 1
             except:
                 result = False
                 log = "Cannot insert new data to database"

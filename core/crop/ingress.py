@@ -3,30 +3,21 @@
 Module to import sensor data to a postgres database.
 """
 
-from core.crop.db import create_database, connect_db, drop_db
+from crop.db import connect_db
 
-from core.crop.ingress_adv import advanticsys_import, advanticsys_df_checks
+from crop.populate_db import session_open, session_close, insert_advanticsys_data
 
-from core.crop.populate_db import session_open, session_close, insert_advanticsys_data
-
-from core.crop.constants import (
-    SQL_SERVER,
-    SQL_USER,
-    SQL_PASSWORD,
-    SQL_HOST,
-    SQL_PORT,
-    CONST_ADVANTICSYS_DIR,
-    CONST_ADVANTICSYS_TEST_1,
-    SQL_CONNECTION_STRING
+from crop.constants import(
+    CONST_ADVANTICSYS,
 )
 
-def import_data (pd_df, sensor_type, server, user, password, host, port, db_name):
+def import_data(pd_df, sensor_type, server, user, password, host, port, db_name):
     """
     This function will take the checked sensor data (pd_df)
     perform data checks and insert them into the db.
     -data: raw data from a sensor as a csv (or dataframe??)
     -sensor_type: type of sensor
-    
+
     Parameters required to connect to the database:
     -server: PostgreSQL
     -user: my user name
@@ -52,15 +43,16 @@ def import_data (pd_df, sensor_type, server, user, password, host, port, db_name
 
     # Creates/Opens a new connection to the db and binds the engine
     session = session_open(engine)
-    
-    if (sensor_type == "advanticsys"): # FIXME:(name or id?)
+
+    if sensor_type == CONST_ADVANTICSYS:
         # load advanticsys sensor data to db
         success, log = insert_advanticsys_data(session, pd_df)
         if not success:
             return success, log
 
     #TODO: add the other types
-    else: pass
+    else:
+        return False, "Sensor type des not exist"
 
     session_close(session)
 

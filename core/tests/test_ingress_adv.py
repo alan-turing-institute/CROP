@@ -3,10 +3,8 @@ Test ingress.py module
 """
 
 import os
-import sys
-import pytest
 
-from core.crop.constants import (
+from crop.constants import (
     CONST_TEST_DIR_DATA,
     CONST_ADVANTICSYS_FOLDER,
     CONST_ADVANTICSYS_TEST_1,
@@ -21,7 +19,7 @@ from core.crop.constants import (
     ERR_IMPORT_ERROR_3,
 )
 
-from core.crop.ingress_adv import (
+from crop.ingress_adv import (
     advanticsys_read_csv,
     advanticsys_check_structure,
     advanticsys_import,
@@ -168,7 +166,7 @@ def test_advanticsys_df_validity():
     data_df = advanticsys_read_csv(file_path)
 
     success, _, data_df = advanticsys_convert(data_df)
-    assert(success)
+    assert success
 
     success, log = advanticsys_df_validity(data_df)
-    assert(True == success), log
+    assert True == success, log

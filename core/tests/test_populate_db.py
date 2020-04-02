@@ -4,31 +4,31 @@ test sensor, sensor type, location and advanticsys data.
 """
 
 import os
-import pytest
 import pandas as pd
 
 
-from core.crop.structure import TypeClass, LocationClass, SensorClass, SensorLocationClass
+from crop.structure import TypeClass, LocationClass, SensorClass, SensorLocationClass
 
-from core.crop.constants import (
+from crop.constants import (
     CONST_COREDATA_DIR,
     CONST_ADVANTICSYS_DIR,
     CONST_ADVANTICSYS_TEST_1,
     CONST_ADVANTICSYS_TEST_10,
     SQL_CONNECTION_STRING,
     CONST_TEST_DIR_DATA,
-    CONST_SENSOR_LOCATION_TESTS
+    CONST_SENSOR_LOCATION_TESTS,
 )
 
-from core.crop.db import create_database, connect_db, drop_db
+from crop.db import create_database, connect_db, drop_db
 
-from core.crop.ingress_adv import advanticsys_import
+from crop.ingress_adv import advanticsys_import
 
-from core.crop.populate_db import session_open, session_close, insert_advanticsys_data
+from crop.populate_db import session_open, session_close, insert_advanticsys_data
 
 
 # Test database name
 TEST_DB_NAME = "fake_db"
+
 
 def test_create_database():
     """
@@ -37,6 +37,7 @@ def test_create_database():
 
     created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert created, log
+
 
 def test_insert_type_data():
     """
@@ -124,7 +125,7 @@ def test_insert_sensor_data():
 
 
 def test_import_sensor_location():
-   
+
     test_csv = "sensor_location.csv"
 
     sensor_df = pd.read_csv(os.path.join(CONST_COREDATA_DIR, test_csv))
@@ -140,24 +141,30 @@ def test_import_sensor_location():
     # Check if table is empty and bulk inserts if it is
     first_entry = session.query(SensorLocationClass).first()
     if first_entry == None:
-        session.bulk_insert_mappings(SensorLocationClass, sensor_df.to_dict(orient="records"))
+        session.bulk_insert_mappings(
+            SensorLocationClass, sensor_df.to_dict(orient="records")
+        )
         assert session.query(SensorLocationClass).count() == len(sensor_df.index)
     else:
         assert session.query(SensorLocationClass).count() == len(sensor_df.index)
 
     session_close(session)
 
-     # Trying to upload location history data for a sensor that does not exist
+    # Trying to upload location history data for a sensor that does not exist
     test_csv = "sensor_location_test_1.csv"
 
-    sensor_df = pd.read_csv(os.path.join(CONST_TEST_DIR_DATA, CONST_SENSOR_LOCATION_TESTS, test_csv))
+    sensor_df = pd.read_csv(
+        os.path.join(CONST_TEST_DIR_DATA, CONST_SENSOR_LOCATION_TESTS, test_csv)
+    )
     assert sensor_df.empty == False
     status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert status, log
     session = session_open(engine)
 
     try:
-        session.bulk_insert_mappings(SensorLocationClass, sensor_df.to_dict(orient="records"))
+        session.bulk_insert_mappings(
+            SensorLocationClass, sensor_df.to_dict(orient="records")
+        )
         result = True
     except:
         session.rollback()
@@ -170,14 +177,18 @@ def test_import_sensor_location():
     # Trying to upload location history data for a location that does not exist
     test_csv = "sensor_location_test_2.csv"
 
-    sensor_df = pd.read_csv(os.path.join(CONST_TEST_DIR_DATA, CONST_SENSOR_LOCATION_TESTS, test_csv))
+    sensor_df = pd.read_csv(
+        os.path.join(CONST_TEST_DIR_DATA, CONST_SENSOR_LOCATION_TESTS, test_csv)
+    )
     assert sensor_df.empty == False
     status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert status, log
     session = session_open(engine)
 
     try:
-        session.bulk_insert_mappings(SensorLocationClass, sensor_df.to_dict(orient="records"))
+        session.bulk_insert_mappings(
+            SensorLocationClass, sensor_df.to_dict(orient="records")
+        )
         result = True
     except:
         session.rollback()
@@ -190,14 +201,18 @@ def test_import_sensor_location():
     # Trying to upload location history data with an empty installation date
     test_csv = "sensor_location_test_3.csv"
 
-    sensor_df = pd.read_csv(os.path.join(CONST_TEST_DIR_DATA, CONST_SENSOR_LOCATION_TESTS, test_csv))
+    sensor_df = pd.read_csv(
+        os.path.join(CONST_TEST_DIR_DATA, CONST_SENSOR_LOCATION_TESTS, test_csv)
+    )
     assert sensor_df.empty == False
     status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert status, log
     session = session_open(engine)
 
     try:
-        session.bulk_insert_mappings(SensorLocationClass, sensor_df.to_dict(orient="records"))
+        session.bulk_insert_mappings(
+            SensorLocationClass, sensor_df.to_dict(orient="records")
+        )
         result = True
     except:
         session.rollback()
@@ -243,7 +258,7 @@ def test_insert_advanticsys_data():
 
     session_close(session)
 
+
 def test_drop_db():
     success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert success, log
-
