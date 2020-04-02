@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy_utils import database_exists, drop_database
 from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from crop.constants import SQL_DEFAULT_DBNAME
 
@@ -89,8 +90,6 @@ def drop_db(conn_string, db_name):
     db_conn_string = "{}/{}".format(conn_string, db_name)
 
     if database_exists(db_conn_string):
-        from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-
         # Connect to the db
         _, _, engine = connect_db(conn_string, db_name)
 
