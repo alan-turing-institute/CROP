@@ -27,7 +27,7 @@ from flask_login import UserMixin
 
 from bcrypt import gensalt, hashpw
 
-from core.crop.constants import (
+from crop.constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
@@ -42,16 +42,14 @@ from core.crop.constants import (
     ID_COL_NAME,
 )
 
-from sqlalchemy.ext.declarative import declarative_base
+SQLA = SQLAlchemy()
+BASE = SQLA.Model
 
-db = SQLAlchemy()
-BASE = db.Model
-
-#BASE = declarative_base()
 
 class TypeClass(BASE):
     """
-    This class contains a list and characteristics of each type of sensor installed eg. "Advanticsys"
+    This class contains a list and characteristics of each type of sensor
+    installed eg. "Advanticsys"
     """
 
     __tablename__ = SENSOR_TYPE_TABLE_NAME
@@ -61,7 +59,7 @@ class TypeClass(BASE):
     sensor_type = Column(String(100), nullable=False, unique=True)
     source = Column(String(100), nullable=False)
     origin = Column(String(100), nullable=False)
-    frequency = Column(String(100), nullable= False)
+    frequency = Column(String(100), nullable=False)
     data = Column(String(100), nullable=False)
     description = Column(Text)
 
@@ -80,29 +78,23 @@ class SensorClass(BASE):
     __tablename__ = SENSOR_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     type_id = Column(
         Integer,
         ForeignKey("{}.{}".format(SENSOR_TYPE_TABLE_NAME, ID_COL_NAME)),
         nullable=False,
     )
     device_id = Column(Unicode(100), nullable=False)
-    installation_date = Column(DateTime, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
-    #FIXME:One sensor to many loc?
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
-
     advanticsys_readings_relationship = relationship("ReadingsAdvanticsysClass")
     tinytag_readings_relationship = relationship("ReadingsTinyTagClass")
     airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
     environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
-
-    # relationshionships (Many-To-One)
-    #location_relationship = relationship("LocationClass")
 
     # arguments
     __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
@@ -112,35 +104,34 @@ class LocationClass(BASE):
     """
     This class describes all the physical locations in the farm. eg. Sensor x is found in
     the zone Farm 1, in the B aisle, In column 23 in the 4rd self.
-        Description of location codes: 
-        zones: (String) description of zone eg. Entrance, stairs, Farm 1, etc.. 
+        Description of location codes:
+        zones: (String) description of zone eg. Entrance, stairs, Farm 1, etc..
         aisle: (String) A, B. (Enumeration of aisles)
         column: (Integer). Enumeration of columns in farm zones.
-        shelf: (Integer) Number of shelves per column from bottom to top: 1-4. 
+        shelf: (Integer) Number of shelves per column from bottom to top: 1-4.
     """
 
     __tablename__ = LOCATION_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     zone = Column(String(50), nullable=False)
     aisle = Column(String(50), nullable=False)
     column = Column(Integer, nullable=False)
     shelf = Column(Integer, nullable=False)
-    #FIXME: the following is not working with orm
-    #code = column_property(section + column + shelf) #generated code of location
+    # FIXME: the following is not working with orm
+    # code = column_property(section + column + shelf) #generated code of location
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
     crop_growth_relationship = relationship("CropGrowthClass")
 
-     # arguments
+    # arguments
     __table_args__ = (UniqueConstraint("zone", "aisle", "column", "shelf"),)
 
     # constructor
     def __init__(self, zone, aisle, column, shelf, code):
-
         self.zone = zone
         self.aisle = aisle
         self.column = column
@@ -156,11 +147,11 @@ class ReadingsAdvanticsysClass(BASE):
     __tablename__ = ADVANTICSYS_READINGS_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_id = Column(
         Integer,
         ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
-        nullable=False
+        nullable=False,
     )
 
     timestamp = Column(DateTime, nullable=False)
@@ -179,7 +170,7 @@ class ReadingsAirVelocityClass(BASE):
 
     __tablename__ = AIR_VELOCITY_READINGS_TABLE_NAME
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_id = Column(
         Integer,
         ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
@@ -212,7 +203,7 @@ class ReadingsEnvironmentalClass(BASE):
     __tablename__ = ENVIRONMENTAL_READINGS_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     sensor_id = Column(
         Integer,
         ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
@@ -266,7 +257,7 @@ class ReadingsEnergyClass(BASE):
     Class for reading the energy data
     (monthly)
     meter_point: which meter point (Clapham Junction, Kilburn str. etc)
-    period: 
+
     """
 
     __tablename__ = ENERGY_READINGS_TABLE_NAME
@@ -281,6 +272,7 @@ class ReadingsEnergyClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
+
 class CropGrowthClass(BASE):
     """
     Class for reading the crop data
@@ -294,9 +286,10 @@ class CropGrowthClass(BASE):
 
     crop = Column(String, nullable=False)
     propagation_date = Column(DateTime, nullable=False)
-    location_id = Column(Integer,
+    location_id = Column(
+        Integer,
         ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
-        nullable=False
+        nullable=False,
     )
     trays = Column(Integer, nullable=False)
     m2 = Column(Float, nullable=False)
@@ -309,11 +302,11 @@ class CropGrowthClass(BASE):
     surplus_waste_trays = Column(Float, nullable=False)
     est_disease_trays = Column(Float, nullable=False)
     mass_harvested = Column(Float, nullable=False)
-    total_waste_p = Column(Float, nullable=False) #percentages (?)
+    total_waste_p = Column(Float, nullable=False)  # percentages (?)
     surplus_waste_p = Column(Float, nullable=False)
-    total_waste_m2 = Column (String, nullable=False)
+    total_waste_m2 = Column(String, nullable=False)
     total_waste_p = Column(Float, nullable=False)
-    waste_explanation = Column(String, nullable=False) #no ref on what that is
+    waste_explanation = Column(String, nullable=False)  # no ref on what that is
     yield_m2 = Column(Float, nullable=False)
     propagation_days = Column(Float, nullable=False)
     days_under_lights = Column(Float, nullable=False)
@@ -328,12 +321,12 @@ class CropGrowthClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
+
 class InfrastructureClass(BASE):
     """
     Class for reading the crop data
     (from google sheets)
     """
-    # TODO: this dataset needs some explaination. Lots of unused data here. 
 
     __tablename__ = INFRASTRUCTURE_TABLE_NAME
 
@@ -346,7 +339,8 @@ class InfrastructureClass(BASE):
     tank_ec = Column(Float)
     tank_clox = Column(Float)
     tank_water_temp = Column(Float)
-    #TODO:add entrances 
+    # TODO:add entrances
+
 
 class SensorLocationClass(BASE):
     """
@@ -378,6 +372,7 @@ class SensorLocationClass(BASE):
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
 
+
 class WeatherClass(BASE):
     """
     Class for reading the Met Weather API
@@ -399,6 +394,7 @@ class WeatherClass(BASE):
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
+
 
 class UserClass(BASE, UserMixin):
     """

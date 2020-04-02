@@ -8,9 +8,9 @@ from sqlalchemy_utils import database_exists, drop_database
 from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
 
-from core.crop.constants import SQL_DEFAULT_DBNAME, SQL_CONNECTION_STRING
+from crop.constants import SQL_DEFAULT_DBNAME
 
-from core.crop.structure import BASE
+from crop.structure import BASE
 
 
 def create_database(conn_string, db_name):
@@ -160,7 +160,7 @@ def check_database_structure(engine):
                 mapper = inspect(sql_class)
 
                 for obj in mapper.attrs:
-                    print (obj)
+                    print(obj)
 
                     # checks if the object is a relationship
                     if isinstance(obj, RelationshipProperty):

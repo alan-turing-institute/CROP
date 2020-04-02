@@ -28,9 +28,7 @@ CONST_COREDATA_DIR = os.path.join(
 CONST_ADVANTICSYS_DIR = os.path.join(
     CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ADVANTICSYS_FOLDER
 )
-CONST_ENV_DIR = os.path.join(
-    CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER
-)
+CONST_ENV_DIR = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER)
 
 # Core data
 SENSOR_CSV = "Sensors.csv"  # List of sensors
@@ -64,7 +62,9 @@ CONST_ADVANTICSYS_CO2LEVEL_MAX = 1000
 
 # Advanticsys test data
 CONST_ADVANTICSYS_TEST_1 = "data-20190821-test1.csv"  # Healthy data file
-CONST_ADVANTICSYS_TEST_2 = "data-20190821-test2.csv"  # Few rows, one column is misspelled
+CONST_ADVANTICSYS_TEST_2 = (
+    "data-20190821-test2.csv"  # Few rows, one column is misspelled
+)
 CONST_ADVANTICSYS_TEST_3 = "data-20190821-test3.csv"  # Few rows, timestamp is wrong
 CONST_ADVANTICSYS_TEST_4 = "data-20190821-test4.csv"  # Few rows, mobdusid is wrong
 CONST_ADVANTICSYS_TEST_5 = "data-20190821-test5.csv"  # Few rows, temeprature is wrong
@@ -107,7 +107,7 @@ CONST_NEW_ENV_COL_LIST = [
     CONST_NEW_ENV_COL_CO2,
     CONST_NEW_ENV_COL_TEMPERATURE,
     CONST_NEW_ENV_COL_HUMIDITY,
-    CONST_NEW_ENV_COL_DS_TEMP
+    CONST_NEW_ENV_COL_DS_TEMP,
 ]
 
 # New Environmental sensors test data
@@ -121,7 +121,7 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # Create connection string
-SQL_SERVER = "postgresql"
+SQL_ENGINE = "postgresql"
 SQL_USER = os.environ["CROP_SQL_USER"]
 SQL_PASSWORD = os.environ["CROP_SQL_PASS"]
 SQL_HOST = os.environ["CROP_SQL_HOST"]
@@ -131,7 +131,7 @@ SQL_DEFAULT_DBNAME = "postgres"
 SQL_SSLMODE = "require"
 
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
-    SQL_SERVER,
+    SQL_ENGINE,
     SQL_USER,
     SQL_PASSWORD,
     SQL_HOST,
