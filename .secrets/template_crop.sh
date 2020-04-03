@@ -1,4 +1,4 @@
-export PYTHONPATH="<<full path to CROP/__app__/>>:${PYTHONPATH}" # adding crop core app to PYTHONPATH
+export PYTHONPATH="<<full path to CROP/>>:${PYTHONPATH}" # adding crop core app to PYTHONPATH
 
 # Azure resources
 export CROP_SUBSCRIPTION_ID="<<<replaceme>>" # Azure subscription ID
