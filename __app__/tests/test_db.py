@@ -1,10 +1,8 @@
 import pytest
 
 
-from crop.constants import SQL_CONNECTION_STRING
-
-from crop.db import create_database, connect_db, drop_db, check_database_structure
-
+from __app__.crop.constants import SQL_CONNECTION_STRING
+from __app__.crop.db import create_database, connect_db, drop_db, check_database_structure
 
 TEST_DB_NAME = "fake_db"
 

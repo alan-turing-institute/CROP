@@ -5,9 +5,11 @@ Test ingress.py module
 import os
 import sys
 import pytest
+import pandas as pd
 
-from crop.constants import (
+from __app__.crop.constants import (
     CONST_TEST_DIR_DATA,
+    CONST_ADVANTICSYS_DIR,
     CONST_ADVANTICSYS_FOLDER,
     CONST_ADVANTICSYS_TEST_1,
     CONST_ADVANTICSYS_TEST_2,
@@ -18,17 +20,26 @@ from crop.constants import (
     CONST_ADVANTICSYS_TEST_7,
     CONST_ADVANTICSYS_TEST_8,
     CONST_ADVANTICSYS_TEST_9,
+    CONST_ADVANTICSYS_TEST_10,
     ERR_IMPORT_ERROR_3,
+    SQL_TEST_DBNAME,
+    SQL_CONNECTION_STRING
 )
 
-from crop.ingress_adv import (
+from __app__.crop.ingress_adv import (
     advanticsys_read_csv,
     advanticsys_check_structure,
     advanticsys_import,
     advanticsys_convert,
     advanticsys_df_validity,
+    insert_advanticsys_data
 )
 
+from __app__.crop.db import (
+    connect_db,
+    session_open,
+    session_close
+)
 
 def test_advanticsys_read_csv():
 
@@ -172,3 +183,41 @@ def test_advanticsys_df_validity():
 
     success, log = advanticsys_df_validity(data_df)
     assert(True == success), log
+
+
+def test_insert_advanticsys_data():
+    """
+    Bulk inserts test advanticsys data
+
+    Arguments:
+        engine: SQL engine object
+    """
+
+    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_1)
+    success, log, test_ingress_df = advanticsys_import(file_path)
+    assert success, log
+    assert isinstance(test_ingress_df, pd.DataFrame)
+
+    # Try to connect to an engine that exists
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
+    assert status, log
+
+    # trying to import the same data twice
+    session = session_open(engine)
+    success, log = insert_advanticsys_data(session, test_ingress_df)
+    session_close(session)
+
+    assert success == False, log
+
+    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_10)
+    success, log, test_ingress_df = advanticsys_import(file_path)
+    assert success, log
+    assert isinstance(test_ingress_df, pd.DataFrame)
+
+    session = session_open(engine)
+    success, log = insert_advanticsys_data(session, test_ingress_df)
+    session_close(session)
+
+    assert success == False, log
+
+    

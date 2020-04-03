@@ -27,7 +27,7 @@ from flask_login import UserMixin
 
 from bcrypt import gensalt, hashpw
 
-from crop.constants import (
+from __app__.crop.constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,

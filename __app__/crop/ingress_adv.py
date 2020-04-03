@@ -8,7 +8,7 @@ import os
 import pandas as pd
 
 # from crop.db import create_database
-from crop.constants import (
+from __app__.crop.constants import (
     CONST_ADVANTICSYS_COL_LIST,
     CONST_ADVANTICSYS_COL_TIMESTAMP,
     CONST_ADVANTICSYS_COL_MODBUSID,
@@ -33,12 +33,18 @@ from crop.constants import (
     CONST_TEST_DIR_DATA,
     CONST_ADVANTICSYS_FOLDER,
     CONST_ADVANTICSYS_TEST_1,
+    CONST_ADVANTICSYS
 )
 
 file_path = os.path.join(
     CONST_TEST_DIR_DATA, CONST_ADVANTICSYS_FOLDER, CONST_ADVANTICSYS_TEST_1
 )
 
+from __app__.crop.structure import (
+    SensorClass,
+    TypeClass,
+    ReadingsAdvanticsysClass
+)
 
 def advanticsys_import(file_path):
     """
@@ -271,3 +277,78 @@ def advanticsys_df_check_range(advanticsys_df, col_name, col_min, col_max):
         )
 
     return success, log
+
+
+def insert_advanticsys_data(session, adv_df):
+    """
+    The function will take the prepared advanticsys data frame from the ingress module
+    and find sensor id with respect to modbusid and sensor type and insert data into the db.
+    -session: an open sqlalchemy session
+    -adv_df: dataframe containing a checked advanticsys df
+    -cnt_dupl: counts duplicate values
+    """
+
+    result = True
+    log = ""
+    cnt_dupl = 0
+    
+    # Gets the the assigned int id of the "Advanticsys" type
+    try:
+        adv_type_id = session.query(TypeClass).filter(TypeClass.sensor_type == CONST_ADVANTICSYS).first().id
+    except:
+        result = False
+        log = "Sensor type {} was not found.".format(CONST_ADVANTICSYS)
+        return result, log
+
+    # Gets the sensor_id of the sensor with type=advanticsys and device_id=modbusid
+    for _, row in adv_df.iterrows():
+
+        adv_device_id = row[CONST_ADVANTICSYS_COL_MODBUSID]
+        adv_timestamp = row[CONST_ADVANTICSYS_COL_TIMESTAMP]
+
+        try:
+            adv_sensor_id = session.query(SensorClass).\
+                            filter(SensorClass.device_id == str(adv_device_id)).\
+                            filter(SensorClass.type_id == adv_type_id).\
+                            first().id
+        except:
+            adv_sensor_id = -1
+            result = False
+            log = "{} sensor with {} = {} was not found.".format(
+                CONST_ADVANTICSYS, CONST_ADVANTICSYS_COL_MODBUSID, str(adv_device_id))
+            break
+
+        # check if data entry already exists
+        if adv_sensor_id != -1:
+            found = False
+            try:
+                query_result = session.query(ReadingsAdvanticsysClass).\
+                                filter(ReadingsAdvanticsysClass.sensor_id == adv_sensor_id).\
+                                filter(ReadingsAdvanticsysClass.time_stamp == adv_timestamp).\
+                                first()
+
+                if query_result is not None:
+                    found = True
+            except:
+                found = False
+                
+            try:
+                if not found:
+                    data = ReadingsAdvanticsysClass(
+                        sensor_id=adv_sensor_id,
+                        time_stamp=adv_timestamp,
+                        temperature=row[CONST_ADVANTICSYS_COL_TEMPERATURE],
+                        humidity=row[CONST_ADVANTICSYS_COL_HUMIDITY],
+                        co2=row[CONST_ADVANTICSYS_COL_CO2LEVEL])
+                    session.add(data)
+
+                else: cnt_dupl += 1
+            except:
+                result = False
+                log = "Cannot insert new data to database"
+
+    if cnt_dupl != 0:
+        result = False
+        log = "Cannot insert {} duplicate values".format(cnt_dupl)
+
+    return result, log
