@@ -5,6 +5,7 @@ services:
 
 install:
   - pip install -r __app__/requirements.txt
+  - pip install -e .
 
 env:
   -CROP_SQL_HOST="localhost"
