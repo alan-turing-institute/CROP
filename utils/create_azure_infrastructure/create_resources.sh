@@ -102,7 +102,8 @@ if [ ${#exists} = 2 ]; then
         --admin-user $CROP_SQL_USERNAME \
         --admin-password $CROP_SQL_PASS \
         --sku-name $CONST_POSTGRES_SERVER \
-        --version $CONST_POSTGRES_V
+        --version $CONST_POSTGRES_V \
+        --ssl-enforcement Disabled
 
     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER has been created."
 
