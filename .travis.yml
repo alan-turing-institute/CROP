@@ -25,7 +25,7 @@ before_script:
   - psql -c "CREATE DATABASE cropdb;" -U postgres
 
 script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)/CROP/
   - cd __app__
   - echo $PYTHONPATH
+  - python -c "from utils.upload_syntetic_data import upload_syntetic_data"
   - pytest -vv
