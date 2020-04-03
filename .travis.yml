@@ -4,7 +4,7 @@ services:
   - postgresql
 
 install:
-  - pip install -r core/requirements.txt
+  - pip install -r __app__/requirements.txt
 
 env:
   -CROP_SQL_HOST="localhost"
@@ -24,6 +24,6 @@ before_script:
   - psql -c "CREATE DATABASE cropdb;" -U postgres
 
 script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)/CROP/core
-  - cd core
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)/CROP
+  - cd __app__
   - pytest
