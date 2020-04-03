@@ -27,4 +27,5 @@ before_script:
 script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)/CROP/
   - cd __app__
+  - echo $PYTHONPATH
   - pytest -vv
