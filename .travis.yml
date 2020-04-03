@@ -12,6 +12,7 @@ env:
   -CROP_SQL_PASS="postgres"
   -CROP_SQL_DBNAME="cropdb"
   -CROP_SQL_PORT="5432"
+  -PYTHONPATH=$PYTHONPATH:$(pwd)/CROP/
 
 git:
   submodules: false
