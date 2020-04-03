@@ -5,13 +5,11 @@ drop database, and check its structure.
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy_utils import database_exists, drop_database
-from sqlalchemy.orm import RelationshipProperty
+from sqlalchemy.orm import RelationshipProperty, sessionmaker
 from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
 
-from crop.constants import SQL_DEFAULT_DBNAME
-
-from crop.structure import BASE
-
+from __app__.crop.constants import SQL_DEFAULT_DBNAME
+from __app__.crop.structure import BASE
 
 def create_database(conn_string, db_name):
     """
@@ -26,7 +24,7 @@ def create_database(conn_string, db_name):
 
     # Create a new database
     if not database_exists(db_conn_string):
-        try:
+       try:
             # On postgres, the postgres database is normally present by default.
             # Connecting as a superuser (eg, postgres), allows to connect and create a new db.
             def_engine = create_engine("{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
@@ -49,8 +47,8 @@ def create_database(conn_string, db_name):
             BASE.metadata.create_all(engine)
 
             conn.close()
-        except:
-            return False, "Error creating a new database"
+       except:
+           return False, "Error creating a new database"
     return True, None
 
 
@@ -62,6 +60,7 @@ def connect_db(conn_string, db_name):
     return: True, None: if connected to the database,
             engine: returns the engine object
     """
+    
     # Create connection string
     db_conn_string = "{}/{}".format(conn_string, db_name)
 
@@ -73,6 +72,7 @@ def connect_db(conn_string, db_name):
             return False, "Cannot connect to db: %s" % db_name, None
     else:
         return False, "Cannot find db: %s" % db_name, None
+    
     return True, None, engine
 
 
@@ -187,3 +187,22 @@ def check_database_structure(engine):
         return False, "No tables found in the db"
 
     return True, None
+
+
+def session_open(engine):
+    """
+    Opens a new connection/session to the db and binds the engine
+    -engine: the connected engine
+    """
+    Session = sessionmaker()
+    Session.configure(bind=engine)
+    return Session()
+
+
+def session_close(session):
+    """
+    Closes the current open session
+    -session: an open session
+    """
+    session.commit()
+    session.close()

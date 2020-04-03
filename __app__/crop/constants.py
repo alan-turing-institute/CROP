@@ -130,6 +130,8 @@ SQL_DBNAME = os.environ["CROP_SQL_DBNAME"].strip().lower()
 SQL_DEFAULT_DBNAME = "postgres"
 SQL_SSLMODE = "require"
 
+SQL_TEST_DBNAME = "test_db"
+
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_ENGINE,
     SQL_USER,
