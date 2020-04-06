@@ -26,9 +26,4 @@ before_script:
 
 script:
   - cd __app__
-  - echo $PYTHONPATH
-  - ls ../
-  - ls ../utils
-  - ls ../utils/upload_syntetic_data
-  - python -c "from utils.upload_syntetic_data import upload_syntetic_data"
-  # - pytest -vv
+  - pytest -vv
