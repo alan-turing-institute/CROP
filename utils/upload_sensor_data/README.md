@@ -35,11 +35,11 @@ python upload_sensor_data.py \
   --storageacc teststorageacc \
   --container testcontainer \
   --connectionstr "BlobEndpoint=..." \
-  --source ../../core/tests/data/Advantix/data-20190821-test1.csv \
+  --source ../../core/tests/data/Advanticsys/data-20190821-test1.csv \
   --target 20190821-test1.csv
 ```
 
-### Generating SAS and connection
+### Generating SAS and the connection string
 
 - **Allowed services:** Blob
 - **Allowed resource types:** Container, Object
