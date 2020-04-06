@@ -4,8 +4,7 @@ services:
   - postgresql
 
 install:
-  - pip install -r __app__/requirements.txt
-  - pip install -e .
+  - pip install -r __app__/requirements.tx
 
 env:
   -CROP_SQL_HOST="localhost"
