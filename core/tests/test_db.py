@@ -1,6 +1,3 @@
-import pytest
-
-
 from crop.constants import SQL_CONNECTION_STRING
 
 from crop.db import create_database, connect_db, drop_db, check_database_structure
@@ -8,11 +5,13 @@ from crop.db import create_database, connect_db, drop_db, check_database_structu
 
 TEST_DB_NAME = "fake_db"
 
+
 def test_create_database():
 
     # Test create new db
     created, log = create_database(SQL_CONNECTION_STRING, TEST_DB_NAME)
     assert created, log
+
 
 def test_connect_db():
 
@@ -26,6 +25,7 @@ def test_connect_db():
     assert status == False, log
     assert engine == None
 
+
 def test_check_database_structure():
 
     status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
@@ -35,8 +35,9 @@ def test_check_database_structure():
     good, log = check_database_structure(engine)
     assert good, log
 
+
 def test_drop_db():
 
-   #Test drop db
-   success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
-   assert success, log
+    # Test drop db
+    success, log = drop_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
+    assert success, log

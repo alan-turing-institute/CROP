@@ -3,8 +3,6 @@ Test ingress.py module
 """
 
 import os
-import sys
-import pytest
 
 from crop.constants import (
     CONST_TEST_DIR_DATA,
@@ -168,7 +166,7 @@ def test_advanticsys_df_validity():
     data_df = advanticsys_read_csv(file_path)
 
     success, _, data_df = advanticsys_convert(data_df)
-    assert(success)
+    assert success
 
     success, log = advanticsys_df_validity(data_df)
-    assert(True == success), log
+    assert True == success, log
