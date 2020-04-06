@@ -55,7 +55,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("target", default=None, help="A unique target (blob) name.")
 
-    args = parser.parse_args()
+    #args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     file_path = (args.source).strip()
     blob_name = (args.target).strip()

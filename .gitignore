@@ -6,7 +6,7 @@ CROP.tf
 CROP.pyproj.user
 
 # SECRETS
-/.secrets/
+/.secrets/crop.sh
 
 # Data
 /data/ 

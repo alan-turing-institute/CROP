@@ -4,7 +4,7 @@ services:
   - postgresql
 
 install:
-  - pip install -r core/requirements.txt
+  - pip install -r __app__/requirements.txt
 
 env:
   -CROP_SQL_HOST="localhost"
@@ -12,18 +12,18 @@ env:
   -CROP_SQL_PASS="postgres"
   -CROP_SQL_DBNAME="cropdb"
   -CROP_SQL_PORT="5432"
+  -PYTHONPATH=$PYTHONPATH:$(pwd)
 
 git:
   submodules: false
 
 before_install:
-   - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
-   - git submodule update --init --recursive
+  - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+  - git submodule update --init --recursive
   
 before_script:
   - psql -c "CREATE DATABASE cropdb;" -U postgres
 
 script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)/CROP/core
-  - cd core
-  - pytest
+  - cd __app__
+  - pytest -vv
