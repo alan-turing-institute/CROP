@@ -4,6 +4,7 @@ services:
   - postgresql
 
 install:
+  - echo pwd
   - pip install -r __app__/requirements.tx
 
 env:
@@ -28,4 +29,4 @@ script:
   - cd __app__
   - echo $PYTHONPATH
   - python -c "from utils.upload_syntetic_data import upload_syntetic_data"
-  - pytest -vv
+  # - pytest -vv
