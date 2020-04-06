@@ -3,8 +3,7 @@ Test ingress.py module
 """
 
 import os
-import sys
-import pytest
+
 import pandas as pd
 
 from __app__.crop.constants import (
@@ -59,7 +58,7 @@ def test_advanticsys_check_structure():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _ = advanticsys_check_structure(data_df)
-    assert True == success
+    assert success is True
 
     # checks if data with mispelled column fails
     file_path = os.path.join(
@@ -67,7 +66,7 @@ def test_advanticsys_check_structure():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _ = advanticsys_check_structure(data_df)
-    assert False == success
+    assert success is False
 
 
 def test_advanticsys_convert():
@@ -78,7 +77,7 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _, data_df = advanticsys_convert(data_df)
-    assert True == success
+    assert success is True
 
     # One column is misppeled, the checks should pick this up and return None
     file_path = os.path.join(
@@ -86,8 +85,8 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _, data_df = advanticsys_convert(data_df)
-    assert False == success
-    assert None == data_df
+    assert success is False
+    assert data_df is None
 
     # Timestamp is wrong, the checks should return None
     file_path = os.path.join(
@@ -95,8 +94,8 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _, data_df = advanticsys_convert(data_df)
-    assert False == success
-    assert None == data_df
+    assert success is False
+    assert data_df is None
 
     # Modbus ID is wrong
     file_path = os.path.join(
@@ -104,7 +103,7 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _, data_df = advanticsys_convert(data_df)
-    assert False == success
+    assert success is False
 
     # Temperature values are wrong
     file_path = os.path.join(
@@ -112,7 +111,7 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _, data_df = advanticsys_convert(data_df)
-    assert False == success
+    assert success is False
 
     # Humidity values are wrong
     file_path = os.path.join(
@@ -120,7 +119,7 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _, data_df = advanticsys_convert(data_df)
-    assert False == success
+    assert success is False
 
     # Co2 values are wrong
     file_path = os.path.join(
@@ -128,7 +127,7 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, _, data_df = advanticsys_convert(data_df)
-    assert False == success
+    assert success is False
 
     # Temp and humidity empty values, assert error 3
     file_path = os.path.join(
@@ -136,7 +135,7 @@ def test_advanticsys_convert():
     )
     data_df = advanticsys_read_csv(file_path)
     success, log, _ = advanticsys_convert(data_df)
-    assert False == success
+    assert success is False
     assert ERR_IMPORT_ERROR_3 == log
 
 
@@ -147,8 +146,8 @@ def test_advanticsys_import():
         CONST_TEST_DIR_DATA, CONST_ADVANTICSYS_FOLDER, CONST_ADVANTICSYS_TEST_2
     )
     success, _, data_df = advanticsys_import(file_path)
-    assert False == success
-    assert None == data_df
+    assert success is False
+    assert data_df is None
 
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTICSYS_FOLDER, CONST_ADVANTICSYS_TEST_1
@@ -171,7 +170,7 @@ def test_advanticsys_df_validity():
     assert success
 
     success, _ = advanticsys_df_validity(data_df)
-    assert False == success
+    assert success is False
 
     file_path = os.path.join(
         CONST_TEST_DIR_DATA, CONST_ADVANTICSYS_FOLDER, CONST_ADVANTICSYS_TEST_1
@@ -179,10 +178,10 @@ def test_advanticsys_df_validity():
     data_df = advanticsys_read_csv(file_path)
 
     success, _, data_df = advanticsys_convert(data_df)
-    assert(success)
+    assert success
 
     success, log = advanticsys_df_validity(data_df)
-    assert(True == success), log
+    assert success, log
 
 
 def test_insert_advanticsys_data():
@@ -207,10 +206,11 @@ def test_insert_advanticsys_data():
     success, log = insert_advanticsys_data(session, test_ingress_df)
     session_close(session)
 
-    assert success == False, log
+    assert success is False, log
 
     file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_10)
     success, log, test_ingress_df = advanticsys_import(file_path)
+
     assert success, log
     assert isinstance(test_ingress_df, pd.DataFrame)
 
@@ -218,6 +218,4 @@ def test_insert_advanticsys_data():
     success, log = insert_advanticsys_data(session, test_ingress_df)
     session_close(session)
 
-    assert success == False, log
-
-    
+    assert success is False, log

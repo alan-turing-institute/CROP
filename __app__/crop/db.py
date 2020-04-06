@@ -7,9 +7,11 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy_utils import database_exists, drop_database
 from sqlalchemy.orm import RelationshipProperty, sessionmaker
 from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from __app__.crop.constants import SQL_DEFAULT_DBNAME
 from __app__.crop.structure import BASE
+
 
 def create_database(conn_string, db_name):
     """
@@ -24,7 +26,7 @@ def create_database(conn_string, db_name):
 
     # Create a new database
     if not database_exists(db_conn_string):
-       try:
+        try:
             # On postgres, the postgres database is normally present by default.
             # Connecting as a superuser (eg, postgres), allows to connect and create a new db.
             def_engine = create_engine("{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
@@ -47,8 +49,8 @@ def create_database(conn_string, db_name):
             BASE.metadata.create_all(engine)
 
             conn.close()
-       except:
-           return False, "Error creating a new database"
+        except:
+            return False, "Error creating a new database"
     return True, None
 
 
@@ -60,7 +62,7 @@ def connect_db(conn_string, db_name):
     return: True, None: if connected to the database,
             engine: returns the engine object
     """
-    
+
     # Create connection string
     db_conn_string = "{}/{}".format(conn_string, db_name)
 
@@ -72,7 +74,7 @@ def connect_db(conn_string, db_name):
             return False, "Cannot connect to db: %s" % db_name, None
     else:
         return False, "Cannot find db: %s" % db_name, None
-    
+
     return True, None, engine
 
 
@@ -89,8 +91,6 @@ def drop_db(conn_string, db_name):
     db_conn_string = "{}/{}".format(conn_string, db_name)
 
     if database_exists(db_conn_string):
-        from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-
         # Connect to the db
         _, _, engine = connect_db(conn_string, db_name)
 
@@ -160,7 +160,7 @@ def check_database_structure(engine):
                 mapper = inspect(sql_class)
 
                 for obj in mapper.attrs:
-                    print (obj)
+                    print(obj)
 
                     # checks if the object is a relationship
                     if isinstance(obj, RelationshipProperty):
