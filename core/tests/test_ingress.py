@@ -1,33 +1,36 @@
 """
-Module to test creating a database and populating it with
-test sensor, sensor type, location and advanticsys data.
+Module to test importing data from sensors to db
 """
 
 import os
 import pandas as pd
 
+from crop.db import create_database, connect_db, drop_db
+from crop.ingress import import_data
+from crop.ingress_adv import advanticsys_import
+from crop.populate_db import session_open, session_close
 
 from crop.structure import TypeClass, LocationClass, SensorClass, SensorLocationClass
 
 from crop.constants import (
-    CONST_COREDATA_DIR,
+    SQL_ENGINE,
+    SQL_USER,
+    SQL_PASSWORD,
+    SQL_HOST,
+    SQL_PORT,
+    CONST_ADVANTICSYS,
     CONST_ADVANTICSYS_DIR,
     CONST_ADVANTICSYS_TEST_1,
-    CONST_ADVANTICSYS_TEST_10,
-    SQL_CONNECTION_STRING,
+    CONST_COREDATA_DIR,
     CONST_TEST_DIR_DATA,
     CONST_SENSOR_LOCATION_TESTS,
+    SQL_CONNECTION_STRING,
 )
 
-from crop.db import create_database, connect_db, drop_db
 
-from crop.ingress_adv import advanticsys_import
-
-from crop.populate_db import session_open, session_close, insert_advanticsys_data
-
-
-# Test database name
 TEST_DB_NAME = "fake_db"
+
+FILE_PATH = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_1)
 
 
 def test_create_database():
@@ -223,40 +226,28 @@ def test_import_sensor_location():
     session_close(session)
 
 
-def test_insert_advanticsys_data():
-    """
-    Tests inserting test advanticsys data
-    """
+# util function
 
-    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_1)
-    success, log, test_ingress_df = advanticsys_import(file_path)
+
+def test_import_data():
+
+    # Bring df
+    success, log, test_ingress_df = advanticsys_import(FILE_PATH)
     assert success, log
     assert isinstance(test_ingress_df, pd.DataFrame)
 
-    # Try to connect to an engine that exists
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, TEST_DB_NAME)
-    assert status, log
-
-    # Creates/Opens a new connection to the db and binds the engine
-    session = session_open(engine)
-
-    # tests loading sensor data to db
-    success, log = insert_advanticsys_data(session, test_ingress_df)
+    # Test import function
+    success, log = import_data(
+        test_ingress_df,
+        CONST_ADVANTICSYS,
+        SQL_ENGINE,
+        SQL_USER,
+        SQL_PASSWORD,
+        SQL_HOST,
+        SQL_PORT,
+        TEST_DB_NAME,
+    )
     assert success, log
-
-    # trying to import the same data twice
-    success, log = insert_advanticsys_data(session, test_ingress_df)
-    assert success == False, log
-
-    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_10)
-    success, log, test_ingress_df = advanticsys_import(file_path)
-    assert success, log
-    assert isinstance(test_ingress_df, pd.DataFrame)
-
-    success, log = insert_advanticsys_data(session, test_ingress_df)
-    assert success == False, log
-
-    session_close(session)
 
 
 def test_drop_db():

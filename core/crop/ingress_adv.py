@@ -4,7 +4,6 @@ for the Advanticsys sensors
 
 """
 
-import os
 import pandas as pd
 
 # from crop.db import create_database
@@ -30,13 +29,6 @@ from crop.constants import (
     CONST_ADVANTICSYS_HUMIDITY_MAX,
     CONST_ADVANTICSYS_CO2LEVEL_MIN,
     CONST_ADVANTICSYS_CO2LEVEL_MAX,
-    CONST_TEST_DIR_DATA,
-    CONST_ADVANTICSYS_FOLDER,
-    CONST_ADVANTICSYS_TEST_1,
-)
-
-file_path = os.path.join(
-    CONST_TEST_DIR_DATA, CONST_ADVANTICSYS_FOLDER, CONST_ADVANTICSYS_TEST_1
 )
 
 
@@ -150,7 +142,8 @@ def advanticsys_convert(advanticsys_raw_df):
     # convert to expected types
     try:
         advanticsys_df[CONST_ADVANTICSYS_COL_TIMESTAMP] = pd.to_datetime(
-            advanticsys_df[CONST_ADVANTICSYS_COL_TIMESTAMP], format="%Y-%m-%dT%H:%M:%S.%f"
+            advanticsys_df[CONST_ADVANTICSYS_COL_TIMESTAMP],
+            format="%Y-%m-%dT%H:%M:%S.%f",
         )
         advanticsys_df[CONST_ADVANTICSYS_COL_MODBUSID] = advanticsys_df[
             CONST_ADVANTICSYS_COL_MODBUSID
@@ -230,7 +223,9 @@ def advanticsys_df_validity(advanticsys_df):
 
     # Check every column
     for col_name, col_min, col_max in zip(col_names, col_mins, col_maxs):
-        success, log = advanticsys_df_check_range(advanticsys_df, col_name, col_min, col_max)
+        success, log = advanticsys_df_check_range(
+            advanticsys_df, col_name, col_min, col_max
+        )
         if not success:
             return success, log
 
