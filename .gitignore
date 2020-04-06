@@ -1,3 +1,4 @@
+
 # Visual Studio
 CROP.pyproj
 CROP.sln
@@ -5,15 +6,10 @@ CROP.tf
 CROP.pyproj.user
 
 # SECRETS
-.secrets/
+/.secrets/crop.sh
 
 # Data
 /data/ 
-
-# Azure function
-local.settings.json
-.python_packages
-
 
 # PyTest
 __pycache__
