@@ -155,9 +155,8 @@ def insert_adv_data(engine):
 
     # tests loading sensor data to db
     success, log = insert_advanticsys_data(session, test_ingress_df)
-
     session_close(session)
-
+    assert success, log
 
 def import_sensor_location(engine):
     """
