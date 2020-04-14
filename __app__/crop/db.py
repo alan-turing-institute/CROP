@@ -26,7 +26,7 @@ def create_database(conn_string, db_name):
 
     # Create a new database
     if not database_exists(db_conn_string):
-        try:
+        # try:
             # On postgres, the postgres database is normally present by default.
             # Connecting as a superuser (eg, postgres), allows to connect and create a new db.
             def_engine = create_engine("{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
@@ -49,8 +49,8 @@ def create_database(conn_string, db_name):
             BASE.metadata.create_all(engine)
 
             conn.close()
-        except:
-            return False, "Error creating a new database"
+        # except:
+        #     return False, "Error creating a new database"
     return True, None
 
 
