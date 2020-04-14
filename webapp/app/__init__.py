@@ -5,8 +5,8 @@ from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 
-from crop.structure import db
-from crop.structure import UserClass
+from __app__.crop.structure import SQLA as db
+from __app__.crop.structure import UserClass
 
 login_manager = LoginManager()
 

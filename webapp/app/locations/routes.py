@@ -1,13 +1,11 @@
 from app.locations import blueprint
-from flask import render_template
 from flask_login import login_required
-
-from flask import request
-
+from flask import request, render_template
 from sqlalchemy import exc
 
-from crop.structure import db
-from crop.structure import LocationClass
+
+from __app__.crop.structure import SQLA as db
+from __app__.crop.structure import LocationClass
 
 
 CONST_ACTION_ADD = "Add"
@@ -52,19 +50,19 @@ def route_template(template):
 
                 loc_action = request.form.get('loc_action')
 
-                loc_section = request.form.get('loc_section')
+                loc_zone = request.form.get('loc_zone')
+                loc_aisle = request.form.get('loc_aisle')
                 loc_column = request.form.get('loc_column')
                 loc_shelf = request.form.get('loc_shelf')
-                loc_code = request.form.get('loc_code')
-
+                
                 # Adding a new location
                 if loc_action == CONST_ACTION_ADD:
                     try:
                         location = LocationClass(
-                            section=loc_section,
+                            zone=loc_zone,
+                            aisle=loc_aisle,
                             column=loc_column,
-                            shelf=loc_shelf,
-                            code=loc_code
+                            shelf=loc_shelf
                         )
                         
                         db.session.add(location)
@@ -85,10 +83,10 @@ def route_template(template):
 
                         LocationClass.query.filter_by(id=loc_id).update(
                             dict(
-                                section=loc_section,
+                                zone=loc_zone,
+                                aisle=loc_aisle,
                                 column=loc_column,
-                                shelf=loc_shelf,
-                                code=loc_code
+                                shelf=loc_shelf
                             )
                         )
                         db.session.commit()

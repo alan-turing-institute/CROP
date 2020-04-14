@@ -7,13 +7,12 @@ from flask_login import (
     logout_user
 )
 
-from crop.structure import db
 from app import login_manager
-from crop.structure import UserClass
-
 from app.base import blueprint
 from app.base.forms import LoginForm, CreateAccountForm
 
+from __app__.crop.structure import SQLA as db
+from __app__.crop.structure import UserClass
 
 @blueprint.route('/')
 def route_default():
