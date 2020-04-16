@@ -20,8 +20,6 @@ CONST_FORM_ACTION_DELETE = "delete"
 @login_required
 def route_template(template):
 
-    print("template: ", template, " request.method: ", request.method )
-
     if template == "locations":
         locations = LocationClass.query.all()
         return render_template(template + '.html', locations=locations)

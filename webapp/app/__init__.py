@@ -1,5 +1,6 @@
 from flask import Flask, url_for
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required
+from flask_cors import CORS
 
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
@@ -28,7 +29,7 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
-    module_list = ('home', 'views', 'locations', 'types', 'sensors', 'users', 'base')
+    module_list = ('home', 'views', 'locations', 'types', 'sensors', 'users', 'base', 'queries')
     
     for module_name in module_list:
         module = import_module('app.{}.routes'.format(module_name))
@@ -92,4 +93,5 @@ def create_app(config, selenium=False):
     configure_database(app)
     configure_logs(app)
     apply_themes(app)
+    CORS(app)
     return app
