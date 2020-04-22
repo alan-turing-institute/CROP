@@ -4,8 +4,7 @@ from flask_login import login_required
 
 #from app.base.models import User
 
-# from crop.structure import db
-from crop.structure import UserClass
+from __app__.crop.structure import UserClass
 
 
 @blueprint.route('/<template>')

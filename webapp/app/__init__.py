@@ -1,12 +1,13 @@
 from flask import Flask, url_for
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required
+from flask_cors import CORS
 
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 
-from crop.structure import db
-from crop.structure import UserClass
+from __app__.crop.structure import SQLA as db
+from __app__.crop.structure import UserClass
 
 login_manager = LoginManager()
 
@@ -28,7 +29,7 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
-    module_list = ('home', 'views', 'locations', 'types', 'sensors', 'users', 'base')
+    module_list = ('home', 'views', 'locations', 'types', 'sensors', 'users', 'base', 'queries')
     
     for module_name in module_list:
         module = import_module('app.{}.routes'.format(module_name))
@@ -85,6 +86,7 @@ def apply_themes(app):
 def create_app(config, selenium=False):
     app = Flask(__name__, static_folder='base/static')
     app.config.from_object(config)
+
     if selenium:
         app.config['LOGIN_DISABLED'] = True
     register_extensions(app)
@@ -92,4 +94,5 @@ def create_app(config, selenium=False):
     configure_database(app)
     configure_logs(app)
     apply_themes(app)
+    CORS(app)
     return app

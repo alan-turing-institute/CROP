@@ -38,10 +38,10 @@
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Section</th>
+                    <th>Zone</th>
+                    <th>Aisle</th>
                     <th>Column</th>
                     <th>Shelf</th>
-                    <th>Code</th>
                     <th class="column-title no-link last"><span class="nobr">Action</span>
                   </tr>
                 </thead>
@@ -50,10 +50,10 @@
                     {% for t_location in locations %}
                     <tr class='clickable-row' method = POST>
                       <td>{{ t_location.id }}</td>
-                      <td>{{ t_location.section }}</td>
+                      <td>{{ t_location.zone }}</td>
+                      <td>{{ t_location.aisle }}</td>
                       <td>{{ t_location.column }}</td>
                       <td>{{ t_location.shelf }}</td>
-                      <td>{{ t_location.code }}</td>
                       <td class=" last"><a href="/locations/location_form?query={{ t_location.id }}">Edit</a>
                     </tr>
                     {% endfor %}
