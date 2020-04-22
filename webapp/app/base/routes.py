@@ -1,4 +1,7 @@
 from bcrypt import checkpw
+
+from os import environ
+
 from flask import jsonify, render_template, redirect, request, url_for
 from flask_login import (
     current_user,
@@ -7,13 +10,13 @@ from flask_login import (
     logout_user
 )
 
-from crop.structure import db
 from app import login_manager
-from crop.structure import UserClass
 
 from app.base import blueprint
 from app.base.forms import LoginForm, CreateAccountForm
 
+from __app__.crop.structure import SQLA as db
+from __app__.crop.structure import UserClass
 
 @blueprint.route('/')
 def route_default():
@@ -51,11 +54,13 @@ def login():
             login_user(user)
             return redirect(url_for('base_blueprint.route_default'))
         return render_template('errors/page_403.html')
+    
     if not current_user.is_authenticated:
         return render_template(
             'login/login.html',
             login_form=login_form,
-            create_account_form=create_account_form
+            create_account_form=create_account_form,
+            disable_register=(environ.get('CROP_DISABLE_REGISTER', "True") == "True")
         )
     return redirect(url_for('home_blueprint.index'))
 

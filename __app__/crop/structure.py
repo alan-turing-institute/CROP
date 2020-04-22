@@ -114,7 +114,7 @@ class LocationClass(BASE):
     __tablename__ = LOCATION_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True) # e
 
     zone = Column(String(50), nullable=False)
     aisle = Column(String(50), nullable=False)
