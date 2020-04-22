@@ -1,4 +1,6 @@
-export PYTHONPATH="<<full path to CROP/>>:${PYTHONPATH}" # adding crop core app to PYTHONPATH
+#!/bin/bash
+
+export PYTHONPATH=`pwd`"/..:${PYTHONPATH}"
 
 # Azure resources
 export CROP_SUBSCRIPTION_ID="<<<replaceme>>" # Azure subscription ID

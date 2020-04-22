@@ -86,6 +86,7 @@ def apply_themes(app):
 def create_app(config, selenium=False):
     app = Flask(__name__, static_folder='base/static')
     app.config.from_object(config)
+
     if selenium:
         app.config['LOGIN_DISABLED'] = True
     register_extensions(app)

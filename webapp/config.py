@@ -26,6 +26,7 @@ class Config(object):
 
 class ProductionConfig(Config):
     DEBUG = False
+    DISABLE_REGISTER = True
 
     # Security
     SESSION_COOKIE_HTTPONLY = True
@@ -44,7 +45,7 @@ class ProductionConfig(Config):
 
 class DebugConfig(Config):
     DEBUG = True
-
+    DISABLE_REGISTER = True
 
 config_dict = {
     'Production': ProductionConfig,
