@@ -35,6 +35,19 @@
         <!-- </div> -->
 
       </div>
+
+
+      <!-- TEST { -->
+      
+        <div class="ln_solid"></div>
+        <div class="form-group">
+          <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+            <button type="submit" name="action_button" class="btn btn-success" value="submit" onclick="myFunction()">RUN</button>
+          </div>
+        </div>
+    
+      <!-- TEST } -->
+
     </div>
   </div>
 {% endblock content %}
@@ -55,5 +68,30 @@
   <script src="{{ url_for('static', filename='structures/CROP3js2/js/GLTFLoader.js') }}"></script>
   <script src="{{ url_for('static', filename='structures/CROP3js2/js/OBJLoader.js') }}"></script>
   <script src="{{ url_for('static', filename='structures/CROP3js2/js/crop.js') }}"></script>
+
+  
+  <!-- TEST { -->
+  <script>
+    function myFunction() {
+        
+        const baseUrl = 'http://0.0.0.0:5000';
+        const queriesUrl = baseUrl.concat('/queries');
+        const senorsUrl = queriesUrl.concat('/getallsensors');
+
+        console.log(senorsUrl)
+
+        const Http = new XMLHttpRequest()
+        
+        Http.open("GET", senorsUrl);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    }
+  
+  </script>
+  <!-- TEST } -->
+
 
 {% endblock javascripts %}
