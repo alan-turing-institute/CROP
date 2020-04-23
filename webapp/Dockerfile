@@ -8,5 +8,5 @@ COPY migrations migrations
 
 RUN pip install -r requirements.txt
 
-EXPOSE 5000
+EXPOSE 80
 CMD ["gunicorn", "--config", "gunicorn.py", "gentelella:app"]

@@ -1,11 +1,7 @@
 from app.sensors import blueprint
-from flask import render_template
+from flask import request, render_template
 from flask_login import login_required
 
-from flask import request
-
-# from crop.structure import db
-# from crop.structure import 
 
 @blueprint.route('/<template>')
 @login_required
