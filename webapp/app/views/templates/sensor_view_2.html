@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} SENSORS {% endblock title %}
+{% block title %} SENSORS 2 {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -23,30 +23,27 @@
               <div class="clearfix"></div>
             </div>
 
-            <div class="x_content">
+            <!-- <div class="x_content">
                 <canvas id="c" style="width: 100%; height: 100%;"> 
                     Text to alert visitors that the Canvas
                     is not supported by your browser.
                 </canvas>
 
+            </div> -->
+
+            <div class="webgl-content">
+                <div id="unityContainer" style="width: 960px; height: 600px"></div>
+                <div class="footer">
+                  <div class="webgl-logo"></div>
+                  <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
+                  <div class="title">CROP_unity_js</div>
+                </div>
             </div>
             
           </div>
         <!-- </div> -->
 
       </div>
-
-
-      <!-- TEST { -->
-      
-        <div class="ln_solid"></div>
-        <div class="form-group">
-          <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
-            <button type="submit" name="action_button" class="btn btn-success" value="submit" onclick="myFunction()">RUN</button>
-          </div>
-        </div>
-    
-      <!-- TEST } -->
 
     </div>
   </div>
@@ -55,42 +52,12 @@
 {% block javascripts %}
   {{ super() }}
 
-  <!-- <script>
-
-    var path = document.location.pathname;
-    var directory = path.substring(path.indexOf('/'), path.lastIndexOf('/'));
-  </script> -->
-
 
   <!-- 3D models -->
-  <script src="{{ url_for('static', filename='structures/CROP3js2/js/three.js') }}"></script>
-  <script src="{{ url_for('static', filename='structures/CROP3js2/js/OrbitControls.js') }}"></script>
-  <script src="{{ url_for('static', filename='structures/CROP3js2/js/GLTFLoader.js') }}"></script>
-  <script src="{{ url_for('static', filename='structures/CROP3js2/js/OBJLoader.js') }}"></script>
-  <script src="{{ url_for('static', filename='structures/CROP3js2/js/crop.js') }}"></script>
-
-  
-  <!-- TEST { -->
+  <script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
+  <script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
   <script>
-    function myFunction() {
-        
-        const queriesUrl = '/queries';
-        const senorsUrl = queriesUrl.concat('/getallsensors');
-
-        console.log(senorsUrl)
-
-        const Http = new XMLHttpRequest()
-        
-        Http.open("GET", senorsUrl);
-        Http.send();
-
-        Http.onreadystatechange = (e) => {
-            console.log(Http.responseText)
-        }
-    }
-  
+    var unityInstance = UnityLoader.instantiate("unityContainer", {onProgress: UnityProgress});
   </script>
-  <!-- TEST } -->
-
 
 {% endblock javascripts %}
