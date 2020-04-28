@@ -2,7 +2,10 @@
 
 build:
 	# checking out submodules
-	git submodule update --remote
+	#git submodule update --remote
+
+	git submodule sync
+	git submodule update --init --recursive --remote
 
 	docker build . -f Dockerfile -t turingcropapp/webapp:latest
 run:
