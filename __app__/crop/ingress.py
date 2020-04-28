@@ -56,4 +56,4 @@ def import_data(pd_df, sensor_type, user, password, host, port, db_name):
 
     session_close(session)
 
-    return True, None
+    return True, log

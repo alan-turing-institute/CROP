@@ -38,7 +38,7 @@ def advanticsys_import(blobin: func.InputStream, blobout: func.Out[bytes]):
     database = "{}".format(os.environ["CROP_SQL_DBNAME"].strip())
 
     # uploading data to the database
-    status, error = import_data(
+    status, log = import_data(
         data_df, CONST_ADVANTICSYS, user, password, host, port, database
     )
 
@@ -47,9 +47,10 @@ def advanticsys_import(blobin: func.InputStream, blobout: func.Out[bytes]):
     if status:
 
         logging.info(
-            f"COMPLETED: advanticsys sensor data import process finished:\n"
+            f"SUCCESS: advanticsys sensor data import process finished:\n"
             f"Name: {blobin.name}\n"
-            f"Blob Size: {blobin.length} bytes"
+            f"Blob Size: {blobin.length} bytes\n"
+            f"Log: {log}"
         )
 
     else:
@@ -58,5 +59,5 @@ def advanticsys_import(blobin: func.InputStream, blobout: func.Out[bytes]):
             f"ERROR: advanticsys sensor data import process failed:\n"
             f"Name: {blobin.name}\n"
             f"Blob Size: {blobin.length} bytes\n"
-            f"Error: {error}"
+            f"Error: {log}"
         )
