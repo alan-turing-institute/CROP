@@ -9,7 +9,7 @@ CROP.pyproj.user
 /.secrets/crop.sh
 
 # USERS
-/utils/upload_user_data
+/utils/upload_user_data/users.csv
 
 # Data
 /data/ 
