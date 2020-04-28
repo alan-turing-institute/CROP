@@ -4,6 +4,8 @@ A module for constants
 import os
 import pandas as pd
 
+from __app__.crop.utils import make_conn_string
+
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
@@ -132,6 +134,15 @@ SQL_SSLMODE = "require"
 
 SQL_TEST_DBNAME = "test_db"
 
+SQL_CONNECTION_STRING = make_conn_string(
+    SQL_ENGINE,
+    SQL_USER,
+    SQL_PASSWORD,
+    SQL_HOST,
+    SQL_PORT,
+)
+
+
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_ENGINE,
     SQL_USER,
@@ -156,5 +167,9 @@ CROP_GROWTH_TABLE_NAME = "crop_growth_data"
 INFRASTRUCTURE_TABLE_NAME = "infrastructure_data"
 SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 
+SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
+
 # SQL Column names
 ID_COL_NAME = "id"
+
+
