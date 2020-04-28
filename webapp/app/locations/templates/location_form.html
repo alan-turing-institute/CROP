@@ -29,11 +29,19 @@
                 <!-- /hidden -->
 
                 <div class="form-group">
-                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_section">Section<span class="required">*</span>
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_zone">Zone<span class="required">*</span>
                   </label>
                   <div class="col-md-6 col-sm-6 col-xs-12">
-                    <input type="number" min="1" id="loc_section" name="loc_section" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.section }}">
+                    <input type="text"id="loc_zone" name="loc_zone" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.zone }}">
                   </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_aisle">Aisle<span class="required">*</span>
+                    </label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" id="loc_aisle" name="loc_aisle" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.aisle }}"> 
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -48,17 +56,10 @@
                     <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_shelf">Shelf<span class="required">*</span>
                     </label>
                     <div class="col-md-6 col-sm-6 col-xs-12">
-                        <input type="text" id="loc_shelf" name="loc_shelf" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.shelf }}"> 
+                        <input type="number"  min="1" id="loc_shelf" name="loc_shelf" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.shelf }}"> 
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_code">Code<span class="required">*</span>
-                    </label>
-                    <div class="col-md-6 col-sm-6 col-xs-12">
-                        <input type="text" id="loc_code" name="loc_code" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.code }}"> 
-                    </div>
-                </div>
 
                 <div class="ln_solid"></div>
                 <div class="form-group">
