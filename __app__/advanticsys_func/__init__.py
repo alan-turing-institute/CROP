@@ -10,13 +10,17 @@ from io import StringIO
 import pandas as pd
 import azure.functions as func
 
-from __app__.crop.constants import CONST_ADVANTICSYS
-from __app__.crop.ingress import import_data
+from __app__.crop.constants import (
+    CONST_ADVANTICSYS, SQL_ENGINE,
+)
+from __app__.crop.utils import make_conn_string
+from __app__.crop.ingress import import_data, log_upload_event
 
 
-def advanticsys_import(blobin: func.InputStream, blobout: func.Out[bytes]):
+def advanticsys_import(blobin: func.InputStream):
     """
     The main advanticsys Azure Function routine.
+
     """
 
     logging.info(
@@ -42,7 +46,10 @@ def advanticsys_import(blobin: func.InputStream, blobout: func.Out[bytes]):
         data_df, CONST_ADVANTICSYS, user, password, host, port, database
     )
 
-    # blobout.set(data_str)
+    # Logging the advanticsys sensor data upload event
+    conn_string = make_conn_string(SQL_ENGINE, user, password, host, port)
+
+    log_status, log_err = log_upload_event(CONST_ADVANTICSYS, blobin.name, status, log, conn_string)
 
     if status:
 
@@ -50,7 +57,8 @@ def advanticsys_import(blobin: func.InputStream, blobout: func.Out[bytes]):
             f"SUCCESS: advanticsys sensor data import process finished:\n"
             f"Name: {blobin.name}\n"
             f"Blob Size: {blobin.length} bytes\n"
-            f"Log: {log}"
+            f"Info: {log}\n"
+            f"Log: {log_status} {log_err}"
         )
 
     else:
@@ -59,5 +67,6 @@ def advanticsys_import(blobin: func.InputStream, blobout: func.Out[bytes]):
             f"ERROR: advanticsys sensor data import process failed:\n"
             f"Name: {blobin.name}\n"
             f"Blob Size: {blobin.length} bytes\n"
-            f"Error: {log}"
+            f"Info: {log}\n"
+            f"Log: {log_status} {log_err}"
         )

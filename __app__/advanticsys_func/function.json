@@ -8,13 +8,6 @@
         "direction": "in",
         "path": "advanticsys-raw-data/{blobname}.{blobextension}",
         "connection": "AzureWebJobsStorage"
-    },
-    {
-        "name": "blobout",
-        "type": "blob",
-        "direction": "out",
-        "path": "advanticsys-processed-data/{blobname}.{blobextension}",
-        "connection": "AzureWebJobsStorage"
     }
   ]
 }
