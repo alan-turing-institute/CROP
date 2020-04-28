@@ -57,7 +57,12 @@
   <script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
   <script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
   <script>
-    var unityInstance = UnityLoader.instantiate("unityContainer", {onProgress: UnityProgress});
+    var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", {onProgress: UnityProgress});
   </script>
+
+
+<link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
+ 
+
 
 {% endblock javascripts %}
