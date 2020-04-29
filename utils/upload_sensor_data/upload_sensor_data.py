@@ -5,7 +5,7 @@ A script to uploads a file as a blob to a container in Azure storage account.
 """
 
 import argparse
-from azure.storage.blob import BlockBlobService
+#from azure.storage.blob import BlockBlobService
 
 
 def check_blob_exists(block_blob_service, container_name, blob_name):
@@ -58,24 +58,36 @@ if __name__ == "__main__":
     #args = parser.parse_args()
     args, unknown = parser.parse_known_args()
 
-    file_path = (args.source).strip()
-    blob_name = (args.target).strip()
+    file_path = args.source.strip()
+    blob_name = args.target.strip()
 
-    # connects to the storage account's blob service using the connection string
-    blob_service = BlockBlobService(
-        account_name=args.storageacc, connection_string=args.connectionstr
-    )
+    conn_str = args.connectionstr.strip()
+
+    # # connects to the storage account's blob service using the connection string
+    # blob_service = BlockBlobService(
+    #     account_name=args.storageacc, connection_string=args.connectionstr
+    # )
 
     # checks if blob already exists
-    blob_exists = check_blob_exists(blob_service, args.container, blob_name)
+    #blob_exists = check_blob_exists(blob_service, args.container, blob_name)
 
-    if not blob_exists:
-        try:
-            # uploads a new blob
-            blob_service.create_blob_from_path(args.container, blob_name, file_path)
-        except ValueError as error:
-            raise RuntimeError(error)
-    else:
-        raise RuntimeError("Blob named %s already exists!" % (blob_name))
+    # # if not blob_exists:
+    # try:
+    #     # uploads a new blob
+    #     xxx = blob_service.create_blob_from_path(args.container, blob_name, file_path)
+    #     print(xxx)
+    # except ValueError as error:
+    #     raise RuntimeError(error)
+
+    #blob.upload_blob(data, overwrite=True)
+
+    # else:
+    #     raise RuntimeError("Blob named %s already exists!" % (blob_name))
+
+    from azure.storage.blob import BlobClient
+
+    blob_client = BlobClient.from_blob_url(conn_str)
+
+    print(blob_client)
 
     print("Success.")
