@@ -352,6 +352,7 @@ def insert_advanticsys_data(session, adv_df):
                 result = False
                 log = "Cannot insert new data to database"
 
-    log = "New: {} (uploaded); Duplicates: {} (ignored)".format(cnt_new, cnt_dupl)
+    if result:
+        log = "New: {} (uploaded); Duplicates: {} (ignored)".format(cnt_new, cnt_dupl)
     
     return result, log
