@@ -206,7 +206,9 @@ def test_insert_advanticsys_data():
     success, log = insert_advanticsys_data(session, test_ingress_df)
     session_close(session)
 
-    assert success is False, log
+    # This should pass and reeport 75 duplicatee values
+    assert success is True, log
+    assert log == "New: 0 (uploaded); Duplicates: 75 (ignored)"
 
     file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_10)
     success, log, test_ingress_df = advanticsys_import(file_path)

@@ -17,7 +17,6 @@ pip3 install -r requirements.txt
 Uploads a file as a blob to a container in Azure storage account.
 
 positional arguments:
-  storageacc     Storage account name.
   container      Container name (each sensor type has its own container).
   connectionstr  Connection string with write and list permissions.
   source         Full path to the file to be uploaded.
@@ -32,7 +31,6 @@ Returns "Success" if the upload was successful, otherwise raises a RuntimeError.
 ### Example
 ```
 python upload_sensor_data.py \
-  --storageacc teststorageacc \
   --container testcontainer \
   --connectionstr "BlobEndpoint=..." \
   --source ../../core/tests/data/Advanticsys/data-20190821-test1.csv \
