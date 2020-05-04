@@ -8,6 +8,9 @@ CROP.pyproj.user
 # SECRETS
 /.secrets/crop.sh
 
+# USERS
+/utils/upload_user_data/users.csv
+
 # Data
 /data/ 
 
