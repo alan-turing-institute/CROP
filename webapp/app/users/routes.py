@@ -2,10 +2,7 @@ from app.users import blueprint
 from flask import render_template, request, jsonify
 from flask_login import login_required
 
-#from app.base.models import User
-
 from __app__.crop.structure import UserClass
-
 
 @blueprint.route('/<template>')
 @login_required

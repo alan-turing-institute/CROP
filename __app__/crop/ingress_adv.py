@@ -282,6 +282,7 @@ def insert_advanticsys_data(session, adv_df):
     result = True
     log = ""
     cnt_dupl = 0
+    cnt_new = 0
 
     # Gets the the assigned int id of the "Advanticsys" type
     try:
@@ -344,14 +345,14 @@ def insert_advanticsys_data(session, adv_df):
                     )
                     session.add(data)
 
+                    cnt_new += 1
                 else:
                     cnt_dupl += 1
             except:
                 result = False
                 log = "Cannot insert new data to database"
 
-    if cnt_dupl != 0:
-        result = False
-        log = "Cannot insert {} duplicate values".format(cnt_dupl)
-
+    if result:
+        log = "New: {} (uploaded); Duplicates: {} (ignored)".format(cnt_new, cnt_dupl)
+    
     return result, log
