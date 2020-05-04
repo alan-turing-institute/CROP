@@ -2,12 +2,12 @@
 Module (routes.py) to handle queries from the 3d model javascript application
 """
 
-import json
-from datetime import datetime
-from sqlalchemy import func, and_
+
+from sqlalchemy import func, and_, desc
 from flask_login import login_required
 
 from app.queries import blueprint
+from utilities.utils import jasonify_query_result
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
@@ -15,6 +15,7 @@ from __app__.crop.structure import (
     TypeClass,
     SensorClass,
     LocationClass,
+    ReadingsAdvanticsysClass,
 )
 
 
@@ -22,7 +23,10 @@ from __app__.crop.structure import (
 @login_required
 def get_all_sensors():
     """
-    Produces a JSON list with sensors and their latest locations
+    Produces a JSON list with sensors and their latest locations.
+
+    Returns:
+        result - JSON string
     """
 
     # Getting the latest locations of all sensors
@@ -55,19 +59,43 @@ def get_all_sensors():
     )
 
     execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
 
-    dict_entry, results_arr = {}, []
-    for rowproxy in execute_result:
+    return result
 
-        # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
-        for column, value in rowproxy.items():
 
-            if isinstance(value, datetime):
-                dict_entry = {**dict_entry, **{column: value.isoformat()}}
-            else:
-                dict_entry = {**dict_entry, **{column: value}}
-        results_arr.append(dict_entry)
+@blueprint.route("/getadvanticsysdata/<sensor_id>", methods=["GET"])
+@login_required
+def get_advanticsys_data(sensor_id):
+    """
+    Produces a JSON with the Advanticsys sensor data for a specified sensor.
 
-    result = json.dumps(results_arr, ensure_ascii=True, indent=4, sort_keys=True)
+    Args:
+        sensor_id - Advanticsys sensor ID
+    Returns:
+        result - JSON string
+    """
+
+    query = (
+        db.session.query(
+            SensorClass.id,
+            ReadingsAdvanticsysClass.timestamp,
+            ReadingsAdvanticsysClass.temperature,
+            ReadingsAdvanticsysClass.humidity,
+            ReadingsAdvanticsysClass.co2,
+            ReadingsAdvanticsysClass.time_created,
+            ReadingsAdvanticsysClass.time_updated,
+        )
+        .filter(
+            and_(
+                SensorClass.id == sensor_id,
+                ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
+            )
+        )
+        .order_by(desc(ReadingsAdvanticsysClass.timestamp))
+    )
+
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
 
     return result

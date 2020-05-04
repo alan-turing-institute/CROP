@@ -42,4 +42,5 @@ def test_import_data():
         SQL_TEST_DBNAME
     )
 
-    assert success is False, log == "Cannot insert 75 duplicate values"
+    assert success is True, log 
+    assert log == "New: 0 (uploaded); Duplicates: 75 (ignored)"
