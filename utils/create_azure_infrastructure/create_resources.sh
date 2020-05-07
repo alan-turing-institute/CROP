@@ -7,7 +7,7 @@ CONST_POSTGRES_SERVER='B_Gen5_1'
 
 # Declare an array of string with the names of containers
 # TODO: this probably needs to be extracted from the Python module
-declare -a ContainersArray=("advanticsys-raw-data" "advanticsys-processed-data")
+declare -a ContainersArray=("advanticsys-raw-data")
 
 # az login
 
@@ -119,6 +119,8 @@ if [ ${#exists} = 2 ]; then
             --start-ip-address $ip \
             --end-ip-address $ip
     done
+
+    # TODO: add Allow access to Azure services as YES
 
     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER firewall rules created."
 else
