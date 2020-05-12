@@ -12,7 +12,7 @@ from utilities.utils import query_result_to_array
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import DataUploadLogClass, TypeClass
-
+from __app__.crop.constants import CONST_MAX_RECORDS
 
 @blueprint.route("/<template>")
 @login_required
@@ -48,6 +48,7 @@ def route_template(template):
                 )
             )
             .order_by(desc(DataUploadLogClass.time_created))
+            .limit(CONST_MAX_RECORDS)
         )
 
         logs = db.session.execute(query_result).fetchall()

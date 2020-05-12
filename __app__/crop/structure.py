@@ -160,6 +160,8 @@ class ReadingsAdvanticsysClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 class ReadingsAirVelocityClass(BASE):
     """
