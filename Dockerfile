@@ -21,11 +21,11 @@ RUN pip install -r /requirements.txt && rm -rf ~/.cache/pip /requirements.txt
 RUN mkdir CROP
 WORKDIR CROP
 
-# Adding crop webapp
-ADD webapp webapp
-
 # Adding crop core
 ADD __app__ __app__
+
+# Adding crop webapp
+ADD webapp webapp
 
 # Adding secrets
 ADD .secrets .secrets

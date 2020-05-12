@@ -11,7 +11,7 @@ from utilities.utils import query_result_to_array
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import SensorClass, ReadingsAdvanticsysClass
-
+from __app__.crop.constants import CONST_MAX_RECORDS
 
 @blueprint.route("/<template>")
 @login_required
@@ -36,6 +36,7 @@ def route_template(template):
             )
             .filter(and_(ReadingsAdvanticsysClass.sensor_id == SensorClass.id,))
             .order_by(desc(ReadingsAdvanticsysClass.timestamp))
+            .limit(CONST_MAX_RECORDS)
         )
 
         readings = db.session.execute(query).fetchall()

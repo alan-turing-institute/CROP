@@ -172,4 +172,4 @@ SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
 # SQL Column names
 ID_COL_NAME = "id"
 
-
+CONST_MAX_RECORDS = 500
