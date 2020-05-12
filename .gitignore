@@ -11,6 +11,9 @@ CROP.pyproj.user
 # USERS
 /utils/upload_user_data/users.csv
 
+# REAL test data
+/utils/upload_real_test_data
+
 # Data
 /data/ 
 
