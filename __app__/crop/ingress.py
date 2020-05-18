@@ -71,7 +71,7 @@ def log_upload_event(sensor_type, filename, status, log, connection_string):
 
     - sensor_type: the type of sensor(s) for which the data is being uploaded
     - filename: the name of the file uploaded
-    - status: OK / FAILED
+    - status: boolean
     - log: log message from the upload routine
     - connection_string: connecetion string to the database
     
