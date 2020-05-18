@@ -9,6 +9,7 @@ from __app__.crop.utils import make_conn_string
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
+CONST_STARK = "Stark"
 
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
@@ -121,6 +122,10 @@ ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)
 ERR_IMPORT_ERROR_3 = "Data contains empty entries"
 ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
+
+# STARK
+STARK_USERNAME = "{}".format(os.environ["CROP_STARK_USERNAME"].strip())
+STARK_PASS = "{}".format(os.environ["CROP_STARK_PASS"].strip())
 
 # Create connection string
 SQL_ENGINE = "postgresql"
