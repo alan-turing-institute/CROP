@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Advanticsys Sensor Data {% endblock title %}
+{% block title %} Energy Data {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -23,7 +23,7 @@
 
                 <div class="row x_title">
                     <div class="col-md-6">
-                        <h3>Uploaded Advanticsys Sensor Data <small>(showing max 500 records)</small></h3>
+                        <h3>Uploaded Energy Data <small>(showing max 500 records)</small></h3>
                     </div>
                 </div>
 
@@ -33,9 +33,7 @@
                   <tr>
                     <th>Timestamp</th>
                     <th>ID</th>
-                    <th>Temperature</th>
-                    <th>Humidity</th>
-                    <th>CO2</th>
+                    <th>Half Hourly kWh</th>
                     <th>Upload Time</th>
                   </tr>
                 </thead>
@@ -45,12 +43,10 @@
                     for t_reading in readings:
                 %}
                 <tr>
-                    <td>{{ t_reading.advanticsys_data_timestamp }}</td>
+                    <td>{{ t_reading.energy_data_timestamp }}</td>
                     <td>{{ t_reading.sensors_id }}</td>
-                    <td>{{ t_reading.advanticsys_data_temperature }}</td>
-                    <td>{{ t_reading.advanticsys_data_humidity }}</td>
-                    <td>{{ t_reading.advanticsys_data_co2 }}</td>
-                    <td>{{ t_reading.advanticsys_data_time_created }}</td>
+                    <td>{{ t_reading.energy_data_electricity_consumption }}</td>
+                    <td>{{ t_reading.energy_data_time_created }}</td>
                 </tr>
                 {%
                     endfor
