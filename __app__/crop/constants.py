@@ -124,8 +124,8 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # STARK
-STARK_USERNAME = "{}".format(os.environ["CROP_STARK_USERNAME"].strip())
-STARK_PASS = "{}".format(os.environ["CROP_STARK_PASS"].strip())
+STARK_USERNAME = os.environ["CROP_STARK_USERNAME"].strip()
+STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
 
 # Create connection string
 SQL_ENGINE = "postgresql"
