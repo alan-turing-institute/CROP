@@ -70,6 +70,7 @@ def route_template(template):
 
         return render_template(
                 template + ".html",
+                num_adv_sensors=len(adv_sensors),
                 adv_sensors=adv_sensors,
                 dt_from=dt_from.strftime("%B %d, %Y"),
                 dt_to=dt_to.strftime("%B %d, %Y"),

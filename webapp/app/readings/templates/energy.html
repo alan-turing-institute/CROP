@@ -93,9 +93,17 @@
 
         $('#datatable-responsive').DataTable( {
             "order": [[ 0, "desc" ]]
-        } );
-        
-        // $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
+        } ); 
+    });
+
+    $(window).load(function() {
+
+        $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
+
+        // $('#reportrange').daterangepicker({
+        //     startDate: moment("{{ dt_from }}", "MMMM D, YYYY"),
+        //     endDate: moment("{{ dt_to }}", "MMMM D, YYYY"),
+        // })
     });
 
 
