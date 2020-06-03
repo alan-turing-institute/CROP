@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Analysis Dashboard {% endblock title %}
+{% block title %} Temperature Analysis Dashboard {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -99,7 +99,7 @@
 
 <script>
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/home/dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/home/temperature?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
         location.replace(request_url)
     });
 

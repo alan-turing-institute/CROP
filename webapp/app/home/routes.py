@@ -97,7 +97,7 @@ def route_template(template):
     Renders templates
     """
 
-    if template == "dashboard":
+    if template == "temperature":
         adv_sensors_temp = {}
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
