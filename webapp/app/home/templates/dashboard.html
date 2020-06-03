@@ -19,14 +19,11 @@
       <div class="row">
         <div class="col-md-12 col-sm-12 col-xs-12">
           <div class="x_panel">
-
             <div class="x_content">
-
                 <div class="row x_title">
                     <div class="col-md-6">
-                        <h3>Analysis Dashboard</h3>
+                        <h2>Analysis Dashboard</h2>
                     </div>
-                    
                     <div class="col-md-6">
                         <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
@@ -35,28 +32,44 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="" role="tabpanel" data-example-id="togglable-tabs">
-                    <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
-                        {% for i in range(0, num_adv_sensors) %}
-                            <li role="presentation" class="">
-                                <a href="#tab_content"{{i}} role="tab" data-toggle="tab" aria-expanded="false">{{ adv_sensors[i] }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
+            <!-- <div class="clearfix"></div> -->
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel">
+                    
+                        <div class="x_title">
+                            <h3>Temperature Range Counts <small>Advanticsys sensors</small></h3> 
+                        </div>
 
-                    <div id="myTabContent" class="tab-content">
-                        {% for i in range(0, num_adv_sensors) %}
-                            <div role="tabpanel" class="tab-pane fade active in" id="tab_content"{{i}} aria-labelledby="home-tab">
-                                <div class="x_content">
-                                    <div id='myDiv'></div>
+                        <div class="x_content">
+                            <div class="" role="tabpanel" data-example-id="togglable-tabs">
+
+                                <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
+                                    {% for i in range(0, num_adv_sensors) %}
+                                        <li role="presentation" class="">
+                                            <a href="#tab_content{{i}}" role="tab" data-toggle="tab"> Modbus ID = {{ adv_sensors[i] }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+
+                                <div id="myTabContent" class="tab-content">
+                                    {% for i in range(0, num_adv_sensors) %}
+                                        <div role="tabpanel" class="tab-pane fade active in" id="tab_content{{i}}">
+                                            <div class="x_content">
+                                                <div id="plotDiv{{i}}"></div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             </div>
-                        {% endfor %}
+                        </div>
+                    
                     </div>
                 </div>
-
             </div>
+
           </div>
         </div>
       </div>
@@ -89,18 +102,81 @@
         var request_url = "/home/dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
         location.replace(request_url)
     });
+
+    $(window).load(function() {
+        $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
+    });
 </script>
 
 <script>
-    var data = [
-    {
-        x: ['giraffes', 'orangutans', 'monkeys'],
-        y: [20, 14, 23],
-        type: 'bar'
-    }
-    ];
 
-    Plotly.newPlot('myDiv', data);
+    var i, j;
+    var adv_temp_data = JSON.parse('{{adv_sensors_temp.data | safe}}');
+    var sensor_temp_data;
+    var temp_range, temp_range_data;
+    var dates, temp_cnts;
+    var data, layout;
+    var modbus_ids_str = '{{adv_sensors}}'
+    var modbus_ids = modbus_ids_str.substring(1, modbus_ids_str.length - 1).split(" ")
+    var title_date_str, title_sensor_str;
+
+    // iterate sensors
+    for (i = 0; i < adv_temp_data.length; i++) {
+        data = [];
+
+        dates = [];
+        
+        sensor_temp_data = adv_temp_data[i];
+
+        // iterate temperature bins
+        for (j = 0; j < sensor_temp_data.length; j++) {
+            temp_cnts = [];
+
+            temp_range = sensor_temp_data[j][0];
+            temp_range_data = sensor_temp_data[j][1];
+
+            if (j == 0) {
+                for(x in temp_range_data) {
+                    dates.push(temp_range_data[x].date);
+                }
+            }
+
+            for(x in temp_range_data) {
+                temp_cnts.push(temp_range_data[x].temp_cnt);
+            }
+            
+            data.push({
+                name: temp_range,
+                x: dates,
+                y: temp_cnts,
+                type: 'bar',
+            })
+        }
+
+        title_sensor_str = '(Modbus ID = '.concat(modbus_ids[i]).concat(') ');
+        title_date_str = 'during the '.concat(temp_range_data[0].date).concat(' - ').concat(temp_range_data[temp_range_data.length-1].date).concat(' period');
+
+        layout = {
+            title: 'Temperature range counts for the Advanticsys sensor '.concat(title_sensor_str).concat(title_date_str),
+            barmode: 'stack',
+            xaxis: {
+                title: "Date",
+                titlefont: {
+                    size: 22,
+                }
+            },
+            yaxis: {
+                title: "Count",
+                titlefont: {
+                    size: 22,
+                }
+            }
+        };
+
+        Plotly.newPlot('plotDiv'+ i.toString(), data, layout);
+    }
+
 </script>
+
 
 {% endblock javascripts %}
