@@ -2,12 +2,16 @@
 Module (routes.py) to handle queries from the 3d model javascript application
 """
 
-
-from sqlalchemy import func, and_, desc
+from flask import request
 from flask_login import login_required
+from sqlalchemy import func, and_, desc
 
 from app.queries import blueprint
-from utilities.utils import jasonify_query_result
+
+from utilities.utils import (
+    jasonify_query_result,
+    parse_date_range_argument,
+)
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
@@ -16,11 +20,12 @@ from __app__.crop.structure import (
     SensorClass,
     LocationClass,
     ReadingsAdvanticsysClass,
+    ReadingsEnergyClass,
 )
 
 
 @blueprint.route("/getallsensors", methods=["GET"])
-# @login_required
+@login_required
 def get_all_sensors():
     """
     Produces a JSON list with sensors and their latest locations.
@@ -65,7 +70,7 @@ def get_all_sensors():
 
 
 @blueprint.route("/getadvanticsysdata/<sensor_id>", methods=["GET"])
-# @login_required
+@login_required
 def get_advanticsys_data(sensor_id):
     """
     Produces a JSON with the Advanticsys sensor data for a specified sensor.
@@ -76,9 +81,11 @@ def get_advanticsys_data(sensor_id):
         result - JSON string
     """
 
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
     query = (
         db.session.query(
-            SensorClass.id,
+            ReadingsAdvanticsysClass.sensor_id,
             ReadingsAdvanticsysClass.timestamp,
             ReadingsAdvanticsysClass.temperature,
             ReadingsAdvanticsysClass.humidity,
@@ -88,11 +95,50 @@ def get_advanticsys_data(sensor_id):
         )
         .filter(
             and_(
-                SensorClass.id == sensor_id,
-                ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
+                ReadingsAdvanticsysClass.sensor_id == sensor_id,
+                ReadingsAdvanticsysClass.timestamp >= dt_from,
+                ReadingsAdvanticsysClass.timestamp <= dt_to,
             )
         )
         .order_by(desc(ReadingsAdvanticsysClass.timestamp))
+    )
+
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+
+    return result
+
+
+@blueprint.route("/getstarkdata/<sensor_id>", methods=["GET"])
+@login_required
+def get_stark_data(sensor_id):
+    """
+    Produces a JSON with Stark readings data for a specified sensor (meter).
+
+    Args:
+        sensor_id - Stark meter ID
+    Returns:
+        result - JSON string
+    """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
+    query = (
+        db.session.query(
+            ReadingsEnergyClass.sensor_id,
+            ReadingsEnergyClass.timestamp,
+            ReadingsEnergyClass.electricity_consumption,
+            ReadingsEnergyClass.time_created,
+            ReadingsEnergyClass.time_updated,
+        )
+        .filter(
+            and_(
+                ReadingsEnergyClass.sensor_id == sensor_id,
+                ReadingsEnergyClass.timestamp >= dt_from,
+                ReadingsEnergyClass.timestamp <= dt_to,
+            )
+        )
+        .order_by(desc(ReadingsEnergyClass.timestamp))
     )
 
     execute_result = db.session.execute(query).fetchall()
