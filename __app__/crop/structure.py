@@ -115,7 +115,7 @@ class LocationClass(BASE):
     __tablename__ = LOCATION_TABLE_NAME
 
     # columns
-    id = Column(Integer, primary_key=True, autoincrement=True) # e
+    id = Column(Integer, primary_key=True, autoincrement=True)  # e
 
     zone = Column(String(50), nullable=False)
     aisle = Column(String(50), nullable=False)
@@ -159,6 +159,9 @@ class ReadingsAdvanticsysClass(BASE):
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 
 class ReadingsAirVelocityClass(BASE):
@@ -252,10 +255,7 @@ class ReadingsTinyTagClass(BASE):
 
 class ReadingsEnergyClass(BASE):
     """
-    Class for reading the energy data
-    (monthly)
-    meter_point: which meter point (Clapham Junction, Kilburn str. etc)
-
+    Energy Readings from Stark.co.uk
     """
 
     __tablename__ = ENERGY_READINGS_TABLE_NAME
@@ -263,12 +263,20 @@ class ReadingsEnergyClass(BASE):
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    meter_point = Column(String, nullable=False)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
     timestamp = Column(DateTime, nullable=False)
     electricity_consumption = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 
 class CropGrowthClass(BASE):
@@ -437,6 +445,9 @@ class UserClass(BASE, UserMixin):
 
 
 class DataUploadLogClass(BASE):
+    """
+    Class for storing log information from data import procedures.
+    """
 
     __tablename__ = SENSOR_UPLOAD_LOG_TABLE_NAME
 

@@ -22,7 +22,9 @@ if __name__ == "__main__":
         "CROP_SQL_USER": os.environ["CROP_SQL_USER"],
         "CROP_SQL_PASS": os.environ["CROP_SQL_PASS"],
         "CROP_SQL_DBNAME": os.environ["CROP_SQL_DBNAME"],
-        "CROP_SQL_PORT": os.environ["CROP_SQL_PORT"]
+        "CROP_SQL_PORT": os.environ["CROP_SQL_PORT"],
+        "CROP_STARK_USERNAME": os.environ["CROP_STARK_USERNAME"],
+        "CROP_STARK_PASS": os.environ["CROP_STARK_PASS"]
     }
 
     with open(rel_file_path, 'w') as outfile:
