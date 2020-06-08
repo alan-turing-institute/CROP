@@ -9,6 +9,7 @@ from __app__.crop.utils import make_conn_string
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
+CONST_STARK = "Stark"
 
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
@@ -122,6 +123,10 @@ ERR_IMPORT_ERROR_3 = "Data contains empty entries"
 ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
+# STARK
+STARK_USERNAME = os.environ["CROP_STARK_USERNAME"].strip()
+STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
+
 # Create connection string
 SQL_ENGINE = "postgresql"
 SQL_USER = os.environ["CROP_SQL_USER"]
@@ -172,4 +177,4 @@ SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
 # SQL Column names
 ID_COL_NAME = "id"
 
-
+CONST_MAX_RECORDS = 500
