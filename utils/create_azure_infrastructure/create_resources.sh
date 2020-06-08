@@ -4,8 +4,9 @@
 CONST_LOCATION='uksouth'
 CONST_POSTGRES_V='11'
 CONST_POSTGRES_SERVER='B_Gen5_1'
-CONST_FUNCAPP_PLAN='cropfuncapppremiumplan'
+CONST_FUNCAPP_PLAN=$CROP_RG_NAME'funcapppremiumplan'
 CONST_FUNCAPP_DOCKER_IMAGE='turingcropapp/webapp:funcapp'
+CONST_WEBAPP_SKU='P1V2'
 
 # Declare an array of string with the names of containers
 # TODO: this probably needs to be extracted from the Python module
@@ -122,9 +123,10 @@ if [ ${#exists} = 2 ]; then
             --end-ip-address $ip
     done
 
-    # TODO: add Allow access to Azure services as YES
-
     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER firewall rules created."
+      
+    read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to allow access to Azure services for the SQL database"
+    # allow access to Azure services as YES
 else
     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER already exists. Skipping."
 fi
@@ -133,73 +135,128 @@ fi
 # Creates Function App
 ###################################################################################
 
-function_name=$CROP_RG_NAME"functionapp"
-cwd=`pwd`
+# function_name=$CROP_RG_NAME"functionapp"
+# cwd=`pwd`
 
-echo "CROP BUILD INFO: Function APP: cd ../../__app__"
-cd ../../__app__
+# echo "CROP BUILD INFO: Function APP: cd ../../__app__"
+# cd ../../__app__
 
-echo "CROP BUILD INFO: Function APP: az functionapp delete"
-az functionapp delete \
-    --name $function_name \
+# echo "CROP BUILD INFO: Function APP: az functionapp delete"
+# az functionapp delete \
+#     --name $function_name \
+#     --resource-group $CROP_RG_NAME \
+#     --subscription $CROP_SUBSCRIPTION_ID
+
+# echo "CROP BUILD INFO: Function APP: functionapp plan delete"
+# az functionapp plan delete \
+#     --resource-group $CROP_RG_NAME \
+#     --name $CONST_FUNCAPP_PLAN \
+#     --yes
+
+# echo "CROP BUILD INFO: Function APP: functionapp plan create"
+# az functionapp plan create \
+#     --resource-group $CROP_RG_NAME \
+#     --name $CONST_FUNCAPP_PLAN \
+#     --location $CONST_LOCATION \
+#     --number-of-workers 1 \
+#     --sku EP1 \
+#     --is-linux
+
+# echo "CROP BUILD INFO: Function APP: az functionapp create"
+
+# az functionapp create \
+#     --subscription $CROP_SUBSCRIPTION_ID \
+#     --resource-group $CROP_RG_NAME \
+#     --storage-account $CROP_STORAGE_ACCOUNT \
+#     --name $function_name \
+#     --functions-version 2 \
+#     --plan $CONST_FUNCAPP_PLAN \
+#     --deployment-container-image-name $CONST_FUNCAPP_DOCKER_IMAGE \
+#     --docker-registry-server-user $CROP_DOCKER_USER \
+#     --docker-registry-server-password $CROP_DOCKER_PASS
+
+# echo "CROP BUILD INFO: Function APP: $function_name created."
+
+# echo "CROP BUILD INFO: Function APP: sleeping for 30 seconds"
+# sleep 30
+
+# echo "CROP BUILD INFO: Function APP: az functionapp config appsettings set"
+
+# az functionapp config appsettings set \
+#     --name $function_name \
+#     --resource-group $CROP_RG_NAME \
+#     --settings "CROP_SQL_HOST=$CROP_SQL_HOST" \
+#     "CROP_SQL_SERVER=$CROP_SQL_SERVER" \
+#     "CROP_SQL_DBNAME=$CROP_SQL_DBNAME" \
+#     "CROP_SQL_USER=$CROP_SQL_USER" \
+#     "CROP_SQL_PASS=$CROP_SQL_PASS" \
+#     "CROP_SQL_PORT=$CROP_SQL_PORT" \
+#     "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
+#     "CROP_STARK_PASS=$CROP_STARK_PASS" \
+#     > /dev/null
+
+# echo "CROP BUILD INFO: Function APP: $function_name configuration updated"
+
+# python $cwd/create_json.py $CONNECTION_STRING local.settings.json
+
+# echo "CROP BUILD INFO: Function APP: local.settings.json file updated."
+
+# echo "CROP BUILD INFO: Function APP: func azure functionapp publish"
+# func azure functionapp publish $function_name --build-native-deps --build remote
+
+# echo "CROP BUILD INFO: Function APP "$function" uploaded"
+
+# echo "CROP BUILD INFO: Function APP cd: "$cwd
+# cd $cwd
+
+###################################################################################
+# Creates WebApp
+###################################################################################
+
+webapp_appservice_name=$CROP_RG_NAME"webappservice"
+webapp_name=$CROP_RG_NAME
+
+echo "CROP BUILD INFO: WebApp: az webapp delete"
+
+az webapp delete \
+    --name $webapp_name \
     --resource-group $CROP_RG_NAME \
     --subscription $CROP_SUBSCRIPTION_ID
 
-echo "CROP BUILD INFO: Function APP: functionapp plan create"
-az functionapp plan create \
+echo "CROP BUILD INFO: WebApp: az appservice plan delete"
+
+az appservice plan delete \
+    --name $webapp_appservice_name \
     --resource-group $CROP_RG_NAME \
-    --name $CONST_FUNCAPP_PLAN \
+    --subscription $CROP_SUBSCRIPTION_ID \
+    --yes
+
+echo "CROP BUILD INFO: WebApp: az appservice plan create"
+
+az appservice plan create \
+    --name $webapp_appservice_name \
+    --resource-group $CROP_RG_NAME \
+    --is-linux \
     --location $CONST_LOCATION \
     --number-of-workers 1 \
-    --sku EP1 \
-    --is-linux
+    --sku $CONST_WEBAPP_SKU \
+    --subscription $CROP_SUBSCRIPTION_ID
 
-echo "CROP BUILD INFO: Function APP: az functionapp create"
+echo "CROP BUILD INFO: WebApp: az webapp create"
 
-az functionapp create \
-    --subscription $CROP_SUBSCRIPTION_ID \
+az webapp create \
+    --name $webapp_name \
+    --plan $webapp_appservice_name \
     --resource-group $CROP_RG_NAME \
-    --storage-account $CROP_STORAGE_ACCOUNT \
-    --name $function_name \
-    --functions-version 2 \
-    --plan $CONST_FUNCAPP_PLAN \
-    --deployment-container-image-name $CONST_FUNCAPP_DOCKER_IMAGE \
+    --deployment-container-image-name turingcropapp/webapp:$CROP_RG_NAME \
+    --docker-registry-server-password $CROP_DOCKER_PASS \
     --docker-registry-server-user $CROP_DOCKER_USER \
-    --docker-registry-server-password $CROP_DOCKER_PASS
+    --subscription $CROP_SUBSCRIPTION_ID
 
-echo "CROP BUILD INFO: Function APP: $function_name created."
+read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to activate Continuous Deployment for the container and update the webhook on docker hub"
+echo ""
 
-echo "CROP BUILD INFO: Function APP: sleeping for 30 seconds"
-sleep 30
-
-echo "CROP BUILD INFO: Function APP: az functionapp config appsettings set"
-
-az functionapp config appsettings set \
-    --name $function_name \
-    --resource-group $CROP_RG_NAME \
-    --settings "CROP_SQL_HOST=$CROP_SQL_HOST" \
-    "CROP_SQL_SERVER=$CROP_SQL_SERVER" \
-    "CROP_SQL_DBNAME=$CROP_SQL_DBNAME" \
-    "CROP_SQL_USER=$CROP_SQL_USER" \
-    "CROP_SQL_PASS=$CROP_SQL_PASS" \
-    "CROP_SQL_PORT=$CROP_SQL_PORT" \
-    "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
-    "CROP_STARK_PASS=$CROP_STARK_PASS" \
-    > /dev/null
-
-echo "CROP BUILD INFO: Function APP: $function_name configuration updated"
-
-python $cwd/create_json.py $CONNECTION_STRING local.settings.json
-
-echo "CROP BUILD INFO: Function APP: local.settings.json file updated."
-
-echo "CROP BUILD INFO: Function APP: func azure functionapp publish"
-func azure functionapp publish $function_name --build-native-deps --build remote
-
-echo "CROP BUILD INFO: Function APP "$function" uploaded"
-
-echo "CROP BUILD INFO: Function APP cd: "$cwd
-cd $cwd
+###################################################################################
 
 echo "CROP BUILD INFO: Finished."
 
