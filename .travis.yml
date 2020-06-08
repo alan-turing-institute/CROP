@@ -13,6 +13,8 @@ env:
   -CROP_SQL_DBNAME="cropdb"
   -CROP_SQL_PORT="5432"
   -PYTHONPATH=$PYTHONPATH:$(pwd)
+  -CROP_STARK_USERNAME="testname"
+  -CROP_STARK_PASS="testpass"
 
 git:
   submodules: false
