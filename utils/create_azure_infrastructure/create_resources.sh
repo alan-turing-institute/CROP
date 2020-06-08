@@ -2,8 +2,10 @@
 
 # CONSTANTS
 CONST_LOCATION='uksouth'
-CONST_POSTGRES_V='9.6'
+CONST_POSTGRES_V='11'
 CONST_POSTGRES_SERVER='B_Gen5_1'
+CONST_FUNCAPP_PLAN='cropfuncapppremiumplan'
+CONST_FUNCAPP_DOCKER_IMAGE='turingcropapp/webapp:funcapp'
 
 # Declare an array of string with the names of containers
 # TODO: this probably needs to be extracted from the Python module
@@ -132,31 +134,45 @@ fi
 ###################################################################################
 
 function_name=$CROP_RG_NAME"functionapp"
-
 cwd=`pwd`
 
-echo "cd: ../../__app__"
+echo "CROP BUILD INFO: Function APP: cd ../../__app__"
 cd ../../__app__
 
-exists=`az functionapp list --subscription $CROP_SUBSCRIPTION_ID --resource-group $CROP_RG_NAME --query "[?name=='$function_name']"`
+echo "CROP BUILD INFO: Function APP: az functionapp delete"
+az functionapp delete \
+    --name $function_name \
+    --resource-group $CROP_RG_NAME \
+    --subscription $CROP_SUBSCRIPTION_ID
 
-# Checks the lenght of the query result. 2 means there were no results.
-if [ ${#exists} = 2 ]; then
-    az functionapp create \
-        --subscription $CROP_SUBSCRIPTION_ID \
-        --resource-group $CROP_RG_NAME \
-        --consumption-plan-location $CONST_LOCATION \
-        --storage-account $CROP_STORAGE_ACCOUNT \
-        --name $function_name \
-        --os-type Linux \
-        --runtime python \
-        --runtime-version 3.7 \
-        --functions-version 2
+echo "CROP BUILD INFO: Function APP: functionapp plan create"
+az functionapp plan create \
+    --resource-group $CROP_RG_NAME \
+    --name $CONST_FUNCAPP_PLAN \
+    --location $CONST_LOCATION \
+    --number-of-workers 1 \
+    --sku EP1 \
+    --is-linux
 
-    echo "CROP BUILD INFO: Function APP $function_name created."
-else
-    echo "CROP BUILD INFO: Function APP $function_name already exists. Skipping."
-fi
+echo "CROP BUILD INFO: Function APP: az functionapp create"
+
+az functionapp create \
+    --subscription $CROP_SUBSCRIPTION_ID \
+    --resource-group $CROP_RG_NAME \
+    --storage-account $CROP_STORAGE_ACCOUNT \
+    --name $function_name \
+    --functions-version 2 \
+    --plan $CONST_FUNCAPP_PLAN \
+    --deployment-container-image-name $CONST_FUNCAPP_DOCKER_IMAGE \
+    --docker-registry-server-user $CROP_DOCKER_USER \
+    --docker-registry-server-password $CROP_DOCKER_PASS
+
+echo "CROP BUILD INFO: Function APP: $function_name created."
+
+echo "CROP BUILD INFO: Function APP: sleeping for 30 seconds"
+sleep 30
+
+echo "CROP BUILD INFO: Function APP: az functionapp config appsettings set"
 
 az functionapp config appsettings set \
     --name $function_name \
@@ -167,21 +183,23 @@ az functionapp config appsettings set \
     "CROP_SQL_USER=$CROP_SQL_USER" \
     "CROP_SQL_PASS=$CROP_SQL_PASS" \
     "CROP_SQL_PORT=$CROP_SQL_PORT" \
+    "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
+    "CROP_STARK_PASS=$CROP_STARK_PASS" \
     > /dev/null
 
-echo CROP BUILD INFO: Function APP $function_name configuration updated.
+echo "CROP BUILD INFO: Function APP: $function_name configuration updated"
 
-# creating the utils/croptrigger/local.settings.json file
 python $cwd/create_json.py $CONNECTION_STRING local.settings.json
 
-echo "CROP BUILD INFO: local.settings.json file updated."
+echo "CROP BUILD INFO: Function APP: local.settings.json file updated."
 
-# publishing function app
+echo "CROP BUILD INFO: Function APP: func azure functionapp publish"
 func azure functionapp publish $function_name --build-native-deps --build remote
 
-echo CROP BUILD INFO: Function APP $function uploaded.
+echo "CROP BUILD INFO: Function APP "$function" uploaded"
 
-echo "cd: "$cwd
+echo "CROP BUILD INFO: Function APP cd: "$cwd
 cd $cwd
 
-echo CROP BUILD INFO: Finished.
+echo "CROP BUILD INFO: Finished."
+
