@@ -19,5 +19,6 @@ pylint>=2.4.4
 azure-functions>=1.2.0
 flask_wtf>=0.14.3
 
-#gunicorn
 azure-storage-blob>=12.3.0
+
+selenium>=3.141.0
