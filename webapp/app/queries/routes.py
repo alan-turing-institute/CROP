@@ -25,7 +25,7 @@ from __app__.crop.structure import (
 
 
 @blueprint.route("/getallsensors", methods=["GET"])
-@login_required
+#@login_required
 def get_all_sensors():
     """
     Produces a JSON list with sensors and their latest locations.
@@ -70,7 +70,7 @@ def get_all_sensors():
 
 
 @blueprint.route("/getadvanticsysdata/<sensor_id>", methods=["GET"])
-@login_required
+#@login_required
 def get_advanticsys_data(sensor_id):
     """
     Produces a JSON with the Advanticsys sensor data for a specified sensor.
@@ -110,7 +110,7 @@ def get_advanticsys_data(sensor_id):
 
 
 @blueprint.route("/getstarkdata/<sensor_id>", methods=["GET"])
-@login_required
+#@login_required
 def get_stark_data(sensor_id):
     """
     Produces a JSON with Stark readings data for a specified sensor (meter).
