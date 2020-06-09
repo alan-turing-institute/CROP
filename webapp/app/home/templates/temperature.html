@@ -1,0 +1,182 @@
+{% extends "base_site.html" %}
+
+{% block title %} Temperature Analysis Dashboard {% endblock title %}
+
+{% block stylesheets %}
+  {{ super() }}
+  <link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}" rel="stylesheet">
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+            <div class="x_content">
+                <div class="row x_title">
+                    <div class="col-md-6">
+                        <h2>Temperature Analysis Dashboard</h2>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
+                            <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                            <span></span> 
+                            <b class="caret"></b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- <div class="clearfix"></div> -->
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel">
+                    
+                        <div class="x_title">
+                            <h3>Temperature Range Counts <small>Advanticsys sensors</small></h3> 
+                        </div>
+
+                        <div class="x_content">
+                            <div class="" role="tabpanel" data-example-id="togglable-tabs">
+
+                                <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
+                                    {% for i in range(0, num_adv_sensors) %}
+                                        <li role="presentation" class="">
+                                            <a href="#tab_content{{i}}" role="tab" data-toggle="tab"> Modbus ID = {{ adv_sensors[i] }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+
+                                <div id="myTabContent" class="tab-content">
+                                    {% for i in range(0, num_adv_sensors) %}
+                                        <div role="tabpanel" class="tab-pane fade active in" id="tab_content{{i}}">
+                                            <div class="x_content">
+                                                <div id="plotDiv{{i}}"></div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    
+                    </div>
+                </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ super() }}
+
+  <!-- Datatables -->
+  <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.flash.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-keytable/js/dataTables.keyTable.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/datatables.net-scroller/js/dataTables.scroller.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
+
+<script>
+    $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
+        var request_url = "/home/temperature?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        location.replace(request_url)
+    });
+
+    $(window).load(function() {
+        $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
+    });
+</script>
+
+<script>
+
+    var i, j;
+    var adv_temp_data = JSON.parse('{{adv_sensors_temp.data | safe}}');
+    var sensor_temp_data;
+    var temp_range, temp_range_data;
+    var dates, temp_cnts;
+    var data, layout;
+    var modbus_ids_str = '{{adv_sensors}}'
+    var modbus_ids = modbus_ids_str.substring(1, modbus_ids_str.length - 1).split(" ")
+    var title_date_str, title_sensor_str;
+
+    // iterate sensors
+    for (i = 0; i < adv_temp_data.length; i++) {
+        data = [];
+
+        dates = [];
+        
+        sensor_temp_data = adv_temp_data[i];
+
+        // iterate temperature bins
+        for (j = 0; j < sensor_temp_data.length; j++) {
+            temp_cnts = [];
+
+            temp_range = sensor_temp_data[j][0];
+            temp_range_data = sensor_temp_data[j][1];
+
+            if (j == 0) {
+                for(x in temp_range_data) {
+                    dates.push(temp_range_data[x].date);
+                }
+            }
+
+            for(x in temp_range_data) {
+                temp_cnts.push(temp_range_data[x].temp_cnt);
+            }
+            
+            data.push({
+                name: temp_range,
+                x: dates,
+                y: temp_cnts,
+                type: 'bar',
+            })
+        }
+
+        title_sensor_str = '(Modbus ID = '.concat(modbus_ids[i]).concat(') ');
+        title_date_str = 'during the '.concat(temp_range_data[0].date).concat(' - ').concat(temp_range_data[temp_range_data.length-1].date).concat(' period');
+
+        layout = {
+            title: 'Temperature range counts for the Advanticsys sensor '.concat(title_sensor_str).concat(title_date_str),
+            barmode: 'stack',
+            xaxis: {
+                title: "Date",
+                titlefont: {
+                    size: 22,
+                }
+            },
+            yaxis: {
+                title: "Count",
+                titlefont: {
+                    size: 22,
+                }
+            }
+        };
+
+        Plotly.newPlot('plotDiv'+ i.toString(), data, layout);
+    }
+
+</script>
+
+
+{% endblock javascripts %}

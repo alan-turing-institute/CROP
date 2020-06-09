@@ -1,0 +1,68 @@
+{% extends "base_site.html" %}
+
+{% block title %} Underground Farm {% endblock title %}
+
+{% block stylesheets %}
+  {{ super() }}
+  <link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      
+      <div class="row">
+        <!-- <div class="col-md-12 col-sm-12 col-xs-12"> -->
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>3D model</h2>
+              <div class="clearfix"></div>
+            </div>
+
+            <!-- <div class="x_content">
+                <canvas id="c" style="width: 100%; height: 100%;"> 
+                    Text to alert visitors that the Canvas
+                    is not supported by your browser.
+                </canvas>
+
+            </div> -->
+
+            <div class="webgl-content">
+                <div id="unityContainer" style="width: 960px; height: 600px"></div>
+                <div class="footer">
+                  <div class="webgl-logo"></div>
+                  <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
+                  <div class="title">CROP_unity_js</div>
+                </div>
+            </div>
+            
+          </div>
+        <!-- </div> -->
+
+      </div>
+
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ super() }}
+
+
+  <!-- 3D models -->
+  <script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
+  <script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
+  <script>
+    var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", {onProgress: UnityProgress});
+  </script>
+
+
+<link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
+ 
+
+
+{% endblock javascripts %}

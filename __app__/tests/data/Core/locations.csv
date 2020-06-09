@@ -1,0 +1,10 @@
+zone,aisle,column,shelf,code
+Farm1,A,1,2,code1
+Farm1,B,6,2,code2
+Farm1,A,15,4,code3
+Farm1,B,20,4,code4
+Farm2,A,25,2,code5
+Farm2,A,28,2,code6
+Farm2,A,33,3,code7
+Entrance,E,1,1,code8
+Stairs,S,1,1,code9

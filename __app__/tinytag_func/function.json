@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "blobin",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "tinytagrawdata/{blobname}.{blobextension}",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
