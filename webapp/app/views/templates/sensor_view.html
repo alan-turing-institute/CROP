@@ -1,0 +1,96 @@
+{% extends "base_site.html" %}
+
+{% block title %} SENSORS {% endblock title %}
+
+{% block stylesheets %}
+  {{ super() }}
+  <link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      
+      <div class="row">
+        <!-- <div class="col-md-12 col-sm-12 col-xs-12"> -->
+          <div class="x_panel">
+            <div class="x_title">
+              <h2>3D model</h2>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="x_content">
+                <canvas id="c" style="width: 100%; height: 100%;"> 
+                    Text to alert visitors that the Canvas
+                    is not supported by your browser.
+                </canvas>
+
+            </div>
+            
+          </div>
+        <!-- </div> -->
+
+      </div>
+
+
+      <!-- TEST { -->
+<!--       
+        <div class="ln_solid"></div>
+        <div class="form-group">
+          <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+            <button type="submit" name="action_button" class="btn btn-success" value="submit" onclick="myFunction()">RUN</button>
+          </div>
+        </div>
+     -->
+      <!-- TEST } -->
+
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ super() }}
+
+  <!-- <script>
+
+    var path = document.location.pathname;
+    var directory = path.substring(path.indexOf('/'), path.lastIndexOf('/'));
+  </script> -->
+
+
+  <!-- 3D models -->
+  <script src="{{ url_for('static', filename='structures/CROP3js2/js/three.js') }}"></script>
+  <script src="{{ url_for('static', filename='structures/CROP3js2/js/OrbitControls.js') }}"></script>
+  <script src="{{ url_for('static', filename='structures/CROP3js2/js/GLTFLoader.js') }}"></script>
+  <script src="{{ url_for('static', filename='structures/CROP3js2/js/OBJLoader.js') }}"></script>
+  <script src="{{ url_for('static', filename='structures/CROP3js2/js/crop.js') }}"></script>
+
+  
+  <!-- TEST { -->
+  <!-- <script>
+    function myFunction() {
+        
+        const queriesUrl = '/queries';
+        const senorsUrl = queriesUrl.concat('/getallsensors');
+
+        console.log(senorsUrl)
+
+        const Http = new XMLHttpRequest()
+        
+        Http.open("GET", senorsUrl);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            console.log(Http.responseText)
+        }
+    }
+  
+  </script> -->
+  <!-- TEST } -->
+
+
+{% endblock javascripts %}

@@ -1,3 +1,4 @@
+
 # Visual Studio
 CROP.pyproj
 CROP.sln
@@ -5,14 +6,17 @@ CROP.tf
 CROP.pyproj.user
 
 # SECRETS
-.secrets/
+/.secrets/crop.sh
+/.secrets/local.sh
+
+# USERS
+/utils/upload_user_data/users.csv
+
+# REAL test data
+/utils/upload_real_test_data
 
 # Data
 /data/ 
-
-# Terraform
-.terraform
-terraform.tfstate
 
 # PyTest
 __pycache__

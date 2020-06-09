@@ -1,5 +1,5 @@
 """
-___init__.py for CROP
+___init__.py
 """
 
 #pass
