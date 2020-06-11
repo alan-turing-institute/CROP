@@ -35,18 +35,21 @@ jobs:
         submodules: false
       services:
         - docker
+      
       script:
-        - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
-        - git submodule update --init --recursive
-        - docker build -f Dockerfile -t turingcropapp/webapp:test .
-      env:
-        -CI_USER_TOKEN=${CI_USER_TOKEN}
+        - echo $TESTSECRET
+      # script:
+      #   - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+      #   - git submodule update --init --recursive
+      #   - docker build -f Dockerfile -t turingcropapp/webapp:test .
+      # env:
+      #   -CI_USER_TOKEN=${CI_USER_TOKEN}
 
-      after_success:
-        - if [[ "$TRAVIS_BRANCH" == "travis" ]]; then
-            docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
-            docker push turingcropapp/webapp:test ;
-          fi
+      # after_success:
+      #   - if [[ "$TRAVIS_BRANCH" == "travis" ]]; then
+      #       docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
+      #       docker push turingcropapp/webapp:test ;
+      #     fi
 
       # # don't notify me when things fail
       # notifications:
