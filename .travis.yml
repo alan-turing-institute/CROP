@@ -31,6 +31,8 @@ jobs:
 
     - stage: publish
       name: "Deploy to DockerHub"
+      git:
+        submodules: false
       services:
         - docker
       script:
