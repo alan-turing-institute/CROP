@@ -37,11 +37,11 @@ jobs:
         - docker
       
       script:
-        - echo -e "#!/bin/bash\n\n" > /CROP/.secrets/crop.sh
-        - echo -e 'export TESTSECRET="$TESTSECRET\n"' > /CROP/.secrets/crop.sh
-        - cat /CROP/.secrets/crop.sh
+        - echo -e "#!/bin/bash\n\n" > .secrets/crop.sh
+        - echo -e 'export TESTSECRET="$TESTSECRET\n"' > .secrets/crop.sh
+        - cat .secrets/crop.sh
         
-        # $TESTSECRET
+   
       # script:
       #   - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
       #   - git submodule update --init --recursive
