@@ -58,4 +58,4 @@ jobs:
 
 stages:
   - name: publish
-    if: (type = pull_request OR type = push) AND branch = travis
+    if: (type = pull_request OR type = push) AND (branch = develop OR branch = travis)
