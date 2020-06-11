@@ -2,11 +2,12 @@
 
 # PRODUCTION BUILD
 build:
-	git submodule sync
-	git submodule update --init --recursive --remote
-	docker build . -f Dockerfile -t turingcropapp/webapp:cropapp
+	docker build -f Dockerfile.cropapp \
+		-t turingcropapp/webapp:cropapp \
+		--build-arg CI_USER_TOKEN=${CI_USER_TOKEN} \
+		.
 run:
-	docker run -p 5005:5005 turingcropapp/webapp:cropapp
+	docker run -p 5000:5000 turingcropapp/webapp:cropapp
 clean:
 	docker image rm turingcropapp/webapp:cropapp
 push:

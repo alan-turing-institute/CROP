@@ -1,9 +1,10 @@
-language: python
+
 
 jobs:
   include:
     - stage: test
       name: "Unit Tests"
+      language: python
       services:
         - postgresql
       install:
@@ -30,7 +31,25 @@ jobs:
 
     - stage: publish
       name: "Deploy to DockerHub"
+      services:
+        - docker
+      script:
+        - docker build -t Dockerfile.cropapp .
+        
+      # sudo: 'required'
+     
+      # before_install:
+      #   - './.travis/main.sh'
 
+      # after_success:
+      #   #- if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+      #   docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
+      #   make push-image ;
+      #   #  fi
+
+      # # don't notify me when things fail
+      # notifications:
+      #   email: false
 
 stages:
   - name: publish
