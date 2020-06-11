@@ -40,10 +40,10 @@ jobs:
         - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
         - git submodule update --init --recursive
         - if [[ "$TRAVIS_BRANCH" == "travis" ]]; then
-            docker build -f Dockerfile -t turingcropapp/webapp:test .
+            docker build -f Dockerfile -t turingcropapp/webapp:test . ;
           fi
         - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
-            docker build -f Dockerfile -t turingcropapp/webapp:cropapptest .
+            docker build -f Dockerfile -t turingcropapp/webapp:cropapptest . ;
           fi
   
       after_success:
