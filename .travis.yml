@@ -36,18 +36,15 @@ jobs:
       services:
         - docker
       script:
-        - docker build -f Dockerfile.cropapp -t turingcropapp/webapp:cropapp --build-arg CI_USER_TOKEN=${CI_USER_TOKEN} .
+        - docker build -f Dockerfile.cropapp -t turingcropapp/webapp:test --build-arg CI_USER_TOKEN=${CI_USER_TOKEN} .
+      env:
+        -CI_USER_TOKEN=${CI_USER_TOKEN}
 
-      # sudo: 'required'
-     
-      # before_install:
-      #   - './.travis/main.sh'
-
-      # after_success:
-      #   #- if [[ "$TRAVIS_BRANCH" == "master" ]]; then
-      #   docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
-      #   make push-image ;
-      #   #  fi
+      after_success:
+        - if [[ "$TRAVIS_BRANCH" == "travis" ]]; then
+            docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
+            docker push turingcropapp/webapp:test ;
+          fi
 
       # # don't notify me when things fail
       # notifications:
