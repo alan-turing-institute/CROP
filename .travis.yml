@@ -34,8 +34,8 @@ jobs:
       services:
         - docker
       script:
-        - docker build -t Dockerfile.cropapp .
-        
+        - docker build -t Dockerfile.cropapp . --build-arg CI_USER_TOKEN=${CI_USER_TOKEN}
+
       # sudo: 'required'
      
       # before_install:
