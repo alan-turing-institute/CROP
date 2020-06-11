@@ -36,6 +36,8 @@ jobs:
       services:
         - docker
       script:
+        - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+        - git submodule update --init --recursive
         - docker build -f Dockerfile.cropapp -t turingcropapp/webapp:test --build-arg CI_USER_TOKEN=${CI_USER_TOKEN} .
       env:
         -CI_USER_TOKEN=${CI_USER_TOKEN}
