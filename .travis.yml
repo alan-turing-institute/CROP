@@ -39,23 +39,23 @@ jobs:
         - ./utils/travis_build/set_env_params.sh
         - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
         - git submodule update --init --recursive
-        - if [[ "$TRAVIS_BRANCH" == "travis" ]]; then
-            docker build -f Dockerfile -t turingcropapp/webapp:test . ;
-          fi
         - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
             docker build -f Dockerfile -t turingcropapp/webapp:cropapptest . ;
           fi
+        - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+            docker build -f Dockerfile -t turingcropapp/webapp:cropapp . ;
+          fi
   
       after_success:
-        - if [[ "$TRAVIS_BRANCH" == "travis" ]]; then
-            docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
-            docker push turingcropapp/webapp:test ;
-          fi
         - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
             docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
             docker push turingcropapp/webapp:cropapptest ;
           fi
+        - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+            docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
+            docker push turingcropapp/webapp:cropapp ;
+          fi
 
 stages:
   - name: publish
-    if: (type = pull_request OR type = push) AND (branch = develop OR branch = travis)
+    if: ((type = pull_request OR type = push) AND branch = develop) OR (type = pull_request AND branch = master)
