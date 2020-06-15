@@ -433,7 +433,7 @@ def route_template(template):
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
-    elif template == "electricity":
+    elif template == "energy":
         energy_data = {}
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
