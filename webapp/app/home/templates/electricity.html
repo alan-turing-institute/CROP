@@ -38,9 +38,10 @@
                 <div class="col-md-12 col-sm-12 col-xs-12">
                     <div class="x_panel">
                         <div class="x_title">
-                            <h3>Lights <small>Advanticsys sensors</small></h3> 
+                            <h3>Lights <small>(Energy use from Carpenter's Place)</small></h3> 
                         </div>
-                        <div class="x_content">  
+                        <div class="x_content">
+                            <div id="plotLightsOnDiv"></div>
                         </div>
                     </div>
                 </div>
@@ -83,5 +84,73 @@
         $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
     });
 </script>
+
+<script>
+    var data;
+    var dates;
+    var lights_means;
+    var energy_data = JSON.parse('{{energy_data.data | safe}}');
+
+    // Lights on plot
+    var lights_data = energy_data[0];
+    
+    data = [];
+    dates = [];
+    lights_means = [];
+
+    for(x in lights_data) {
+        dates.push(lights_data[x].date);
+        lights_means.push(lights_data[x].mean_lights_on);
+    }
+
+    console.log(dates);
+    console.log(lights_means);
+
+    data.push({
+        x: dates,
+        y: lights_means,
+        type: 'bar',
+    })
+
+    title_date_str = 'during the '.concat(lights_data[0].date).concat(' - ').concat(lights_data[lights_data.length-1].date).concat(' period');
+
+    layout = {
+        title: 'Number of hours lights were on'.concat(title_date_str),
+        barmode: 'stack',
+        xaxis: {
+            title: "Date",
+            titlefont: {
+                size: 22,
+            }
+        },
+        yaxis: {
+            title: "Mean hours lights on",
+            titlefont: {
+                size: 22,
+            }
+        },
+        shapes: [
+            {
+                type: 'line',
+                xref: 'paper',
+                x0: 0,
+                y0: 18.0,
+                x1: 1,
+                y1: 18.0,
+                line:{
+                    color: 'rgb(255, 0, 0)',
+                    width: 4,
+                    dash:'dot'
+                }
+            }
+        ]
+    };
+
+    Plotly.newPlot('plotLightsOnDiv', data, layout);
+
+
+
+</script>
+
 
 {% endblock javascripts %}
