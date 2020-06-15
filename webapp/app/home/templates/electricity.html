@@ -51,7 +51,7 @@
                             <h3>Ventilation <small>(Energy use from Clapham Common)</small></h3> 
                         </div>
                         <div class="x_content">
-                            <!-- <div id="plotVentilationDiv"></div> -->
+                            <div id="plotVentilationDiv"></div>
                         </div>
                     </div>
                 </div>
@@ -98,7 +98,6 @@
 <script>
     var data;
     var dates;
-    var lights_means;
     var energy_data = JSON.parse('{{energy_data.data | safe}}');
 
     // Lights-on plot
@@ -106,15 +105,12 @@
     
     data = [];
     dates = [];
-    lights_means = [];
+    var lights_means = [];
 
     for(x in lights_data) {
         dates.push(lights_data[x].date);
         lights_means.push(lights_data[x].mean_lights_on);
     }
-
-    console.log(dates);
-    console.log(lights_means);
 
     data.push({
         x: dates,
@@ -159,7 +155,42 @@
     Plotly.newPlot('plotLightsOnDiv', data, layout);
 
     // Ventilation plot
-    
+    data = [];
+    var ventilation_data = energy_data[1];
+
+    dates = [];
+    var ach = [];
+
+    for(x in ventilation_data) {
+        dates.push(ventilation_data[x].timestamp);
+        ach.push(ventilation_data[x].ach);
+    }
+
+    data.push({
+        x: dates,
+        y: ach,
+        type: 'bar',
+    })
+
+    layout = {
+        title: 'Air change per hour '.concat(title_date_str),
+        barmode: 'stack',
+        xaxis: {
+            title: "Timestamp",
+            titlefont: {
+                size: 22,
+            }
+        },
+        yaxis: {
+            title: "ACH (air change per hour)",
+            titlefont: {
+                size: 22,
+            }
+        }
+    };
+
+    Plotly.newPlot('plotVentilationDiv', data, layout);
+
 </script>
 
 
