@@ -330,7 +330,7 @@ def route_template(template):
     Renders templates
     """
 
-    if template == "temperature":
+    if template == "temperature_dashboard":
         adv_sensors_temp = {}
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
@@ -433,7 +433,7 @@ def route_template(template):
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
-    elif template == "energy":
+    elif template == "energy_dashboard":
         energy_data = {}
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
