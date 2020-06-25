@@ -61,13 +61,13 @@ CROP is implemented using a well established software stack (given below) and ex
     </tr>
     <tr>
         <td>
-          <img src="media/azure_webapp_logo.png" width=100>
+          <img src="media/stack/azure_webapp_logo.png" width=100>
           </br>WebApp
         </td>
     </tr>
     <tr>
         <td>
-          <img src="media/azure_storage_logo.png" width=100>
+          <img src="media/stack/azure_storage_logo.png" width=100>
           </br>Storage
         </td>
     </tr>
