@@ -73,7 +73,7 @@ CROP is implemented using a well established software stack (given below) and ex
     </tr>
     <tr>
         <td>
-          <img src="media/azure_pg_logo.png" width=200>
+          <img src="media/stack/azure_pg_logo.png" width=200>
           </br>PostgreSQL
         </td>
     </tr>
