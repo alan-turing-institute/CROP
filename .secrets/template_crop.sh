@@ -25,3 +25,6 @@ export CROP_STARK_PASS="<<<replaceme>>"
 # Docker
 export CROP_DOCKER_USER="<<<replaceme>>"
 export CROP_DOCKER_PASS="<<<replaceme>>"
+
+# 30MHz
+export CROP_30MHZ_APIKEY="<<<replaceme>>"
