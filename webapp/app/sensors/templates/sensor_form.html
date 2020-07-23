@@ -1,0 +1,90 @@
+{% extends "base_site.html" %}
+
+{% block title %} SENSOR FORM {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>{{ action }} sensor</h3>
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+              <br />
+              <form id="sensor-form" data-parsley-validate class="form-horizontal form-label-left" method="POST">
+                
+                <!-- hidden -->
+                <!-- <div class="form-group">
+                    <input type="hidden" id="loc_action" name="loc_action" value="{{ action }}">
+                    <input type="hidden" id="loc_id" name="loc_id" value="{{ loc_id }}">
+                </div> -->
+                <!-- /hidden -->
+
+                <!-- <div class="form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_zone">Zone<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                    <input type="text"id="loc_zone" name="loc_zone" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.zone }}">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_aisle">Aisle<span class="required">*</span>
+                    </label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="text" id="loc_aisle" name="loc_aisle" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.aisle }}"> 
+                    </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_column">Column<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                    <input type="number" min="1" id="loc_column" name="loc_column" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.column }}">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="loc_shelf">Shelf<span class="required">*</span>
+                    </label>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <input type="number"  min="1" id="loc_shelf" name="loc_shelf" required="required" class="form-control col-md-7 col-xs-12" value="{{ location.shelf }}"> 
+                    </div>
+                </div>
+
+
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                    <button type="submit" name="action_button" class="btn btn-success" value="submit">Submit</button>
+                    <button type="submit" name="action_button" class="btn btn-warning" value="cancel">Cancel</button>
+
+                    {% if action == "Edit" %}
+                    <button type="submit" name="action_button" class="btn btn-danger" value="delete">Delete</button>
+                    {% endif %}
+
+                  </div>
+                </div> -->
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ super()}}
+  <!-- Parsley -->
+  <script src="{{ url_for('static', filename='vendors/parsleyjs/dist/parsley.min.js') }}"></script>
+{% endblock javascripts %}
