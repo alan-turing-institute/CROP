@@ -22,3 +22,5 @@ flask_wtf>=0.14.3
 azure-storage-blob>=12.3.0
 
 selenium>=3.141.0
+
+requests>=2.23.0
