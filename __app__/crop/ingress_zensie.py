@@ -1,24 +1,22 @@
+"""
+Python module to import data using 30 MHz
+"""
+
 import os
 import requests
 import json
 import pandas as pd
 
-from datetime import datetime, timedelta
+#from datetime import datetime, timedelta
+
+from __app__.crop.constants import CONST_CROP_30MHZ_ORG, CONST_CROP_30MHZ_APIKEY
 
 
-CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
-CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
+CONST_CHECK_URL_PATH = 'https://api.30mhz.com/api/stats/check'
+CONST_CHECK_PARAMS = 'statisticType=averages&intervalSize=5m'
 
 
-def main():
-    """
-    Main test routine
-    """
-
-    test_check()
-
-
-def get_sensor_data(api_key, check_id, dt_from, dt_to):
+def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
     """
     Makes a request to download sensor data for a specified period of time.
 
@@ -42,13 +40,10 @@ def get_sensor_data(api_key, check_id, dt_from, dt_to):
         'Authorization': api_key,
     }
 
-    url_path = 'https://api.30mhz.com/api/stats/check'
-    params = 'statisticType=averages&intervalSize=5m'
-
     dt_from_iso = dt_from.strftime('%Y-%m-%dT%H:%M:%S') + 'Z'
     dt_to_iso = dt_to.strftime('%Y-%m-%dT%H:%M:%S') + 'Z'
     
-    url = '{}/{}/from/{}/until/{}?{}'.format(url_path, check_id, dt_from_iso, dt_to_iso, params)
+    url = '{}/{}/from/{}/until/{}?{}'.format(CONST_CHECK_URL_PATH, check_id, dt_from_iso, dt_to_iso, CONST_CHECK_PARAMS)
 
     response = requests.get(url, headers=headers)
 
@@ -77,21 +72,3 @@ def get_sensor_data(api_key, check_id, dt_from, dt_to):
 
     return success, error, data_df
 
-
-def test_check():
-    """
-    """
-
-    check_id = CONST_CROP_30MHZ_TEST_T_RH_CHECKID
-
-    dt_from = datetime.now() + timedelta(days=-1)
-    dt_to = datetime.now()
-
-    success, error, _ = get_sensor_data(CONST_CROP_30MHZ_APIKEY, check_id, dt_from, dt_to)
-
-    assert success, error
-
-
-if __name__ == "__main__":
-
-    main()
