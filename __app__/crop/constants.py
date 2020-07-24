@@ -127,6 +127,10 @@ ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 STARK_USERNAME = os.environ["CROP_STARK_USERNAME"].strip()
 STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
 
+# 30MHz (Zensie)
+CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
+CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
+
 # Create connection string
 SQL_ENGINE = "postgresql"
 SQL_USER = os.environ["CROP_SQL_USER"]
