@@ -87,6 +87,10 @@ class SensorClass(BASE):
     )
     device_id = Column(Unicode(100), nullable=False)
 
+    name = Column(Unicode(100), nullable=False)
+
+    last_updated = Column(DateTime())
+
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 

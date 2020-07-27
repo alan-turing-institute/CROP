@@ -7,9 +7,10 @@ import requests
 import json
 import pandas as pd
 
-#from datetime import datetime, timedelta
 
-from __app__.crop.constants import CONST_CROP_30MHZ_ORG, CONST_CROP_30MHZ_APIKEY
+from __app__.crop.constants import (
+    CONST_CROP_30MHZ_APIKEY,
+)
 
 
 CONST_CHECK_URL_PATH = 'https://api.30mhz.com/api/stats/check'
