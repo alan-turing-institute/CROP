@@ -17,6 +17,7 @@ from __app__.crop.structure import (
     SensorClass,
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
+    TypeClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
 
@@ -62,11 +63,14 @@ def route_template(template):
                     db.session.query(
                         ReadingsEnergyClass.timestamp,
                         SensorClass.id,
+                        SensorClass.name,
+                        TypeClass.sensor_type,
                         ReadingsEnergyClass.electricity_consumption,
                         ReadingsEnergyClass.time_created,
                     )
                     .filter(
                         and_(
+                            SensorClass.type_id == TypeClass.id,
                             ReadingsEnergyClass.sensor_id == SensorClass.id,
                             ReadingsEnergyClass.timestamp >= dt_from,
                             ReadingsEnergyClass.timestamp <= dt_to,

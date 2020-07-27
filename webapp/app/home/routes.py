@@ -444,14 +444,6 @@ def route_template(template):
         # ventilation analysis
         ventilation_results_df = ventilation_energy_use(dt_from, dt_to)
 
-        print("!" * 50)
-        print(dt_from, dt_to)
-        print("!" * 50)
-        print(lights_results_df)
-        print("!" * 50)
-        print(ventilation_results_df)
-        print("!" * 50)
-
         # jsonify
         energy_data["data"] = (
             "["

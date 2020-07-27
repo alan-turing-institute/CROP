@@ -38,11 +38,11 @@
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Device ID</th>
                     <th>Type</th>
-                    <!-- <th>Aisle</th>
-                    <th>Column</th>
-                    <th>Shelf</th> -->
+                    <th>Device ID</th>
+                    <th>Name</th>
+                    <th>Last updated</th>
+                    <!-- <th>Shelf</th> -->
                     <th class="column-title no-link last"><span class="nobr">Action</span>
                   </tr>
                 </thead>
@@ -51,8 +51,10 @@
                     {% for t_sensor in sensors %}
                     <tr class='clickable-row' method = POST>
                       <td>{{ t_sensor.sensors_id }}</td>
-                      <td>{{ t_sensor.sensors_device_id }}</td>
                       <td>{{ t_sensor.sensor_types_sensor_type }}</td>
+                      <td>{{ t_sensor.sensors_device_id }}</td>
+                      <td>{{ t_sensor.sensors_name }}</td>
+                      <td>{{ t_sensor.sensors_last_updated }}</td>
                       <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.sensors_id }}">Edit</a> 
                     </tr>
                     {% endfor %}
