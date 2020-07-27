@@ -142,7 +142,7 @@ class LocationClass(BASE):
         self.shelf = shelf
 
 
-class Readings30MHzTRM(BASE):
+class ReadingsZensieTRM(BASE):
     """
     Base class for the 30MHz Temperature and RH GU sensor readings
     """
@@ -166,6 +166,7 @@ class Readings30MHzTRM(BASE):
 
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
+
 
 class ReadingsAdvanticsysClass(BASE):
     """
