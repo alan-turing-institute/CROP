@@ -18,6 +18,7 @@ from __app__.crop.structure import (
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     TypeClass,
+    ReadingsZensieTRM,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
 
@@ -33,13 +34,14 @@ def route_template(template):
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-        if template in ["advanticsys", "energy"]:
+        if template in ["advanticsys", "energy", "zensie_trh"]:
             if template == "advanticsys":
 
                 query = (
                     db.session.query(
                         ReadingsAdvanticsysClass.timestamp,
                         SensorClass.id,
+                        SensorClass.name,
                         ReadingsAdvanticsysClass.temperature,
                         ReadingsAdvanticsysClass.humidity,
                         ReadingsAdvanticsysClass.co2,
@@ -77,6 +79,29 @@ def route_template(template):
                         )
                     )
                     .order_by(desc(ReadingsEnergyClass.timestamp))
+                    .limit(CONST_MAX_RECORDS)
+                )
+
+            elif template == "zensie_trh":
+
+                query = (
+                    db.session.query(
+                        ReadingsZensieTRM.timestamp,
+                        SensorClass.id,
+                        SensorClass.name,
+                        ReadingsZensieTRM.temperature,
+                        ReadingsZensieTRM.humidity,
+                        ReadingsZensieTRM.time_created,
+                        ReadingsZensieTRM.time_updated,
+                    )
+                    .filter(
+                        and_(
+                            ReadingsZensieTRM.sensor_id == SensorClass.id,
+                            ReadingsZensieTRM.timestamp >= dt_from,
+                            ReadingsZensieTRM.timestamp <= dt_to,
+                        )
+                    )
+                    .order_by(desc(ReadingsZensieTRM.timestamp))
                     .limit(CONST_MAX_RECORDS)
                 )
 
