@@ -175,8 +175,9 @@ ENERGY_READINGS_TABLE_NAME = "energy_data"
 CROP_GROWTH_TABLE_NAME = "crop_growth_data"
 INFRASTRUCTURE_TABLE_NAME = "infrastructure_data"
 SENSOR_LOCATION_TABLE_NAME = "sensor_location"
-
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
+
+ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
 
 # SQL Column names
 ID_COL_NAME = "id"

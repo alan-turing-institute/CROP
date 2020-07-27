@@ -41,6 +41,7 @@ from __app__.crop.constants import (
     SENSOR_LOCATION_TABLE_NAME,
     ID_COL_NAME,
     SENSOR_UPLOAD_LOG_TABLE_NAME,
+    ZENSIE_TRH_TABLE_NAME
 )
 
 SQLA = SQLAlchemy()
@@ -140,6 +141,31 @@ class LocationClass(BASE):
         self.column = column
         self.shelf = shelf
 
+
+class Readings30MHzTRM(BASE):
+    """
+    Base class for the 30MHz Temperature and RH GU sensor readings
+    """
+
+    __tablename__ = ZENSIE_TRH_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    timestamp = Column(DateTime, nullable=False)
+    temperature = Column(Float, nullable=False)
+    humidity = Column(Float, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 class ReadingsAdvanticsysClass(BASE):
     """
