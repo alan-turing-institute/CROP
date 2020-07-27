@@ -33,6 +33,8 @@ def route_template(template):
             db.session.query(
                 SensorClass.id,
                 SensorClass.device_id,
+                SensorClass.name,
+                SensorClass.last_updated,
                 TypeClass.sensor_type,
             )
             .filter(
@@ -66,6 +68,8 @@ def route_template(template):
                         SensorClass.id,
                         SensorClass.device_id,
                         SensorClass.type_id,
+                        SensorClass.name,
+                        SensorClass.last_updated,
                         TypeClass.sensor_type,
                     )
                     .filter(

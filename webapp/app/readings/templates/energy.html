@@ -40,6 +40,8 @@
                         <tr>
                             <th>Timestamp</th>
                             <th>ID</th>
+                            <th>Type</th>
+                            <th>Name</th>
                             <th>Half Hourly kWh</th>
                             <th>Upload Time</th>
                         </tr>   
@@ -51,6 +53,8 @@
                         <tr>
                             <td>{{ t_reading.energy_data_timestamp }}</td>
                             <td>{{ t_reading.sensors_id }}</td>
+                            <td>{{ t_reading.sensor_types_sensor_type }}</td>
+                            <td>{{ t_reading.sensors_name }}</td>
                             <td>{{ t_reading.energy_data_electricity_consumption }}</td>
                             <td>{{ t_reading.energy_data_time_created }}</td>
                         </tr>
