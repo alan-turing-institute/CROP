@@ -159,9 +159,6 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
 
     for zensie_sensor_i, zensie_sensor in enumerate(zensie_sensor_list):
 
-        if zensie_sensor_i != 0:
-            continue
-
         sensor_id = zensie_sensor["sensors_id"]
         sensor_check_id = zensie_sensor["sensors_device_id"]
 
@@ -233,6 +230,11 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
 
                         session.add(data)
 
+
+                    session.query().\
+                        filter(SensorClass.id == sensor_id).\
+                        update({"last_updated": datetime.now()})
+
                     session_close(session)
 
                     elapsed_time = time.time() - start_time
@@ -267,7 +269,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
 def import_zensie_data():
     """
     Imports all zensie data
-    
+
     """
 
     from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
@@ -282,6 +284,6 @@ def import_zensie_data():
         dt_from = dt_to
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    import_zensie_data()
+#     import_zensie_data()

@@ -2,28 +2,33 @@
 Importing zensie data using Azure FunctionApp.
 """
 
-
-import datetime
+from datetime import datetime, timedelta, timezone
 import logging
 
 import azure.functions as func
 
-def stark_import(mytimer: func.TimerRequest):
+from __app__.crop.ingress_zensie import import_zensie_trh_data
+from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+
+def zensie_import(mytimer: func.TimerRequest):
     """
-    The main STARK import Azure Function routine.
+    The main Zensie import Azure Function routine.
 
     """
 
     utc_timestamp = (
-        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+        datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
     )
 
     logging.info("Python zensie timer trigger function started at %s", utc_timestamp)
 
+    dt_to = datetime.now()
+    dt_from = dt_to + timedelta(days=-1)
     
+    import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
  
     utc_timestamp = (
-        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+        datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
     )
 
     logging.info("Python zensie timer trigger function finished at %s", utc_timestamp)
