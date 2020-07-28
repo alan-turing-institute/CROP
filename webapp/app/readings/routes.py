@@ -18,7 +18,7 @@ from __app__.crop.structure import (
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     TypeClass,
-    ReadingsZensieTRM,
+    ReadingsZensieTRH,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
 
@@ -86,22 +86,22 @@ def route_template(template):
 
                 query = (
                     db.session.query(
-                        ReadingsZensieTRM.timestamp,
+                        ReadingsZensieTRH.timestamp,
                         SensorClass.id,
                         SensorClass.name,
-                        ReadingsZensieTRM.temperature,
-                        ReadingsZensieTRM.humidity,
-                        ReadingsZensieTRM.time_created,
-                        ReadingsZensieTRM.time_updated,
+                        ReadingsZensieTRH.temperature,
+                        ReadingsZensieTRH.humidity,
+                        ReadingsZensieTRH.time_created,
+                        ReadingsZensieTRH.time_updated,
                     )
                     .filter(
                         and_(
-                            ReadingsZensieTRM.sensor_id == SensorClass.id,
-                            ReadingsZensieTRM.timestamp >= dt_from,
-                            ReadingsZensieTRM.timestamp <= dt_to,
+                            ReadingsZensieTRH.sensor_id == SensorClass.id,
+                            ReadingsZensieTRH.timestamp >= dt_from,
+                            ReadingsZensieTRH.timestamp <= dt_to,
                         )
                     )
-                    .order_by(desc(ReadingsZensieTRM.timestamp))
+                    .order_by(desc(ReadingsZensieTRH.timestamp))
                     .limit(CONST_MAX_RECORDS)
                 )
 
