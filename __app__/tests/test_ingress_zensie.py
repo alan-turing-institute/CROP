@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 
 from __app__.crop.constants import (
     CONST_CROP_30MHZ_APIKEY,
-    CONST_CROP_30MHZ_TEST_T_RH_CHECKID
+    CONST_CROP_30MHZ_TEST_T_RH_CHECKID,
+    CONST_ZENSIE_TRH_SENSOR_TYPE,
 )
 
 from __app__.crop.ingress_zensie import (
-    get_api_sensor_data
+    get_api_sensor_data,
 )
 
 def test_get_sensor_data():

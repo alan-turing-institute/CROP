@@ -4,7 +4,11 @@ A module for constants
 import os
 import pandas as pd
 
+import logging
+
 from __app__.crop.utils import make_conn_string
+
+logging.basicConfig(level=logging.DEBUG)
 
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"
