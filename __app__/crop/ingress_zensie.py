@@ -229,9 +229,8 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                         )
 
                         session.add(data)
-
-
-                    session.query().\
+                    
+                    session.query(SensorClass).\
                         filter(SensorClass.id == sensor_id).\
                         update({"last_updated": datetime.now()})
 
@@ -274,14 +273,19 @@ def import_zensie_data():
 
     from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
-    date_ranges = pd.date_range(start='2020-01-01', end='2020-08-01', periods=20)
+    # date_ranges = pd.date_range(start='2020-01-01', end='2020-08-01', periods=20)
 
-    for date_idx, dt_to in enumerate(date_ranges):
+    # for date_idx, dt_to in enumerate(date_ranges):
 
-        if date_idx != 0:
-            import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
+    #     if date_idx != 0:
+    #         import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
 
-        dt_from = dt_to
+    #     dt_from = dt_to
+
+    dt_to = datetime.now()
+    dt_from = dt_to + timedelta(days=-10)
+    
+    import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
 
 
 # if __name__ == "__main__":
