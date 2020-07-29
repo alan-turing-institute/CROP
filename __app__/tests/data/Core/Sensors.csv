@@ -1,7 +1,7 @@
-type_id,device_id
-1,1
-1,2
-1,3
-1,4
-2,2
-2,1
+type_id,device_id,name
+1,1,test1
+1,2,test2
+1,3,test3
+1,4,test4
+2,2,test5
+2,1,test6
