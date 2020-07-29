@@ -254,7 +254,7 @@ def import_energy_data(electricity_df, conn_string, database):
     if not success:
         return success, log
 
-    # Check if the stark sensor type is in the databse
+    # Check if the stark sensor type is in the database
     try:
         session = session_open(engine)
 
@@ -356,3 +356,4 @@ def import_energy_data(electricity_df, conn_string, database):
         log = "Cannot insert new data to database"
 
         return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
+

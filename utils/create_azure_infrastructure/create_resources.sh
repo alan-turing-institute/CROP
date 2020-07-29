@@ -135,79 +135,79 @@ fi
 # Creates Function App
 ###################################################################################
 
-# function_name=$CROP_RG_NAME"functionapp"
-# cwd=`pwd`
+function_name=$CROP_RG_NAME"functionapp"
+cwd=`pwd`
 
-# echo "CROP BUILD INFO: Function APP: cd ../../__app__"
-# cd ../../__app__
+echo "CROP BUILD INFO: Function APP: cd ../../__app__"
+cd ../../__app__
 
-# echo "CROP BUILD INFO: Function APP: az functionapp delete"
-# az functionapp delete \
-#     --name $function_name \
-#     --resource-group $CROP_RG_NAME \
-#     --subscription $CROP_SUBSCRIPTION_ID
+echo "CROP BUILD INFO: Function APP: az functionapp delete"
+az functionapp delete \
+    --name $function_name \
+    --resource-group $CROP_RG_NAME \
+    --subscription $CROP_SUBSCRIPTION_ID
 
-# echo "CROP BUILD INFO: Function APP: functionapp plan delete"
-# az functionapp plan delete \
-#     --resource-group $CROP_RG_NAME \
-#     --name $CONST_FUNCAPP_PLAN \
-#     --yes
+echo "CROP BUILD INFO: Function APP: functionapp plan delete"
+az functionapp plan delete \
+    --resource-group $CROP_RG_NAME \
+    --name $CONST_FUNCAPP_PLAN \
+    --yes
 
-# echo "CROP BUILD INFO: Function APP: functionapp plan create"
-# az functionapp plan create \
-#     --resource-group $CROP_RG_NAME \
-#     --name $CONST_FUNCAPP_PLAN \
-#     --location $CONST_LOCATION \
-#     --number-of-workers 1 \
-#     --sku EP1 \
-#     --is-linux
+echo "CROP BUILD INFO: Function APP: functionapp plan create"
+az functionapp plan create \
+    --resource-group $CROP_RG_NAME \
+    --name $CONST_FUNCAPP_PLAN \
+    --location $CONST_LOCATION \
+    --number-of-workers 1 \
+    --sku EP1 \
+    --is-linux
 
-# echo "CROP BUILD INFO: Function APP: az functionapp create"
+echo "CROP BUILD INFO: Function APP: az functionapp create"
 
-# az functionapp create \
-#     --subscription $CROP_SUBSCRIPTION_ID \
-#     --resource-group $CROP_RG_NAME \
-#     --storage-account $CROP_STORAGE_ACCOUNT \
-#     --name $function_name \
-#     --functions-version 2 \
-#     --plan $CONST_FUNCAPP_PLAN \
-#     --deployment-container-image-name $CONST_FUNCAPP_DOCKER_IMAGE \
-#     --docker-registry-server-user $CROP_DOCKER_USER \
-#     --docker-registry-server-password $CROP_DOCKER_PASS
+az functionapp create \
+    --subscription $CROP_SUBSCRIPTION_ID \
+    --resource-group $CROP_RG_NAME \
+    --storage-account $CROP_STORAGE_ACCOUNT \
+    --name $function_name \
+    --functions-version 2 \
+    --plan $CONST_FUNCAPP_PLAN \
+    --deployment-container-image-name $CONST_FUNCAPP_DOCKER_IMAGE \
+    --docker-registry-server-user $CROP_DOCKER_USER \
+    --docker-registry-server-password $CROP_DOCKER_PASS
 
-# echo "CROP BUILD INFO: Function APP: $function_name created."
+echo "CROP BUILD INFO: Function APP: $function_name created."
 
-# echo "CROP BUILD INFO: Function APP: sleeping for 30 seconds"
-# sleep 30
+echo "CROP BUILD INFO: Function APP: sleeping for 30 seconds"
+sleep 30
 
-# echo "CROP BUILD INFO: Function APP: az functionapp config appsettings set"
+echo "CROP BUILD INFO: Function APP: az functionapp config appsettings set"
 
-# az functionapp config appsettings set \
-#     --name $function_name \
-#     --resource-group $CROP_RG_NAME \
-#     --settings "CROP_SQL_HOST=$CROP_SQL_HOST" \
-#     "CROP_SQL_SERVER=$CROP_SQL_SERVER" \
-#     "CROP_SQL_DBNAME=$CROP_SQL_DBNAME" \
-#     "CROP_SQL_USER=$CROP_SQL_USER" \
-#     "CROP_SQL_PASS=$CROP_SQL_PASS" \
-#     "CROP_SQL_PORT=$CROP_SQL_PORT" \
-#     "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
-#     "CROP_STARK_PASS=$CROP_STARK_PASS" \
-#     > /dev/null
+az functionapp config appsettings set \
+    --name $function_name \
+    --resource-group $CROP_RG_NAME \
+    --settings "CROP_SQL_HOST=$CROP_SQL_HOST" \
+    "CROP_SQL_SERVER=$CROP_SQL_SERVER" \
+    "CROP_SQL_DBNAME=$CROP_SQL_DBNAME" \
+    "CROP_SQL_USER=$CROP_SQL_USER" \
+    "CROP_SQL_PASS=$CROP_SQL_PASS" \
+    "CROP_SQL_PORT=$CROP_SQL_PORT" \
+    "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
+    "CROP_STARK_PASS=$CROP_STARK_PASS" \
+    > /dev/null
 
-# echo "CROP BUILD INFO: Function APP: $function_name configuration updated"
+echo "CROP BUILD INFO: Function APP: $function_name configuration updated"
 
-# python $cwd/create_json.py $CONNECTION_STRING local.settings.json
+python $cwd/create_json.py $CONNECTION_STRING local.settings.json
 
-# echo "CROP BUILD INFO: Function APP: local.settings.json file updated."
+echo "CROP BUILD INFO: Function APP: local.settings.json file updated."
 
-# echo "CROP BUILD INFO: Function APP: func azure functionapp publish"
-# func azure functionapp publish $function_name --build-native-deps --build remote
+echo "CROP BUILD INFO: Function APP: func azure functionapp publish"
+func azure functionapp publish $function_name --build-native-deps --build remote
 
-# echo "CROP BUILD INFO: Function APP "$function" uploaded"
+echo "CROP BUILD INFO: Function APP "$function" uploaded"
 
-# echo "CROP BUILD INFO: Function APP cd: "$cwd
-# cd $cwd
+echo "CROP BUILD INFO: Function APP cd: "$cwd
+cd $cwd
 
 ###################################################################################
 # Creates WebApp
