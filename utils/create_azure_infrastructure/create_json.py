@@ -24,6 +24,8 @@ if __name__ == "__main__":
         "CROP_SQL_DBNAME": os.environ["CROP_SQL_DBNAME"],
         "CROP_SQL_PORT": os.environ["CROP_SQL_PORT"],
         "CROP_STARK_USERNAME": os.environ["CROP_STARK_USERNAME"],
+        "CROP_STARK_PASS": os.environ["CROP_STARK_PASS"],
+        "CROP_30MHZ_APIKEY": os.environ["CROP_30MHZ_APIKEY"],
         "CROP_STARK_PASS": os.environ["CROP_STARK_PASS"]
     }
 
