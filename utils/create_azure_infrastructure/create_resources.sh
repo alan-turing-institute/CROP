@@ -22,114 +22,114 @@ declare -a ContainersArray=("advanticsys-raw-data")
 az account set -s $CROP_SUBSCRIPTION_ID
 echo "CROP BUILD INFO: default subscription set to $CROP_SUBSCRIPTION_ID"
 
-###################################################################################
-# Creates RESOURCE GROUP
-###################################################################################
+# ###################################################################################
+# # Creates RESOURCE GROUP
+# ###################################################################################
 
-# If resource group does not exist - create
-if ! `az group exists -n $CROP_RG_NAME`; then
+# # If resource group does not exist - create
+# if ! `az group exists -n $CROP_RG_NAME`; then
 
-    az group create --name $CROP_RG_NAME \
-        --location $CONST_LOCATION
+#     az group create --name $CROP_RG_NAME \
+#         --location $CONST_LOCATION
 
-    echo "CROP BUILD INFO: resource group $CROP_RG_NAME has been created."
-else
-    echo "CROP BUILD INFO: resource group $CROP_RG_NAME already exists. Skipping."
-fi
+#     echo "CROP BUILD INFO: resource group $CROP_RG_NAME has been created."
+# else
+#     echo "CROP BUILD INFO: resource group $CROP_RG_NAME already exists. Skipping."
+# fi
 
-###################################################################################
-# Creates STORAGE ACCOUNT
-###################################################################################
+# ###################################################################################
+# # Creates STORAGE ACCOUNT
+# ###################################################################################
 
-# Checks if storage account does not exist
-#   This is not a great implementation as it depends on Python to parse the json object.
-#   Changes are wellcome.
-available=`az storage account check-name --name $CROP_STORAGE_ACCOUNT | python -c 'import json,sys;obj=json.load(sys.stdin);print (obj["nameAvailable"])'`
+# # Checks if storage account does not exist
+# #   This is not a great implementation as it depends on Python to parse the json object.
+# #   Changes are wellcome.
+# available=`az storage account check-name --name $CROP_STORAGE_ACCOUNT | python -c 'import json,sys;obj=json.load(sys.stdin);print (obj["nameAvailable"])'`
 
-if [ $available = "True" ]; then
+# if [ $available = "True" ]; then
 
-    az storage account create --name $CROP_STORAGE_ACCOUNT \
-        --location $CONST_LOCATION \
-        --resource-group $CROP_RG_NAME \
-        --sku Standard_LRS
+#     az storage account create --name $CROP_STORAGE_ACCOUNT \
+#         --location $CONST_LOCATION \
+#         --resource-group $CROP_RG_NAME \
+#         --sku Standard_LRS
 
-    echo "CROP BUILD INFO: storage account $CROP_STORAGE_ACCOUNT has been created."
-else
-    echo "CROP BUILD INFO: storage account $CROP_STORAGE_ACCOUNT already exists. Skipping."
-fi
+#     echo "CROP BUILD INFO: storage account $CROP_STORAGE_ACCOUNT has been created."
+# else
+#     echo "CROP BUILD INFO: storage account $CROP_STORAGE_ACCOUNT already exists. Skipping."
+# fi
 
-# Getting the first storage account key
-ACCESS_KEY=$(az storage account keys list --account-name $CROP_STORAGE_ACCOUNT --resource-group $CROP_RG_NAME --output tsv |head -1 | awk '{print $3}')
-# Creating a connection string
-CONNECTION_STRING="DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=${CROP_STORAGE_ACCOUNT};AccountKey=${ACCESS_KEY}"
+# # Getting the first storage account key
+# ACCESS_KEY=$(az storage account keys list --account-name $CROP_STORAGE_ACCOUNT --resource-group $CROP_RG_NAME --output tsv |head -1 | awk '{print $3}')
+# # Creating a connection string
+# CONNECTION_STRING="DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=${CROP_STORAGE_ACCOUNT};AccountKey=${ACCESS_KEY}"
 
-###################################################################################
-# Creates BLOB CONTAINERS
-###################################################################################
+# ###################################################################################
+# # Creates BLOB CONTAINERS
+# ###################################################################################
 
-for container in ${ContainersArray[@]}; do
+# for container in ${ContainersArray[@]}; do
 
-    # Checks if container exists
-    #   This is not a great implementation as it depends on Python to parse the json object.
-    #   Changes are wellcome.
-    exists=$(az storage container exists --name $container --account-name $CROP_STORAGE_ACCOUNT --account-key $ACCESS_KEY | python -c 'import json,sys;obj=json.load(sys.stdin);print (obj["exists"])')
+#     # Checks if container exists
+#     #   This is not a great implementation as it depends on Python to parse the json object.
+#     #   Changes are wellcome.
+#     exists=$(az storage container exists --name $container --account-name $CROP_STORAGE_ACCOUNT --account-key $ACCESS_KEY | python -c 'import json,sys;obj=json.load(sys.stdin);print (obj["exists"])')
 
-    if ! $exists; then
-        az storage container create \
-            --name $container \
-            --account-name $CROP_STORAGE_ACCOUNT \
-            --account-key $ACCESS_KEY
+#     if ! $exists; then
+#         az storage container create \
+#             --name $container \
+#             --account-name $CROP_STORAGE_ACCOUNT \
+#             --account-key $ACCESS_KEY
 
-        echo "CROP BUILD INFO: Container $container has been created."
-    else
-        echo "CROP BUILD INFO: Container $container already exists. Skipping."
-    fi
-done
+#         echo "CROP BUILD INFO: Container $container has been created."
+#     else
+#         echo "CROP BUILD INFO: Container $container already exists. Skipping."
+#     fi
+# done
 
-###################################################################################
-# Creates PostgreSQL DB
-###################################################################################
+# ###################################################################################
+# # Creates PostgreSQL DB
+# ###################################################################################
 
-# Checks for postgres databases
-#   This is not a great implementation as it depends on Python to parse the json object.
-#   Changes are wellcome.
+# # Checks for postgres databases
+# #   This is not a great implementation as it depends on Python to parse the json object.
+# #   Changes are wellcome.
 
-exists=`az postgres server list -g $CROP_RG_NAME`
+# exists=`az postgres server list -g $CROP_RG_NAME`
 
-# Checks the lenght of the query result. 2 means there were no results.
-if [ ${#exists} = 2 ]; then
-    az postgres server create \
-        --resource-group $CROP_RG_NAME \
-        --name $CROP_SQL_SERVER \
-        --location $CONST_LOCATION \
-        --admin-user $CROP_SQL_USERNAME \
-        --admin-password $CROP_SQL_PASS \
-        --sku-name $CONST_POSTGRES_SERVER \
-        --version $CONST_POSTGRES_V \
-        --ssl-enforcement Disabled
+# # Checks the lenght of the query result. 2 means there were no results.
+# if [ ${#exists} = 2 ]; then
+#     az postgres server create \
+#         --resource-group $CROP_RG_NAME \
+#         --name $CROP_SQL_SERVER \
+#         --location $CONST_LOCATION \
+#         --admin-user $CROP_SQL_USERNAME \
+#         --admin-password $CROP_SQL_PASS \
+#         --sku-name $CONST_POSTGRES_SERVER \
+#         --version $CONST_POSTGRES_V \
+#         --ssl-enforcement Disabled
 
-    echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER has been created."
+#     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER has been created."
 
-    # Adding rules of allowed ip addresses
-    declare -a IPArray=($CROP_SQL_WHITEIPS)
+#     # Adding rules of allowed ip addresses
+#     declare -a IPArray=($CROP_SQL_WHITEIPS)
 
-    for ip in ${IPArray[@]}; do
+#     for ip in ${IPArray[@]}; do
 
-        az postgres server firewall-rule create \
-            --resource-group $CROP_RG_NAME \
-            --server-name $CROP_SQL_SERVER \
-            -n whitelistedip \
-            --start-ip-address $ip \
-            --end-ip-address $ip
-    done
+#         az postgres server firewall-rule create \
+#             --resource-group $CROP_RG_NAME \
+#             --server-name $CROP_SQL_SERVER \
+#             -n whitelistedip \
+#             --start-ip-address $ip \
+#             --end-ip-address $ip
+#     done
 
-    echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER firewall rules created."
+#     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER firewall rules created."
       
-    read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to allow access to Azure services for the SQL database"
-    # allow access to Azure services as YES
-else
-    echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER already exists. Skipping."
-fi
+#     read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to allow access to Azure services for the SQL database"
+#     # allow access to Azure services as YES
+# else
+#     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER already exists. Skipping."
+# fi
 
 ###################################################################################
 # Creates Function App
@@ -193,6 +193,7 @@ az functionapp config appsettings set \
     "CROP_SQL_PORT=$CROP_SQL_PORT" \
     "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
     "CROP_STARK_PASS=$CROP_STARK_PASS" \
+    "CROP_30MHZ_APIKEY=$CROP_30MHZ_APIKEY" \
     > /dev/null
 
 echo "CROP BUILD INFO: Function APP: $function_name configuration updated"
@@ -209,54 +210,54 @@ echo "CROP BUILD INFO: Function APP "$function" uploaded"
 echo "CROP BUILD INFO: Function APP cd: "$cwd
 cd $cwd
 
-###################################################################################
-# Creates WebApp
-###################################################################################
+# ###################################################################################
+# # Creates WebApp
+# ###################################################################################
 
-webapp_appservice_name=$CROP_RG_NAME"webappservice"
-webapp_name=$CROP_RG_NAME
+# webapp_appservice_name=$CROP_RG_NAME"webappservice"
+# webapp_name=$CROP_RG_NAME
 
-echo "CROP BUILD INFO: WebApp: az webapp delete"
+# echo "CROP BUILD INFO: WebApp: az webapp delete"
 
-az webapp delete \
-    --name $webapp_name \
-    --resource-group $CROP_RG_NAME \
-    --subscription $CROP_SUBSCRIPTION_ID
+# az webapp delete \
+#     --name $webapp_name \
+#     --resource-group $CROP_RG_NAME \
+#     --subscription $CROP_SUBSCRIPTION_ID
 
-echo "CROP BUILD INFO: WebApp: az appservice plan delete"
+# echo "CROP BUILD INFO: WebApp: az appservice plan delete"
 
-az appservice plan delete \
-    --name $webapp_appservice_name \
-    --resource-group $CROP_RG_NAME \
-    --subscription $CROP_SUBSCRIPTION_ID \
-    --yes
+# az appservice plan delete \
+#     --name $webapp_appservice_name \
+#     --resource-group $CROP_RG_NAME \
+#     --subscription $CROP_SUBSCRIPTION_ID \
+#     --yes
 
-echo "CROP BUILD INFO: WebApp: az appservice plan create"
+# echo "CROP BUILD INFO: WebApp: az appservice plan create"
 
-az appservice plan create \
-    --name $webapp_appservice_name \
-    --resource-group $CROP_RG_NAME \
-    --is-linux \
-    --location $CONST_LOCATION \
-    --number-of-workers 1 \
-    --sku $CONST_WEBAPP_SKU \
-    --subscription $CROP_SUBSCRIPTION_ID
+# az appservice plan create \
+#     --name $webapp_appservice_name \
+#     --resource-group $CROP_RG_NAME \
+#     --is-linux \
+#     --location $CONST_LOCATION \
+#     --number-of-workers 1 \
+#     --sku $CONST_WEBAPP_SKU \
+#     --subscription $CROP_SUBSCRIPTION_ID
 
-echo "CROP BUILD INFO: WebApp: az webapp create"
+# echo "CROP BUILD INFO: WebApp: az webapp create"
 
-az webapp create \
-    --name $webapp_name \
-    --plan $webapp_appservice_name \
-    --resource-group $CROP_RG_NAME \
-    --deployment-container-image-name turingcropapp/webapp:$CROP_RG_NAME \
-    --docker-registry-server-password $CROP_DOCKER_PASS \
-    --docker-registry-server-user $CROP_DOCKER_USER \
-    --subscription $CROP_SUBSCRIPTION_ID
+# az webapp create \
+#     --name $webapp_name \
+#     --plan $webapp_appservice_name \
+#     --resource-group $CROP_RG_NAME \
+#     --deployment-container-image-name turingcropapp/webapp:$CROP_RG_NAME \
+#     --docker-registry-server-password $CROP_DOCKER_PASS \
+#     --docker-registry-server-user $CROP_DOCKER_USER \
+#     --subscription $CROP_SUBSCRIPTION_ID
 
-read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to activate Continuous Deployment for the container and update the webhook on docker hub"
-echo ""
+# read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to activate Continuous Deployment for the container and update the webhook on docker hub"
+# echo ""
 
-###################################################################################
+# ###################################################################################
 
 echo "CROP BUILD INFO: Finished."
 
