@@ -11,4 +11,5 @@ echo -e 'export CROP_SQL_PASS="'$CROP_SQL_PASS'"' >> $secrets_file
 echo -e 'export CROP_SQL_HOST="'$CROP_SQL_HOST'"' >> $secrets_file
 echo -e 'export CROP_SQL_PORT="'$CROP_SQL_PORT'"' >> $secrets_file
 echo -e 'export CROP_SQL_DBNAME="'$CROP_SQL_DBNAME'"' >> $secrets_file
+echo -e 'export CROP_30MHZ_APIKEY="'$CROP_30MHZ_APIKEY'"' >> $secrets_file
 echo -e 'export PYTHONPATH="/CROP:${PYTHONPATH}"' >> $secrets_file
