@@ -288,6 +288,6 @@ def import_zensie_data():
     import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     import_zensie_data()
+    import_zensie_data()
