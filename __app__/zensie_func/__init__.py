@@ -25,6 +25,9 @@ def zensie_import(mytimer: func.TimerRequest):
     dt_to = datetime.now()
     dt_from = dt_to + timedelta(days=-1)
     
+    logging.info("SQL_CONNECTION_STRING %s" % (SQL_CONNECTION_STRING))
+    logging.info("SQL_DBNAME %s" % (SQL_DBNAME))
+
     import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
  
     utc_timestamp = (
