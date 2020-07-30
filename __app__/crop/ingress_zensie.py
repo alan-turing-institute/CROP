@@ -157,7 +157,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
             CONST_ZENSIE_TRH_SENSOR_TYPE, "Zensie API", success, log, conn_string
         )
 
-    for zensie_sensor_i, zensie_sensor in enumerate(zensie_sensor_list):
+    for _, zensie_sensor in enumerate(zensie_sensor_list):
 
         sensor_id = zensie_sensor["sensors_id"]
         sensor_check_id = zensie_sensor["sensors_device_id"]
