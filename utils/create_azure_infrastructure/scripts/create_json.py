@@ -8,8 +8,12 @@ Creates local.settings.json file for Azure Function App
 
 if __name__ == "__main__":
 
-    conn_string = sys.argv[1].strip()
-    rel_file_path = sys.argv[2].strip()
+    if len(sys.argv) > 2:
+        conn_string = sys.argv[1].strip()
+        rel_file_path = sys.argv[2].strip()
+    else:
+        conn_string = sys.argv[0].strip()
+        rel_file_path = sys.argv[1].strip()
 
     data = {}
 
@@ -24,7 +28,9 @@ if __name__ == "__main__":
         "CROP_SQL_DBNAME": os.environ["CROP_SQL_DBNAME"],
         "CROP_SQL_PORT": os.environ["CROP_SQL_PORT"],
         "CROP_STARK_USERNAME": os.environ["CROP_STARK_USERNAME"],
-        "CROP_STARK_PASS": os.environ["CROP_STARK_PASS"]
+        "CROP_STARK_PASS": os.environ["CROP_STARK_PASS"],
+        "CROP_30MHZ_APIKEY": os.environ["CROP_30MHZ_APIKEY"],
+        "CROP_30MHZ_TEST_T_RH_CHECKID": os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"],
     }
 
     with open(rel_file_path, 'w') as outfile:
