@@ -27,4 +27,5 @@ export CROP_DOCKER_USER="<<<replaceme>>"
 export CROP_DOCKER_PASS="<<<replaceme>>"
 
 # 30MHz
+export CROP_30MHZ_ORGANIZATION="<<<replaceme>>"
 export CROP_30MHZ_APIKEY="<<<replaceme>>"
