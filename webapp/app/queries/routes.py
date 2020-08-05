@@ -21,11 +21,12 @@ from __app__.crop.structure import (
     LocationClass,
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
+    ReadingsZensieTRHClass,
 )
 
 
 @blueprint.route("/getallsensors", methods=["GET"])
-#@login_required
+@login_required
 def get_all_sensors():
     """
     Produces a JSON list with sensors and their latest locations.
@@ -70,7 +71,7 @@ def get_all_sensors():
 
 
 @blueprint.route("/getadvanticsysdata/<sensor_id>", methods=["GET"])
-#@login_required
+@login_required
 def get_advanticsys_data(sensor_id):
     """
     Produces a JSON with the Advanticsys sensor data for a specified sensor.
@@ -110,7 +111,7 @@ def get_advanticsys_data(sensor_id):
 
 
 @blueprint.route("/getstarkdata/<sensor_id>", methods=["GET"])
-#@login_required
+@login_required
 def get_stark_data(sensor_id):
     """
     Produces a JSON with Stark readings data for a specified sensor (meter).
@@ -139,6 +140,44 @@ def get_stark_data(sensor_id):
             )
         )
         .order_by(desc(ReadingsEnergyClass.timestamp))
+    )
+
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+
+    return result
+
+
+@blueprint.route("/get30mhzrhtdata/<sensor_id>", methods=["GET"])
+@login_required
+def get_30mhz_rht_data(sensor_id):
+    """
+    Produces a JSON with the 30MHz RH & T sensor data for a specified sensor.
+
+    Args:
+        sensor_id - Advanticsys sensor ID
+    Returns:
+        result - JSON string
+    """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
+    query = (
+        db.session.query(
+            ReadingsZensieTRHClass.sensor_id,
+            ReadingsZensieTRHClass.timestamp,
+            ReadingsZensieTRHClass.temperature,
+            ReadingsZensieTRHClass.time_created,
+            ReadingsZensieTRHClass.time_updated,
+        )
+        .filter(
+            and_(
+                ReadingsZensieTRHClass.sensor_id == sensor_id,
+                ReadingsZensieTRHClass.timestamp >= dt_from,
+                ReadingsZensieTRHClass.timestamp <= dt_to,
+            )
+        )
+        .order_by(desc(ReadingsZensieTRHClass.timestamp))
     )
 
     execute_result = db.session.execute(query).fetchall()
