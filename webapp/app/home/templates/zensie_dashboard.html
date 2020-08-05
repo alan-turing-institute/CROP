@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Temperature Analysis Dashboard {% endblock title %}
+{% block title %} 30MHz Sensors Analysis Dashboard {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -22,7 +22,7 @@
             <div class="x_content">
                 <div class="row x_title">
                     <div class="col-md-6">
-                        <h2>Temperature Analysis Dashboard</h2>
+                        <h2>30MHz Sensors Analysis Dashboard</h2>
                     </div>
                     <div class="col-md-6">
                         <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
@@ -38,24 +38,24 @@
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
                     <div class="x_panel">
-                    
+                        
                         <div class="x_title">
-                            <h3>Temperature Range Counts <small>Advanticsys sensors</small></h3> 
+                            <h3>Temperature Range Counts</h3> 
                         </div>
 
                         <div class="x_content">
                             <div class="" role="tabpanel" data-example-id="togglable-tabs">
 
                                 <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
-                                    {% for i in range(0, num_adv_sensors) %}
+                                    {% for i in range(0, num_zensie_sensors) %}
                                         <li role="presentation" class="">
-                                            <a href="#tab_content{{i}}" role="tab" data-toggle="tab"> Modbus ID = {{ adv_sensors[i] }}</a>
+                                            <a href="#tab_content{{i}}" role="tab" data-toggle="tab"> {{ zensie_sensors[i] }}</a>
                                         </li>
                                     {% endfor %}
                                 </ul>
 
                                 <div id="myTabContent" class="tab-content">
-                                    {% for i in range(0, num_adv_sensors) %}
+                                    {% for i in range(0, num_zensie_sensors) %}
                                         <div role="tabpanel" class="tab-pane fade active in" id="tab_content{{i}}">
                                             <div class="x_content">
                                                 <div id="plotDiv{{i}}"></div>
@@ -99,7 +99,7 @@
 
 <script>
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/home/temperature_dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/home/zensie_dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
         location.replace(request_url)
     });
 
@@ -111,22 +111,23 @@
 <script>
 
     var i, j;
-    var adv_temp_data = JSON.parse('{{adv_sensors_temp.data | safe}}');
+    var zensie_temp_data = JSON.parse('{{zensie_temp_ranges.data | safe}}');
     var sensor_temp_data;
     var temp_range, temp_range_data;
     var dates, temp_cnts;
     var data, layout;
-    var modbus_ids_str = '{{adv_sensors}}'
-    var modbus_ids = modbus_ids_str.substring(1, modbus_ids_str.length - 1).split(" ")
+    
+    var zensie_sensor_names = '{{ zensie_sensors }}';
+    var sensor_names = zensie_sensor_names.substring(1, zensie_sensor_names.length).split(" ")
     var title_date_str, title_sensor_str;
 
     // iterate sensors
-    for (i = 0; i < adv_temp_data.length; i++) {
+    for (i = 0; i < zensie_temp_data.length; i++) {
         data = [];
 
         dates = [];
         
-        sensor_temp_data = adv_temp_data[i];
+        sensor_temp_data = zensie_temp_data[i];
 
         // iterate temperature bins
         for (j = 0; j < sensor_temp_data.length; j++) {
@@ -153,11 +154,12 @@
             })
         }
 
-        title_sensor_str = '(Modbus ID = '.concat(modbus_ids[i]).concat(') ');
+        title_sensor_str = '('.concat(sensor_names[i].substring(5, sensor_names[i].length-6)).concat(') ');
+
         title_date_str = 'during the '.concat(temp_range_data[0].date).concat(' - ').concat(temp_range_data[temp_range_data.length-1].date).concat(' period');
 
         layout = {
-            title: 'Temperature range counts for the Advanticsys sensor '.concat(title_sensor_str).concat(title_date_str),
+            title: 'Temperature range counts for the 30MHz sensor '.concat(title_sensor_str).concat(title_date_str),
             barmode: 'stack',
             xaxis: {
                 title: "Date",
