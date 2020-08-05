@@ -7,7 +7,7 @@ from sqlalchemy import and_
 
 from __app__.crop.structure import (
     TypeClass,
-    ReadingsZensieTRH,
+    ReadingsZensieTRHClass,
 )
 
 def find_sensor_type_id(session, sensor_type):
@@ -55,12 +55,12 @@ def get_zensie_trh_sensor_data(session, sensor_id, date_from, date_to):
     """
 
     query = session.query(
-        ReadingsZensieTRH.timestamp,
+        ReadingsZensieTRHClass.timestamp,
     ).filter(
         and_(
-            ReadingsZensieTRH.sensor_id == sensor_id,
-            ReadingsZensieTRH.timestamp >= date_from,
-            ReadingsZensieTRH.timestamp <= date_to,
+            ReadingsZensieTRHClass.sensor_id == sensor_id,
+            ReadingsZensieTRHClass.timestamp >= date_from,
+            ReadingsZensieTRHClass.timestamp <= date_to,
         )
     )
 

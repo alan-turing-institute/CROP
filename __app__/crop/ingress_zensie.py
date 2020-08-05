@@ -14,7 +14,7 @@ from __app__.crop.db import connect_db, session_open, session_close
 from __app__.crop.structure import (
     TypeClass,
     SensorClass,
-    ReadingsZensieTRH,
+    ReadingsZensieTRHClass,
 )
 from __app__.crop.utils import query_result_to_array
 from __app__.crop.constants import (
@@ -221,7 +221,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                     session = session_open(engine)
                     for idx, row in new_data_df.iterrows():
 
-                        data = ReadingsZensieTRH(
+                        data = ReadingsZensieTRHClass(
                             sensor_id=sensor_id,
                             timestamp=idx,
                             temperature=row["Temperature"],

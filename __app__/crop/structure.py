@@ -142,7 +142,7 @@ class LocationClass(BASE):
         self.shelf = shelf
 
 
-class ReadingsZensieTRH(BASE):
+class ReadingsZensieTRHClass(BASE):
     """
     Base class for the 30MHz Temperature and RH GU sensor readings
     """
