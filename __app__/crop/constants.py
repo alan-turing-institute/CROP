@@ -188,3 +188,5 @@ ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
 ID_COL_NAME = "id"
 
 CONST_MAX_RECORDS = 500
+
+CONST_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
