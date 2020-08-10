@@ -1,6 +1,6 @@
 # Zensie Backup
 
-A script to backup 30 MHz sensor data using Zensie API.
+Script to backup 30 MHz sensor data using Zensie API.
 
 The routine uses api key to connect to the ZENSIE API and iterates through a list of sensors (**config.yml**). Backed up data is saved into a new folder as separate compressed (zip) csv files for each sensor.
 
