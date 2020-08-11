@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
 CONST_STARK = "Stark"
-CONST_ZENSIE_TRH_SENSOR_TYPE = "30MHz Temperature and RH GU"
+CONST_ZENSIE_TRH_SENSOR_TYPE = "30MHz T&RH"
 
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
