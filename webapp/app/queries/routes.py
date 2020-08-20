@@ -167,6 +167,7 @@ def get_30mhz_rht_data(sensor_id):
             ReadingsZensieTRHClass.sensor_id,
             ReadingsZensieTRHClass.timestamp,
             ReadingsZensieTRHClass.temperature,
+            ReadingsZensieTRHClass.humidity,
             ReadingsZensieTRHClass.time_created,
             ReadingsZensieTRHClass.time_updated,
         )
