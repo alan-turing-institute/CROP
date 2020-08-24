@@ -4,12 +4,6 @@ A module for constants
 import os
 import pandas as pd
 
-import logging
-
-from __app__.crop.utils import make_conn_string
-
-logging.basicConfig(level=logging.DEBUG)
-
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
@@ -94,11 +88,10 @@ CONST_TINYTAG_TEST_2019 = "Temps_RafKirk.csv"  # 2019 data
 
 # TINYTAG IMPORT
 CONST_TINYTAG_COL_SENSOR_NAME = "TempJulia"
-CONST_TINYTAG_COL_TIMESTAMP = "DateTime"
-CONST_TINYTAG_COL_TEMPERATURE = "Temperature"
+CONST_TINYTAG_COL_TIMESTAMP = "timestamp"
+CONST_TINYTAG_COL_TEMPERATURE = "temperature"
 CONST_TINYTAG_COL_NAME = "sensor_name"
 CONST_TINYTAG_COL_LIST = [
-    CONST_TINYTAG_COL_NAME,
     CONST_TINYTAG_COL_TIMESTAMP,
     CONST_TINYTAG_COL_TEMPERATURE,
 ]
@@ -154,8 +147,8 @@ STARK_USERNAME = os.environ["CROP_STARK_USERNAME"].strip()
 STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
 
 # 30MHz (Zensie)
-CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
-CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
+# CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
+# CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
 
 # Create connection string
 SQL_ENGINE = "postgresql"
@@ -169,10 +162,9 @@ SQL_SSLMODE = "require"
 
 SQL_TEST_DBNAME = "test_db"
 
-SQL_CONNECTION_STRING = make_conn_string(
-    SQL_ENGINE, SQL_USER, SQL_PASSWORD, SQL_HOST, SQL_PORT,
-)
-
+# SQL_CONNECTION_STRING = make_conn_string(
+#    SQL_ENGINE, SQL_USER, SQL_PASSWORD, SQL_HOST, SQL_PORT,
+# )
 
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_ENGINE,

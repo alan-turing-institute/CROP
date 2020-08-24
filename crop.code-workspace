@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"debug.internalConsoleOptions": "neverOpen",
+		"python.pythonPath": "C:\\Users\\Flora\\.conda\\envs\\crop\\python.exe"
+	}
+}
