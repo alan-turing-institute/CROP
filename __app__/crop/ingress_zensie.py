@@ -135,6 +135,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
     success, log, engine = connect_db(conn_string, database)
 
     if not success:
+        logging.info(log)
         return success, log
 
     # get the list of zensie trh sensors
@@ -153,6 +154,8 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
         log = "No sensors with sensor type {} were found.".format(sensor_type)
 
     if not success:
+        logging.info(log)
+
         return log_upload_event(
             CONST_ZENSIE_TRH_SENSOR_TYPE, "Zensie API", success, log, conn_string
         )
@@ -162,13 +165,13 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
         sensor_id = zensie_sensor["sensors_id"]
         sensor_check_id = zensie_sensor["sensors_device_id"]
 
-        logging.debug(
+        logging.info(
             "sensor_id: {} | sensor_check_id: {}".format(sensor_id, sensor_check_id)
         )
 
         if sensor_id > 0 and len(sensor_check_id) > 0:
 
-            logging.debug(
+            logging.info(
                 "sensor_id: {} | dt_from: {}, dt_to: {}".format(
                     sensor_id, dt_from, dt_to
                 )
@@ -179,7 +182,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                 CONST_CROP_30MHZ_APIKEY, sensor_check_id, dt_from, dt_to
             )
 
-            logging.debug(
+            logging.info(
                 "sensor_id: {} | sensor_success: {}, sensor_error: {}".format(
                     sensor_id, sensor_success, sensor_error
                 )
@@ -200,7 +203,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                     # Filtering only new data
                     new_data_df = api_data_df[~api_data_df.index.isin(db_data_df.index)]
 
-                    logging.debug(
+                    logging.info(
                         "sensor_id: {} | len(db_data_df): {}".format(
                             sensor_id, len(db_data_df)
                         )
@@ -208,7 +211,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                 else:
                     new_data_df = api_data_df
 
-                logging.debug(
+                logging.info(
                     "sensor_id: {} | len(new_data_df): {}".format(
                         sensor_id, len(new_data_df)
                     )
