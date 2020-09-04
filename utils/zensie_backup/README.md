@@ -19,4 +19,4 @@ The routine uses api key to connect to the ZENSIE API and iterates through a lis
 
 ### Example:
 
-    python zensie_backup.py 2020-08-01 2080-08-10
+    python zensie_backup.py --dfrom '2020-08-01' --dto '2020-08-10'
