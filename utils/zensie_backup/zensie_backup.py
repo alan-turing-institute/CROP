@@ -58,7 +58,7 @@ def forward_date_range(start_dt, end_dt, span_days):
     while start_dt + span < end_dt:
         current = start_dt + span
         yield start_dt, current
-        start_dt = current + step
+        start_dt = current
     else:
         yield start_dt, end_dt
 
@@ -218,9 +218,15 @@ def main(args):
     with open(args.fconfig, "r") as ymlfile:
         cfg = yaml.safe_load(ymlfile)
 
-    dt_to = datetime.now()
+    if args.dto is None:
+        dt_to = datetime.now()
+    else:
+        dt_to = args.dto
 
-    dt_from = dt_to + timedelta(days=-5)
+    if args.dfrom is None:
+        dt_from = dt_to + timedelta(days=-30)
+    else:
+        dt_from = args.dfrom
 
     zensie_apikey = cfg["zensie_apikey"]
     sensors_dict = cfg["sensors"]
