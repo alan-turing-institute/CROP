@@ -86,7 +86,7 @@
 
 <script>
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/home/energy_dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/dashboards/energy_dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
         location.replace(request_url)
     });
 
