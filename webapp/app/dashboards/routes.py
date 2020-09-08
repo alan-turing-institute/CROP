@@ -55,7 +55,7 @@ def resample(df, bins, dt_from, dt_to):
 
     bins_list = []
     for i in range(len(bins) - 1):
-        bins_list.append("(%d, %d]" % (bins[i], bins[i + 1]))
+        bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
 
     date_min = min(df["date"].min(), dt_from)
     date_max = max(df["date"].max(), dt_to)
@@ -577,7 +577,7 @@ def route_template(template):
     elif template == "zensie_dashboard":
 
         sensor_names, sensor_temp_ranges = zensie_analysis(dt_from, dt_to)
-
+       
         return render_template(
             template + ".html",
             num_zensie_sensors=len(sensor_names),
