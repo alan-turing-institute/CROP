@@ -32,7 +32,7 @@ from __app__.crop.constants import (
 
 
 # Temperature constants
-TEMP_BINS = [0, 17, 21, 24, 30]
+TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
 
 # Ventilation constants
 CONST_SFP = 2.39  # specific fan power
