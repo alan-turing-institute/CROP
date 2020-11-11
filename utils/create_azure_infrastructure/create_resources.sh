@@ -132,131 +132,66 @@ else
 fi
 
 ###################################################################################
-# Creates Function App
+# Creates Function App(s)
 ###################################################################################
 
-# function_name=$CROP_RG_NAME"functionapp"
-# cwd=`pwd`
+echo "CROP BUILD INFO: cd scripts"
+cd scripts
 
-# echo "CROP BUILD INFO: Function APP: cd ../../__app__"
-# cd ../../__app__
+echo "CROP BUILD INFO: ./create_functionapps.sh $CONST_FUNCAPP_PLAN $CONST_LOCATION $CONST_FUNCAPP_DOCKER_IMAGE $CONNECTION_STRING"
+./create_functionapps.sh $CONST_FUNCAPP_PLAN $CONST_LOCATION $CONST_FUNCAPP_DOCKER_IMAGE $CONNECTION_STRING
 
-# echo "CROP BUILD INFO: Function APP: az functionapp delete"
-# az functionapp delete \
-#     --name $function_name \
+echo "CROP BUILD INFO: cd .."
+cd ..
+
+# ###################################################################################
+# # Creates WebApp
+# ###################################################################################
+
+# webapp_appservice_name=$CROP_RG_NAME"webappservice"
+# webapp_name=$CROP_RG_NAME
+
+# echo "CROP BUILD INFO: WebApp: az webapp delete"
+
+# az webapp delete \
+#     --name $webapp_name \
 #     --resource-group $CROP_RG_NAME \
 #     --subscription $CROP_SUBSCRIPTION_ID
 
-# echo "CROP BUILD INFO: Function APP: functionapp plan delete"
-# az functionapp plan delete \
+# echo "CROP BUILD INFO: WebApp: az appservice plan delete"
+
+# az appservice plan delete \
+#     --name $webapp_appservice_name \
 #     --resource-group $CROP_RG_NAME \
-#     --name $CONST_FUNCAPP_PLAN \
+#     --subscription $CROP_SUBSCRIPTION_ID \
 #     --yes
 
-# echo "CROP BUILD INFO: Function APP: functionapp plan create"
-# az functionapp plan create \
+# echo "CROP BUILD INFO: WebApp: az appservice plan create"
+
+# az appservice plan create \
+#     --name $webapp_appservice_name \
 #     --resource-group $CROP_RG_NAME \
-#     --name $CONST_FUNCAPP_PLAN \
+#     --is-linux \
 #     --location $CONST_LOCATION \
 #     --number-of-workers 1 \
-#     --sku EP1 \
-#     --is-linux
+#     --sku $CONST_WEBAPP_SKU \
+#     --subscription $CROP_SUBSCRIPTION_ID
 
-# echo "CROP BUILD INFO: Function APP: az functionapp create"
+# echo "CROP BUILD INFO: WebApp: az webapp create"
 
-# az functionapp create \
-#     --subscription $CROP_SUBSCRIPTION_ID \
+# az webapp create \
+#     --name $webapp_name \
+#     --plan $webapp_appservice_name \
 #     --resource-group $CROP_RG_NAME \
-#     --storage-account $CROP_STORAGE_ACCOUNT \
-#     --name $function_name \
-#     --functions-version 2 \
-#     --plan $CONST_FUNCAPP_PLAN \
-#     --deployment-container-image-name $CONST_FUNCAPP_DOCKER_IMAGE \
+#     --deployment-container-image-name turingcropapp/webapp:$CROP_RG_NAME \
+#     --docker-registry-server-password $CROP_DOCKER_PASS \
 #     --docker-registry-server-user $CROP_DOCKER_USER \
-#     --docker-registry-server-password $CROP_DOCKER_PASS
+#     --subscription $CROP_SUBSCRIPTION_ID
 
-# echo "CROP BUILD INFO: Function APP: $function_name created."
+# read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to activate Continuous Deployment for the container and update the webhook on docker hub"
+# echo ""
 
-# echo "CROP BUILD INFO: Function APP: sleeping for 30 seconds"
-# sleep 30
-
-# echo "CROP BUILD INFO: Function APP: az functionapp config appsettings set"
-
-# az functionapp config appsettings set \
-#     --name $function_name \
-#     --resource-group $CROP_RG_NAME \
-#     --settings "CROP_SQL_HOST=$CROP_SQL_HOST" \
-#     "CROP_SQL_SERVER=$CROP_SQL_SERVER" \
-#     "CROP_SQL_DBNAME=$CROP_SQL_DBNAME" \
-#     "CROP_SQL_USER=$CROP_SQL_USER" \
-#     "CROP_SQL_PASS=$CROP_SQL_PASS" \
-#     "CROP_SQL_PORT=$CROP_SQL_PORT" \
-#     "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
-#     "CROP_STARK_PASS=$CROP_STARK_PASS" \
-#     > /dev/null
-
-# echo "CROP BUILD INFO: Function APP: $function_name configuration updated"
-
-# python $cwd/create_json.py $CONNECTION_STRING local.settings.json
-
-# echo "CROP BUILD INFO: Function APP: local.settings.json file updated."
-
-# echo "CROP BUILD INFO: Function APP: func azure functionapp publish"
-# func azure functionapp publish $function_name --build-native-deps --build remote
-
-# echo "CROP BUILD INFO: Function APP "$function" uploaded"
-
-# echo "CROP BUILD INFO: Function APP cd: "$cwd
-# cd $cwd
-
-###################################################################################
-# Creates WebApp
-###################################################################################
-
-webapp_appservice_name=$CROP_RG_NAME"webappservice"
-webapp_name=$CROP_RG_NAME
-
-echo "CROP BUILD INFO: WebApp: az webapp delete"
-
-az webapp delete \
-    --name $webapp_name \
-    --resource-group $CROP_RG_NAME \
-    --subscription $CROP_SUBSCRIPTION_ID
-
-echo "CROP BUILD INFO: WebApp: az appservice plan delete"
-
-az appservice plan delete \
-    --name $webapp_appservice_name \
-    --resource-group $CROP_RG_NAME \
-    --subscription $CROP_SUBSCRIPTION_ID \
-    --yes
-
-echo "CROP BUILD INFO: WebApp: az appservice plan create"
-
-az appservice plan create \
-    --name $webapp_appservice_name \
-    --resource-group $CROP_RG_NAME \
-    --is-linux \
-    --location $CONST_LOCATION \
-    --number-of-workers 1 \
-    --sku $CONST_WEBAPP_SKU \
-    --subscription $CROP_SUBSCRIPTION_ID
-
-echo "CROP BUILD INFO: WebApp: az webapp create"
-
-az webapp create \
-    --name $webapp_name \
-    --plan $webapp_appservice_name \
-    --resource-group $CROP_RG_NAME \
-    --deployment-container-image-name turingcropapp/webapp:$CROP_RG_NAME \
-    --docker-registry-server-password $CROP_DOCKER_PASS \
-    --docker-registry-server-user $CROP_DOCKER_USER \
-    --subscription $CROP_SUBSCRIPTION_ID
-
-read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to activate Continuous Deployment for the container and update the webhook on docker hub"
-echo ""
-
-###################################################################################
+# ###################################################################################
 
 echo "CROP BUILD INFO: Finished."
 

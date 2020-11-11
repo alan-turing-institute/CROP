@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Electricity Analysis Dashboard {% endblock title %}
+{% block title %} Zensie Temperature and Relative Humidity Data {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -9,7 +9,6 @@
   <link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}" rel="stylesheet">
-  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -19,11 +18,14 @@
       <div class="row">
         <div class="col-md-12 col-sm-12 col-xs-12">
           <div class="x_panel">
+
             <div class="x_content">
+
                 <div class="row x_title">
                     <div class="col-md-6">
-                        <h2>Electricity Analysis Dashboard</h2>
+                        <h3>Uploaded Zensie Temperature and Relative Humidity Sensor Data <small>(showing max 500 records)</small></h3>
                     </div>
+
                     <div class="col-md-6">
                         <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
@@ -32,20 +34,38 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h3>Lights <small>Advanticsys sensors</small></h3> 
-                        </div>
-                        <div class="x_content">  
-                        </div>
-                    </div>
-                </div>
-            </div>
+              <table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Upload Time</th>
+                  </tr>
+                </thead>
+                <tbody>
 
+                {%
+                    for t_reading in readings:
+                %}
+                <tr>
+                    <td>{{ t_reading.zensie_trh_data_timestamp }}</td>
+                    <td>{{ t_reading.sensors_id }}</td>
+                    <td>{{ t_reading.sensors_name }}</td>
+                    <td>{{ t_reading.zensie_trh_data_temperature }}</td>
+                    <td>{{ t_reading.zensie_trh_data_humidity }}</td>
+                    <td>{{ t_reading.zensie_trh_data_time_created }}</td>
+                </tr>
+                {%
+                    endfor
+                %}
+                  
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -55,7 +75,6 @@
 
 {% block javascripts %}
   {{ super() }}
-
   <!-- Datatables -->
   <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
@@ -73,15 +92,25 @@
   <script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
 
-<script>
+  <script>
+
+    $(document).ready(function() {
+        $('#datatable-responsive').DataTable( {
+            "order": [[ 0, "desc" ]]
+        } );
+    } );
+
+    $(window).load(function() {
+
+        $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
+
+    });
+
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/home/electricity?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/readings/zensie_trh?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+
         location.replace(request_url)
     });
 
-    $(window).load(function() {
-        $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
-    });
 </script>
-
 {% endblock javascripts %}
