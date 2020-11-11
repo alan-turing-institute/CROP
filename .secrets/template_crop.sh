@@ -18,6 +18,9 @@ export CROP_SQL_DBNAME="<<<replaceme>>" # Azure PostgreSQL DB name
 export CROP_SQL_PORT="<<<replaceme>>" # port number to connect to the Azure PostgreSQL DB
 export CROP_SQL_WHITEIPS="<<<replaceme>>" # list of ips to be whitelisted for connecting to the Azure PostgreSQL DB
 
+export CROP_SQL_READER_USER ="<<<replaceme>>" # Azure PostgreSQL Read-only user name
+export CROP_SQL_READER_PASS ="<<<replaceme>>" # Azure PostgreSQL Read-only user password
+
 # Stark
 export CROP_STARK_USERNAME="<<<replaceme>>"
 export CROP_STARK_PASS="<<<replaceme>>"
@@ -25,3 +28,7 @@ export CROP_STARK_PASS="<<<replaceme>>"
 # Docker
 export CROP_DOCKER_USER="<<<replaceme>>"
 export CROP_DOCKER_PASS="<<<replaceme>>"
+
+# 30MHz
+export CROP_30MHZ_ORGANIZATION="<<<replaceme>>"
+export CROP_30MHZ_APIKEY="<<<replaceme>>"

@@ -17,6 +17,8 @@ from __app__.crop.structure import (
     SensorClass,
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
+    TypeClass,
+    ReadingsZensieTRHClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
 
@@ -32,13 +34,14 @@ def route_template(template):
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-        if template in ["advanticsys", "energy"]:
+        if template in ["advanticsys", "energy", "zensie_trh"]:
             if template == "advanticsys":
 
                 query = (
                     db.session.query(
                         ReadingsAdvanticsysClass.timestamp,
                         SensorClass.id,
+                        SensorClass.name,
                         ReadingsAdvanticsysClass.temperature,
                         ReadingsAdvanticsysClass.humidity,
                         ReadingsAdvanticsysClass.co2,
@@ -62,17 +65,43 @@ def route_template(template):
                     db.session.query(
                         ReadingsEnergyClass.timestamp,
                         SensorClass.id,
+                        SensorClass.name,
+                        TypeClass.sensor_type,
                         ReadingsEnergyClass.electricity_consumption,
                         ReadingsEnergyClass.time_created,
                     )
                     .filter(
                         and_(
+                            SensorClass.type_id == TypeClass.id,
                             ReadingsEnergyClass.sensor_id == SensorClass.id,
                             ReadingsEnergyClass.timestamp >= dt_from,
                             ReadingsEnergyClass.timestamp <= dt_to,
                         )
                     )
                     .order_by(desc(ReadingsEnergyClass.timestamp))
+                    .limit(CONST_MAX_RECORDS)
+                )
+
+            elif template == "zensie_trh":
+
+                query = (
+                    db.session.query(
+                        ReadingsZensieTRHClass.timestamp,
+                        SensorClass.id,
+                        SensorClass.name,
+                        ReadingsZensieTRHClass.temperature,
+                        ReadingsZensieTRHClass.humidity,
+                        ReadingsZensieTRHClass.time_created,
+                        ReadingsZensieTRHClass.time_updated,
+                    )
+                    .filter(
+                        and_(
+                            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
+                            ReadingsZensieTRHClass.timestamp >= dt_from,
+                            ReadingsZensieTRHClass.timestamp <= dt_to,
+                        )
+                    )
+                    .order_by(desc(ReadingsZensieTRHClass.timestamp))
                     .limit(CONST_MAX_RECORDS)
                 )
 

@@ -4,12 +4,17 @@ A module for constants
 import os
 import pandas as pd
 
+import logging
+
 from __app__.crop.utils import make_conn_string
+
+logging.basicConfig(level=logging.DEBUG)
 
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
 CONST_STARK = "Stark"
+CONST_ZENSIE_TRH_SENSOR_TYPE = "30MHz T&RH"
 
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
@@ -127,6 +132,10 @@ ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 STARK_USERNAME = os.environ["CROP_STARK_USERNAME"].strip()
 STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
 
+# 30MHz (Zensie)
+CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
+CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
+
 # Create connection string
 SQL_ENGINE = "postgresql"
 SQL_USER = os.environ["CROP_SQL_USER"]
@@ -171,10 +180,13 @@ ENERGY_READINGS_TABLE_NAME = "energy_data"
 CROP_GROWTH_TABLE_NAME = "crop_growth_data"
 INFRASTRUCTURE_TABLE_NAME = "infrastructure_data"
 SENSOR_LOCATION_TABLE_NAME = "sensor_location"
-
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
+
+ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
 
 # SQL Column names
 ID_COL_NAME = "id"
 
 CONST_MAX_RECORDS = 500
+
+CONST_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
