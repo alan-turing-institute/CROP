@@ -1,14 +1,14 @@
 # CROP <img src="media/logo.png" width="180" align="right">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation Status](https://readthedocs.org/projects/crop/badge/?version=latest)](https://crop.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.com/alan-turing-institute/CROP.svg?branch=master)](https://travis-ci.org/alan-turing-institute/CROP)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[![Build Status](https://travis-ci.com/alan-turing-institute/CROP.svg?branch=master)](https://travis-ci.org/alan-turing-institute/CROP)
 
-<!-- [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3662779.svg)](https://doi.org/10.5281/zenodo.3662779) -->
+**C**rop is a **R**esearch **O**bservations **P**latform designed and created by [Dr Tomas Lazauskas](https://github.com/tomaslaz) and [Dr Flora Roumpani](https://github.com/entopia) in collaboration with [Dr Ruchi Choudhary's](https://www.turing.ac.uk/people/researchers/ruchi-choudhary) research group and [Growing Underground](http://growing-underground.com/).
 
 ## Summary
 
-**C**rop is a **R**esearch **O**bservations **P**latform designed and created by [Tomas Lazauskas](https://github.com/tomaslaz) and [Flora Roumpani](https://github.com/entopia) in collaboration with [Dr Ruchi Choudhary's](https://www.turing.ac.uk/people/researchers/ruchi-choudhary) research group and [Growing Underground](http://growing-underground.com/).
+The overall aim of the CROP project is to prototype a digital twin of the Growing Underground's underground farm.
+
+CROP is an on cloud-based application which utilizes the flexibility, customization and evolution that a cloud-native system provides, to better refine, simplify and improve the processes and architecture of the system with regards to our research needs.
 
 The overall aim of the CROP project is to prototype a digital twin of the [Growing Underground](http://growing-underground.com/)'s underground farm which:
 * collects heterogeneous IoT sensor data,
@@ -19,13 +19,22 @@ The overall aim of the CROP project is to prototype a digital twin of the [Growi
 <p align="center">
   <img src="media/webapp.png" width="600">
 </p>
+
+## Key Functionalities
+
+- **1** Users can access the CROP platform and database using multiple ways.
+- **2** CROP web application is the main interface for the digital twin. Users can explore collected heterogeneous IoT sensor data, analyse farm conditions at various points in time, use the developed 3D visualisation tools.
+- **3** CROP database is constantly updated from multiple streams of data: Zensie API, Stark energy usage platform, custom made (Raspberry Pi) sensors, and others.
+- **4** CROP machine learning services integrate automated prediction and calibration models into the platform.
+
 <br/>
+<p align="center">
+  <img src="media/infrastructure.png" width="600">
+</p>
 
 ## Disclaimer
 
 CROP is a **development** code and we recommend that you do not deploy this **prototype** application in a production setting. The implementation is only for demonstration purposes only and we make no warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the web app, backend infrastructure or the information.
-
-## Key Functionality
 
 ## Implementation
 
@@ -89,7 +98,7 @@ CROP is implemented using a well established software stack (given below) and ex
 
 #### Continuous Deployment
 
-We employ a continuous delivery toolchain with Docker on Travis CI which publishes Docker images automatically when PR is made to the *master* branch.
+We employ a continuous delivery toolchain with Docker on Travis CI which publishes Docker images automatically when PR is made to the *master* or *develop* branches.
 
 #### Manual
 
