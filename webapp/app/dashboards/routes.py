@@ -613,4 +613,30 @@ def route_template(template):
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
+    elif template == "ET_dashboard":
+        
+        energy_data = {}
+
+        # lights-on analysis
+        lights_results_df = lights_energy_use(dt_from, dt_to)
+
+        # ventilation analysis
+        ventilation_results_df = ventilation_energy_use(dt_from, dt_to)
+
+        # jsonify
+        energy_data["data"] = (
+            "["
+            + lights_results_df.to_json(orient="records")
+            + ","
+            + ventilation_results_df.to_json(orient="records")
+            + "]"
+        )
+
+        return render_template(
+            template + ".html",
+            energy_data=energy_data,
+            dt_from=dt_from.strftime("%B %d, %Y"),
+            dt_to=dt_to.strftime("%B %d, %Y"),
+        )
+
     return render_template(template + ".html")
