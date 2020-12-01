@@ -98,10 +98,10 @@
 <script>
     var data;
     var dates;
-    var expansion_data = JSON.parse('{{expansion_data.data | safe}}');
+    var energy_data = JSON.parse('{{energy_data.data | safe}}');
 
     // Lights-on plot
-    var lights_data = expansion_data[0];
+    var lights_data = energy_data[0];
     
     data = [];
     dates = [];
@@ -156,7 +156,7 @@
 
     // Ventilation plot
     data = [];
-    var ventilation_data = expansion_data[1];
+    var ventilation_data = energy_data[1];
 
     dates = [];
     var ach = [];

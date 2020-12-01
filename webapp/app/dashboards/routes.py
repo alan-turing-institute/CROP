@@ -641,7 +641,7 @@ def route_template(template):
         
     elif template == "expansion_dashboard":
         
-        expansion_data = {}
+        energy_data = {}
 
         # lights-on analysis
         lights_results_df = lights_energy_use(dt_from, dt_to)
@@ -650,7 +650,7 @@ def route_template(template):
         ventilation_results_df = ventilation_energy_use(dt_from, dt_to)
 
         # jsonify
-        expansion_data["data"] = (
+        energy_data["data"] = (
             "["
             + lights_results_df.to_json(orient="records")
             + ","
@@ -660,7 +660,7 @@ def route_template(template):
 
         return render_template(
             template + ".html",
-            expansion_data=expansion_data,
+            energy_data=energy_data,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
