@@ -185,9 +185,12 @@
             title: "ACH (air change per hour)",
             titlefont: {
                 size: 22,
-            }
+            },
+            autorange: false,
+            range:[0,4.5]
         }
     };
+
 
     Plotly.newPlot('plotVentilationDiv', data, layout);
 
