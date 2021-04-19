@@ -47,29 +47,36 @@ def read_table_data(client, ds_name, electricity_df):
 
         try:
             energy = float(values[-1])
-            timestamp = datetime.strptime(" ".join(values[:-1]), "%a %d/%m/%Y %H:%M")
-        except:
+            timestamp = datetime.strptime(
+                " ".join(values[:-1]), "%a %d/%m/%Y %H:%M"
+            )
+        except Exception:
             continue
 
         timestamps.append(timestamp)
         electricity.append(energy)
 
-    new_df = pd.DataFrame({"timestamp": timestamps, "electricity": electricity})
+    new_df = pd.DataFrame(
+        {"timestamp": timestamps, "electricity": electricity}
+    )
     new_df["data_source"] = ds_name
 
     return electricity_df.append(new_df)
 
 
-def scrape_data(hide=True):
+def scrape_data(hide=True, prev=1):
     """
     Scrapes the stark.co.uk website for energy consumption data.
     Arguments:
         hide: hide the scraping process from the user.
+        prev: the number of months of scrape data
     Returns:
         energy_df: pandas dataframe with the electricity usage data
     """
 
-    energy_df = pd.DataFrame(columns=["timestamp", "electricity", "data_source"])
+    energy_df = pd.DataFrame(
+        columns=["timestamp", "electricity", "data_source"]
+    )
 
     status = True
     error = ""
@@ -100,11 +107,17 @@ def scrape_data(hide=True):
             '//*[@class="iconBtn primary-color form-control closeBtn ml-lg-2"]'
         ).click()
         sleep(SLEEP_TIME)
-    except:
+    except Exception:
         sleep(SLEEP_TIME)
 
     # Picking start date
     client.find_element_by_id("StartDate").click()
+
+    for _ in range(prev - 1):
+        client.find_element_by_xpath(
+            '//*[@class="datepicker-days"]'
+        ).find_element_by_class_name("prev").click()
+
     client.find_element_by_xpath(
         '//*[@class="datepicker-days"]'
     ).find_element_by_xpath("//table/tbody/tr/td").click()
@@ -122,7 +135,9 @@ def scrape_data(hide=True):
     ).find_element_by_class_name("today").click()
     sleep(SLEEP_TIME)
 
-    end_date = client.find_element_by_id("EndDate").get_attribute("value").strip()
+    end_date = (
+        client.find_element_by_id("EndDate").get_attribute("value").strip()
+    )
 
     # Count number of days
     days_delta = (
@@ -170,9 +185,14 @@ def scrape_data(hide=True):
 
             ds_name = (element.text).strip()
 
-            if ds_name in avail_data_sources and not ds_name in visit_data_sources:
+            if (
+                ds_name in avail_data_sources
+                and ds_name not in visit_data_sources
+            ):
 
-                element.find_element_by_class_name("treeTooltipWrapper").click()
+                element.find_element_by_class_name(
+                    "treeTooltipWrapper"
+                ).click()
                 sleep(SLEEP_TIME)
                 visit_data_sources.append(ds_name)
 
@@ -218,7 +238,8 @@ def scrape_data(hide=True):
 
                 # close table window
                 close_button = client.find_elements_by_xpath(
-                    '//*[@id="reportTableModal"]/div/div/div[@class="cardTopBar"]'
+                    '//*[@id="reportTableModal"]'
+                    + '/div/div/div[@class="cardTopBar"]'
                     + '/div[@class="cardHeader"]/div[@class="buttonBar"]/'
                     + 'button[@class="iconBtn primary-color form-control"]'
                 )
@@ -267,11 +288,13 @@ def import_energy_data(electricity_df, conn_string, database):
 
         session_close(session)
 
-    except:
+    except Exception:
         status = False
         log = "Sensor type {} was not found.".format(CONST_STARK)
 
-        return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
+        return log_upload_event(
+            CONST_STARK, "stark.co.uk", status, log, conn_string
+        )
 
     # Check if data sources are in the database
     data_sources = electricity_df["data_source"].unique()
@@ -289,7 +312,7 @@ def import_energy_data(electricity_df, conn_string, database):
                 .first()
                 .id
             )
-        except:
+        except Exception:
 
             status = False
             log = "{} sensor with {} = '{}' was not found.".format(
@@ -328,7 +351,7 @@ def import_energy_data(electricity_df, conn_string, database):
                     dulp_cnt += 1
                 else:
                     found = False
-            except:
+            except Exception:
                 found = False
 
             if not found:
@@ -342,22 +365,27 @@ def import_energy_data(electricity_df, conn_string, database):
 
                 add_cnt += 1
 
-            session.query(SensorClass).\
-                filter(SensorClass.id == sensor_id).\
-                update({"last_updated": datetime.now()})
+            session.query(SensorClass).filter(
+                SensorClass.id == sensor_id
+            ).update({"last_updated": datetime.now()})
 
         session_close(session)
 
         status = True
-        log = "New: {} (uploaded); Duplicates: {} (ignored)".format(add_cnt, dulp_cnt)
+        log = "New: {} (uploaded); Duplicates: {} (ignored)".format(
+            add_cnt, dulp_cnt
+        )
 
-        return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
+        return log_upload_event(
+            CONST_STARK, "stark.co.uk", status, log, conn_string
+        )
 
-    except:
+    except Exception:
         session_close(session)
 
         status = False
         log = "Cannot insert new data to database"
 
-        return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
-
+        return log_upload_event(
+            CONST_STARK, "stark.co.uk", status, log, conn_string
+        )
