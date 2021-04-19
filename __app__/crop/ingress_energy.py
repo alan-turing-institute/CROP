@@ -132,7 +132,7 @@ def scrape_data(hide=True):
 
     # Picking data sources
 
-    client.find_element_by_id("btnOpenGroupTree").click()
+    client.find_element_by_id("btnOpenGroupTreeSearch").click()
     sleep(SLEEP_TIME)
     client.find_element_by_id("groupTree").find_element_by_class_name(
         "treeToggleWrapper"
@@ -157,7 +157,7 @@ def scrape_data(hide=True):
     for i_a in range(len(avail_data_sources)):
 
         if i_a > 0:
-            client.find_element_by_id("btnOpenGroupTree").click()
+            client.find_element_by_id("btnOpenGroupTreeSearch").click()
             sleep(SLEEP_TIME)
 
         tree_options = client.find_element_by_id("groupTree")
