@@ -9,8 +9,8 @@ Steps to use this model:
     - LatestData
     - Data_model
       - test_run_live
-    - RCodes
-
+      - test_model: SAVE THE CODES IN THE FOLDER HERE
+    
 2. Run the Python code Download_Data.py
   - Change the name of the folder where the csv files are saved such that it corresponds to your mother_folder/LatestData folder.
 
