@@ -17,7 +17,8 @@ Steps to use this model:
 3. Download the R codes in this  folder into your mother_folder
   - Install the packages with the code pasted at the bottom of this page (only needs to be run if you don't have the packages installed) or run may_installpackages.R
   - Change the mother_folder name so it represents the path on your computer in may_main.R
-  - Run *may_main.R*
+  - Run **may_main.R**
+  - The outputs should be three figures forecasting the temperature for the three sensors in the middle of the farm - saved in folder test_run_live
 
 
 
