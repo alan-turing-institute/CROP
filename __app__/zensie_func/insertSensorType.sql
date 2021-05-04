@@ -22,4 +22,14 @@ VALUES
  '2021-05-04 00:00:00.00'
 )
 -- add more rows here
-GO
+
+-- Insert rows into table 'TableName'
+INSERT INTO sensors
+( -- columns to insert data into
+ type_id, device_id, name
+)
+VALUES
+( -- first row: values for the columns in the list above
+ 11, 'i-b9bf5432-9436-11ea-b286-79ffe41fb933', 'i_weathers'
+)
+-- add more rows here

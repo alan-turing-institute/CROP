@@ -20,6 +20,7 @@ from __app__.crop.utils import query_result_to_array
 from __app__.crop.constants import (
     CONST_CROP_30MHZ_APIKEY,
     CONST_ZENSIE_TRH_SENSOR_TYPE,
+    CONST_ZENSIE_WEATHER_SENSOR_TYPE
 )
 from __app__.crop.ingress import log_upload_event
 from __app__.crop.sensors import get_zensie_trh_sensor_data
@@ -288,9 +289,158 @@ def import_zensie_data():
     dt_to = datetime.now()
     dt_from = dt_to + timedelta(days=-10)
     
-    import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
+    # import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
+    import_zensie_weather_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
+
+def import_zensie_weather_data(conn_string, database, dt_from, dt_to):
+    """
+    Uploads zensie weather data to the CROP database.
+
+    Arguments:
+        conn_string: connection string
+        database: the name of the database
+        dt_from: date range from
+        dt_to: date range to
+    Returns:
+        status, error
+    """
+
+    log = ""
+    sensor_type = CONST_ZENSIE_WEATHER_SENSOR_TYPE
+
+    success, log, engine = connect_db(conn_string, database)
+
+    if not success:
+        logging.info(log)
+        return success, log
+
+    # get the list of zensie trh sensors
+    try:
+        session = session_open(engine)
+        zensie_sensor_list = get_zensie_sensors_list(session, sensor_type)
+        session_close(session)
+
+        if zensie_sensor_list is None or len(zensie_sensor_list) == 0:
+            success = False
+            log = "No sensors with sensor type {} were found.".format(sensor_type)
+
+    except:
+        session_close(session)
+        success = False
+        log = "No sensors with sensor type {} were found.".format(sensor_type)
+
+    if not success:
+        logging.info(log)
+
+        return log_upload_event(
+            CONST_ZENSIE_WEATHER_SENSOR_TYPE, "Zensie Weather API", success, log, conn_string
+        )
+
+    for _, zensie_sensor in enumerate(zensie_sensor_list):
+
+        sensor_id = zensie_sensor["sensors_id"]
+        sensor_check_id = zensie_sensor["sensors_device_id"]
+
+        logging.info(
+            "sensor_id: {} | sensor_check_id: {}".format(sensor_id, sensor_check_id)
+        )
+        # if sensor_id > 0 and len(sensor_check_id) > 0:
+
+        #     logging.info(
+        #         "sensor_id: {} | dt_from: {}, dt_to: {}".format(
+        #             sensor_id, dt_from, dt_to
+        #         )
+        #     )
+
+        #     # Sensor data from Zensie
+        #     sensor_success, sensor_error, api_data_df = get_api_sensor_data(
+        #         CONST_CROP_30MHZ_APIKEY, sensor_check_id, dt_from, dt_to
+        #     )
+
+        #     logging.info(
+        #         "sensor_id: {} | sensor_success: {}, sensor_error: {}".format(
+        #             sensor_id, sensor_success, sensor_error
+        #         )
+        #     )
+
+        #     if sensor_success:
+        #         # Sensor data from database
+        #         session = session_open(engine)
+        #         db_data_df = get_zensie_trh_sensor_data(
+        #             session,
+        #             sensor_id,
+        #             dt_from + timedelta(hours=-1),
+        #             dt_to + timedelta(hours=1),
+        #         )
+        #         session_close(session)
+
+        #         if len(db_data_df) > 0:
+        #             # Filtering only new data
+        #             new_data_df = api_data_df[~api_data_df.index.isin(db_data_df.index)]
+
+        #             logging.info(
+        #                 "sensor_id: {} | len(db_data_df): {}".format(
+        #                     sensor_id, len(db_data_df)
+        #                 )
+        #             )
+        #         else:
+        #             new_data_df = api_data_df
+
+        #         logging.info(
+        #             "sensor_id: {} | len(new_data_df): {}".format(
+        #                 sensor_id, len(new_data_df)
+        #             )
+        #         )
+
+        #         if len(new_data_df) > 0:
+
+        #             start_time = time.time()
+
+        #             session = session_open(engine)
+        #             for idx, row in new_data_df.iterrows():
+
+        #                 data = ReadingsZensieTRHClass(
+        #                     sensor_id=sensor_id,
+        #                     timestamp=idx,
+        #                     temperature=row["Temperature"],
+        #                     humidity=row["Humidity"],
+        #                 )
+
+        #                 session.add(data)
+                    
+        #             session.query(SensorClass).\
+        #                 filter(SensorClass.id == sensor_id).\
+        #                 update({"last_updated": datetime.now()})
+
+        #             session_close(session)
+
+        #             elapsed_time = time.time() - start_time
+
+        #             logging.debug(
+        #                 "sensor_id: {} | elapsed time importing data: {} s.".format(
+        #                     sensor_id, elapsed_time
+        #                 )
+        #             )
+
+        #             upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
+        #             log_upload_event(
+        #                 CONST_ZENSIE_TRH_SENSOR_TYPE,
+        #                 "Zensie API; Sensor ID {}".format(sensor_id),
+        #                 sensor_success,
+        #                 upload_log,
+        #                 conn_string,
+        #             )
+
+        #     else:
+        #         log_upload_event(
+        #             CONST_ZENSIE_TRH_SENSOR_TYPE,
+        #             "Zensie API; Sensor ID {}".format(sensor_id),
+        #             sensor_success,
+        #             sensor_error,
+        #             conn_string,
+        #         )
+    return True, None
 
 
 if __name__ == "__main__":
-
     import_zensie_data()
