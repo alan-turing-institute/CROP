@@ -81,13 +81,9 @@ runbsts_live <- function(starttm, testtm, tobj,sensor_name){
   save(dynamic_fit, file=filename)
   
   ## Static model --
-  print("Training the Static models")
-  
-  predarima2 <-try( Arima(tsel$Sensor_temp[trainsel], xreg =  tsel$EnergyCP[trainsel],
-                          order = c(5,1,2),
-                          seasonal = list(order=c(1,0,0),period=24),method="CSS"))
+  print("Training the Static model")
 
-  predarima3 <- try(Arima(tsel$Sensor_temp[trainsel], xreg =  tsel$Lights[trainsel],
+    predarima3 <- try(Arima(tsel$Sensor_temp[trainsel], xreg =  tsel$Lights[trainsel],
                           order = c(4,1,2),
                           seasonal = list(order=c(1,1,0),period=24),method = "CSS"))
 
@@ -97,12 +93,10 @@ runbsts_live <- function(starttm, testtm, tobj,sensor_name){
   newcovtyp <- constructCovTyp(tsel$FarmTime[testsel])
   predtyp <- predict(dynamic_fit, burn=200, newdata=newcovtyp[,-c(26)],48) #burn 200
   
-  pred_512 <- forecast(predarima2,xreg= tsel$EnergyCP[testsel],h=48)
-  
   pred_412_L <- forecast(predarima3,xreg= tsel$Lights[testsel],h=48)
   
   
-save_pred <- list(predtyp, pred_512,pred_412_L)
+save_pred <- list(predtyp, pred_412_L)
 return(save_pred)
 
 }

@@ -55,7 +55,7 @@ if (hour(max(t_ee$FarmTimestamp))>16){
   forecast_timestamp <- as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 16,":00:00"), tz="GMT")
 } else if  (hour(max(t_ee$FarmTimestamp))<=4) {
   forecast_timestamp <- as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))-1," ", 16,":00:00"), tz="GMT")
-
+  
 }else  {
   forecast_timestamp <- as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 4,":00:00"), tz="GMT")
   
@@ -64,26 +64,20 @@ if (hour(max(t_ee$FarmTimestamp))>16){
 # Load the model functions ----------------
 source(paste0(daughterfolder,"/may_functions.R"), echo=FALSE)
 
-list_f_timestamps <- seq(from=  forecast_timestamp-24*36*3600,
-                         to= forecast_timestamp-24*3600,
-                         by="6 days")
+
+forecast_timestamp <- list_f_timestamps[ff]
+## Create the training datasets for the forecast of the three sensors
+
+# select one year
+tobj0<- t_ee[t_ee$FarmTimestamp>=(forecast_timestamp-365*24*3600),]
+tobj0$FarmTime <- tobj0$FarmTimestamp
+tobj0$DateFarm <- as.Date(tobj0$FarmTimestamp)
+
+#tobj0$EnergyCP <- ifelse(is.na(tobj0$EnergyCP),0,tobj0$EnergyCP*2)
+tobj0$EnergyCP <- tobj0$EnergyCP*2
 
 
-for (ff in 1:length(list_f_timestamps)){
-  
-  forecast_timestamp <- list_f_timestamps[ff]
-  ## Create the training datasets for the forecast of the three sensors
-  
-  # select one year
-  tobj0<- t_ee[t_ee$FarmTimestamp>=(forecast_timestamp-365*24*3600),]
-  tobj0$FarmTime <- tobj0$FarmTimestamp
-  tobj0$DateFarm <- as.Date(tobj0$FarmTimestamp)
-  
-  #tobj0$EnergyCP <- ifelse(is.na(tobj0$EnergyCP),0,tobj0$EnergyCP*2)
-  tobj0$EnergyCP <- tobj0$EnergyCP*2
-  
-  
-  
+
 
 
 # Forecasting the top bench:
@@ -140,19 +134,19 @@ tobj_list <- list(tobj1,tobj2,tobj3)
 list_forecasts <- vector("list", length(tobj_list))
 names(list_forecasts) <- sensor_loc
 for(mm in 1:length(sensor_loc)){
-
-    sensor_name <-sensor_loc[mm]
-    print(sensor_name)
-    testtm <- forecast_timestamp
-    print(testtm)
-    starttm  <-forecast_timestamp- 200*1*24*3600
-    
-    tobj_mm <- tobj_list[[mm]]
-
-    # runs model and outputs list containing three forecasts, probabilities and warning message
-    list_forecasts[[mm]] <- runbsts_live(starttm, testtm, tobj_mm,sensor_name)
- 
-    
+  
+  sensor_name <-sensor_loc[mm]
+  print(sensor_name)
+  testtm <- forecast_timestamp
+  print(testtm)
+  starttm  <-forecast_timestamp- 200*1*24*3600
+  
+  tobj_mm <- tobj_list[[mm]]
+  
+  # runs model and outputs list containing three forecasts, probabilities and warning message
+  list_forecasts[[mm]] <- runbsts_live(starttm, testtm, tobj_mm,sensor_name)
+  
+  
 }
 
 setwd(paste0(liverun_folder,"/Data"))
@@ -175,12 +169,12 @@ for(mm in 1:length(sensor_loc)){
   tobj_mm <- tobj_list[[mm]]
   
   # plot two days earlier
-    tobj_mm <- tobj_mm[tobj_mm$FarmTime>(forecast_timestamp- 2*1*24*3600),]
+  tobj_mm <- tobj_mm[tobj_mm$FarmTime>(forecast_timestamp- 2*1*24*3600),]
   
   f_for <- data.frame(
     FarmTime = seq(from=(forecast_timestamp+1*3600), to= (forecast_timestamp+48*3600), by="1 hour"),
     Dyn_For =  list_forecasts[[mm]][[1]]$mean,
-  Stat_lights = list_forecasts[[mm]][[2]]$mean)
+    Stat_lights = list_forecasts[[mm]][[2]]$mean)
   
   f_for <- melt(f_for, id.vars = "FarmTime",value.name = "Sensor_temp",variable.name = "Model") 
   
@@ -188,10 +182,10 @@ for(mm in 1:length(sensor_loc)){
   
   # data frame to plot:
   tp <- rbind(tobj_mm[, names(f_for)],f_for)
-
+  
   # extract probility stats for dynamic model
   stats_save <-round(sim_stats_bsts(list_forecasts[[mm]][[1]]),2)
-# print warning message based on stats_save
+  # print warning message based on stats_save
   return_message<- print_warning_message(stats_save)
   
   ggplot(tp, aes(FarmTime, Sensor_temp, colour=Model))+
@@ -204,4 +198,4 @@ for(mm in 1:length(sensor_loc)){
 }
 
 
-}
+
