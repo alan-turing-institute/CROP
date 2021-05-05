@@ -96,11 +96,9 @@ def import_zensie_weather_data(conn_string:str, database:str, dt_from:datetime, 
     for _, zensie_sensor in enumerate(zensie_sensor_list):
       sensor_id = zensie_sensor["sensors_id"]
       sensor_check_id = zensie_sensor["sensors_device_id"]
-
       logging.info(
         "sensor_id: {} | sensor_check_id: {}".format(sensor_id, sensor_check_id)
       )
-
       if sensor_id > 0 and len(sensor_check_id) > 0:
         logging.info("\nUpdate: Getting data for sensor_id: {} | dt_from: {}, dt_to: {}"
           .format(sensor_id, dt_from, dt_to)
@@ -111,87 +109,80 @@ def import_zensie_weather_data(conn_string:str, database:str, dt_from:datetime, 
           CONST_CROP_30MHZ_APIKEY, sensor_check_id, dt_from, dt_to
         )
 
-        logging.info(
-            "\nUpdate: sensor_id: {} | sensor_success: {}, sensor_error: {}".format(
-                sensor_id, sensor_success, sensor_error
-            )
-        )
+        logging.info("\nUpdate: sensor_id: {} | sensor_success: {}, sensor_error: {}"
+          .format(sensor_id, sensor_success, sensor_error))
 
         if sensor_success:
-            # Sensor data from database
-            session = session_open(engine)
-            db_data_df = get_zensie_weather_sensor_data(
-              session,
-              sensor_id,
-              dt_from + timedelta(hours=-1),
-              dt_to + timedelta(hours=1),
+          # Sensor data from database
+          session = session_open(engine)
+          db_data_df = get_zensie_weather_sensor_data(
+            session,
+            sensor_id,
+            dt_from + timedelta(hours=-1),
+            dt_to + timedelta(hours=1),
+          )
+          session_close(session)
+
+          if len(db_data_df) > 0:
+            # Filtering only new data
+            new_data_df = api_data_df[~api_data_df.index.isin(db_data_df.index)]
+            logging.info("sensor_id: {} | len(db_data_df): {}"
+              .format(sensor_id, len(db_data_df))
             )
+          else:
+            new_data_df = api_data_df
+
+          logging.info("sensor_id: {} | len(new_data_df): {}\n\n"
+            .format(sensor_id, len(new_data_df))
+          )
+
+          if len(new_data_df) > 0:
+            # this is the current time in seconds since epoch
+            start_time:float = time.time()
+            session = session_open(engine)
+            for idx, row in new_data_df.iterrows():
+              data = ReadingsZensieWeatherClass(
+                  sensor_id=sensor_id,
+                  timestamp=idx,
+                  temperature=row["temperature"],
+                  rain_probability=row["rain_probability"],
+                  rain=row["rain"],
+                  relative_humidity=row["relative_humidity"],
+                  wind_speed=row["wind_speed"],
+                  wind_direction=row["wind_direction"],
+                  air_pressure=row["air_pressure"],
+                  radiation=row["radiation"])
+              session.add(data)
+            
+            session.query(SensorClass)\
+            .filter(SensorClass.id == sensor_id)\
+            .update({"last_updated": datetime.now()})
             session_close(session)
 
-            if len(db_data_df) > 0:
-              # Filtering only new data
-              new_data_df = api_data_df[~api_data_df.index.isin(db_data_df.index)]
-              logging.info("sensor_id: {} | len(db_data_df): {}"
-                .format(sensor_id, len(db_data_df))
-              )
-            else:
-              new_data_df = api_data_df
+            elapsed_time = time.time() - start_time
 
-            logging.info(
-                "sensor_id: {} | len(new_data_df): {}".format(
-                    sensor_id, len(new_data_df)
+            logging.debug(
+                "sensor_id: {} | elapsed time importing data: {} s.".format(
+                    sensor_id, elapsed_time
                 )
             )
 
-            print (new_data_df)
-
-        #         if len(new_data_df) > 0:
-
-        #             start_time = time.time()
-
-        #             session = session_open(engine)
-        #             for idx, row in new_data_df.iterrows():
-
-        #                 data = ReadingsZensieTRHClass(
-        #                     sensor_id=sensor_id,
-        #                     timestamp=idx,
-        #                     temperature=row["Temperature"],
-        #                     humidity=row["Humidity"],
-        #                 )
-
-        #                 session.add(data)
-                    
-        #             session.query(SensorClass).\
-        #                 filter(SensorClass.id == sensor_id).\
-        #                 update({"last_updated": datetime.now()})
-
-        #             session_close(session)
-
-        #             elapsed_time = time.time() - start_time
-
-        #             logging.debug(
-        #                 "sensor_id: {} | elapsed time importing data: {} s.".format(
-        #                     sensor_id, elapsed_time
-        #                 )
-        #             )
-
-        #             upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
-        #             log_upload_event(
-        #                 CONST_ZENSIE_TRH_SENSOR_TYPE,
-        #                 "Zensie API; Sensor ID {}".format(sensor_id),
-        #                 sensor_success,
-        #                 upload_log,
-        #                 conn_string,
-        #             )
-
-        #     else:
-        #         log_upload_event(
-        #             CONST_ZENSIE_TRH_SENSOR_TYPE,
-        #             "Zensie API; Sensor ID {}".format(sensor_id),
-        #             sensor_success,
-        #             sensor_error,
-        #             conn_string,
-        #         )
+            upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
+            log_upload_event(
+                CONST_ZENSIE_WEATHER_SENSOR_TYPE,
+                "Zensie Weather API; Sensor ID {}".format(sensor_id),
+                sensor_success,
+                upload_log,
+                conn_string)
+        
+        else:
+          log_upload_event(
+              CONST_ZENSIE_WEATHER_SENSOR_TYPE,
+              "Zensie Weather API; Sensor ID {}".format(sensor_id),
+              sensor_success,
+              sensor_error,
+              conn_string,
+          )
     return True, None
 
 def get_zensie_sensors_list(session, sensor_type)->list:
@@ -233,7 +224,7 @@ def get_api_weather_data(api_key, check_id, dt_from, dt_to):
     """
 
     success:bool = True
-    error:str = ""
+    error:str = "None"
     data_df:pd.Dataframe.dtypes = None
     log:str = ""
 

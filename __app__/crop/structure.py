@@ -193,7 +193,7 @@ class ReadingsZensieWeatherClass(BASE):
     wind_direction = Column(Float, nullable=True)
     air_pressure = Column(Float, nullable=True)
     radiation = Column(Float, nullable=True)
-    radiation = Column(Float, nullable=True)
+
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
