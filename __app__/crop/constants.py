@@ -184,6 +184,7 @@ SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
 
 ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
+ZENSIE_WEATHER_TABLE_NAME = "iweather"
 
 # SQL Column names
 ID_COL_NAME = "id"
