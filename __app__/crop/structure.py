@@ -199,7 +199,7 @@ class ReadingsZensieWeatherClass(BASE):
     time_updated = Column(DateTime(), onupdate=func.now())
     
     # arguments
-    __table_args__ = (UniqueConstraint("sensor_id", "timestanp"),)
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 class ReadingsAdvanticsysClass(BASE):
     """
