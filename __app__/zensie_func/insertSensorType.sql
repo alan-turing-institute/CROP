@@ -40,3 +40,7 @@ ADD COLUMN sensor_id INTEGER NOT NULL DEFAULT 47,
 RENAME COLUMN time_collected to timestamp,
 ADD time_created TIMESTAMP NULL,
 ADD time_updated TIMESTAMP NULL;  
+
+SELECT * FROM iweather 
+ORDER BY timestamp DESC
+LIMIT 3
