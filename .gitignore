@@ -8,6 +8,7 @@ CROP.pyproj.user
 # SECRETS
 /.secrets/crop.sh
 /.secrets/local.sh
+/.secrets/template_windows_crop.bat
 
 # USERS
 /utils/upload_user_data/users.csv
