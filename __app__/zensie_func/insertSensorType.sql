@@ -33,3 +33,10 @@ VALUES
  11, 'i-b9bf5432-9436-11ea-b286-79ffe41fb933', 'i_weathers'
 )
 -- add more rows here
+
+
+ALTER TABLE iweather
+ADD COLUMN sensor_id INTEGER NOT NULL DEFAULT 47,
+RENAME COLUMN time_collected to timestamp,
+ADD time_created TIMESTAMP NULL,
+ADD time_updated TIMESTAMP NULL;  
