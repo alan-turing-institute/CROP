@@ -91,9 +91,9 @@ def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
         ReadingsZensieWeatherClass.timestamp,
     ).filter(
         and_(
-            ReadingsZensieWeatherClass.sensor_id == sensor_id,
-            ReadingsZensieWeatherClass.timestamp >= date_from,
-            ReadingsZensieWeatherClass.timestamp <= date_to,
+          ReadingsZensieWeatherClass.sensor_id == sensor_id,
+          ReadingsZensieWeatherClass.timestamp >= date_from,
+          ReadingsZensieWeatherClass.timestamp <= date_to,
         )
     )
 
