@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "entryPoint": "weather_import",
+  "bindings": [
+    {
+        "name": "mytimer",
+        "type": "timerTrigger",
+        "direction": "in",
+        "schedule": "1 */1 * * *"
+    }
+  ]
+}
