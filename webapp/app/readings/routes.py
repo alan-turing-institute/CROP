@@ -19,6 +19,7 @@ from __app__.crop.structure import (
     ReadingsEnergyClass,
     TypeClass,
     ReadingsZensieTRHClass,
+    CropGrowthClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
 
@@ -34,7 +35,7 @@ def route_template(template):
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-        if template in ["advanticsys", "energy", "zensie_trh"]:
+        if template in ["advanticsys", "energy", "zensie_trh", "cropgrowth"]:
             if template == "advanticsys":
 
                 query = (
@@ -102,6 +103,25 @@ def route_template(template):
                         )
                     )
                     .order_by(desc(ReadingsZensieTRHClass.timestamp))
+                    .limit(CONST_MAX_RECORDS)
+                )
+
+            elif template == "cropgrowth":
+                query = (
+                    db.session.query(
+                        CropGrowthClass.crop,
+                        CropGrowthClass.harvest_date,
+                        CropGrowthClass.time_created,
+                        CropGrowthClass.time_updated,
+                    )
+                    .filter(
+                        and_(
+                            # ReadingsZensieTRHClass.sensor_id == SensorClass.id,
+                            CropGrowthClass.timestamp >= dt_from,
+                            CropGrowthClass.timestamp <= dt_to,
+                        )
+                    )
+                    .order_by(desc(CropGrowthClass.harvest_date))
                     .limit(CONST_MAX_RECORDS)
                 )
 
