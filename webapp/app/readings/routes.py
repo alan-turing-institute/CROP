@@ -19,9 +19,10 @@ from __app__.crop.structure import (
     ReadingsEnergyClass,
     TypeClass,
     ReadingsZensieTRHClass,
-    CropGrowthClass,
+    DailyHarvestClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
+import sys
 
 
 @blueprint.route("/<template>", methods=["GET"])
@@ -35,7 +36,7 @@ def route_template(template):
 
         dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-        if template in ["advanticsys", "energy", "zensie_trh", "cropgrowth"]:
+        if template in ["advanticsys", "energy", "zensie_trh", "dailyharvest"]:
             if template == "advanticsys":
 
                 query = (
@@ -106,26 +107,34 @@ def route_template(template):
                     .limit(CONST_MAX_RECORDS)
                 )
 
-            elif template == "cropgrowth":
+            elif template == "dailyharvest":
                 query = (
                     db.session.query(
-                        CropGrowthClass.crop,
-                        CropGrowthClass.harvest_date,
-                        CropGrowthClass.time_created,
-                        CropGrowthClass.time_updated,
+                        DailyHarvestClass.crop,
+                        DailyHarvestClass.propagation_date,
+                        DailyHarvestClass.location_id,
+                        DailyHarvestClass.stack,
+                        DailyHarvestClass.total_yield_weight,
+                        DailyHarvestClass.disease_trays,
+                        DailyHarvestClass.defect_trays,
+                        DailyHarvestClass.notes,
+                        DailyHarvestClass.user,
+                        DailyHarvestClass.time_created,
+                        # DailyHarvestClass.time_updated,
                     )
-                    .filter(
-                        and_(
-                            # ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-                            CropGrowthClass.timestamp >= dt_from,
-                            CropGrowthClass.timestamp <= dt_to,
-                        )
-                    )
-                    .order_by(desc(CropGrowthClass.harvest_date))
+                    # .filter(
+                    #    and_(
+                    #        # ReadingsZensieTRHClass.sensor_id == SensorClass.id,
+                    #        DailyHarvestClass.time_created >= dt_from,
+                    #        DailyHarvestClass.time_created <= dt_to,
+                    #    )
+                    # )
+                    # .order_by(desc(DailyHarvestClass.time_created))
                     .limit(CONST_MAX_RECORDS)
                 )
 
             readings = db.session.execute(query).fetchall()
+            # print(readings, file=sys.stderr)
 
             results_arr = query_result_to_array(readings, date_iso=False)
 
