@@ -21,6 +21,7 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.sql.expression import false
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -28,6 +29,7 @@ from flask_login import UserMixin
 from bcrypt import gensalt, hashpw
 
 from __app__.crop.constants import (
+    DAILY_HARVEST_TABLE_NAME,
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
@@ -41,7 +43,7 @@ from __app__.crop.constants import (
     SENSOR_LOCATION_TABLE_NAME,
     ID_COL_NAME,
     SENSOR_UPLOAD_LOG_TABLE_NAME,
-    ZENSIE_TRH_TABLE_NAME
+    ZENSIE_TRH_TABLE_NAME,
 )
 
 SQLA = SQLAlchemy()
@@ -310,6 +312,35 @@ class ReadingsEnergyClass(BASE):
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 
+class DailyHarvestClass(BASE):
+    """
+    Class for creating the harvest table
+    (from manual input)
+    """
+
+    __tablename__ = DAILY_HARVEST_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    crop = Column(String, nullable=False)
+    propagation_date = Column(DateTime, nullable=True)
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    stack = Column(Integer, nullable=True)
+    total_yield_weight = Column(Float, nullable=False)
+    disease_trays = Column(Integer, nullable=True)
+    defect_trays = Column(Integer, nullable=True)
+    notes = Column(String, nullable=True)
+    user = Column(String, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+
 class CropGrowthClass(BASE):
     """
     Class for reading the crop data
@@ -361,8 +392,7 @@ class CropGrowthClass(BASE):
 
 class InfrastructureClass(BASE):
     """
-    Class for reading the crop data
-    (from google sheets)
+    Class for the tank data
     """
 
     __tablename__ = INFRASTRUCTURE_TABLE_NAME

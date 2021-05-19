@@ -149,11 +149,7 @@ SQL_SSLMODE = "require"
 SQL_TEST_DBNAME = "test_db"
 
 SQL_CONNECTION_STRING = make_conn_string(
-    SQL_ENGINE,
-    SQL_USER,
-    SQL_PASSWORD,
-    SQL_HOST,
-    SQL_PORT,
+    SQL_ENGINE, SQL_USER, SQL_PASSWORD, SQL_HOST, SQL_PORT,
 )
 
 
@@ -178,6 +174,7 @@ AIR_VELOCITY_READINGS_TABLE_NAME = "air_velocity_data"
 ENVIRONMENTAL_READINGS_TABLE_NAME = "environmental_data"
 ENERGY_READINGS_TABLE_NAME = "energy_data"
 CROP_GROWTH_TABLE_NAME = "crop_growth_data"
+DAILY_HARVEST_TABLE_NAME = "daily_harvest_data"
 INFRASTRUCTURE_TABLE_NAME = "infrastructure_data"
 SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
