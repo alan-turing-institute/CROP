@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Crop Growth Data {% endblock title %}
+{% block title %} Daily Harvest Data {% endblock title %}
 
 {% block stylesheets %}
 {{ super() }}
@@ -28,7 +28,7 @@
 
             <div class="row x_title">
               <div class="col-md-6">
-                <h3>Crop Growth Data <small>(showing max 500 records)</small></h3>
+                <h3>Daily Harvest Data <small>(showing max 500 records)</small></h3>
               </div>
 
               <div class="col-md-6">
@@ -45,8 +45,15 @@
               cellspacing="0" width="100%">
               <thead>
                 <tr>
-                  <th>crop</th>
-                  <th>Harvest Date</th>
+                  <th>Crop</th>
+                  <th>Propagation Date</th>
+                  <th>Location ID</th>
+                  <th>Stack</th>
+                  <th>Total Yield Weight</th>
+                  <th>Disease Trays</th>
+                  <th>Defect Trays</th>
+                  <th>Notes</th>
+                  <th>User</th>
                   <th>Upload Time</th>
                 </tr>
               </thead>
@@ -56,9 +63,16 @@
                 for t_reading in readings:
                 %}
                 <tr>
-                  <td>{{ t_reading.crop_growth_data_crop }}</td>
-                  <td>{{ t_reading.crop_growth_data_harvest_date }}</td>
-                  <td>{{ t_reading.crop_growth_data_time_created }}</td>
+                  <td>{{ t_reading.daily_harvest_data_crop }}</td>
+                  <td>{{ t_reading.daily_harvest_data_propagation_date }}</td>
+                  <td>{{ t_reading.daily_harvest_data_location_id}}</td>
+                  <td>{{ t_reading.daily_harvest_data_stack}}</td>
+                  <td>{{ t_reading.daily_harvest_data_total_yield_weight}}</td>
+                  <td>{{ t_reading.daily_harvest_data_disease_trays}}</td>
+                  <td>{{ t_reading.daily_harvest_data_defect_trays}}</td>
+                  <td>{{ t_reading.daily_harvest_data_notes}}</td>
+                  <td>{{ t_reading.daily_harvest_data_user}}</td>
+                  <td>{{ t_reading.daily_harvest_data_time_created }}</td>
                 </tr>
                 {%
                 endfor
@@ -73,6 +87,7 @@
   </div>
 </div>
 {% endblock content %}
+
 
 {% block javascripts %}
 {{ super() }}
@@ -114,7 +129,7 @@
   });
 
   $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
-    var request_url = "/readings/zensie_trh?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+    var request_url = "/readings/dailyharvest?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
 
     location.replace(request_url)
   });
