@@ -44,6 +44,7 @@ from __app__.crop.constants import (
     ID_COL_NAME,
     SENSOR_UPLOAD_LOG_TABLE_NAME,
     ZENSIE_TRH_TABLE_NAME,
+    WARNINGS_TABLE_NAME,
 )
 
 SQLA = SQLAlchemy()
@@ -503,6 +504,41 @@ class UserClass(BASE, UserMixin):
         """
 
         return {"id": self.id, "username": self.username, "email": self.email}
+
+
+class DataWarningsClass(BASE):
+    """
+    Class for storing log information for warnings from sensors.
+    """
+
+    __tablename__ = WARNINGS_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    type_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TYPE_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    priority = Column(String(10), nullable=False)
+    log = Column(String(100), nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # constructor
+    def __init__(self, type_id, location_id, filename, status, log):
+        self.type_id = type_id
+        self.location_id = location_id
+        self.filename = filename
+        self.status = status
+        self.log = log
 
 
 class DataUploadLogClass(BASE):
