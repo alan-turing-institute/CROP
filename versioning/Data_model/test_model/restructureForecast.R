@@ -6,6 +6,7 @@ library(dplyr)
 #library("reshape2")
 library(forecast)
 library(mlflow)
+library(carrier)
 
 SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
@@ -103,9 +104,25 @@ trainArima = function(available.Data, trainIndex) {
 
 forecastArima = function(available.Data, forecastIndex, arima.Model) {
   print("Training the Static model")
-  results = forecast(arima.Model,xreg = available.Data$Lights[forecastIndex], h=48)
+  results = forecast::forecast(arima.Model,xreg = available.Data$Lights[forecastIndex], h=48)
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
+
+with(mlflow::mlflow_start_run(), {
+  model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+  results = forecastArima(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model)
+  
+  message("ARIMA (timestamp)=", forecastDataStart)
+  message("RMSE: ", 2)
+  
+  mlflow_log_param("Historical Data", historicalDataStart)
+  mlflow_log_param("Historical Days", daysOfHistoryForTraining)
+  mlflow_log_param("Forecast Starts", forecastDataStart)
+  mlflow_log_metric("RMSE", 2)
+  
+  mlflow_log_model(model, "model")
+})
+
 
 trainBSTS = function(available.Data, trainIndex, forecastIndex) {
   fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
@@ -122,25 +139,6 @@ forecastBSTS = function(available.Data, trainIndex, forecastIndex) {
   
 }
 
-bsts.Model = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-bsts.Results = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, arima.Model)
-
-RUN_WITH_MLFLOW = FALSE
-
-if (RUN_WITH_MLFLOW) {
-  with(mlflow::mlflow_start_run(), {
-    arima.Model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-    arima.Results = forecastArima(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, arima.Model)
-    
-    message("ARIMA (timestamp)=", forecastDataStart)
-    message("RMSE: ", 2)
-    
-    mlflow_log_param("Historical Data", historicalDataStart)
-    mlflow_log_param("Historical Days", daysOfHistoryForTraining)
-    mlflow_log_param("Forecast Starts", forecastDataStart)
-    mlflow_log_metric("RMSE", 2)
-    
-    #mlflow_log_model(arima.Model, "ARIMA Model")
-  })
-}
+#bsts.Model = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+#bsts.Results = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, arima.Model)
 
