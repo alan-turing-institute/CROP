@@ -108,9 +108,19 @@ forecastArima = function(available.Data, forecastIndex, arima.Model) {
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
+#model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+#forecaster = crate (function (model, input, hour) { 
+#  forecast::forecast(model, xreg=input, h = hour)
+#})
+#forecast = forecaster(model, split.Data$tsel$Lights[split.Data$testSelIndex], 48)
+
 with(mlflow::mlflow_start_run(), {
   model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-  results = forecastArima(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model)
+  forecaster = crate (function (model, input, hour) { 
+    forecast::forecast(model, xreg=input, h = hour)
+  })
+  forecast = forecaster(model, split.Data$tsel$Lights[split.Data$testSelIndex], 48)
+  #results = forecastArima(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model)
   
   message("ARIMA (timestamp)=", forecastDataStart)
   message("RMSE: ", 2)
@@ -120,7 +130,7 @@ with(mlflow::mlflow_start_run(), {
   mlflow_log_param("Forecast Starts", forecastDataStart)
   mlflow_log_metric("RMSE", 2)
   
-  mlflow_log_model(model, "model")
+  mlflow_log_model(forecaster, "model")
 })
 
 
