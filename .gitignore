@@ -20,7 +20,8 @@ CROP.pyproj.user
 /data/ 
 /versioning/LatestData
 *.RDS
-/versioning/Data_model/test_model/mlruns
+/versioning/Data_model/test_model/arima/mlruns/
+/versioning/Data_model/test_model/mlruns/
 
 # PyTest
 __pycache__

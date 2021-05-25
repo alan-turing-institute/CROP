@@ -1,9 +1,5 @@
-#library("plyr")
-#library("ggplot2")
 library(lubridate)
-library(bsts)
 library(dplyr)
-#library("reshape2")
 library(forecast)
 library(mlflow)
 library(carrier)
@@ -16,7 +12,7 @@ SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
 source(paste0(".","/may_live_functions.R"), echo=FALSE)
 
 loadData = function(dataObjectPath) {
-  readRDS("../../LatestData/may_t_ee.RDS") 
+  readRDS(dataObjectPath) 
 }
 
 standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
@@ -68,7 +64,7 @@ splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) 
   list(tsel=tsel, trainSelIndex=trainsel, testSelIndex=testsel)
 }
 
-cleanedDataPath = "../../LatestData/may_t_ee.RDS"
+cleanedDataPath = "../../../LatestData/may_t_ee.RDS"
 t_ee = loadData(cleanedDataPath) 
 latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
 forecast_timestamp = getForecastTimestamp(latest_timestamp)
@@ -108,22 +104,30 @@ forecastArima = function(available.Data, forecastIndex, arima.Model) {
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
-#model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-#forecaster = crate (function (model, input, hour) { 
-#  forecast::forecast(model, xreg=input, h = hour)
-#})
-#forecast = forecaster(model, split.Data$tsel$Lights[split.Data$testSelIndex], 48)
-
-with(mlflow::mlflow_start_run(), {
-  model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-  forecaster = crate (function (model, input, hour) { 
-    forecast::forecast(model, xreg=input, h = hour)
+with(mlflow_start_run(), {
+  #model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+  #forecaster = crate (function (input, hour) { 
+  #  forecast::forecast(model, xreg=input, h = hour)
+  #})
+  #forecast = forecaster(split.Data$tsel$Lights[split.Data$testSelIndex], 48)
+  
+  forecaster = crate(function (available.Data, trainIndex, forecastIndex) {
+    p = 4 # AR order
+    d = 1 # degree of difference
+    q = 2 # MA order
+    MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
+    forecastDataStart
+    #model = forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
+    #                         order = c(p,d,q),
+    #                         seasonal = list(order=c(1,1,0),period=24),method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES)
+    #results = forecast::forecast(model,xreg = available.Data$Lights[forecastIndex], h=48)
+    #list(upper=results$upper, lower=results$lower, mean=results$mean)
   })
-  forecast = forecaster(model, split.Data$tsel$Lights[split.Data$testSelIndex], 48)
-  #results = forecastArima(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model)
+  
+  forecast = forecaster(split.Data$tsel, split.Data$trainSelIndex, split.Data$testSelIndex)
   
   message("ARIMA (timestamp)=", forecastDataStart)
-  message("RMSE: ", 2)
+  message("TestParam=", mlflow_param("testInput", "NA", "string"))
   
   mlflow_log_param("Historical Data", historicalDataStart)
   mlflow_log_param("Historical Days", daysOfHistoryForTraining)
@@ -134,21 +138,7 @@ with(mlflow::mlflow_start_run(), {
 })
 
 
-trainBSTS = function(available.Data, trainIndex, forecastIndex) {
-  fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
-  mc = list()
-  mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
-  mc = bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
-  #this centres the mean towards the lower part of the day so the model is easier to explain
-  dynamic_fit = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=1000) #iter 1000
-}
 
-forecastBSTS = function(available.Data, trainIndex, forecastIndex) {
-  newcovtyp <- constructCovTyp(tsel$FarmTime[testsel])
-  predtyp <- predict(dynamic_fit, burn=200, newdata=newcovtyp[,-c(26)],48) #burn 200
-  
-}
 
-#bsts.Model = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-#bsts.Results = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, arima.Model)
+
 
