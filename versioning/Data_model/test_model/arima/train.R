@@ -3,6 +3,7 @@ library(dplyr)
 library(forecast)
 library(mlflow)
 library(carrier)
+library(rjson)
 
 SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
@@ -53,7 +54,7 @@ standardiseObservations = function(observations, sensor =? string) {
 }
 
 splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) {
-  daysIntoFuture = 2
+  daysIntoFuture = 1
   tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(daysIntoFuture*SECONDS.PERDAY)))
   
   # indices for training
@@ -100,34 +101,28 @@ trainArima = function(available.Data, trainIndex) {
 
 forecastArima = function(available.Data, forecastIndex, arima.Model) {
   print("Training the Static model")
-  results = forecast::forecast(arima.Model,xreg = available.Data$Lights[forecastIndex], h=48)
+  results = forecast::forecast(model=arima.Model,xreg = available.Data$Lights[forecastIndex], h=48)
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
 with(mlflow_start_run(), {
-  #model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-  #forecaster = crate (function (input, hour) { 
-  #  forecast::forecast(model, xreg=input, h = hour)
-  #})
-  #forecast = forecaster(split.Data$tsel$Lights[split.Data$testSelIndex], 48)
+  horizon = mlflow_param("horizon", 12, "numeric")
+  model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+  inputJSON = toJSON(structure(list(value=split.Data$tsel$Lights[split.Data$testSelIndex])))
   
-  forecaster = crate(function (available.Data, trainIndex, forecastIndex) {
-    p = 4 # AR order
-    d = 1 # degree of difference
-    q = 2 # MA order
-    MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
-    forecastDataStart
-    #model = forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
-    #                         order = c(p,d,q),
-    #                         seasonal = list(order=c(1,1,0),period=24),method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES)
-    #results = forecast::forecast(model,xreg = available.Data$Lights[forecastIndex], h=48)
+  forecaster = crate (function (input) {
+    input
+    #rjson::fromJSON(input)
+    #df = as.data.frame(rjson::fromJSON(input))
+    #df$value
+    #results = forecast::forecast(!!model, xreg=df$value, h = 12)
     #list(upper=results$upper, lower=results$lower, mean=results$mean)
-  })
-  
-  forecast = forecaster(split.Data$tsel, split.Data$trainSelIndex, split.Data$testSelIndex)
+  }, model)
+  #forecast = forecaster(split.Data$tsel$Lights[split.Data$testSelIndex], horizon)
+  #forecast = forecaster(input)
   
   message("ARIMA (timestamp)=", forecastDataStart)
-  message("TestParam=", mlflow_param("testInput", "NA", "string"))
+  message("Horizon=", horizon)
   
   mlflow_log_param("Historical Data", historicalDataStart)
   mlflow_log_param("Historical Days", daysOfHistoryForTraining)
@@ -136,6 +131,10 @@ with(mlflow_start_run(), {
   
   mlflow_log_model(forecaster, "model")
 })
+
+#mlflow_end_run()
+
+
 
 
 
