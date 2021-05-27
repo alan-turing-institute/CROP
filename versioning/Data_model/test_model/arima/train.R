@@ -110,13 +110,11 @@ with(mlflow_start_run(), {
   model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
   inputJSON = toJSON(structure(list(value=split.Data$tsel$Lights[split.Data$testSelIndex])))
   
-  forecaster = crate (function (input) {
-    input
-    #rjson::fromJSON(input)
-    #df = as.data.frame(rjson::fromJSON(input))
-    #df$value
-    #results = forecast::forecast(!!model, xreg=df$value, h = 12)
-    #list(upper=results$upper, lower=results$lower, mean=results$mean)
+  forecaster = crate (function (input) { 
+    myInput = "{\"value\":[1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1]}"
+    df = as.data.frame(rjson::fromJSON(myInput))
+    results = forecast::forecast(!!model, xreg=df$value, h = 12)
+    list(upper=results$upper, lower=results$lower, mean=results$mean)
   }, model)
   #forecast = forecaster(split.Data$tsel$Lights[split.Data$testSelIndex], horizon)
   #forecast = forecaster(input)
