@@ -41,7 +41,8 @@ getOneYearDataUptoDate = function(observations, forecast_timestamp = ? Date) {
   tobj0$DateFarm = as.Date(tobj0$FarmTimestamp)
   
   #tobj0$EnergyCP <- ifelse(is.na(tobj0$EnergyCP),0,tobj0$EnergyCP*2)
-  tobj0$EnergyCP = tobj0$EnergyCP*2
+  total_hourly_energy_consumption = 2
+  tobj0$EnergyCP = tobj0$EnergyCP*total_hourly_energy_consumption
   
   tobj0
 }
