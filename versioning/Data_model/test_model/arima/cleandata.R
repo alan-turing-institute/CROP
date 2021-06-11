@@ -147,6 +147,7 @@ cleanEnergyData = function() {
   # Assume ECP is in UTC, but time needs to be shifted back an hour
   ecp_ph$FarmTimestamp <- as.POSIXct(ecp_ph$Timestamp)
   saveRDS(ecp_ph,"ecp_API.RDS")
+  ecp_ph
 }
 
 ## Combine data frames ---------
@@ -160,16 +161,16 @@ cleanEnergyData = function() {
 environmentData = cleanEnvData()
 my_time = environmentData$my_time
 all_sensors_df2 = environmentData$all_sensors_df2
-# ecp_ph = cleanEnergyData()
+ecp_ph = cleanEnergyData()
 
 # Join with my_time, which contains every hour in the year (in case of missing data)
 t_e1 <- dplyr::left_join(my_time, all_sensors_df2)
 
 # Join with my_time, which contains every hour in the year (in case of missing data)
-#t_e2 <- left_join(my_time, ecp_ph)
+t_e2 <- dplyr::left_join(my_time, ecp_ph)
 
 # Now can join temperature and energy together
-#t_ee <- left_join(t_e1, t_e2)
+t_ee <- left_join(t_e1, t_e2)
 
 ## save the cleaned data frame for future use --------------
 #setwd(daughterfolder)
