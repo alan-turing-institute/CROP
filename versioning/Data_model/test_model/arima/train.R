@@ -149,15 +149,15 @@ trainBSTS = function(available.Data, trainIndex) {
   mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
   mc = bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
   #this centres the mean towards the lower part of the day so the model is easier to explain
-  numIterations = 100 # default = 1000
+  numIterations = 500 # default = 1000
   model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
-  print(model)
   return (model)
 }
 
 forecastBSTS = function(available.Data, forecastIndex, model) {
   newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
-  predict(model, burn=200, newdata=newcovtyp[,-c(26)],48) #burn 200
+  periodToForecast = 48
+  predict(model, burn=200, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
 }
 
 bsts.Model = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
