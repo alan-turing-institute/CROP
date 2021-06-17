@@ -94,7 +94,7 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
 
 def get_zensie_sensors_list(session, sensor_type):
     """
-    Makes a list of ensie rth sensors with their check_id and ids.
+    Makes a list of zensie rth sensors with their check_id and ids.
 
     Arguments:
         session: sql session

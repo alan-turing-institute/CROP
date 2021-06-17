@@ -149,7 +149,11 @@ SQL_SSLMODE = "require"
 SQL_TEST_DBNAME = "test_db"
 
 SQL_CONNECTION_STRING = make_conn_string(
-    SQL_ENGINE, SQL_USER, SQL_PASSWORD, SQL_HOST, SQL_PORT,
+    SQL_ENGINE,
+    SQL_USER,
+    SQL_PASSWORD,
+    SQL_HOST,
+    SQL_PORT,
 )
 
 
@@ -188,3 +192,9 @@ ID_COL_NAME = "id"
 CONST_MAX_RECORDS = 500
 
 CONST_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+# Warnings log
+
+WARNING_PROP_LOW_TEMPR = "Temperature is low in propagation, add heater"
+WARNING_NO_DATA_PROP = "Missing data in propagation - check sensor battery"
