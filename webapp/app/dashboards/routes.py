@@ -25,10 +25,7 @@ from __app__.crop.structure import (
     ReadingsEnergyClass,
     ReadingsZensieTRHClass,
 )
-from __app__.crop.constants import (
-    CONST_MAX_RECORDS, 
-    CONST_TIMESTAMP_FORMAT
-)
+from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
 
 # Temperature constants
@@ -116,7 +113,8 @@ def lights_energy_use(dt_from_, dt_to_):
 
     # getting eneregy data for the analysis
     query = db.session.query(
-        ReadingsEnergyClass.timestamp, ReadingsEnergyClass.electricity_consumption,
+        ReadingsEnergyClass.timestamp,
+        ReadingsEnergyClass.electricity_consumption,
     ).filter(
         and_(
             SensorClass.device_id == sensor_device_id,
@@ -210,8 +208,9 @@ def lights_energy_use(dt_from_, dt_to_):
         prev_row_value = None
         for df_index in energy_hour.index:
             if df_index > 0:
-                if (np.isnan(energy_hour.loc[df_index, "lights_on_4"]) and \
-                    not np.isnan(prev_row_value)):
+                if np.isnan(energy_hour.loc[df_index, "lights_on_4"]) and not np.isnan(
+                    prev_row_value
+                ):
 
                     energy_hour.loc[df_index, "lights_on_4"] = prev_row_value
             prev_row_value = energy_hour.loc[df_index, "lights_on_4"]
@@ -272,7 +271,8 @@ def ventilation_energy_use(dt_from, dt_to):
 
     # getting eneregy data for the analysis
     query = db.session.query(
-        ReadingsEnergyClass.timestamp, ReadingsEnergyClass.electricity_consumption,
+        ReadingsEnergyClass.timestamp,
+        ReadingsEnergyClass.electricity_consumption,
     ).filter(
         and_(
             SensorClass.device_id == sensor_device_id,
@@ -333,8 +333,13 @@ def zensie_analysis(dt_from, dt_to):
         sensor_temp_ranges: json data with temperate ranges
     """
 
-    logging.info("Calling zensie_analysis with parameters %s %s" % \
-        (dt_from.strftime(CONST_TIMESTAMP_FORMAT), dt_to.strftime(CONST_TIMESTAMP_FORMAT)))
+    logging.info(
+        "Calling zensie_analysis with parameters %s %s"
+        % (
+            dt_from.strftime(CONST_TIMESTAMP_FORMAT),
+            dt_to.strftime(CONST_TIMESTAMP_FORMAT),
+        )
+    )
 
     query = db.session.query(
         ReadingsZensieTRHClass.timestamp,
@@ -355,7 +360,9 @@ def zensie_analysis(dt_from, dt_to):
     logging.info("Total number of records found: %d" % (len(df.index)))
 
     if not df.empty:
-        sensor_names, sensor_temp_ranges = temperature_range_analysis(df, dt_from, dt_to)
+        sensor_names, sensor_temp_ranges = temperature_range_analysis(
+            df, dt_from, dt_to
+        )
 
     else:
         sensor_names = []
@@ -376,15 +383,15 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         sensor_names: a list of sensor names
         sensor_temp_ranges: json data with temperate ranges
     """
-    
+
     sensor_temp_ranges = {}
 
     df = copy.deepcopy(temp_df)
 
-    df_unique_sensors = df[['sensor_id', 'name']].drop_duplicates(['sensor_id', 'name'])
+    df_unique_sensors = df[["sensor_id", "name"]].drop_duplicates(["sensor_id", "name"])
 
-    sensor_ids = df_unique_sensors['sensor_id'].tolist()
-    sensor_names = df_unique_sensors['name'].tolist()
+    sensor_ids = df_unique_sensors["sensor_id"].tolist()
+    sensor_names = df_unique_sensors["name"].tolist()
 
     # extracting date from datetime
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
@@ -396,8 +403,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
     sensor_grp = df.groupby(
         by=[
             df.timestamp.map(
-                lambda x: "%04d-%02d-%02d-%02d"
-                % (x.year, x.month, x.day, x.hour)
+                lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
             ),
             "sensor_id",
             "date",
@@ -438,15 +444,11 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
             ).dt.strftime("%Y-%m-%d")
 
             bins_json.append(
-                '["'
-                + bin_range
-                + '",'
-                + temp_bin_df.to_json(orient="records")
-                + "]"
+                '["' + bin_range + '",' + temp_bin_df.to_json(orient="records") + "]"
             )
 
         json_data.append("[" + ",".join(bins_json) + "]")
-    
+
     sensor_temp_ranges["data"] = "[" + ",".join(json_data) + "]"
 
     return sensor_names, sensor_temp_ranges
@@ -473,7 +475,7 @@ def route_template(template):
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
     if template == "advanticsys_dashboard":
-        
+
         adv_sensors_temp = {}
 
         # advanticsys
@@ -577,7 +579,20 @@ def route_template(template):
     elif template == "zensie_dashboard":
 
         sensor_names, sensor_temp_ranges = zensie_analysis(dt_from, dt_to)
-       
+
+        return render_template(
+            template + ".html",
+            num_zensie_sensors=len(sensor_names),
+            zensie_sensors=sensor_names,
+            zensie_temp_ranges=sensor_temp_ranges,
+            dt_from=dt_from.strftime("%B %d, %Y"),
+            dt_to=dt_to.strftime("%B %d, %Y"),
+        )
+
+    elif template == "test_dashboard":
+
+        sensor_names, sensor_temp_ranges = zensie_analysis(dt_from, dt_to)
+
         return render_template(
             template + ".html",
             num_zensie_sensors=len(sensor_names),
@@ -588,7 +603,7 @@ def route_template(template):
         )
 
     elif template == "energy_dashboard":
-        
+
         energy_data = {}
 
         # lights-on analysis

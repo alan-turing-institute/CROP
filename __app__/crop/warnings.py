@@ -12,6 +12,7 @@ from __app__.crop.structure import (
     SensorLocationClass,
     ReadingsZensieTRHClass,
     LocationClass,
+    DataWarningsClass,
 )
 
 from __app__.crop.utils import query_result_to_array
@@ -54,7 +55,8 @@ def db_query_tmpr_day_zenzie(session, location_zone, date_range):
         )
     )
     readings = session.execute(query).fetchall()
-    # TODO: query_result_to_array(readings))
+    # TODO: r = query_result_to_array(readings)
+
     return readings
 
 
@@ -67,9 +69,7 @@ def too_cold_in_propagation_room(readings, location_zone):
         print("Missing data in  %s - check sensor battery" % (location_zone))
 
     else:
-        average_temp_ = []
-        for i in range(len(readings)):
-            average_temp_.append(readings[i][0])
+        average_temp_ = [item[0] for _, item in enumerate(readings)]
         average_temp = mean(average_temp_)
 
         min_temp = 23
@@ -90,9 +90,7 @@ def too_humid_in_propagation_room(readings, location_zone):
     if len(readings) < 5:
         print("Missing data in  %s - check sensor battery" % (location_zone))
     else:
-        average_hum_ = []
-        for i in range(len(readings)):
-            average_hum_.append(readings[i][1])
+        average_hum_ = [item[1] for _, item in enumerate(readings)]
         average_hum = mean(average_hum_)
 
         max_hum = 80
@@ -118,8 +116,22 @@ def issue_warnings():
     None
 
 
-def upload_warning_db(session, warning):
-    None
+def upload_warnings(session, warning):
+    start_time = time.time()
+
+    session = session_open(engine)
+    for idx, row in warning.iterrows():
+
+        data = DataWarningsClass(
+            type_id=type_id,
+            timestamp=idx,
+            priority=prior,
+            log=warning_log,
+            # temperature=row["Temperature"],
+            # humidity=row["Humidity"],
+        )
+
+    session.add(data)
 
 
 if __name__ == "__main__":
