@@ -7,10 +7,13 @@ from datetime import datetime, timedelta
 import logging
 from types import GetSetDescriptorType
 import pandas as pd
+from requests.api import get
+
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+
 
 
 from __app__.crop.ingress import log_upload_event
@@ -19,10 +22,9 @@ from __app__.crop.structure import SensorClass, TypeClass, ReadingsEnergyClass
 
 from __app__.crop.constants import CONST_STARK, STARK_USERNAME, STARK_PASS
 
-SLEEP_TIME = 7.3
+SLEEP_TIME = 1.3
 
 def setupDriver():
-    from selenium import webdriver
     from webdriver_manager.chrome import ChromeDriverManager
     driver = webdriver.Chrome(ChromeDriverManager(version="87.0.4280.88").install())
     driver.get("https://www.google.com")
@@ -84,7 +86,7 @@ def read_table_data(client, ds_name, electricity_df):
     return electricity_df.append(new_df)
 
 
-def scrape_data(hide=True):
+def scrape_data(hide=False):
     """
     Scrapes the stark.co.uk website for energy consumption data.
     Arguments:
@@ -142,7 +144,6 @@ def scrape_data(hide=True):
         sleep(SLEEP_TIME)
         
         start_date = client.find_element_by_id("StartDate").get_attribute("value").strip()
-        # logging("start_date: {}".format(start_date))
         return start_date
         # except:
         #     error = "Error occured while getting data from stark.co.uk"
@@ -159,112 +160,125 @@ def scrape_data(hide=True):
         return end_date
 
     # # Picking data sources
+    def openDataSource(client):
+        client.find_element_by_id("btnOpenGroupTreeSearch").click()
+        sleep(SLEEP_TIME)
+        client.find_element_by_id("groupTree").find_element_by_class_name(
+            "treeToggleWrapper"
+        ).click()
+        sleep(SLEEP_TIME)
 
-    client.find_element_by_id("btnOpenGroupTreeSearch").click()
-    sleep(SLEEP_TIME)
-    client.find_element_by_id("groupTree").find_element_by_class_name(
-        "treeToggleWrapper"
-    ).click()
-    sleep(SLEEP_TIME)
+    def getDataSources(client):
+        tree_options = client.find_element_by_id("groupTree")
+        tree_options = tree_options.find_element_by_class_name("treeBranch")
+        elements_list = tree_options.find_elements_by_class_name(
+            "treeItemElementsWrapper"
+        )
+        return elements_list
 
-    tree_options = client.find_element_by_id("groupTree")
-    tree_options = tree_options.find_element_by_class_name("treeBranch")
-    elements_list = tree_options.find_elements_by_class_name(
-        "treeItemElementsWrapper"
-    )
+    # # Picking data sources
+    def setTimeZone(client):
+        client.find_element_by_id("btnOpenTimezones").click()
+        sleep(SLEEP_TIME)
+        li = client.find_element_by_xpath("//li[@value='UTC']")
+        logging.info("=========> List element (UTC) found: {}".format(li))
+        li.click()
+        sleep(SLEEP_TIME)
+        client.find_element_by_id("buttonTZConfirm").click()
+        sleep(SLEEP_TIME)
 
-    avail_data_sources = []
+    def getReport(client, energy_df):
+        client.find_element_by_id("buttonRunReport").click()        
+        # Wait until the report is finished
+        value = ""
+        iter_cnt = 0
+        while len(value) == 0 and iter_cnt < 100:
+            sleep(SLEEP_TIME)
+            value = (
+                client.find_element_by_id("reqId")
+                .get_attribute("value")
+                .strip()
+            )
+            iter_cnt += 1
+        sleep(SLEEP_TIME * 10)
+        # Download the report data
+        client.find_element_by_id("btnOpenGraphicDownloadMenu").click()
+        sleep(SLEEP_TIME)
+        # Open table
+        client.find_element_by_id("btnOpenReportTable").click()
+        sleep(SLEEP_TIME)
+        # Read table data
+        updated_energy_df = read_table_data(client, ds_name, energy_df)
+        return updated_energy_df 
+
+    def filterDataSources(elements_list):
+        avail_data_sources = []
+        for element in elements_list:
+            ds_name = (element.text).strip()
+            if ds_name.startswith("~"):
+                continue
+            avail_data_sources.append(element.text)
+        return avail_data_sources
+
+    openDataSource(client)
+    avail_data_sources = filterDataSources(getDataSources(client))
     visit_data_sources = []
-
-    for element in elements_list:
-        ds_name = (element.text).strip()
-        if ds_name.startswith("~"):
-            continue
-        avail_data_sources.append(element.text)
-        logging.info("Source: {}".format(element.text))
     
     for i_a in range(len(avail_data_sources)):
         if i_a > 0:
-            client.find_element_by_id("btnOpenGroupTreeSearch").click()
-            sleep(SLEEP_TIME)
+            openDataSource(client)
 
-            tree_options = client.find_element_by_id("groupTree")
-            tree_options = tree_options.find_element_by_class_name("treeBranch")
-            elements_list = tree_options.find_elements_by_class_name(
-                "treeItemElementsWrapper"
-            )
-
+        elements_list = getDataSources(client)
         for element in elements_list:
             ds_name = (element.text).strip()
             if ds_name in avail_data_sources and not ds_name in visit_data_sources:
                 element.find_element_by_class_name("treeTooltipWrapper").click()
                 sleep(SLEEP_TIME)
-                startDate = pickStartDate(client)
-                endDate = pickEndDate(client)
                 visit_data_sources.append(ds_name)
-                
-                logging.info("=========> Getting Report for: {}".format(ds_name))
-                logging.info("=========> Report Starts: {}".format(startDate))
-                logging.info("=========> Report Ends: {}".format(endDate))
-                
+                setTimeZone(client)
+                start_date = pickStartDate(client)
+                end_date = pickEndDate(client)
+                # Count number of days
+                days_delta = (
+                    datetime.strptime(end_date, "%d/%m/%Y").date()
+                    - datetime.strptime(start_date, "%d/%m/%Y").date()
+                ).days      
+                energy_df = getReport(client, energy_df)
 
-    #             # Run report
-    #             client.find_element_by_id("buttonRunReport").click()
-                
+                logging.info("=========> Got Report for: {}".format(ds_name))
+                logging.info("=========> Report Starts: {}".format(start_date))
+                logging.info("=========> Report Ends: {}".format(end_date))
+                logging.info("=========> Report Length: {}".format(len(energy_df.index)))
+                logging.info("=========> Report Head: {}".format(energy_df.head()))
 
-    #             # Wait until the report is finished
-    #             value = ""
-    #             iter_cnt = 0
-    #             while len(value) == 0 and iter_cnt < 100:
-    #                 sleep(SLEEP_TIME)
-    #                 value = (
-    #                     client.find_element_by_id("reqId")
-    #                     .get_attribute("value")
-    #                     .strip()
-    #                 )
-    #                 iter_cnt += 1
+                for _ in range(days_delta):
 
-    #             sleep(SLEEP_TIME * 10)
+                    # Go page by page
+                    next_page = client.find_element_by_id("rtPageControls")
+                    next_page = next_page.find_elements_by_xpath(
+                        '//*[@class="btn btn-sm form-control"]'
+                    )
+                    next_page[-2].click()
+                    sleep(SLEEP_TIME)
 
-    #             # Download the report data
-    #             client.find_element_by_id("btnOpenGraphicDownloadMenu").click()
-    #             sleep(SLEEP_TIME)
+                    energy_df = read_table_data(client, ds_name, energy_df)
 
-    #             # Open table
-    #             client.find_element_by_id("btnOpenReportTable").click()
-    #             sleep(SLEEP_TIME)
+                # close table window
+                close_button = client.find_elements_by_xpath(
+                    '//*[@id="reportTableModal"]/div/div/div[@class="cardTopBar"]'
+                    + '/div[@class="cardHeader"]/div[@class="buttonBar"]/'
+                    + 'button[@class="iconBtn primary-color form-control"]'
+                )
 
-    #             # Read table data
-    #             energy_df = read_table_data(client, ds_name, energy_df)
-    #             logging.info("=========> Report Length: {}".format(len(energy_df.index)))
-    # #             for _ in range(days_delta):
+                close_button[1].click()
 
-    #                 # Go page by page
-    #                 next_page = client.find_element_by_id("rtPageControls")
-    #                 next_page = next_page.find_elements_by_xpath(
-    #                     '//*[@class="btn btn-sm form-control"]'
-    #                 )
-    #                 next_page[-2].click()
-    #                 sleep(SLEEP_TIME)
+                # Removing duplicates
+                energy_df.drop_duplicates(keep=False, inplace=True)
 
-    #                 energy_df = read_table_data(client, ds_name, energy_df)
-
-    #             # close table window
-    #             close_button = client.find_elements_by_xpath(
-    #                 '//*[@id="reportTableModal"]/div/div/div[@class="cardTopBar"]'
-    #                 + '/div[@class="cardHeader"]/div[@class="buttonBar"]/'
-    #                 + 'button[@class="iconBtn primary-color form-control"]'
-    #             )
-
-    #             close_button[1].click()
-
-    #             # Removing duplicates
-    #             energy_df.drop_duplicates(keep=False, inplace=True)
-
-    #             break
-    # # except:
-    # #     status = False
-    # #     error = "Error occured while getting data from stark.co.uk"
+                break
+    # except:
+    #     status = False
+    #     error = "Error occured while getting data from stark.co.uk"
 
     client.quit()
 
