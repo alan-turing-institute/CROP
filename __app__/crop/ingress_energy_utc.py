@@ -8,6 +8,7 @@ import logging
 from types import GetSetDescriptorType
 import pandas as pd
 from requests.api import get
+from sqlalchemy.sql.operators import op
 
 
 from selenium import webdriver
@@ -22,7 +23,7 @@ from __app__.crop.structure import SensorClass, TypeClass, ReadingsEnergyClass
 
 from __app__.crop.constants import CONST_STARK, STARK_USERNAME, STARK_PASS
 
-SLEEP_TIME = 1.3
+SLEEP_TIME = 0.3
 
 def setupDriver():
     from webdriver_manager.chrome import ChromeDriverManager
@@ -86,7 +87,7 @@ def read_table_data(client, ds_name, electricity_df):
     return electricity_df.append(new_df)
 
 
-def scrape_data(hide=False):
+def scrape_data(hide=True):
     """
     Scrapes the stark.co.uk website for energy consumption data.
     Arguments:
@@ -141,6 +142,7 @@ def scrape_data(hide=False):
         client.find_element_by_xpath(
             '//*[@class="datepicker-days"]'
         ).find_element_by_xpath("//table/tbody/tr/td").click()
+        
         sleep(SLEEP_TIME)
         
         start_date = client.find_element_by_id("StartDate").get_attribute("value").strip()
@@ -160,15 +162,17 @@ def scrape_data(hide=False):
         return end_date
 
     # # Picking data sources
-    def openDataSource(client):
+    def openDataTreePage(client):
         client.find_element_by_id("btnOpenGroupTreeSearch").click()
         sleep(SLEEP_TIME)
+        
+    def openTree(client):
         client.find_element_by_id("groupTree").find_element_by_class_name(
             "treeToggleWrapper"
         ).click()
         sleep(SLEEP_TIME)
 
-    def getDataSources(client):
+    def getTreeBranches(client):
         tree_options = client.find_element_by_id("groupTree")
         tree_options = tree_options.find_element_by_class_name("treeBranch")
         elements_list = tree_options.find_elements_by_class_name(
@@ -187,9 +191,10 @@ def scrape_data(hide=False):
         client.find_element_by_id("buttonTZConfirm").click()
         sleep(SLEEP_TIME)
 
-    def getReport(client, energy_df):
+    def openReportPage(client, ds_name):
         client.find_element_by_id("buttonRunReport").click()        
         # Wait until the report is finished
+        logging.info("=========> Awaiting Report for: {}".format(ds_name))
         value = ""
         iter_cnt = 0
         while len(value) == 0 and iter_cnt < 100:
@@ -207,9 +212,25 @@ def scrape_data(hide=False):
         # Open table
         client.find_element_by_id("btnOpenReportTable").click()
         sleep(SLEEP_TIME)
-        # Read table data
-        updated_energy_df = read_table_data(client, ds_name, energy_df)
-        return updated_energy_df 
+    
+    def incrementReportPage(client):
+        # Go page by page
+        next_page = client.find_element_by_id("rtPageControls")
+        next_page = next_page.find_elements_by_xpath(
+            '//*[@class="btn btn-sm form-control"]'
+        )
+        next_page[-2].click()
+        sleep(SLEEP_TIME)
+
+    def closeReportPage(client):
+        # close table window
+        close_button = client.find_elements_by_xpath(
+            '//*[@id="reportTableModal"]/div/div/div[@class="cardTopBar"]'
+            + '/div[@class="cardHeader"]/div[@class="buttonBar"]/'
+            + 'button[@class="iconBtn primary-color form-control"]'
+        )
+        close_button[1].click()
+        sleep(SLEEP_TIME)
 
     def filterDataSources(elements_list):
         avail_data_sources = []
@@ -220,68 +241,66 @@ def scrape_data(hide=False):
             avail_data_sources.append(element.text)
         return avail_data_sources
 
-    openDataSource(client)
-    avail_data_sources = filterDataSources(getDataSources(client))
+    def getDaysDelta(start_date, end_date):
+        # Count number of days
+        return (datetime.strptime(end_date, "%d/%m/%Y").date() - datetime.strptime(start_date, "%d/%m/%Y").date()).days
+    
+    openDataTreePage(client)
+    openTree(client)
+    avail_data_sources = filterDataSources(getTreeBranches(client))
     visit_data_sources = []
     
-    for i_a in range(len(avail_data_sources)):
-        if i_a > 0:
-            openDataSource(client)
+    logging.info("=========> Logging begins here\n\n")
 
-        elements_list = getDataSources(client)
+    for i_a in range(len(avail_data_sources)):
+        logging.info("=========> [i_a = {}] Available Report for: {}".format(i_a, avail_data_sources[i_a]))
+        if i_a > 0:
+            openDataTreePage(client)
+        #     second_ds = filterDataSources(getTreeBranches(client))
+        #     for ds in second_ds:
+        #         logging.info("=========> [i_a] Available Reports for: {}".format(ds))        
+        elements_list = getTreeBranches(client)
         for element in elements_list:
             ds_name = (element.text).strip()
             if ds_name in avail_data_sources and not ds_name in visit_data_sources:
+                logging.info("=========> Generating Report for: {}".format(ds_name))
+ 
                 element.find_element_by_class_name("treeTooltipWrapper").click()
                 sleep(SLEEP_TIME)
+                logging.info("=========> Finish Report for: {}".format(ds_name))
                 visit_data_sources.append(ds_name)
+
+    #             
                 setTimeZone(client)
                 start_date = pickStartDate(client)
                 end_date = pickEndDate(client)
-                # Count number of days
-                days_delta = (
-                    datetime.strptime(end_date, "%d/%m/%Y").date()
-                    - datetime.strptime(start_date, "%d/%m/%Y").date()
-                ).days      
-                energy_df = getReport(client, energy_df)
+                days_delta = getDaysDelta(start_date, end_date)
+                days_delta = 1
+                
+                openReportPage(client, ds_name)
+                energy_df = read_table_data(client, ds_name, energy_df)
+
+                for _ in range(days_delta):
+                    incrementReportPage(client)
+                    energy_df = read_table_data(client, ds_name, energy_df)
+
+                closeReportPage(client)
+
+    #             # Removing duplicates
+    #             energy_df.drop_duplicates(keep=False, inplace=True)
 
                 logging.info("=========> Got Report for: {}".format(ds_name))
                 logging.info("=========> Report Starts: {}".format(start_date))
                 logging.info("=========> Report Ends: {}".format(end_date))
                 logging.info("=========> Report Length: {}".format(len(energy_df.index)))
-                logging.info("=========> Report Head: {}".format(energy_df.head()))
-
-                for _ in range(days_delta):
-
-                    # Go page by page
-                    next_page = client.find_element_by_id("rtPageControls")
-                    next_page = next_page.find_elements_by_xpath(
-                        '//*[@class="btn btn-sm form-control"]'
-                    )
-                    next_page[-2].click()
-                    sleep(SLEEP_TIME)
-
-                    energy_df = read_table_data(client, ds_name, energy_df)
-
-                # close table window
-                close_button = client.find_elements_by_xpath(
-                    '//*[@id="reportTableModal"]/div/div/div[@class="cardTopBar"]'
-                    + '/div[@class="cardHeader"]/div[@class="buttonBar"]/'
-                    + 'button[@class="iconBtn primary-color form-control"]'
-                )
-
-                close_button[1].click()
-
-                # Removing duplicates
-                energy_df.drop_duplicates(keep=False, inplace=True)
+                logging.info("=========> Report Head: {}".format(energy_df))
 
                 break
-    # except:
-    #     status = False
-    #     error = "Error occured while getting data from stark.co.uk"
+    # # except:
+    # #     status = False
+    # #     error = "Error occured while getting data from stark.co.uk"
 
     client.quit()
-
     return status, error, energy_df
 
 
