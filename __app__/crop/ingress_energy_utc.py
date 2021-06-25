@@ -16,7 +16,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 
-
 from __app__.crop.ingress import log_upload_event
 from __app__.crop.db import connect_db, session_open, session_close
 from __app__.crop.structure import SensorClass, TypeClass, ReadingsEnergyClass
@@ -30,21 +29,16 @@ def setupDriver():
     driver = webdriver.Chrome(ChromeDriverManager(version="87.0.4280.88").install())
     driver.get("https://www.google.com")
 
-def import_stark_energy_data():
+def import_stark_data():
     """
-    Fix date ranges for pulling data
-    Imports all zensie weather data
+    Imports stark electricity consumption data
     """
     from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
-
-    dt_to:datetime = datetime.now()
-    dt_from:datetime = dt_to + timedelta(days=-1)
-    log:str = "Pull weather from date {} to {}".format(dt_to, dt_from)
-    logging.info(log)
-    log:str = "Use connectionstring {}".format(SQL_CONNECTION_STRING)
-    logging.info(log)
+    import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME)
+    
+def import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME):
     status, error, energy_df = scrape_data()
-    # import_zensie_weather_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
+    export_energy_data(energy_df, SQL_CONNECTION_STRING, SQL_DBNAME)
 
 def read_table_data(client, ds_name, electricity_df):
     """
@@ -179,6 +173,10 @@ def scrape_data(hide=True):
             "treeItemElementsWrapper"
         )
         return elements_list
+    
+    def selectTreeBranch(element):
+        element.find_element_by_class_name("treeTooltipWrapper").click()
+        sleep(SLEEP_TIME)
 
     # # Picking data sources
     def setTimeZone(client):
@@ -250,32 +248,25 @@ def scrape_data(hide=True):
     avail_data_sources = filterDataSources(getTreeBranches(client))
     visit_data_sources = []
     
-    logging.info("=========> Logging begins here\n\n")
-
     for i_a in range(len(avail_data_sources)):
         logging.info("=========> [i_a = {}] Available Report for: {}".format(i_a, avail_data_sources[i_a]))
         if i_a > 0:
             openDataTreePage(client)
-        #     second_ds = filterDataSources(getTreeBranches(client))
-        #     for ds in second_ds:
-        #         logging.info("=========> [i_a] Available Reports for: {}".format(ds))        
+             
         elements_list = getTreeBranches(client)
         for element in elements_list:
             ds_name = (element.text).strip()
             if ds_name in avail_data_sources and not ds_name in visit_data_sources:
-                logging.info("=========> Generating Report for: {}".format(ds_name))
- 
-                element.find_element_by_class_name("treeTooltipWrapper").click()
-                sleep(SLEEP_TIME)
-                logging.info("=========> Finish Report for: {}".format(ds_name))
+                # tagged as visited
                 visit_data_sources.append(ds_name)
 
-    #             
+                logging.info("=========> Generating Report for: {}".format(ds_name))
+                selectTreeBranch(element)
+                
                 setTimeZone(client)
                 start_date = pickStartDate(client)
                 end_date = pickEndDate(client)
                 days_delta = getDaysDelta(start_date, end_date)
-                days_delta = 1
                 
                 openReportPage(client, ds_name)
                 energy_df = read_table_data(client, ds_name, energy_df)
@@ -286,14 +277,14 @@ def scrape_data(hide=True):
 
                 closeReportPage(client)
 
-    #             # Removing duplicates
-    #             energy_df.drop_duplicates(keep=False, inplace=True)
+    #            # Removing duplicates
+                energy_df.drop_duplicates(keep=False, inplace=True)
 
                 logging.info("=========> Got Report for: {}".format(ds_name))
                 logging.info("=========> Report Starts: {}".format(start_date))
                 logging.info("=========> Report Ends: {}".format(end_date))
                 logging.info("=========> Report Length: {}".format(len(energy_df.index)))
-                logging.info("=========> Report Head: {}".format(energy_df))
+                # logging.info("=========> Report Head: {}".format(energy_df))
 
                 break
     # # except:
@@ -304,7 +295,7 @@ def scrape_data(hide=True):
     return status, error, energy_df
 
 
-def import_energy_data(electricity_df, conn_string, database):
+def export_energy_data(electricity_df, conn_string, database):
     """
     Uploads electricity data to the CROP database.
 
@@ -428,4 +419,4 @@ def import_energy_data(electricity_df, conn_string, database):
         return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
 
 if __name__ == "__main__":
-    import_stark_energy_data()
+    import_stark_data()
