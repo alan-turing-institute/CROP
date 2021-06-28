@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="module" src="./utils.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.js"></script>
+    <!--<script type="module" src="./utils.js"></script>-->
     <title>Test stacked bar</title>
 </head>
 
@@ -18,74 +19,105 @@
 
     <script>
         // <block:actions:2>
-        const actions = [
-            {
-                name: 'Randomize',
-                handler(chart) {
-                    chart.data.datasets.forEach(dataset => {
-                        dataset.data = Utils.numbers({ count: chart.data.labels.length, min: -100, max: 100 });
-                    });
-                    chart.update();
-                }
-            },
-        ];
         // </block:actions>
 
         // <block:setup:1>
+        var ctx = document.getElementById('myChart');
+
+
         const DATA_COUNT = 7;
         const NUMBER_CFG = { count: DATA_COUNT, min: -100, max: 100 };
 
-        const labels = Utils.months({ count: 7 });
+
+        var barOptions_stacked = {
+            tooltips: {
+                enabled: true
+            },
+            hover: {
+                animationDuration: 0
+            },
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        beginAtZero: false,
+                        fontFamily: "'Open Sans Bold', sans-serif",
+                        fontSize: 11
+                    },
+                    scaleLabel: {
+                        display: true
+                    },
+                    gridLines: {
+                    },
+                    stacked: true
+                }],
+                yAxes: [{
+                    gridLines: {
+                        display: false,
+                        color: "#fff",
+                        zeroLineColor: "#fff",
+                        zeroLineWidth: 0
+                    },
+                    ticks: {
+                        fontFamily: "'Open Sans Bold', sans-serif",
+                        fontSize: 11
+                    },
+                    stacked: true
+                }]
+            },
+            legend: {
+                display: true
+            },
+
+
+        };
+
+        const labels = ["2014", "2013", "2012", "2011", "2010"];
         const data = {
             labels: labels,
             datasets: [
                 {
-                    label: 'Dataset 1',
-                    data: Utils.numbers(NUMBER_CFG),
-                    backgroundColor: Utils.CHART_COLORS.red,
+                    label: 'Low',
+                    data: [227, 589, 537, 543, 574],
+                    backgroundColor: "rgba(63,103,126,1)",
+                    //backgroundColor: '#D6E9C6' // green
                 },
                 {
-                    label: 'Dataset 2',
-                    data: Utils.numbers(NUMBER_CFG),
-                    backgroundColor: Utils.CHART_COLORS.blue,
+                    label: 'Moderate',
+                    data: [1238, 553, 746, 884, 903],
+                    backgroundColor: "rgba(63,203,226,1)",
+                    //backgroundColor: '#FAEBCC' // yellow
                 },
                 {
-                    label: 'Dataset 3',
-                    data: Utils.numbers(NUMBER_CFG),
-                    backgroundColor: Utils.CHART_COLORS.green,
-                },
+                    label: 'High',
+                    data: [238, 553, 746, 884, 903],
+                    backgroundColor: "rgba(180,60,60,1)",
+                    //backgroundColor: '#EBCCD1' // red
+                }
             ]
         };
         // </block:setup>
 
         // <block:config:0>
         const config = {
-            type: 'bar',
+            type: 'horizontalBar',
             data: data,
-            options: {
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Chart.js Bar Chart - Stacked'
-                    },
-                },
-                responsive: true,
+            //options: barOptions_stacked,
+            options:
+            {
                 scales: {
-                    x: {
-                        stacked: true,
-                    },
-                    y: {
-                        stacked: true
-                    }
+                    xAxes: [{ stacked: true }],
+                    yAxes: [{ stacked: true }]
                 }
             }
         };
+
+        var myChart = new Chart(ctx, config);
         // </block:config>
 
-        module.exports = {
-            actions: actions,
-            config: config,
-        };
+        //module.exports = {
+        //    actions: actions,
+        //    config: config,
+        //};
 
 
     </script>

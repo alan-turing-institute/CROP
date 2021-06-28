@@ -5,10 +5,44 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
     <title>Document</title>
 </head>
 
 <body>
+
+
+    <div class="navbar"><span>Real-Time Chart with Plotly.js</span></div>
+    <div class="wrapper">
+
+        <div id="chart"></div>
+        <script>
+            function getData() {
+                return Math.random();
+            }
+
+            Plotly.plot('chart', [{
+                y: [getData()],
+                type: 'bar',
+                orientation: 'h'
+            }]);
+
+            var cnt = 0;
+
+            setInterval(function () {
+
+                Plotly.extendTraces('chart', { y: [[getData()]] }, [0]);
+                cnt++;
+                if (cnt > 50) {
+                    Plotly.relayout('chart', {
+                        xaxis: {
+                            range: [cnt - 500, cnt]
+                        }
+                    });
+                }
+            }, 15);
+        </script>
+    </div>
 
 </body>
 
