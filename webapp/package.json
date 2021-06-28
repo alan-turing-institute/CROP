@@ -23,5 +23,8 @@
   "contributors": [
     "Antoine fourmy <antoine.fourmy@gmail.com>"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@kurkle/color": "^0.1.9"
+  }
 }
