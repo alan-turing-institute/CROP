@@ -454,19 +454,10 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
     return sensor_names, sensor_temp_ranges
 
 
-@blueprint.route("/index")
-@login_required
-def index():
-    """
-    Index page
-    """
-
-    return render_template("index.html")
-
-
 @blueprint.route("/<template>")
 @login_required
 def route_template(template):
+
     """
     Renders templates
 
@@ -590,7 +581,7 @@ def route_template(template):
         )
 
     elif template == "test_dashboard":
-
+        print("test dashboard test?!!?")
         sensor_names, sensor_temp_ranges = zensie_analysis(dt_from, dt_to)
 
         return render_template(
@@ -627,5 +618,8 @@ def route_template(template):
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
+
+    elif template == "test":
+        return render_template(template + ".html")
 
     return render_template(template + ".html")

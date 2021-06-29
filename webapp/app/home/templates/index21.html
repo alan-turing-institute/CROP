@@ -12,13 +12,22 @@
 
 {% extends "base_site.html" %}
 
-{% block title %} Dashboard 1 {% endblock title %}
+{% block title %} INDEX {% endblock title %}
 
 {% block stylesheets %}
 {{ super() }}
+<link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
+    rel="stylesheet">
 {% endblock stylesheets %}
 
-<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 
 
 {% block content %}
@@ -86,7 +95,8 @@
                     </div>
 
                     <div class="x_content">
-
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <p>Here is my variable: {{ jim}} </p>
                         <canvas id="stackedbarchart"></canvas>
 
                     </div>
@@ -94,84 +104,86 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        {% endblock content %}
+{% endblock content %}
 
-        {% block javascripts %}
-        {{ super()}}
-        <!-- Chart.js -->
-        <script src="{{ url_for('static', filename='vendors/Chart.js/dist/Chart.min.js') }}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
-        <!-- gauge.js -->
-        <script src="{{ url_for('static', filename='vendors/gauge.js/dist/gauge.min.js') }}"></script>
-        <!-- Skycons -->
-        <script src="{{ url_for('static', filename='vendors/skycons/skycons.js') }}"></script>
-        <!-- Flot -->
-        <script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.pie.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.time.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.stack.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.resize.js') }}"></script>
-        <!-- Flot plugins -->
-        <script src="{{ url_for('static', filename='vendors/flot.orderbars/js/jquery.flot.orderBars.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/flot-spline/js/jquery.flot.spline.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/flot.curvedlines/curvedLines.js') }}"></script>
-        <!-- DateJS -->
-        <script src="{{ url_for('static', filename='vendors/DateJS/build/date.js') }}"></script>
-        <!-- JQVMap -->
-        <script src="{{ url_for('static', filename='vendors/jqvmap/dist/jquery.vmap.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/jqvmap/dist/maps/jquery.vmap.world.js') }}"></script>
-        <script src="{{ url_for('static', filename='vendors/jqvmap/examples/js/jquery.vmap.sampledata.js') }}"></script>
-
-
-        <script>
-
-            // <block:setup:1>
-            var ctx = document.getElementById('stackedbarchart');
-
-            const labels = ["2014", "2013", "2012", "2011", "2010"];
-            const data = {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Low',
-                        data: [227, 589, 537, 543, 574],
-                        backgroundColor: "rgba(63,103,126,1)",
-                        //backgroundColor: '#D6E9C6' // green
-                    },
-                    {
-                        label: 'Moderate',
-                        data: [1238, 553, 746, 884, 903],
-                        backgroundColor: "rgba(63,203,226,1)",
-                        //backgroundColor: '#FAEBCC' // yellow
-                    },
-                    {
-                        label: 'High',
-                        data: [238, 553, 746, 884, 903],
-                        backgroundColor: "rgba(180,60,60,1)",
-                        //backgroundColor: '#EBCCD1' // red
-                    }
-                ]
-            };
-            // </block:setup>
-
-            // <block:config:0>
-            const config = {
-                type: 'horizontalBar',
-                data: data,
-                //options: barOptions_stacked,
-                options:
-                {
-                    scales: {
-                        xAxes: [{ stacked: true }],
-                        yAxes: [{ stacked: true }]
-                    }
-                }
-            };
-
-            var myChart = new Chart(ctx, config);
-        </script>
+{% block javascripts %}
+{{ super()}}
+<!-- Chart.js -->
+<script src="{{ url_for('static', filename='vendors/Chart.js/dist/Chart.min.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<!-- gauge.js -->
+<script src="{{ url_for('static', filename='vendors/gauge.js/dist/gauge.min.js') }}"></script>
+<!-- Skycons -->
+<script src="{{ url_for('static', filename='vendors/skycons/skycons.js') }}"></script>
+<!-- Flot -->
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.pie.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.time.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.stack.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.resize.js') }}"></script>
+<!-- Flot plugins -->
+<script src="{{ url_for('static', filename='vendors/flot.orderbars/js/jquery.flot.orderBars.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/flot-spline/js/jquery.flot.spline.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/flot.curvedlines/curvedLines.js') }}"></script>
+<!-- DateJS -->
+<script src="{{ url_for('static', filename='vendors/DateJS/build/date.js') }}"></script>
+<!-- JQVMap -->
+<script src="{{ url_for('static', filename='vendors/jqvmap/dist/jquery.vmap.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jqvmap/dist/maps/jquery.vmap.world.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jqvmap/examples/js/jquery.vmap.sampledata.js') }}"></script>
 
 
+<script>
 
-        {% endblock javascripts %}
+    //var zensie_sensor_names = '{{ zensie_sensors }}';
+    // <block:setup:1>
+    var ctx = document.getElementById('stackedbarchart');
+
+    const labels = ["2014", "2013", "2012", "2011", "2010"];
+    const data = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Low',
+                data: [227, 589, 537, 543, 574],
+                backgroundColor: "rgba(63,103,126,1)",
+                //backgroundColor: '#D6E9C6' // green
+            },
+            {
+                label: 'Moderate',
+                data: [1238, 553, 746, 884, 903],
+                backgroundColor: "rgba(63,203,226,1)",
+                //backgroundColor: '#FAEBCC' // yellow
+            },
+            {
+                label: 'High',
+                data: [238, 553, 746, 884, 903],
+                backgroundColor: "rgba(180,60,60,1)",
+                //backgroundColor: '#EBCCD1' // red
+            }
+        ]
+    };
+    // </block:setup>
+
+    // <block:config:0>
+    const config = {
+        type: 'horizontalBar',
+        data: data,
+        //options: barOptions_stacked,
+        options:
+        {
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{ stacked: true }]
+            }
+        }
+    };
+
+    var myChart = new Chart(ctx, config);
+</script>
+
+
+{% endblock javascripts %}
