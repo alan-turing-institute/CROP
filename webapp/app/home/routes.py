@@ -4,7 +4,8 @@ from flask_login import login_required
 from sqlalchemy import and_
 
 import copy
-import datetime as dt
+
+# import datetime as dt
 
 import numpy as np
 import pandas as pd
@@ -22,10 +23,6 @@ from __app__.crop.structure import (
     ReadingsZensieTRHClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
-
-
-# dt_to = dt.datetime.now()
-# dt_from = dt_to - dt.timedelta(days=7)
 
 
 def zensie_query(dt_from, dt_to, location_zone):
@@ -83,14 +80,18 @@ def zensie_query(dt_from, dt_to, location_zone):
     return sensor_names, sensor_temp_ranges
 
 
-# print(zensie_query(dt_from, dt_to, "Propagation"))
+# zensie_query(dt_from, dt_to, "Propagation")
 
 
 @blueprint.route("/<template>")
 @login_required
 def route_template(template):
 
+    # dt_to = dt.datetime.now()
+    # dt_from = dt_to - dt.timedelta(days=7)
+    # a, b = zensie_query(dt_from, dt_to, "Propagation")
+    a = "hello"
     if template == "index21":
-        return render_template(template + ".html", jim="Hello")
+        return render_template(template + ".html", jim=a)
 
-    return render_template(template + ".html", jim="HEllo")
+    return render_template(template + ".html", jim=a)
