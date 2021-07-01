@@ -4,6 +4,7 @@ from flask_login import login_required
 from sqlalchemy import and_
 
 import copy
+
 import datetime as dt
 
 import numpy as np
@@ -24,8 +25,56 @@ from __app__.crop.structure import (
 from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
 
-# dt_to = dt.datetime.now()
-# dt_from = dt_to - dt.timedelta(days=7)
+def resample(df, bins, dt_from, dt_to):
+    """
+    Resamples (adds missing date/temperature bin combinations) to a dataframe.
+
+    Arguments:
+        df: dataframe with temperature assign to bins
+        bins: temperature bins as a list
+        dt_from: date range from
+        dt_to: date range to
+    Returns:
+        bins_list: a list of temperature bins
+        df_list: a list of df corresponding to temperature bins
+    """
+
+    bins_list = []
+    for i in range(len(bins) - 1):
+        bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
+
+    date_min = min(df["date"].min(), dt_from)
+    date_max = max(df["date"].max(), dt_to)
+
+    for n in range(int((date_max - date_min).days) + 1):
+        day = date_min + dt.timedelta(n)
+
+        for temp_range in bins_list:
+            if len(df[(df["date"] == day) & (df["temp_bin"] == temp_range)].index) == 0:
+
+                df2 = pd.DataFrame(
+                    {"date": [day], "temp_bin": [temp_range], "temp_cnt": [0]}
+                )
+
+                df = df.append(df2)
+
+    df = df.sort_values(by=["date", "temp_bin"], ascending=True)
+
+    df.reset_index(inplace=True, drop=True)
+
+    df_list = []
+
+    for bin_range in bins_list:
+
+        df_bin = df[df["temp_bin"] == bin_range]
+
+        del df_bin["temp_bin"]
+
+        df_bin.reset_index(inplace=True, drop=True)
+
+        df_list.append(df_bin)
+
+    return bins_list, df_list
 
 
 def zensie_query(dt_from, dt_to, location_zone):
@@ -50,14 +99,16 @@ def zensie_query(dt_from, dt_to, location_zone):
 
     query = db.session.query(
         ReadingsZensieTRHClass.timestamp,
-        ReadingsZensieTRHClass.sensor_id,
-        SensorClass.name,
+        # ReadingsZensieTRHClass.sensor_id,
+        # SensorClass.name,
         ReadingsZensieTRHClass.temperature,
         ReadingsZensieTRHClass.humidity,
+        SensorLocationClass.location_id,
+        LocationClass.zone,
     ).filter(
         and_(
-            LocationClass.zone == location_zone,
-            SensorLocationClass.location_id == LocationClass.id,  # propagation location
+            # LocationClass.zone == location_zone,
+            # SensorLocationClass.location_id == LocationClass.id,  # propagation location
             # ReadingsZensieTRHClass.sensor_id == SensorClass.id,
             ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
             ReadingsZensieTRHClass.timestamp >= dt_from,
@@ -70,27 +121,120 @@ def zensie_query(dt_from, dt_to, location_zone):
     logging.info("Total number of records found: %d" % (len(df.index)))
 
     if not df.empty:
-        sensor_names = "mods"
-        sensor_temp_ranges = "meh"
-        # sensor_names, sensor_temp_ranges = temperature_range_analysis(
-        #    df, dt_from, dt_to
-        # )
+        # sensor_names = "mods"
+        # sensor_temp_ranges = "meh"
+        # sensor_temp_ranges = df.values[0]
+        location_zones, sensor_temp_ranges = temperature_range_analysis(
+            df, dt_from, dt_to
+        )
 
     else:
-        sensor_names = []
+        location_zones = []
         sensor_temp_ranges = {}
 
-    return sensor_names, sensor_temp_ranges
+    return location_zones, sensor_temp_ranges
 
 
-# print(zensie_query(dt_from, dt_to, "Propagation"))
+# Temperature constants
+TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
+
+
+def temperature_range_analysis(temp_df, dt_from, dt_to):
+    """
+    Performs temperage range analysis on a given pandas dataframe.
+
+    Arguments:
+        temp_df:
+        dt_from: date range from
+        dt_to: date range to
+    Returns:
+        sensor_names: a list of sensor names
+        sensor_temp_ranges: json data with temperate ranges
+    """
+
+    sensor_temp_ranges = {}
+
+    df = copy.deepcopy(temp_df)
+
+    df_unique_locations = df[["location_id", "zone"]].drop_duplicates(
+        ["location_id", "zone"]
+    )
+
+    location_ids = df_unique_locations["location_id"].tolist()
+    location_zones = df_unique_locations["zone"].tolist()
+
+    # extracting date from datetime
+    df["date"] = pd.to_datetime(df["timestamp"].dt.date)
+
+    # Reseting index
+    df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
+
+    # grouping data by date-hour and location id
+    sensor_grp = df.groupby(
+        by=[
+            df.timestamp.map(
+                lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
+            ),
+            "location_id",
+            "date",
+        ]
+    )
+    print(sensor_grp)
+
+    # estimating hourly temperature mean values
+    sensor_grp_temp = sensor_grp["temperature"].mean().reset_index()
+
+    # binning temperature values
+    sensor_grp_temp["temp_bin"] = pd.cut(sensor_grp_temp["temperature"], TEMP_BINS)
+
+    # converting bins to str
+    sensor_grp_temp["temp_bin"] = sensor_grp_temp["temp_bin"].astype(str)
+
+    # get bin counts for each sensor-day combination
+    sensor_grp_date = sensor_grp_temp.groupby(by=["location_id", "date", "temp_bin"])
+
+    sensor_cnt = sensor_grp_date["temperature"].count().reset_index()
+    sensor_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
+
+    json_data = []
+    for location_id in location_ids:
+
+        cnt_sensor = sensor_cnt[sensor_cnt["location_id"] == location_id]
+
+        del cnt_sensor["location_id"]
+
+        # Adding missing date/temp_bin combos
+        bins_list, df_list = resample(cnt_sensor, TEMP_BINS, dt_from, dt_to)
+
+        bins_json = []
+
+        for i, bin_range in enumerate(bins_list):
+            temp_bin_df = df_list[i]
+            temp_bin_df["date"] = pd.to_datetime(
+                temp_bin_df["date"], format="%Y-%m-%d"
+            ).dt.strftime("%Y-%m-%d")
+
+            bins_json.append(
+                '["' + bin_range + '",' + temp_bin_df.to_json(orient="records") + "]"
+            )
+
+        json_data.append("[" + ",".join(bins_json) + "]")
+
+    sensor_temp_ranges["data"] = "[" + ",".join(json_data) + "]"
+
+    return location_zones, sensor_temp_ranges
 
 
 @blueprint.route("/<template>")
 @login_required
 def route_template(template):
 
+    dt_to = dt.datetime.now()
+    dt_from = dt_to - dt.timedelta(days=7)
+    location_zones, b = zensie_query(dt_from, dt_to, "Propagation")
+    # print(location_zones)
+    a = "hello"
     if template == "index21":
-        return render_template(template + ".html", jim="Hello")
+        return render_template(template + ".html", jim=a)
 
-    return render_template(template + ".html", jim="HEllo")
+    return render_template(template + ".html", jim=a)
