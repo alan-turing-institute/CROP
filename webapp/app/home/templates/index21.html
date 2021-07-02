@@ -126,13 +126,13 @@
 
 
 <script>
+    var ctx = document.getElementById('stackedbarchart');
 
     var i, j;
     var zensie_temp_data = JSON.parse('{{zensie_temp_ranges.data | safe}}');
     var sensor_temp_data;
     var temp_range, temp_range_data;
     var dates, temp_cnts;
-    var data, layout;
     //console.warn(zensie_temp_data)
 
     var zensie_locations = '{{ zensie_locations }}';
@@ -141,10 +141,10 @@
 
     var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(180,60,60,1)", "rgba(200,100,100,1)"];
 
+    cnts = []
 
     // iterate locations
     for (i = 0; i < zensie_temp_data.length; i++) {
-        //console.warn(zensie_temp_data[i])
         // datasets_ = [];
 
         // dates = [];
@@ -153,52 +153,57 @@
         temp_cnts = [];
         // // iterate temperature bins
         for (j = 0; j < sensor_temp_data.length; j++) {
-            //console.warn(sensor_temp_data[j])
 
-            //     temp_range = sensor_temp_data[j][0];
+            //console.warn(sensor_temp_data[j])
+            temp_range = sensor_temp_data[j][0];
             temp_range_data = sensor_temp_data[j][1];
 
             temp_cnts.push(temp_range_data[0].temp_cnt);
-
-
-
-            //     datasets_.push({
-            //         label: temp_range,
-            //         data: temp_cnts,
-            //         backgroundColor: colouramp[j],
-            //     })
-
         }
-        console.warn(temp_cnts)
-        // //console.warn(datasets_)
-
+        cnts.push(temp_cnts)
+        //console.warn(temp_cnts)
 
         // var ctx = document.getElementById('stackedbarchart');
 
-        // const labels = zensie_locations;
-        // const data = {
-        //     labels: labels,
-        //     datasets: [
-        //         datasets_
-        //     ]
-        // };
-
-        // const config = {
-        //     type: 'horizontalBar',
-        //     data: data,
-        //     //options: barOptions_stacked,
-        //     options:
-        //     {
-        //         scales: {
-        //             xAxes: [{ stacked: true }],
-        //             yAxes: [{ stacked: true }]
-        //         }
-        //     }
-        // };
-
         // var myChart = new Chart(ctx, config);
-
     }
+
+    const transpose = (cnts) => {
+        let [row] = cnts
+        return row.map((value, column) => cnts.map(row => row[column]))
+    }
+
+    const dataset_matrix = transpose(cnts);
+
+    const datasets_ = [];
+    for (i = 0; i < dataset_matrix.length; i++) {
+        datasets_.push({
+            label: "temp_range",
+            data: dataset_matrix[i],
+            backgroundColor: colouramp[i],
+        })
+    }
+
+
+    const data = {
+        labels: [26, 27, 19, 24, 25, 17, 28, 29],//zensie_locations,
+        datasets: datasets_
+    };
+
+    console.warn(data)
+    const config = {
+        type: 'horizontalBar',
+        data: data,
+        //options: barOptions_stacked,
+        options:
+        {
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{ stacked: true }]
+            }
+        }
+    };
+    var myChart = new Chart(ctx, config);
 
 </script>
 
