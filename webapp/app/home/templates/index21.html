@@ -84,7 +84,7 @@
 
                     <div class="x_content">
                         <!--<span id="zensie_sensor_names"></span>-->
-                        <p>Here is my variable: {{ jim}} </p>
+                        <p>Here is my variables: {{ jim}} </p>
                         <canvas id="stackedbarchart"></canvas>
 
                     </div>
@@ -123,6 +123,87 @@
 <script src="{{ url_for('static', filename='vendors/jqvmap/dist/maps/jquery.vmap.world.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/jqvmap/examples/js/jquery.vmap.sampledata.js') }}"></script>
 
+
+
+<script>
+
+    var i, j;
+    var zensie_temp_data = JSON.parse('{{zensie_temp_ranges.data | safe}}');
+    var sensor_temp_data;
+    var temp_range, temp_range_data;
+    var dates, temp_cnts;
+    var data, layout;
+    //console.warn(zensie_temp_data)
+
+    var zensie_locations = '{{ zensie_locations }}';
+    var sensor_locations = zensie_locations.substring(1, zensie_locations.length).split(" ")
+    var title_date_str, title_sensor_str;
+
+    var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(180,60,60,1)", "rgba(200,100,100,1)"];
+
+
+    // iterate locations
+    for (i = 0; i < zensie_temp_data.length; i++) {
+        //console.warn(zensie_temp_data[i])
+        // datasets_ = [];
+
+        // dates = [];
+
+        sensor_temp_data = zensie_temp_data[i];
+        temp_cnts = [];
+        // // iterate temperature bins
+        for (j = 0; j < sensor_temp_data.length; j++) {
+            //console.warn(sensor_temp_data[j])
+
+            //     temp_range = sensor_temp_data[j][0];
+            temp_range_data = sensor_temp_data[j][1];
+
+            temp_cnts.push(temp_range_data[0].temp_cnt);
+
+
+
+            //     datasets_.push({
+            //         label: temp_range,
+            //         data: temp_cnts,
+            //         backgroundColor: colouramp[j],
+            //     })
+
+        }
+        console.warn(temp_cnts)
+        // //console.warn(datasets_)
+
+
+        // var ctx = document.getElementById('stackedbarchart');
+
+        // const labels = zensie_locations;
+        // const data = {
+        //     labels: labels,
+        //     datasets: [
+        //         datasets_
+        //     ]
+        // };
+
+        // const config = {
+        //     type: 'horizontalBar',
+        //     data: data,
+        //     //options: barOptions_stacked,
+        //     options:
+        //     {
+        //         scales: {
+        //             xAxes: [{ stacked: true }],
+        //             yAxes: [{ stacked: true }]
+        //         }
+        //     }
+        // };
+
+        // var myChart = new Chart(ctx, config);
+
+    }
+
+</script>
+
+
+<!-- 
 
 <script>
 
@@ -171,7 +252,7 @@
     };
 
     var myChart = new Chart(ctx, config);
-</script>
+</script> -->
 
 
 {% endblock javascripts %}
