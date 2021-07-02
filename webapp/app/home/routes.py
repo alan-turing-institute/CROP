@@ -43,22 +43,14 @@ def resample(df, bins, dt_from, dt_to):
     for i in range(len(bins) - 1):
         bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
 
-    date_min = min(df["date"].min(), dt_from)
-    date_max = max(df["date"].max(), dt_to)
+    for temp_range in bins_list:
+        if len(df[(df["temp_bin"] == temp_range)].index) == 0:
 
-    for n in range(int((date_max - date_min).days) + 1):
-        day = date_min + dt.timedelta(n)
+            df2 = pd.DataFrame({"temp_bin": [temp_range], "temp_cnt": [0]})
 
-        for temp_range in bins_list:
-            if len(df[(df["date"] == day) & (df["temp_bin"] == temp_range)].index) == 0:
+            df = df.append(df2)
 
-                df2 = pd.DataFrame(
-                    {"date": [day], "temp_bin": [temp_range], "temp_cnt": [0]}
-                )
-
-                df = df.append(df2)
-
-    df = df.sort_values(by=["date", "temp_bin"], ascending=True)
+    df = df.sort_values(by=["temp_bin"], ascending=True)
 
     df.reset_index(inplace=True, drop=True)
 
@@ -73,8 +65,12 @@ def resample(df, bins, dt_from, dt_to):
         df_bin.reset_index(inplace=True, drop=True)
 
         df_list.append(df_bin)
+    # print(df_list)
 
     return bins_list, df_list
+
+
+# def weekly_calc (resampled_df_list):
 
 
 def zensie_query(dt_from, dt_to, location_zone):
@@ -156,12 +152,10 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
 
     df = copy.deepcopy(temp_df)
 
-    df_unique_locations = df[["location_id", "zone"]].drop_duplicates(
-        ["location_id", "zone"]
-    )
+    df_unique_locations = df[["location_id"]].drop_duplicates(["location_id"])
 
-    location_ids = df_unique_locations["location_id"].tolist()
-    location_zones = df_unique_locations["zone"].tolist()
+    # location_ids = df_unique_locations["location_id"].tolist()
+    location_zones = df_unique_locations["location_id"].tolist()
 
     # extracting date from datetime
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
@@ -169,7 +163,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
     # Reseting index
     df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
-    # grouping data by date-hour and location id
+    # grouping data by location id
     sensor_grp = df.groupby(
         by=[
             df.timestamp.map(
@@ -179,10 +173,14 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
             "date",
         ]
     )
-    print(sensor_grp)
 
     # estimating hourly temperature mean values
     sensor_grp_temp = sensor_grp["temperature"].mean().reset_index()
+    # print(sensor_grp_temp)
+
+    # for i in range(len(sensor_grp_temp)):
+    #     if sensor_grp_temp["temperature"][i] > 24:
+    #         print(sensor_grp_temp["temperature"][i])
 
     # binning temperature values
     sensor_grp_temp["temp_bin"] = pd.cut(sensor_grp_temp["temperature"], TEMP_BINS)
@@ -191,15 +189,15 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
     sensor_grp_temp["temp_bin"] = sensor_grp_temp["temp_bin"].astype(str)
 
     # get bin counts for each sensor-day combination
-    sensor_grp_date = sensor_grp_temp.groupby(by=["location_id", "date", "temp_bin"])
+    sensor_grp_date = sensor_grp_temp.groupby(by=["location_id", "temp_bin"])
 
     sensor_cnt = sensor_grp_date["temperature"].count().reset_index()
     sensor_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
 
     json_data = []
-    for location_id in location_ids:
+    for location_zone in location_zones:
 
-        cnt_sensor = sensor_cnt[sensor_cnt["location_id"] == location_id]
+        cnt_sensor = sensor_cnt[sensor_cnt["location_id"] == location_zone]
 
         del cnt_sensor["location_id"]
 
@@ -210,9 +208,9 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
 
         for i, bin_range in enumerate(bins_list):
             temp_bin_df = df_list[i]
-            temp_bin_df["date"] = pd.to_datetime(
-                temp_bin_df["date"], format="%Y-%m-%d"
-            ).dt.strftime("%Y-%m-%d")
+            # temp_bin_df["date"] = pd.to_datetime(
+            #    temp_bin_df["date"], format="%Y-%m-%d"
+            # ).dt.strftime("%Y-%m-%d")
 
             bins_json.append(
                 '["' + bin_range + '",' + temp_bin_df.to_json(orient="records") + "]"
@@ -221,7 +219,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         json_data.append("[" + ",".join(bins_json) + "]")
 
     sensor_temp_ranges["data"] = "[" + ",".join(json_data) + "]"
-
+    print(sensor_temp_ranges)
     return location_zones, sensor_temp_ranges
 
 
@@ -231,10 +229,19 @@ def route_template(template):
 
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=7)
-    location_zones, b = zensie_query(dt_from, dt_to, "Propagation")
-    # print(location_zones)
-    a = "hello"
+    location_zones, sensor_temp_ranges = zensie_query(dt_from, dt_to, "Propagation")
+    # print(sensor_temp_ranges)
+
+    a = "test!!"
     if template == "index21":
-        return render_template(template + ".html", jim=a)
+        return render_template(
+            template + ".html",
+            jim=location_zones,
+            sum_zensie_locations=len(location_zones),
+            zensie_locations=location_zones,
+            zensie_temp_ranges=sensor_temp_ranges,
+            dt_from=dt_from.strftime("%B %d, %Y"),
+            dt_to=dt_to.strftime("%B %d, %Y"),
+        )
 
     return render_template(template + ".html", jim=a)
