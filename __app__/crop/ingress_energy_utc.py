@@ -1,7 +1,7 @@
 """
 Python module to import energy data
 """
-
+import numpy as np
 from time import sleep
 from datetime import datetime, timedelta
 import logging
@@ -22,7 +22,7 @@ from __app__.crop.structure import SensorClass, TypeClass, ReadingsEnergyClass
 
 from __app__.crop.constants import CONST_STARK, STARK_USERNAME, STARK_PASS
 
-SLEEP_TIME = 0.3
+SLEEP_TIME = 2.3
 
 def setupDriver():
     from webdriver_manager.chrome import ChromeDriverManager
@@ -38,6 +38,8 @@ def import_stark_data():
     
 def import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME):
     status, error, energy_df = scrape_data()
+    # energy_df.to_csv('energy_df.csv')
+    # energy_df = pd.read_csv("./energy_df.csv")
     export_energy_data(energy_df, SQL_CONNECTION_STRING, SQL_DBNAME)
 
 def read_table_data(client, ds_name, electricity_df):
@@ -90,7 +92,7 @@ def scrape_data(hide=True):
         energy_df: pandas dataframe with the electricity usage data
     """
 
-    energy_df = pd.DataFrame(columns=["timestamp", "electricity", "data_source"])
+    energy_df = pd.DataFrame(columns=["timestamp", "electricity", "data_source"], dtype=object)
 
     status = True
     error = ""
@@ -267,6 +269,7 @@ def scrape_data(hide=True):
                 start_date = pickStartDate(client)
                 end_date = pickEndDate(client)
                 days_delta = getDaysDelta(start_date, end_date)
+                # days_delta = 1
                 
                 openReportPage(client, ds_name)
                 energy_df = read_table_data(client, ds_name, energy_df)
@@ -284,7 +287,7 @@ def scrape_data(hide=True):
                 logging.info("=========> Report Starts: {}".format(start_date))
                 logging.info("=========> Report Ends: {}".format(end_date))
                 logging.info("=========> Report Length: {}".format(len(energy_df.index)))
-                # logging.info("=========> Report Head: {}".format(energy_df))
+                logging.info("=========> Report Head: {}".format(energy_df.head()))
 
                 break
     # # except:
@@ -306,24 +309,22 @@ def export_energy_data(electricity_df, conn_string, database):
     """
 
     stark_type_id = -1
-
     success, log, engine = connect_db(conn_string, database)
+    logging.info("=========> Connected to db:{}".format(success))
     if not success:
         return success, log
 
     # Check if the stark sensor type is in the database
     try:
         session = session_open(engine)
-
         stark_type_id = (
             session.query(TypeClass)
             .filter(TypeClass.sensor_type == CONST_STARK)
             .first()
             .id
         )
-
+        logging.info("=========> Stark Sensor Types: {}".format(stark_type_id))
         session_close(session)
-
     except:
         status = False
         log = "Sensor type {} was not found.".format(CONST_STARK)
@@ -332,12 +333,9 @@ def export_energy_data(electricity_df, conn_string, database):
 
     # Check if data sources are in the database
     data_sources = electricity_df["data_source"].unique()
-
     data_sources_dict = {}
-
     for data_source in data_sources:
         stark_sensor_id = -1
-
         try:
             stark_sensor_id = (
                 session.query(SensorClass)
@@ -346,77 +344,74 @@ def export_energy_data(electricity_df, conn_string, database):
                 .first()
                 .id
             )
+            logging.info("=========> Stark [Sensor, ID]: [{}, {}] ".format(data_source, stark_sensor_id))
         except:
-
             status = False
             log = "{} sensor with {} = '{}' was not found.".format(
                 CONST_STARK, "name", str(data_source)
             )
-
             return log_upload_event(
                 CONST_STARK, "stark.co.uk", status, log, conn_string
             )
 
         data_sources_dict[data_source] = stark_sensor_id
 
-    # Uploading electricity readings data
+    # # Uploading electricity readings data
     add_cnt = 0
     dulp_cnt = 0
 
-    try:
-        session = session_open(engine)
-
-        for _, row in electricity_df.iterrows():
-
-            sensor_id = data_sources_dict[row["data_source"]]
-            timestamp = row["timestamp"]
-            electricity = row["electricity"]
-
-            try:
-                query_result = (
-                    session.query(ReadingsEnergyClass)
-                    .filter(ReadingsEnergyClass.sensor_id == sensor_id)
-                    .filter(ReadingsEnergyClass.timestamp == timestamp)
-                    .first()
-                )
-
-                if query_result is not None:
-                    found = True
-                    dulp_cnt += 1
-                else:
-                    found = False
-            except:
+    # try:
+    session = session_open(engine)
+    for _, row in electricity_df.iterrows():
+        sensor_id = data_sources_dict[row["data_source"]]
+        timestamp = row["timestamp"]
+        electricity = row["electricity"]
+        try:
+            query_result = (
+                session.query(ReadingsEnergyClass)
+                .filter(ReadingsEnergyClass.sensor_id == sensor_id)
+                .filter(ReadingsEnergyClass.timestamp == timestamp)
+                .first()
+            )
+            # logging.info("=========> Existing Data: {}: {}".format(query_result.timestamp, query_result.electricity_consumption))
+            if query_result is not None:
+                found = True
+                dulp_cnt += 1
+            else:
                 found = False
+        except:
+            found = False
 
-            if not found:
+        if not found:
+            data = ReadingsEnergyClass(
+                sensor_id=sensor_id,
+                timestamp=timestamp,
+                electricity_consumption=electricity,
+            )
+            session.add(data)
+            add_cnt += 1
+            # logging.info("=========> New Data: {}: {}".format(data.timestamp, data.electricity_consumption))
 
-                data = ReadingsEnergyClass(
-                    sensor_id=sensor_id,
-                    timestamp=timestamp,
-                    electricity_consumption=electricity,
-                )
-                session.add(data)
+        session.query(SensorClass).\
+            filter(SensorClass.id == sensor_id).\
+            update({"last_updated": datetime.now()})
+    
+    session_close(session)
+    status = True
+    log = "New: {} (uploaded); Duplicates: {} (ignored)".format(add_cnt, dulp_cnt)
+    logging.info("=========> New: {} (uploaded); Duplicates: {} (ignored)".format(add_cnt, dulp_cnt))
+    return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
 
-                add_cnt += 1
+    # except:
+    #     session_close(session)
 
-            session.query(SensorClass).\
-                filter(SensorClass.id == sensor_id).\
-                update({"last_updated": datetime.now()})
+    #     status = False
+    #     log = "Cannot insert new data to database"
 
-        session_close(session)
-
-        status = True
-        log = "New: {} (uploaded); Duplicates: {} (ignored)".format(add_cnt, dulp_cnt)
-
-        return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
-
-    except:
-        session_close(session)
-
-        status = False
-        log = "Cannot insert new data to database"
-
-        return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
+    #     return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
 
 if __name__ == "__main__":
     import_stark_data()
+    # df = pd.DataFrame(columns=['A', 'B'])
+    # from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+    # export_energy_data(df, SQL_CONNECTION_STRING, SQL_DBNAME)
