@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "entryPoint": "zensie_import",
+  "bindings": [
+    {
+        "name": "mytimer",
+        "type": "timerTrigger",
+        "direction": "in",
+        "schedule": "0 */1 * * *"
+    }
+  ]
+}
