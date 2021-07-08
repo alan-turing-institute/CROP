@@ -114,14 +114,25 @@ forecastArima = function(available.Data, forecastIndex, arima.Model) {
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
+source('~/Documents/workspace/CROP/versioning/Data_model/test_model/arima/pushData.R')
+
 model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
 results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
 stats.arima = sim_stats_arima(results.arima)
-source('~/Documents/workspace/CROP/versioning/Data_model/test_model/arima/pushData.R')
-run = writeRun(model_id=MODEL_ID$ARIMA, sensor_id=SENSOR_ID$Temperature_FARM_16B1, measure_id=MEASURE_ID$Temperature_Mean)
-writePrediction(run$id, results=results.arima$mean)
-  
-trainBSTS = function(available.Data, trainIndex) {
+
+records.mean.arima = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.arima$mean)
+records.upper.arima = list(measure_id = MEASURE_ID$Temperature_Upper, measure_values = results.arima$upper)
+records.lower.arima = list(measure_id = MEASURE_ID$Temperature_Lower, measure_values = results.arima$lower)
+records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
+
+run.arima = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1,
+  model_id=MODEL_ID$ARIMA,
+  records=records.arima
+)
+
+writeRun(run.arima)
+
+#trainBSTS = function(available.Data, trainIndex) {
   fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
   mc = list()
   mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
@@ -131,7 +142,7 @@ trainBSTS = function(available.Data, trainIndex) {
   model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
   return (model)
 }
-forecastBSTS = function(available.Data, forecastIndex, model) {
+#forecastBSTS = function(available.Data, forecastIndex, model) {
   newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
   periodToForecast = 4 # default 48
   predict(model, burn=200, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
