@@ -138,7 +138,7 @@ sim_stats_bsts<- function(predct){
 
 sim_stats_arima<- function(predct){
   #using uppper and lower bounds
-  x12samplesbt <-data.frame(pred_412_L$mean[1:24],pred_412_L$upper[1:24,1],pred_412_L$lower[1:24,1])
+  x12samplesbt <-data.frame(predct$mean[1:24],predct$upper[1:24,1],predct$lower[1:24,1])
   sim_stats <- data.frame(
     #average number of hours above 24deg if nothing changes
     h24 = mean(apply(x12samplesbt>25, 2, sum)),

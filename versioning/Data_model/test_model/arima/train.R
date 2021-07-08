@@ -10,8 +10,12 @@ SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
+SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_FARM_16B2=27, Temperature_FARM_16B2=23)
+MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3)
+MODEL_ID = list(ARIMA = 1, BSTS = 2)
 
 source(paste0(".","/may_live_functions.R"), echo=FALSE)
+source(paste0(".","/pushData.R"), echo=FALSE)
 
 loadData = function(dataObjectPath) {
   readRDS(dataObjectPath) 
@@ -68,58 +72,6 @@ splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) 
   list(tsel=tsel, trainSelIndex=trainsel, testSelIndex=testsel)
 }
 
-trainArima = function(available.Data, trainIndex) {
-  p = 4 # AR order
-  d = 1 # degree of difference
-  q = 2 # MA order
-  
-  MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
-  model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
-                 order = c(p,d,q),
-                 seasonal = list(order=c(1,1,0),period=24),method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES))
-}
-
-forecastArima = function(available.Data, forecastIndex, arima.Model) {
-  print("Training the Static model")
-  results = forecast::forecast(model=arima.Model,xreg = available.Data$Lights[forecastIndex], h=48)
-  list(upper=results$upper, lower=results$lower, mean=results$mean)
-}
-
-runWithMLFlow = function() {
-  with(mlflow_start_run(), {
-    horizon = mlflow_param("horizon", 12, "numeric")
-    model = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-    inputJSON = toJSON(structure(list(value=split.Data$tsel$Lights[split.Data$testSelIndex])))
-    
-    forecaster = crate (function (input) { 
-      #
-      #myInput = "{\"value\":[1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1]}"
-      #df = as.data.frame(rjson::fromJSON(myInput))
-      #results = forecast::forecast(!!model, xreg=df$value, h = 12)
-      #list(upper=results$upper, lower=results$lower, mean=results$mean)
-      jsonObject = jsonlite::toJSON(input)
-      rObject=jsonlite::fromJSON(jsonObject)
-      df = as.data.frame(rObject)
-      results = forecast::forecast(!!model, xreg=df$value, h = 12)
-      list(upper=results$upper, lower=results$lower, mean=results$mean)
-    }, model)
-    #forecast = forecaster(split.Data$tsel$Lights[split.Data$testSelIndex], horizon)
-    #forecast = forecaster(input)
-    
-    message("ARIMA (timestamp)=", forecastDataStart)
-    message("Horizon=", horizon)
-    
-    mlflow_log_param("Historical Data", historicalDataStart)
-    mlflow_log_param("Historical Days", daysOfHistoryForTraining)
-    mlflow_log_param("Forecast Starts", forecastDataStart)
-    mlflow_log_metric("RMSE", 2)
-    
-    mlflow_log_model(forecaster, "model")
-  })
-  
-  #mlflow_end_run()
-}
-
 cleanedDataPath = "../../../LatestData/may_t_ee.RDS"
 t_ee = loadData(cleanedDataPath) 
 latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
@@ -143,6 +95,32 @@ historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERD
 forecastDataStart = forecast_timestamp
 split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
 
+trainArima = function(available.Data, trainIndex) {
+  p = 4 # AR order
+  d = 1 # degree of difference
+  q = 2 # MA order
+  
+  print("Training the Static model")
+  MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
+  model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
+                           order = c(p,d,q),
+                           seasonal = list(order=c(1,1,0),period=24),method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES))
+}
+
+forecastArima = function(available.Data, forecastIndex, arima.Model) {
+  print("Forecasting the Static model")
+  numberOfHours=48
+  results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
+  list(upper=results$upper, lower=results$lower, mean=results$mean)
+}
+
+model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
+stats.arima = sim_stats_arima(results.arima)
+source('~/Documents/workspace/CROP/versioning/Data_model/test_model/arima/pushData.R')
+run = writeRun(model_id=MODEL_ID$ARIMA, sensor_id=SENSOR_ID$Temperature_FARM_16B1, measure_id=MEASURE_ID$Temperature_Mean)
+writePrediction(run$id, results=results.arima$mean)
+  
 trainBSTS = function(available.Data, trainIndex) {
   fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
   mc = list()
@@ -153,12 +131,11 @@ trainBSTS = function(available.Data, trainIndex) {
   model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
   return (model)
 }
-
 forecastBSTS = function(available.Data, forecastIndex, model) {
   newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
-  periodToForecast = 48
+  periodToForecast = 4 # default 48
   predict(model, burn=200, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
 }
 
-bsts.Model = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-bsts.Results = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, bsts.Model)
+#model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+#results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
