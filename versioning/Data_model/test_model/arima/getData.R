@@ -2,7 +2,6 @@ library(DBI)
 library(lubridate)
 require(reshape2)
 
-
 SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
 HOURS.PERDAY = 24
