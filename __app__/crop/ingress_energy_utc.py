@@ -22,7 +22,7 @@ from __app__.crop.structure import SensorClass, TypeClass, ReadingsEnergyClass
 
 from __app__.crop.constants import CONST_STARK, STARK_USERNAME, STARK_PASS
 
-SLEEP_TIME = 2.3
+SLEEP_TIME = 5.3
 
 def setupDriver():
     from webdriver_manager.chrome import ChromeDriverManager
