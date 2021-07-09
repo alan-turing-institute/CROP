@@ -11,7 +11,7 @@ MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
 SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_FARM_16B2=27, Temperature_FARM_16B2=23)
-MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3)
+MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3, Temperature_Median = 4)
 MODEL_ID = list(ARIMA = 1, BSTS = 2)
 
 source(paste0(".","/may_live_functions.R"), echo=FALSE)
@@ -125,14 +125,10 @@ records.upper.arima = list(measure_id = MEASURE_ID$Temperature_Upper, measure_va
 records.lower.arima = list(measure_id = MEASURE_ID$Temperature_Lower, measure_values = results.arima$lower)
 records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
 
-run.arima = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1,
-  model_id=MODEL_ID$ARIMA,
-  records=records.arima
-)
-
+run.arima = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$ARIMA, records=records.arima)
 writeRun(run.arima)
 
-#trainBSTS = function(available.Data, trainIndex) {
+trainBSTS = function(available.Data, trainIndex) {
   fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
   mc = list()
   mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
@@ -142,11 +138,19 @@ writeRun(run.arima)
   model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
   return (model)
 }
-#forecastBSTS = function(available.Data, forecastIndex, model) {
+forecastBSTS = function(available.Data, forecastIndex, model) {
   newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
-  periodToForecast = 4 # default 48
+  periodToForecast = 48 # default 48
   predict(model, burn=200, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
 }
 
-#model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-#results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
+model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
+stats.bsts = sim_stats_bsts(results.bsts)
+
+records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
+records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
+records.bsts = list(records.mean.bsts, records.median.bsts)
+
+run.bsts = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$BSTS, records=records.bsts)
+writeRun(run.bsts)
