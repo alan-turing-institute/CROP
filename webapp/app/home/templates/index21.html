@@ -135,37 +135,31 @@
     var dates, temp_cnts;
     //console.warn(zensie_temp_data)
 
-    var zensie_locations = '{{ zensie_locations }}';
+    var zensie_locations = "{{ zensie_locations | safe}}";
+    console.warn(zensie_locations);
     var sensor_locations = zensie_locations.substring(1, zensie_locations.length).split(" ")
     var title_date_str, title_sensor_str;
 
-    var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(180,60,60,1)", "rgba(200,100,100,1)"];
+    var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
 
     cnts = []
 
     // iterate locations
     for (i = 0; i < zensie_temp_data.length; i++) {
-        // datasets_ = [];
-
-        // dates = [];
 
         sensor_temp_data = zensie_temp_data[i];
         temp_cnts = [];
+
         // // iterate temperature bins
         for (j = 0; j < sensor_temp_data.length; j++) {
 
             //console.warn(sensor_temp_data[j])
-            temp_range = sensor_temp_data[j][0];
+
             temp_range_data = sensor_temp_data[j][1];
 
             temp_cnts.push(temp_range_data[0].temp_cnt);
         }
         cnts.push(temp_cnts)
-        //console.warn(temp_cnts)
-
-        // var ctx = document.getElementById('stackedbarchart');
-
-        // var myChart = new Chart(ctx, config);
     }
 
     const transpose = (cnts) => {
@@ -175,10 +169,12 @@
 
     const dataset_matrix = transpose(cnts);
 
+    TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
+
     const datasets_ = [];
     for (i = 0; i < dataset_matrix.length; i++) {
         datasets_.push({
-            label: "temp_range",
+            label: TEMP_BINS[i],
             data: dataset_matrix[i],
             backgroundColor: colouramp[i],
         })
@@ -186,7 +182,7 @@
 
 
     const data = {
-        labels: [26, 27, 19, 24, 25, 17, 28, 29],//zensie_locations,
+        labels: sensor_locations,
         datasets: datasets_
     };
 
