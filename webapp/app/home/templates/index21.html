@@ -130,13 +130,15 @@
 
     var i, j;
     var zensie_temp_data = JSON.parse('{{zensie_temp_ranges.data | safe}}');
+    var json_obj = JSON.parse('{{json_values | safe}}');
+
     var sensor_temp_data;
     var temp_range, temp_range_data;
     var dates, temp_cnts;
     //console.warn(zensie_temp_data)
 
     var zensie_locations = "{{ zensie_locations | safe}}";
-    console.warn(zensie_locations);
+    console.warn(json_obj);
     var sensor_locations = zensie_locations.substring(1, zensie_locations.length).split(" ")
     var title_date_str, title_sensor_str;
 
