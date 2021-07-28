@@ -40,7 +40,6 @@ def resample(df, bins, dt_from, dt_to):
         df_list: a list of df corresponding to temperature bins
     """
 
-    # print(df)
     bins_list = []
     for i in range(len(bins) - 1):
         bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
@@ -56,7 +55,6 @@ def resample(df, bins, dt_from, dt_to):
 
     df.reset_index(inplace=True, drop=True)
 
-    # print(df)
     df_list = []
 
     for bin_range in bins_list:
@@ -68,7 +66,6 @@ def resample(df, bins, dt_from, dt_to):
         df_bin.reset_index(inplace=True, drop=True)
 
         df_list.append(df_bin)
-    # print(df_list)
 
     return bins_list, df_list, df
 
@@ -152,7 +149,6 @@ def mean_sensor_values_per_hr(temp_df):
     """
 
     df = copy.deepcopy(temp_df)
-    # print(df.head(10))
 
     # extracting date from datetime
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
@@ -173,14 +169,8 @@ def mean_sensor_values_per_hr(temp_df):
         .mean()
         .reset_index()
     )
-    # Json_Parser(df_grp_zone_hr)
-    # print(df_grp_zone_hr)
+
     return df_grp_zone_hr
-
-
-def Json_Parser(temp_df):
-    json_df = temp_df.to_json(orient="records")
-    return json_df
 
 
 # Temperature constants
@@ -205,7 +195,6 @@ def temperature_analysis1(df, dt_from, dt_to):
     temp_list = []
 
     for zone in location_zones:
-        print(zone)
 
         df_each_zone = df[df.zone == zone]
         # breaks df in temperature bins
@@ -226,14 +215,13 @@ def temperature_analysis1(df, dt_from, dt_to):
         bin_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
 
         bins_list, df_list, df_ = resample(bin_cnt, TEMP_BINS[zone], dt_from, dt_to)
+        df_["zone"] = zone
+
         temp_list.append(df_)
-    print(temp_list)
+    df_merged = pd.concat(temp_list)  # merges all df in one.
 
-    return temp_list
+    return df_merged
     ##########################
-
-
-#####convert to JSON>..
 
 
 def temperature_range_analysis(temp_df, dt_from, dt_to):
@@ -295,12 +283,6 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         .reset_index()
     )
 
-    # sensor_grp_temp = zone_hr_grp["temperature"].mean().reset_index()
-
-    # print(zone_hr_grp["zone"])
-    # print(zone_hr_grp['zone'])
-    # for zone in zone_hr_grp:
-
     ###################
     Propagation_df = zone_hr_grp[zone_hr_grp.zone == "Propagation"]
 
@@ -354,7 +336,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         # Adding missing date/temp_bin combos
         bins_list, df_list, df_ = resample(cnt_sensor, TEMP_BINS, dt_from, dt_to)
 
-        json_temp.append(Json_Parser(df_))
+        json_temp.append(df_.to_json(orient="records"))
 
         bins_json = []
         # df_temp.append(df_)
@@ -371,11 +353,8 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
 
         json_data.append("[" + ",".join(bins_json) + "]")
 
-    # print(df_test.to_json(orient="records"))
-
-    # print(df_)
     sensor_temp_ranges["data"] = "[" + ",".join(json_data) + "]"
-    # print(sensor_temp_ranges)
+
     return (
         location_zones,
         sensor_temp_ranges,
@@ -420,25 +399,36 @@ def route_template(template):
     dt_from = dt_to - dt.timedelta(days=7)
     location_ids, sensor_temp_ranges, df_mean = zensie_query(dt_from, dt_to)
     df_ = temperature_analysis1(df_mean, dt_from, dt_to)
-    json_df = df_mean.to_json(orient="records")
-    data_to_frontend = json_df
-    # print(data_to_frontend)
 
-    # json_obj = Json_Parser(df_mean)
-    # print(json_obj)
-    # print(sensor_temp_ranges)
+    data_to_frontend = (
+        df_.groupby(["zone"], as_index=True)
+        .apply(lambda x: x[["temp_bin", "temp_cnt"]].to_dict("r"))
+        .reset_index()
+        .rename(columns={0: "Values"})
+        .to_json(orient="records")
+    )
+
+    print(data_to_frontend)
 
     a = "test!!"
     if template == "index21":
         return render_template(
             template + ".html",
             jim=location_ids,
+            temperature_data=data_to_frontend,
             sum_zensie_locations=len(location_ids),
             zensie_locations=location_ids,
             zensie_temp_ranges=sensor_temp_ranges,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
-            json_values=data_to_frontend,
+            # json_values=data_to_frontend,
+        )
+    if template == "index22":
+        return render_template(
+            template + ".html",
+            temperature_data=data_to_frontend,
+            dt_from=dt_from.strftime("%B %d, %Y"),
+            dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
     return render_template(template + ".html", jim=a)

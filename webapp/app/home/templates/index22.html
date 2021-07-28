@@ -128,67 +128,61 @@
 <script>
     var ctx = document.getElementById('stackedbarchart');
 
-    var i, j;
-    var zensie_temp_data = JSON.parse('{{zensie_temp_ranges.data | safe}}');
+    //var i, j;
+    var temperature_data = JSON.parse('{{temperature_data | safe}}');
     //var json_obj = JSON.parse('{{json_values | safe}}');
 
-    var sensor_temp_data;
-    var temp_range, temp_range_data;
-    var dates, temp_cnts;
+    //var sensor_temp_data;
+    //var temp_range, temp_range_data;
+    //var dates, temp_cnts;
     //console.warn(zensie_temp_data)
 
-    var zensie_locations = "{{ zensie_locations | safe}}";
+    //var zensie_locations = "{{ zensie_locations | safe}}";
     //console.warn(json_obj);
-    var sensor_locations = zensie_locations.substring(1, zensie_locations.length).split(" ")
-    var title_date_str, title_sensor_str;
+    //var sensor_locations = zensie_locations.substring(1, zensie_locations.length).split(" ")
+    //var title_date_str, title_sensor_str;
 
     var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
 
-    cnts = []
+    cnts = [];
 
-    // iterate locations
-    for (i = 0; i < zensie_temp_data.length; i++) {
+    //console.warn(temperature_data[0]["Values"][0]["temp_bin"]);
 
-        sensor_temp_data = zensie_temp_data[i];
-        temp_cnts = [];
+    zones_list = [];
+    temp_bin_list = []
+    temp_cnt_list = []
 
-        // // iterate temperature bins
-        for (j = 0; j < sensor_temp_data.length; j++) {
+    for (i = 0; i < temperature_data.length; i++) {
 
-            //console.warn(sensor_temp_data[j])
-
-            temp_range_data = sensor_temp_data[j][1];
-
-            temp_cnts.push(temp_range_data[0].temp_cnt);
+        zones_list.push(temperature_data[i]["zone"])
+        temp_bin_ = []
+        temp_cnt_ = []
+        for (j = 0; j < temperature_data[i]["Values"].length; j++) {
+            temp_bin_.push(temperature_data[i]["Values"][j]["temp_bin"])
+            temp_cnt_.push(parseFloat(temperature_data[i]["Values"][j]["temp_cnt"]))
         }
-        cnts.push(temp_cnts)
+        temp_bin_list.push(temp_bin_)
+        temp_cnt_list.push(temp_cnt_)
     }
 
-    const transpose = (cnts) => {
-        let [row] = cnts
-        return row.map((value, column) => cnts.map(row => row[column]))
-    }
-
-    const dataset_matrix = transpose(cnts);
-
-    TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
 
     const datasets_ = [];
-    for (i = 0; i < dataset_matrix.length; i++) {
+    for (i = 0; i < temp_bin_list[0].length; i++) {
+        console.warn(typeof temp_cnt_list[0][i])
         datasets_.push({
-            label: TEMP_BINS[i],
-            data: dataset_matrix[i],
+            label: temp_bin_list[0][i],
+            data: [temp_cnt_list[0][i]],
             backgroundColor: colouramp[i],
         })
     }
+    console.warn(datasets_)
 
 
     const data = {
-        labels: sensor_locations,
+        labels: [zones_list[0]],
         datasets: datasets_
     };
 
-    console.warn(data)
     const config = {
         type: 'horizontalBar',
         data: data,
@@ -202,6 +196,63 @@
         }
     };
     var myChart = new Chart(ctx, config);
+
+    // iterate locations
+    // for (i = 0; i < zensie_temp_data.length; i++) {
+
+    //     sensor_temp_data = zensie_temp_data[i];
+    //     temp_cnts = [];
+
+    //     // // iterate temperature bins
+    //     for (j = 0; j < sensor_temp_data.length; j++) {
+
+    //         //console.warn(sensor_temp_data[j])
+
+    //         temp_range_data = sensor_temp_data[j][1];
+
+    //         temp_cnts.push(temp_range_data[0].temp_cnt);
+    //     }
+    //     cnts.push(temp_cnts)
+    // }
+
+    // const transpose = (cnts) => {
+    //     let [row] = cnts
+    //     return row.map((value, column) => cnts.map(row => row[column]))
+    // }
+
+    // const dataset_matrix = transpose(cnts);
+
+    // TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
+
+    // const datasets_ = [];
+    // for (i = 0; i < dataset_matrix.length; i++) {
+    //     datasets_.push({
+    //         label: TEMP_BINS[i],
+    //         data: dataset_matrix[i],
+    //         backgroundColor: colouramp[i],
+    //     })
+    // }
+
+
+    // const data = {
+    //     labels: sensor_locations,
+    //     datasets: datasets_
+    // };
+
+    // console.warn(data)
+    // const config = {
+    //     type: 'horizontalBar',
+    //     data: data,
+    //     //options: barOptions_stacked,
+    //     options:
+    //     {
+    //         scales: {
+    //             xAxes: [{ stacked: true }],
+    //             yAxes: [{ stacked: true }]
+    //         }
+    //     }
+    // };
+    // var myChart = new Chart(ctx, config);
 
 </script>
 
