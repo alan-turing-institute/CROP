@@ -84,8 +84,12 @@
 
                     <div class="x_content">
                         <!--<span id="zensie_sensor_names"></span>-->
-                        <p>Here is my variables: {{ jim}} </p>
-                        <canvas id="stackedbarchart"></canvas>
+                        <p> Weekly temperature counts </p>
+                        <canvas id="stackedbarchart0"></canvas>
+                        <canvas id="stackedbarchart1"></canvas>
+                        <canvas id="stackedbarchart2"></canvas>
+                        <canvas id="stackedbarchart3"></canvas>
+                        <canvas id="stackedbarchart4"></canvas>
 
                     </div>
 
@@ -126,7 +130,7 @@
 
 
 <script>
-    var ctx = document.getElementById('stackedbarchart');
+
 
     //var i, j;
     var temperature_data = JSON.parse('{{temperature_data | safe}}');
@@ -166,36 +170,61 @@
     }
 
 
-    const datasets_ = [];
-    for (i = 0; i < temp_bin_list[0].length; i++) {
-        console.warn(typeof temp_cnt_list[0][i])
-        datasets_.push({
-            label: temp_bin_list[0][i],
-            data: [temp_cnt_list[0][i]],
-            backgroundColor: colouramp[i],
-        })
-    }
-    console.warn(datasets_)
 
-
-    const data = {
-        labels: [zones_list[0]],
-        datasets: datasets_
-    };
-
-    const config = {
-        type: 'horizontalBar',
-        data: data,
-        //options: barOptions_stacked,
-        options:
-        {
-            scales: {
-                xAxes: [{ stacked: true }],
-                yAxes: [{ stacked: true }]
-            }
+    for (j = 0; j < zones_list.length; j++) {
+        const datasets_ = [];
+        for (i = 0; i < temp_bin_list[j].length; i++) {
+            datasets_.push({
+                label: temp_bin_list[j][i],
+                data: [temp_cnt_list[j][i]],
+                backgroundColor: colouramp[i],
+            })
         }
-    };
-    var myChart = new Chart(ctx, config);
+
+
+        const data = {
+            labels: [zones_list[j]],
+            datasets: datasets_
+        };
+
+        const config = {
+            type: 'horizontalBar',
+            data: data,
+            //options: barOptions_stacked,
+            options:
+            {
+                legend: {
+                    display: false
+                },
+                scales: {
+                    xAxes: [{
+                        stacked: true,
+                        display: false, //this will remove all the x-axis grid lines
+                    }],
+                    yAxes: [{
+                        stacked: true,
+                        //display: true,
+                        position: 'right',
+                    }]
+                },
+                aspectRatio: 10,
+                tooltips: {
+                    callbacks: {
+                        title: function (tooltipItems, data) {
+                            return '';
+                        },
+                    }
+                }
+
+            }
+        };
+
+        var ctx = document.getElementById('stackedbarchart'.concat(j));
+
+
+        var myChart = new Chart(ctx, config);
+
+    }
 
     // iterate locations
     // for (i = 0; i < zensie_temp_data.length; i++) {

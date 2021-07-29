@@ -25,23 +25,6 @@ from __app__.crop.structure import (
 )
 from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
-TEMP_BINS = {
-    "Propagation": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
-    "FrontFarm": [0.0, 18.0, 21.0, 25.0, 35.0],  # optimal 21
-    "Fridge": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
-    "MidFarm": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
-    "BackFarm": [0.0, 20.0, 25.0, 28.0, 35.0],  # optimal 25
-    "R&D": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
-}
-HUM_BINS = {
-    "Propagation": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "FrontFarm": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "Fridge": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "MidFarm": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "BackFarm": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70,
-    "R&D": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70,
-}
-
 
 def resample(df, bins, dt_from, dt_to):
     """
@@ -136,13 +119,19 @@ def zensie_query(
     logging.info("Total number of records found: %d" % (len(df.index)))
 
     if not df.empty:
+        # sensor_names = "mods"
+        # sensor_temp_ranges = "meh"
+        # sensor_temp_ranges = df.values[0]
+        location_ids, sensor_temp_ranges = temperature_range_analysis(
+            df, dt_from, dt_to
+        )
         df_mean_hr = mean_sensor_values_per_hr(df)
 
     else:
         location_ids = []
         sensor_temp_ranges = {}
 
-    return df_mean_hr
+    return location_ids, sensor_temp_ranges, df_mean_hr
 
 
 def mean_sensor_values_per_hr(temp_df):
@@ -184,22 +173,37 @@ def mean_sensor_values_per_hr(temp_df):
     return df_grp_zone_hr
 
 
-def temperature_analysis(df, dt_from, dt_to, bins):
+# Temperature constants
+TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
+
+
+def temperature_analysis1(df, dt_from, dt_to):
 
     df_unique_zones = df[["zone"]].drop_duplicates(["zone"])
     location_zones = df_unique_zones["zone"].tolist()
     # sensor_grp_temp = zone_hr_grp["temperature"].mean().reset_index()
 
+    TEMP_BINS = {
+        "Propagation": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
+        "FrontFarm": [0.0, 18.0, 21.0, 25.0, 35.0],  # optimal 21
+        "Fridge": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
+        "MidFarm": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
+        "BackFarm": [0.0, 20.0, 25.0, 28.0, 35.0],  # optimal 25
+        "R&D": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
+    }
+    HUM_BINS = [0.0, 50.0, 65.0, 75.0, 85.0]  # optimal 70
     temp_list = []
 
     for zone in location_zones:
 
         df_each_zone = df[df.zone == zone]
         # breaks df in temperature bins
-        df_each_zone["temp_bin"] = pd.cut(df_each_zone["temperature"], bins[zone])
+        df_each_zone["temp_bin"] = pd.cut(df_each_zone["temperature"], TEMP_BINS[zone])
+        # df_each_zone["hum_bin"] = pd.cut(df_each_zone["humidity"], HUM_BINS)
 
         # converting bins to str
         df_each_zone["temp_bin"] = df_each_zone["temp_bin"].astype(str)
+        # df_each_zone["hum_bin"] = df_each_zone["hum_bin"].astype(str)
 
         # groups df per each bin
         bin_grp = df_each_zone.groupby(by=["zone", "temp_bin"])
@@ -210,7 +214,7 @@ def temperature_analysis(df, dt_from, dt_to, bins):
         # renames column with counts
         bin_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
 
-        bins_list, df_list, df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
+        bins_list, df_list, df_ = resample(bin_cnt, TEMP_BINS[zone], dt_from, dt_to)
 
         # renames the values of all the zones
         df_["zone"] = zone
@@ -227,79 +231,157 @@ def temperature_analysis(df, dt_from, dt_to, bins):
             df_["temp_bin"][j] = fixed_label
 
         temp_list.append(df_)
+    df_merged = pd.concat(temp_list)  # merges all df in one.
 
-    # merges all df in one.
-    temp_df_merged = pd.concat(temp_list)
-
-    return temp_df_merged
+    return df_merged
+    ##########################
 
 
-def humidity_analysis(df, dt_from, dt_to, bins):
+def temperature_range_analysis(temp_df, dt_from, dt_to):
+    """
+    Performs temperage range analysis on a given pandas dataframe.
+
+    Arguments:
+        temp_df:
+        dt_from: date range from
+        dt_to: date range to
+    Returns:
+        sensor_names: a list of sensor names
+        sensor_temp_ranges: json data with temperate ranges
+    """
+
+    sensor_temp_ranges = {}
+
+    df = copy.deepcopy(temp_df)
+    # print(df.head(10))
 
     df_unique_zones = df[["zone"]].drop_duplicates(["zone"])
+
     location_zones = df_unique_zones["zone"].tolist()
 
-    hum_list = []
-    for zone in location_zones:
+    # extracting date from datetime
+    df["date"] = pd.to_datetime(df["timestamp"].dt.date)
 
-        df_each_zone = df[df.zone == zone]
-        # breaks df in temperature bins
-        df_each_zone["hum_bin"] = pd.cut(df_each_zone["humidity"], bins[zone])
-        # df_each_zone["hum_bin"] = pd.cut(df_each_zone["humidity"], HUM_BINS)
+    # Reseting index
+    df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
-        # converting bins to str
-        df_each_zone["hum_bin"] = df_each_zone["hum_bin"].astype(str)
-        # df_each_zone["hum_bin"] = df_each_zone["hum_bin"].astype(str)
+    # df.to_csv(
+    #    r"C:\Users\Flora\OneDrive - The Alan Turing Institute\Turing\1.Projects\2.UrbanAgriculture\export_dataframe.csv",
+    #    index=False,
+    #    header=True,
+    # )
 
-        # groups df per each bin
-        bin_grp = df_each_zone.groupby(by=["zone", "hum_bin"])
+    # grouping data by location zone
+    sensor_grp = df.groupby(
+        by=[
+            df.timestamp.map(
+                lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
+            ),
+            "zone",
+            "date",
+        ]
+    )
 
-        # get temperature counts per bin
-        bin_cnt = bin_grp["humidity"].count().reset_index()
+    zone_hr_grp = (
+        df.groupby(
+            by=[
+                df.timestamp.map(
+                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
+                ),
+                "zone",
+                "date",
+            ]
+        )
+        .mean()
+        .reset_index()
+    )
 
-        # renames column with counts
-        bin_cnt.rename(columns={"humidity": "hum_cnt"}, inplace=True)
+    ###################
+    Propagation_df = zone_hr_grp[zone_hr_grp.zone == "Propagation"]
 
-        bins_list, df_list, df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
+    Propagation_df["temp_bin"] = pd.cut(Propagation_df["temperature"], TEMP_BINS)
 
-        # renames the values of all the zones
-        df_["zone"] = zone
+    # converting bins to str
+    Propagation_df["temp_bin"] = Propagation_df["temp_bin"].astype(str)
 
-        # fixes the labels of the bins by removing uncessesary characters((0.0, 25.0]) )
-        for j in range(len(df_["hum_bin"])):
-            fixed_label = (
-                df_["hum_bin"][j]
-                .replace("(", "")
-                .replace("]", "")
-                .replace(", ", "-")
-                .replace(".0", "")
+    # get bin counts for each sensor-day combination
+    Propagation_grp = Propagation_df.groupby(by=["zone", "temp_bin"])
+    temp_cnt = Propagation_grp["temperature"].count().reset_index()
+
+    temp_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
+
+    bins_list, df_list, df_ = resample(temp_cnt, TEMP_BINS, dt_from, dt_to)
+
+    # print(df_list)
+    ##########################
+    # estimating hourly temperature mean values
+    sensor_grp_temp = sensor_grp["temperature"].mean().reset_index()
+    # print(sensor_grp_temp)
+
+    # estimating hourly humidity mean values
+    sensor_grp_hum = sensor_grp["humidity"].mean().reset_index()
+
+    # binning temperature values
+    sensor_grp_temp["temp_bin"] = pd.cut(sensor_grp_temp["temperature"], TEMP_BINS)
+
+    # converting bins to str
+    sensor_grp_temp["temp_bin"] = sensor_grp_temp["temp_bin"].astype(str)
+
+    # get bin counts for each sensor-day combination
+    sensor_grp_date = sensor_grp_temp.groupby(by=["zone", "temp_bin"])
+
+    sensor_cnt = sensor_grp_date["temperature"].count().reset_index()
+    sensor_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
+
+    json_cnt = sensor_cnt.to_json(orient="records")
+    # print(json_cnt)
+
+    json_data = []
+
+    json_temp = []
+
+    for location_zone in location_zones:
+
+        cnt_sensor = sensor_cnt[sensor_cnt["zone"] == location_zone]
+
+        # del cnt_sensor["zone"]
+
+        # Adding missing date/temp_bin combos
+        bins_list, df_list, df_ = resample(cnt_sensor, TEMP_BINS, dt_from, dt_to)
+
+        json_temp.append(df_.to_json(orient="records"))
+
+        bins_json = []
+        # df_temp.append(df_)
+
+        for i, bin_range in enumerate(bins_list):
+            temp_bin_df = df_list[i]
+            # temp_bin_df["date"] = pd.to_datetime(
+            #    temp_bin_df["date"], format="%Y-%m-%d"
+            # ).dt.strftime("%Y-%m-%d")
+
+            bins_json.append(
+                '["' + bin_range + '",' + temp_bin_df.to_json(orient="records") + "]"
             )
-            df_["hum_bin"][j] = fixed_label
 
-        hum_list.append(df_)
-    hum_df_merged = pd.concat(hum_list)  # merges all df in one.
+        json_data.append("[" + ",".join(bins_json) + "]")
 
-    return hum_df_merged
+    sensor_temp_ranges["data"] = "[" + ",".join(json_data) + "]"
 
-
-def Prepare_Json_temp(df):
     return (
-        df.groupby(["zone"], as_index=True)
-        .apply(lambda x: x[["temp_bin", "temp_cnt"]].to_dict("r"))
-        .reset_index()
-        .rename(columns={0: "Values"})
-        .to_json(orient="records")
+        location_zones,
+        sensor_temp_ranges,
     )
 
 
-def Prepare_Json_hum(df):
-    return (
-        df.groupby(["zone"], as_index=True)
-        .apply(lambda x: x[["hum_bin", "hum_cnt"]].to_dict("r"))
-        .reset_index()
-        .rename(columns={0: "Values"})
-        .to_json(orient="records")
-    )
+@blueprint.route("/index")
+@login_required
+def index():
+    """
+    Index page
+    """
+
+    return render_template("index21.html")
 
 
 # test_json = [
@@ -322,35 +404,38 @@ def Prepare_Json_hum(df):
 # ]
 
 
-@blueprint.route("/index")
-@login_required
-def index():
-    """
-    Index page
-    """
-
-    return render_template("index22.html")
-
-
 @blueprint.route("/<template>")
 @login_required
 def route_template(template):
 
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=7)
-    df_mean = zensie_query(dt_from, dt_to)
-    df_temp = temperature_analysis(df_mean, dt_from, dt_to, TEMP_BINS)
-    df_hum = temperature_analysis(df_mean, dt_from, dt_to, HUM_BINS)
+    location_ids, sensor_temp_ranges, df_mean = zensie_query(dt_from, dt_to)
+    df_ = temperature_analysis1(df_mean, dt_from, dt_to)
 
-    weekly_temp_json = Prepare_Json_temp(df_temp)
-    weekly_hum_json = Prepare_Json_temp(df_hum)
-
-    data_to_frontend = weekly_temp_json
+    data_to_frontend = (
+        df_.groupby(["zone"], as_index=True)
+        .apply(lambda x: x[["temp_bin", "temp_cnt"]].to_dict("r"))
+        .reset_index()
+        .rename(columns={0: "Values"})
+        .to_json(orient="records")
+    )
 
     print(data_to_frontend)
 
     a = "test!!"
-
+    if template == "index21":
+        return render_template(
+            template + ".html",
+            jim=location_ids,
+            temperature_data=data_to_frontend,
+            sum_zensie_locations=len(location_ids),
+            zensie_locations=location_ids,
+            zensie_temp_ranges=sensor_temp_ranges,
+            dt_from=dt_from.strftime("%B %d, %Y"),
+            dt_to=dt_to.strftime("%B %d, %Y"),
+            # json_values=data_to_frontend,
+        )
     if template == "index22":
         return render_template(
             template + ".html",
