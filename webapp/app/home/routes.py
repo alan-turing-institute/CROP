@@ -62,13 +62,13 @@ def resample(df, bins, dt_from, dt_to):
         bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
 
     for temp_range in bins_list:
-        if len(df[(df["temp_bin"] == temp_range)].index) == 0:
+        if len(df[(df["bin"] == temp_range)].index) == 0:
 
-            df2 = pd.DataFrame({"temp_bin": [temp_range], "temp_cnt": [0]})
+            df2 = pd.DataFrame({"bin": [temp_range], "cnt": [0]})
 
             df = df.append(df2)
 
-    df = df.sort_values(by=["temp_bin"], ascending=True)
+    df = df.sort_values(by=["bin"], ascending=True)
 
     df.reset_index(inplace=True, drop=True)
 
@@ -76,9 +76,9 @@ def resample(df, bins, dt_from, dt_to):
 
     for bin_range in bins_list:
 
-        df_bin = df[df["temp_bin"] == bin_range]
+        df_bin = df[df["bin"] == bin_range]
 
-        del df_bin["temp_bin"]
+        del df_bin["bin"]
 
         df_bin.reset_index(inplace=True, drop=True)
 
@@ -196,19 +196,19 @@ def temperature_analysis(df, dt_from, dt_to, bins):
 
         df_each_zone = df[df.zone == zone]
         # breaks df in temperature bins
-        df_each_zone["temp_bin"] = pd.cut(df_each_zone["temperature"], bins[zone])
+        df_each_zone["bin"] = pd.cut(df_each_zone["temperature"], bins[zone])
 
         # converting bins to str
-        df_each_zone["temp_bin"] = df_each_zone["temp_bin"].astype(str)
+        df_each_zone["bin"] = df_each_zone["bin"].astype(str)
 
         # groups df per each bin
-        bin_grp = df_each_zone.groupby(by=["zone", "temp_bin"])
+        bin_grp = df_each_zone.groupby(by=["zone", "bin"])
 
         # get temperature counts per bin
         bin_cnt = bin_grp["temperature"].count().reset_index()
 
         # renames column with counts
-        bin_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
+        bin_cnt.rename(columns={"temperature": "cnt"}, inplace=True)
 
         bins_list, df_list, df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
 
@@ -216,15 +216,15 @@ def temperature_analysis(df, dt_from, dt_to, bins):
         df_["zone"] = zone
 
         # fixes the labels of the bins by removing uncessesary characters((0.0, 25.0]) )
-        for j in range(len(df_["temp_bin"])):
+        for j in range(len(df_["bin"])):
             fixed_label = (
-                df_["temp_bin"][j]
+                df_["bin"][j]
                 .replace("(", "")
                 .replace("]", "")
                 .replace(", ", "-")
                 .replace(".0", "")
             )
-            df_["temp_bin"][j] = fixed_label
+            df_["bin"][j] = fixed_label
 
         temp_list.append(df_)
 
@@ -244,37 +244,35 @@ def humidity_analysis(df, dt_from, dt_to, bins):
 
         df_each_zone = df[df.zone == zone]
         # breaks df in temperature bins
-        df_each_zone["hum_bin"] = pd.cut(df_each_zone["humidity"], bins[zone])
-        # df_each_zone["hum_bin"] = pd.cut(df_each_zone["humidity"], HUM_BINS)
+        df_each_zone["bin"] = pd.cut(df_each_zone["humidity"], bins[zone])
 
         # converting bins to str
-        df_each_zone["hum_bin"] = df_each_zone["hum_bin"].astype(str)
-        # df_each_zone["hum_bin"] = df_each_zone["hum_bin"].astype(str)
+        df_each_zone["bin"] = df_each_zone["bin"].astype(str)
 
         # groups df per each bin
-        bin_grp = df_each_zone.groupby(by=["zone", "hum_bin"])
+        bin_grp = df_each_zone.groupby(by=["zone", "bin"])
 
         # get temperature counts per bin
         bin_cnt = bin_grp["humidity"].count().reset_index()
 
         # renames column with counts
-        bin_cnt.rename(columns={"humidity": "hum_cnt"}, inplace=True)
+        bin_cnt.rename(columns={"humidity": "cnt"}, inplace=True)
 
         bins_list, df_list, df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
 
         # renames the values of all the zones
         df_["zone"] = zone
 
-        # fixes the labels of the bins by removing uncessesary characters((0.0, 25.0]) )
-        for j in range(len(df_["hum_bin"])):
+        # formats the labels of the bins by removing uncessesary characters((0.0, 25.0]) )
+        for j in range(len(df_["bin"])):
             fixed_label = (
-                df_["hum_bin"][j]
+                df_["bin"][j]
                 .replace("(", "")
                 .replace("]", "")
                 .replace(", ", "-")
                 .replace(".0", "")
             )
-            df_["hum_bin"][j] = fixed_label
+            df_["bin"][j] = fixed_label
 
         hum_list.append(df_)
     hum_df_merged = pd.concat(hum_list)  # merges all df in one.
@@ -285,7 +283,7 @@ def humidity_analysis(df, dt_from, dt_to, bins):
 def Prepare_Json_temp(df):
     return (
         df.groupby(["zone"], as_index=True)
-        .apply(lambda x: x[["temp_bin", "temp_cnt"]].to_dict("r"))
+        .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
@@ -295,7 +293,7 @@ def Prepare_Json_temp(df):
 def Prepare_Json_hum(df):
     return (
         df.groupby(["zone"], as_index=True)
-        .apply(lambda x: x[["hum_bin", "hum_cnt"]].to_dict("r"))
+        .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
@@ -340,21 +338,22 @@ def route_template(template):
     dt_from = dt_to - dt.timedelta(days=7)
     df_mean = zensie_query(dt_from, dt_to)
     df_temp = temperature_analysis(df_mean, dt_from, dt_to, TEMP_BINS)
-    df_hum = temperature_analysis(df_mean, dt_from, dt_to, HUM_BINS)
+    df_hum = humidity_analysis(df_mean, dt_from, dt_to, HUM_BINS)
 
     weekly_temp_json = Prepare_Json_temp(df_temp)
     weekly_hum_json = Prepare_Json_temp(df_hum)
 
-    data_to_frontend = weekly_temp_json
+    # data_to_frontend = weekly_temp_json # for the end merged json
 
-    print(data_to_frontend)
+    # print(data_to_frontend)
 
     a = "test!!"
 
     if template == "index22":
         return render_template(
             template + ".html",
-            temperature_data=data_to_frontend,
+            temperature_data=weekly_temp_json,
+            humidity_data=weekly_hum_json,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
