@@ -95,6 +95,41 @@
 
                 </div>
             </div>
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h2> Farm Performance </h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <p> Daily temperature counts </p>
+                        <canvas id="stackedbarchart10"></canvas>
+                        <canvas id="stackedbarchart11"></canvas>
+                        <canvas id="stackedbarchart12"></canvas>
+                        <canvas id="stackedbarchart13"></canvas>
+                        <canvas id="stackedbarchart14"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
         </div>
         <div class="row">
             <!--chart.j graph-->
@@ -127,6 +162,41 @@
                         <canvas id="stackedbarchart7"></canvas>
                         <canvas id="stackedbarchart8"></canvas>
                         <canvas id="stackedbarchart9"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h2> Farm Performance </h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <p> Daily humidity counts </p>
+                        <canvas id="stackedbarchart15"></canvas>
+                        <canvas id="stackedbarchart16"></canvas>
+                        <canvas id="stackedbarchart17"></canvas>
+                        <canvas id="stackedbarchart18"></canvas>
+                        <canvas id="stackedbarchart19"></canvas>
 
                     </div>
 
@@ -172,6 +242,9 @@
     //Imports from backend
     var temperature_data = JSON.parse('{{temperature_data | safe}}');
     var humidity_data = JSON.parse('{{humidity_data | safe}}');
+    var temperature_data_daily = JSON.parse('{{temperature_data_daily | safe}}');
+    var humidity_data_daily = JSON.parse('{{humidity_data_daily | safe}}');
+
 
     //var json_obj = JSON.parse('{{json_values | safe}}');
 
@@ -239,11 +312,19 @@
         var myChart = new Chart(ctx, config);
 
     }
+
+    //Temperature
     horizontal_charts(temperature_data, 0, "stackedbarchart0")
     horizontal_charts(temperature_data, 1, "stackedbarchart1")
     horizontal_charts(temperature_data, 2, "stackedbarchart2")
     horizontal_charts(temperature_data, 3, "stackedbarchart3")
     horizontal_charts(temperature_data, 4, "stackedbarchart4")
+
+    horizontal_charts(temperature_data_daily, 0, "stackedbarchart10")
+    horizontal_charts(temperature_data_daily, 1, "stackedbarchart11")
+    horizontal_charts(temperature_data_daily, 2, "stackedbarchart12")
+    horizontal_charts(temperature_data_daily, 3, "stackedbarchart13")
+    horizontal_charts(temperature_data_daily, 4, "stackedbarchart14")
 
 
     /////humidity
@@ -255,6 +336,11 @@
     horizontal_charts(humidity_data, 3, "stackedbarchart8")
     horizontal_charts(humidity_data, 4, "stackedbarchart9")
 
+    horizontal_charts(humidity_data_daily, 0, "stackedbarchart15")
+    horizontal_charts(humidity_data_daily, 1, "stackedbarchart16")
+    horizontal_charts(humidity_data_daily, 2, "stackedbarchart17")
+    horizontal_charts(humidity_data_daily, 3, "stackedbarchart18")
+    horizontal_charts(humidity_data_daily, 4, "stackedbarchart19")
 
     // iterate locations
     // for (i = 0; i < zensie_temp_data.length; i++) {
