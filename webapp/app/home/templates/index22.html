@@ -96,6 +96,43 @@
                 </div>
             </div>
         </div>
+        <div class="row">
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h2> Farm Performance </h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <p> Weekly humidity counts </p>
+                        <canvas id="stackedbarchart5"></canvas>
+                        <canvas id="stackedbarchart6"></canvas>
+                        <canvas id="stackedbarchart7"></canvas>
+                        <canvas id="stackedbarchart8"></canvas>
+                        <canvas id="stackedbarchart9"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -132,67 +169,46 @@
 <script>
 
 
-    //var i, j;
+    //Imports from backend
     var temperature_data = JSON.parse('{{temperature_data | safe}}');
+    var humidity_data = JSON.parse('{{humidity_data | safe}}');
+
     //var json_obj = JSON.parse('{{json_values | safe}}');
 
-    //var sensor_temp_data;
-    //var temp_range, temp_range_data;
-    //var dates, temp_cnts;
-    //console.warn(zensie_temp_data)
+    //console.warn(temperature_data[0]["Values"][0]["bin"]);
 
-    //var zensie_locations = "{{ zensie_locations | safe}}";
-    //console.warn(json_obj);
-    //var sensor_locations = zensie_locations.substring(1, zensie_locations.length).split(" ")
-    //var title_date_str, title_sensor_str;
 
-    var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
+    function horizontal_charts(json_data, zoneid, canvasname) {
+        var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
+        //iterates through zones (5)
 
-    cnts = [];
-
-    //console.warn(temperature_data[0]["Values"][0]["temp_bin"]);
-
-    zones_list = [];
-    temp_bin_list = []
-    temp_cnt_list = []
-
-    for (i = 0; i < temperature_data.length; i++) {
-
-        zones_list.push(temperature_data[i]["zone"])
-        temp_bin_ = []
-        temp_cnt_ = []
-        for (j = 0; j < temperature_data[i]["Values"].length; j++) {
-            temp_bin_.push(temperature_data[i]["Values"][j]["temp_bin"])
-            temp_cnt_.push(parseFloat(temperature_data[i]["Values"][j]["temp_cnt"]))
+        bin_ = []
+        cnt_ = []
+        for (j = 0; j < json_data[zoneid]["Values"].length; j++) {
+            bin_.push(json_data[zoneid]["Values"][j]["bin"])
+            cnt_.push(parseFloat(json_data[zoneid]["Values"][j]["cnt"]))
         }
-        temp_bin_list.push(temp_bin_)
-        temp_cnt_list.push(temp_cnt_)
-    }
 
-
-
-    for (j = 0; j < zones_list.length; j++) {
         const datasets_ = [];
-        for (i = 0; i < temp_bin_list[j].length; i++) {
+        for (i = 0; i < bin_.length; i++) {
             datasets_.push({
-                label: temp_bin_list[j][i],
-                data: [temp_cnt_list[j][i]],
+                label: bin_[i],
+                data: [cnt_[i]],
                 backgroundColor: colouramp[i],
             })
         }
 
-
         const data = {
-            labels: [zones_list[j]],
+            labels: [json_data[zoneid]["zone"]],
             datasets: datasets_
         };
 
         const config = {
             type: 'horizontalBar',
             data: data,
-            //options: barOptions_stacked,
             options:
             {
+
                 legend: {
                     display: false
                 },
@@ -215,16 +231,30 @@
                         },
                     }
                 }
-
             }
         };
 
-        var ctx = document.getElementById('stackedbarchart'.concat(j));
-
-
+        //var ctx = document.getElementById('stackedbarchart'.concat(0));
+        var ctx = document.getElementById(canvasname);
         var myChart = new Chart(ctx, config);
 
     }
+    horizontal_charts(temperature_data, 0, "stackedbarchart0")
+    horizontal_charts(temperature_data, 1, "stackedbarchart1")
+    horizontal_charts(temperature_data, 2, "stackedbarchart2")
+    horizontal_charts(temperature_data, 3, "stackedbarchart3")
+    horizontal_charts(temperature_data, 4, "stackedbarchart4")
+
+
+    /////humidity
+
+
+    horizontal_charts(humidity_data, 0, "stackedbarchart5")
+    horizontal_charts(humidity_data, 1, "stackedbarchart6")
+    horizontal_charts(humidity_data, 2, "stackedbarchart7")
+    horizontal_charts(humidity_data, 3, "stackedbarchart8")
+    horizontal_charts(humidity_data, 4, "stackedbarchart9")
+
 
     // iterate locations
     // for (i = 0; i < zensie_temp_data.length; i++) {
