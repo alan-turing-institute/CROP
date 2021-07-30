@@ -221,13 +221,13 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id, dt_from, dt_t
 
     json_VS = (
         df_grp_hr.groupby(["sensor_id"], as_index=True)
-        .apply(lambda x: x[["temperature", "humidity"]].to_dict("r"))
+        .apply(lambda x: x[["temperature", "humidity", "date"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
     )
 
-    return df_grp_hr
+    return json_VS
 
 
 def temperature_analysis(df, dt_from, dt_to, bins):
@@ -403,7 +403,7 @@ def route_template(template):
     daily_hum_json = Prepare_Json_temp(df_hum_daily)
 
     # data_to_frontend = weekly_temp_json # for the end merged json
-    vertical_stratification(
+    VS_json = vertical_stratification(
         df, 23, 18, dt_from, dt_to
     )  # sensorids in positions (16B1 and 16B4)
     # print(data_to_frontend)
@@ -417,6 +417,7 @@ def route_template(template):
             humidity_data=weekly_hum_json,
             temperature_data_daily=daily_temp_json,
             humidity_data_daily=daily_hum_json,
+            vertical_stratification=VS_json,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
