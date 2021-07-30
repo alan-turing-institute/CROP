@@ -130,6 +130,36 @@
 
                 </div>
             </div>
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h2> Farm Performance </h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <p> Vertical Stratification </p>
+                        <canvas id="stackedbarchart20"></canvas>
+                    </div>
+
+                </div>
+            </div>
         </div>
         <div class="row">
             <!--chart.j graph-->
@@ -244,12 +274,58 @@
     var humidity_data = JSON.parse('{{humidity_data | safe}}');
     var temperature_data_daily = JSON.parse('{{temperature_data_daily | safe}}');
     var humidity_data_daily = JSON.parse('{{humidity_data_daily | safe}}');
+    var vertical_stratification = JSON.parse('{{vertical_stratification | safe}}')
 
 
     //var json_obj = JSON.parse('{{json_values | safe}}');
 
     //console.warn(temperature_data[0]["Values"][0]["bin"]);
 
+    function time_series_charts(json_data, canvasname) {
+
+        values_top = []
+        values_bot = []
+        dates = []
+        for (j = 0; j < json_data[0]["Values"].length; j++) {
+            values_top.push(parseFloat(json_data[0]["Values"][j]["temperature"]))
+            values_bot.push(parseFloat(json_data[1]["Values"][j]["temperature"]))
+            dates.push(parseFloat(json_data[0]["Values"][j]["date"]))
+        }
+
+        const data = {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Top',
+                    data: values_top,
+                    borderColor: "#ff0000",
+                },
+                {
+                    label: 'Bottom',
+                    data: values_bot,
+                    borderColor: "#3399ff",
+                }
+            ]
+        };
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Vertical Stratification'
+                    }
+                }
+            },
+        };
+        var ctx = document.getElementById(canvasname);
+        var myChart = new Chart(ctx, config);
+    }
 
     function horizontal_charts(json_data, zoneid, canvasname) {
         var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
@@ -341,6 +417,10 @@
     horizontal_charts(humidity_data_daily, 2, "stackedbarchart17")
     horizontal_charts(humidity_data_daily, 3, "stackedbarchart18")
     horizontal_charts(humidity_data_daily, 4, "stackedbarchart19")
+
+
+    //vertical stratification
+    time_series_charts(vertical_stratification, "stackedbarchart20")
 
     // iterate locations
     // for (i = 0; i < zensie_temp_data.length; i++) {
