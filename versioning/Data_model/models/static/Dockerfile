@@ -1,11 +1,23 @@
 # FROM ubuntu
-FROM r-base AS base
+FROM rocker/r-ver:4.0.5
 
 RUN apt-get -y update
-RUN apt install curl
+RUN apt -y install curl
+RUN apt -y install git-all
 
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+RUN echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+RUN brew install gcc
 RUN brew install libpq
+
+# If you need to have libpq first in your PATH, run:
+RUN echo 'export PATH="/home/linuxbrew/.linuxbrew/opt/libpq/bin:$PATH"' >> ~/.profile
+
+# For compilers to find libpq you may need to set:
+RUN export LDFLAGS="-L/home/linuxbrew/.linuxbrew/opt/libpq/lib"
+RUN export CPPFLAGS="-I/home/linuxbrew/.linuxbrew/opt/libpq/include"
+RUN apt-get -y install libpq-dev
 
 WORKDIR /models
 
