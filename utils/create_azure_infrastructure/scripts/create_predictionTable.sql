@@ -4,21 +4,24 @@ DROP TABLE IF EXISTS model_run CASCADE;
 DROP TABLE IF EXISTS model_prediction CASCADE;
 
 -- --Model:
--- CREATE TABLE model (
---   id SERIAL PRIMARY KEY,
---   model_name VARCHAR(100) NOT NULL,
---   author VARCHAR(100)
--- );
+CREATE TABLE model (
+  id SERIAL PRIMARY KEY,
+  model_name VARCHAR(100) NOT NULL,
+  author VARCHAR(100)
+);
 
 -- INSERT INTO model(model_name, author)
 -- VALUES('arima', 'Melanie Singh');
 
+-- INSERT INTO model(model_name, author)                            
+-- values ('Bayesian Structural Time Series (BSTS)', 'Melanie Singh')
+
 -- -- Measure:
--- CREATE TABLE model_measure (
---   id SERIAL PRIMARY KEY,
---   measure_name VARCHAR(100) NOT NULL,
---   measure_description VARCHAR(100)
--- );
+CREATE TABLE model_measure (
+  id SERIAL PRIMARY KEY,
+  measure_name VARCHAR(100) NOT NULL,
+  measure_description VARCHAR(100)
+);
 
 -- INSERT INTO model_measure(measure_name)
 -- VALUES('Mean Temperature (Degree Celcius)');
@@ -28,6 +31,9 @@ DROP TABLE IF EXISTS model_prediction CASCADE;
 
 -- INSERT INTO model_measure(measure_name)
 -- VALUES('Lower Bound Temperature (Degree Celcius)');
+
+-- insert into model_measure (measure_name) 
+-- values ('Median Temperature (Degree Celcius)');
 
 -- Record run:
 CREATE TABLE model_run (
