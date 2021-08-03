@@ -1,0 +1,15 @@
+artifact_uri: /Users/myong/Documents/workspace/CROP/versioning/Data_model/test_model/mlruns/0/f75343590aad4e119ba74280c71e2531/artifacts
+end_time: 1622035249045
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: f75343590aad4e119ba74280c71e2531
+run_uuid: f75343590aad4e119ba74280c71e2531
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1622035246059
+status: 4
+tags: []
+user_id: myong

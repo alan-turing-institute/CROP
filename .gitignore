@@ -20,8 +20,14 @@ CROP.pyproj.user
 /data/ 
 /versioning/LatestData
 *.RDS
+*.RData
+*.Rapp.history
+*.Rhistory
 /versioning/Data_model/test_model/arima/mlruns/
 /versioning/Data_model/test_model/mlruns/
+*.csv
+*.tgz
+*.tar.gz
 
 # PyTest
 __pycache__
