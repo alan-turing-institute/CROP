@@ -1,6 +1,6 @@
 library(DBI)
 library(lubridate)
-require(reshape2)
+library(reshape2)
 
 SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
@@ -18,10 +18,10 @@ connectToDatabase = function(){
   crop_port = "5432"
   crop_dbname = "app_db"
   crop_user = "cropdbadmin@cropapptestsqlserver"
-  crop_password = ""
+  crop_password = "QhXZ7qZddDr224Mc2P4k"
   
   # Connect to the MySQL database: con
-  con <- DBI::dbConnect(PostgreSQL(), 
+  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), 
                    dbname = crop_dbname, 
                    host = crop_host, 
                    port = crop_port,
@@ -101,12 +101,12 @@ limitRows = 0
 datesToGetData = getStartEndDate(numDays)
 
 #energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(energy_raw, "./data/energy40.csv")
-energy_raw = read.csv("./data/energy40.csv")
+#write.csv(energy_raw, "../data/energy40.csv")
+energy_raw = read.csv("../data/energy40.csv")
 
 #env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(env_raw, "./data/env40.csv")
-env_raw = read.csv("./data/env40.csv")
+#write.csv(env_raw, "../data/env40.csv")
+env_raw = read.csv("../data/env40.csv")
 
 #source(paste0(".","/cleandata.R"), echo=FALSE)
 

@@ -3,11 +3,12 @@
 constructLights <- function(tobj){
   # lights typically come on at 4pm. So a farm cycle starts at 4pm. This algortihm identifies the likely time that the lights came on in the farm.
   tobj$FarmDateNew <- as.Date(tobj$FarmTime - 16*60*60)
-  tobjmean <- (tobj %>% group_by(FarmDateNew) %>% dplyr::summarise(meanE=mean(EnergyCP)))
+  tobjmean <- (tobj %>% group_by(FarmDateNew) %>% dplyr::summarise(meanE=mean(EnergyCP, na.rm=TRUE)))
   tobj$Lights <- rep(0, length(tobj$FarmDateNew))
   
   # identify rows where energyCP 
   for(ii in 1:length(tobj$Lights)){
+    print(ii)
     if(tobj$EnergyCP[ii] > 0.9*tobjmean[which(tobjmean$FarmDateNew==tobj$FarmDateNew[ii]),2]){
       if(tobj$EnergyCP[ii] >15){
         tobj$Lights[ii] <- 1
@@ -46,7 +47,27 @@ fill_data<-function(tobj){
   tobj$EnergyCP<- ifelse(is.na(tobj$EnergyCP), tobj$TypE,tobj$EnergyCP )
   tobj$Sensor_temp<- ifelse(is.na(tobj$Sensor_temp), tobj$TypT,tobj$Sensor_temp )
   
-  tobj$Lights <- constructLights(tobj)
+  #tobj$Lights <- constructLights(tobj)
+  return(tobj)
+}
+
+fill_data_mean = function(tobj){
+  # the aim of this function is to add typical values for the time of month and year if there is missing data
+  # this is a rapid way of filling in missing data but it requires the old dataset to be loaded. can be changed after another year of sensing.
+  my_time <- data.frame(FarmTime = seq(from=min(tobj$FarmTime), to=max(tobj$FarmTime),by="1 hour"))
+  tobj <- left_join(my_time, tobj)
+  tobj$Hour <- hour(tobj$FarmTime)
+  tobj$Month <- month(tobj$FarmTime)
+  tobj$WeekDay <- weekdays(tobj$FarmTime)
+  
+  tobj = tobj %>% group_by(Month, Hour,WeekDay)
+  TypE = mean(tobj$EnergyCP,na.rm = T)
+  TypT = mean(tobj$Sensor_temp,na.rm = T)
+  
+  tobj$EnergyCP<- ifelse(is.na(tobj$EnergyCP), TypE,tobj$EnergyCP )
+  tobj$Sensor_temp<- ifelse(is.na(tobj$Sensor_temp), TypT,tobj$Sensor_temp )
+  
+  #tobj$Lights <- constructLights(tobj)
   return(tobj)
 }
 
