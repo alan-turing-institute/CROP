@@ -56,7 +56,8 @@ standardiseObservations = function(observations, sensor =? string) {
   observationsForThisSensor = observations
   names(observationsForThisSensor)[tolower(names(observationsForThisSensor))==tolower(sensor)] = "Sensor_temp"
   observationsForThisSensor = observationsForThisSensor[,c("EnergyCP", "FarmTime", "Sensor_temp", "DateFarm")]
-  observationsForThisSensor = fill_data(observationsForThisSensor)
+  observationsForThisSensor = fill_data_mean(observationsForThisSensor)
+  observationsForThisSensor
 }
 
 splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) {
@@ -72,15 +73,22 @@ splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) 
   list(tsel=tsel, trainSelIndex=trainsel, testSelIndex=testsel)
 }
 
-cleanedDataPath = "../../../LatestData/may_t_ee.RDS"
-t_ee = loadData(cleanedDataPath) 
+#cleanedDataPath = "../data/may_t_ee.RDS"
+#t_ee_loaded = loadData(cleanedDataPath) 
+#latest_timestamp_loaded = standardiseLatestTimestamp(max(t_ee_loaded$FarmTimestamp))
+#forecast_timestamp_loaded = getForecastTimestamp(latest_timestamp)
+#tobj0_loaded = getOneYearDataUptoDate(observations = t_ee_loaded, forecast_timestamp = forecast_timestamp)
+#tobj1_loaded = standardiseObservations(tobj0_loaded,"Temperature_FARM_16B1")
+
 latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
 forecast_timestamp = getForecastTimestamp(latest_timestamp)
 tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
-
 tobj1 = standardiseObservations(tobj0,"Temperature_FARM_16B1")
+tobj1 = constructLights(tobj1)
+
+#tobj1 = standardiseObservations(tobj0,"Temperature_FARM_16B1")
 #tobj2 = standardiseObservations(tobj0,"Temperature_FARM_16B2")
-#tobj3 = standardiseObservations(tobj0,"Temperature_FARM_16B4")
+#tobj3 = standardiseObservations(tobj0,"Temperature_Farm_16B4")
 
 sensor_loc = c("Middle_16B1")
 tobj_list = list(tobj1)
@@ -93,6 +101,18 @@ names(list_forecasts) = sensor_loc
 daysOfHistoryForTraining = 30
 historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
 forecastDataStart = forecast_timestamp
+
+tobj=tobj_mm
+daysIntoFuture = 1
+tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(daysIntoFuture*SECONDS.PERDAY)))
+#fullcov <- constructCov(tsel$Lights, tsel$FarmTime)
+# indices for training
+trainsel = 1:(which(tsel$FarmTime==(forecastDataStart))-1)
+# indices for forecasting
+testsel = rep((which(tsel$FarmTime==(forecastDataStart))-24):(which(tsel$FarmTime==(forecastDataStart))-1),2)
+
+list(tsel=tsel, trainSelIndex=trainsel, testSelIndex=testsel)
+
 split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
 
 trainArima = function(available.Data, trainIndex) {
@@ -114,7 +134,7 @@ forecastArima = function(available.Data, forecastIndex, arima.Model) {
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
-source('~/Documents/workspace/CROP/versioning/Data_model/test_model/arima/pushData.R')
+#source('~/Documents/workspace/CROP/versioning/Data_model/test_model/arima/pushData.R')
 
 model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
 results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
@@ -144,13 +164,13 @@ forecastBSTS = function(available.Data, forecastIndex, model) {
   predict(model, burn=200, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
 }
 
-model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
-stats.bsts = sim_stats_bsts(results.bsts)
+#model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+#results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
+#stats.bsts = sim_stats_bsts(results.bsts)
 
-records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
-records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
-records.bsts = list(records.mean.bsts, records.median.bsts)
+#records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
+#records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
+#records.bsts = list(records.mean.bsts, records.median.bsts)
 
-run.bsts = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$BSTS, records=records.bsts)
-writeRun(run.bsts)
+#run.bsts = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$BSTS, records=records.bsts)
+#writeRun(run.bsts)
