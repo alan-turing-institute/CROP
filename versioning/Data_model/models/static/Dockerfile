@@ -20,6 +20,5 @@ RUN export CPPFLAGS="-I/home/linuxbrew/.linuxbrew/opt/libpq/include"
 RUN apt-get -y install libpq-dev
 
 WORKDIR /models
-
-
-# RUN Rscript /code/requirements.R
+RUN Rscript /code/requirements.R
+RUN Rscript /code/test_connection.R
