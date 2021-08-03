@@ -29,32 +29,223 @@
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
             <span class="count_top"><i class="fa fa-clock-o"></i> Energy use/m2</span>
-            <div class="count">123.50</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week1</span>
+            <div class="count">-</div>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>- </i> From last Week1</span>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
             <span class="count_top"><i class="fa fa-user"></i> Total Data Points</span>
-            <div class="count green">2,500</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week1</span>
+            <div class="count green">200,500</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
             <span class="count_top"><i class="fa fa-user"></i> Total no Sensors</span>
-            <div class="count">4,567</div>
-            <span class="count_bottom"><i class="red"><i class="fa fa-sort-desc"></i>12% </i> From last Week1</span>
+            <div class="count">8</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
             <span class="count_top"><i class="fa fa-user"></i> Total Midnight Collectors</span>
-            <div class="count">2,315</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+            <div class="count">4</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
             <span class="count_top"><i class="fa fa-user"></i> Total Missing Entries</span>
             <div class="count">7,325</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>4% </i> From last Week</span>
         </div>
     </div>
     <!-- /top tiles -->
 
+    <!--3D Unity container-->
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+
+
+                <!-- <div class="x_content">
+                <canvas id="c" style="width: 100%; height: 100%;"> 
+                    Text to alert visitors that the Canvas
+                    is not supported by your browser.
+                </canvas>
+
+            </div> -->
+
+                <div class="webgl-content">
+                    <div id="unityContainer" style="height: 45vh"></div>
+                    <div class="footer">
+                        <div class="webgl-logo"></div>
+                        <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
+                        <div class="title">CROP_Unity_3D</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    <!--/3D Unity container-->
+
+    <br />
+
+    <div class="row">
+        <!--warnings feed-->
+        <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Propagation/R&D <small>Alerts</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <ul class="list-unstyled timeline widget">
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>ALL OK IN PROPAGATION AND R&D</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>1 hour ago</span> by <a>Crop</a>
+                                        </div>
+                                        <p class="excerpt">.
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--warnings feed-->
+        <div class="col-md-4 col-sm-4 col-xs-14">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Farm <small>Alerts</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <ul class="list-unstyled timeline widget">
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>High Temperature in Farm1 entrance</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>13 hours ago</span> by <a>Advanticsys 1</a>
+                                        </div>
+                                        <p class="excerpt">Sensor Advantsys recorded a temperature of 25o in the
+                                            entrace. Suggested action :
+                                            1. turn on fans
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>High Humidity Back of Farm</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>13 hours ago</span> by <a>Zenzie 3</a>
+                                        </div>
+                                        <p class="excerpt">Sensor Zenzie recorded humidity 82 in the
+                                            back of the Farm
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--warnings feed-->
+        <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Energy/Weather <small>Alerts</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <ul class="list-unstyled timeline widget">
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>High Temperature in London</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>13 hours ago</span> by <a>Advanticsys 1</a>
+                                        </div>
+                                        <p class="excerpt">Predicted hot weather today at 12:30
+                                            Temperature will reach 27o
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br />
 
     <br />
     <div class="row">
@@ -64,7 +255,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
                 <div class="x_panel tile fixed_height_640 overflow_hidden">
                     <div class="x_title">
-                        <h2> Farm Performance </h2>
+                        <h3> Weekly temperature counts </h3>
                         <ul class="nav navbar-right panel_toolbox">
                             <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
@@ -84,7 +275,7 @@
 
                     <div class="x_content">
                         <!--<span id="zensie_sensor_names"></span>-->
-                        <p> Weekly temperature counts </p>
+                        <!-- <p> Weekly temperature counts </p> -->
                         <canvas id="stackedbarchart0"></canvas>
                         <canvas id="stackedbarchart1"></canvas>
                         <canvas id="stackedbarchart2"></canvas>
@@ -99,7 +290,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
                 <div class="x_panel tile fixed_height_640 overflow_hidden">
                     <div class="x_title">
-                        <h2> Farm Performance </h2>
+                        <h3> Daily temperature counts </h3>
                         <ul class="nav navbar-right panel_toolbox">
                             <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
@@ -119,7 +310,7 @@
 
                     <div class="x_content">
                         <!--<span id="zensie_sensor_names"></span>-->
-                        <p> Daily temperature counts </p>
+                        <!-- <p> Daily temperature counts </p> -->
                         <canvas id="stackedbarchart10"></canvas>
                         <canvas id="stackedbarchart11"></canvas>
                         <canvas id="stackedbarchart12"></canvas>
@@ -134,7 +325,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
                 <div class="x_panel tile fixed_height_640 overflow_hidden">
                     <div class="x_title">
-                        <h2> Farm Performance </h2>
+                        <h3> Vertical Stratification </h3>
                         <ul class="nav navbar-right panel_toolbox">
                             <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
@@ -154,7 +345,7 @@
 
                     <div class="x_content">
                         <!--<span id="zensie_sensor_names"></span>-->
-                        <p> Vertical Stratification </p>
+                        <!-- <p> Vertical Stratification </p> -->
                         <canvas id="stackedbarchart20"></canvas>
                     </div>
 
@@ -166,7 +357,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
                 <div class="x_panel tile fixed_height_640 overflow_hidden">
                     <div class="x_title">
-                        <h2> Farm Performance </h2>
+                        <h3> Weekly humidity counts </h3>
                         <ul class="nav navbar-right panel_toolbox">
                             <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
@@ -186,7 +377,7 @@
 
                     <div class="x_content">
                         <!--<span id="zensie_sensor_names"></span>-->
-                        <p> Weekly humidity counts </p>
+                        <!-- <p> Weekly humidity counts </p> -->
                         <canvas id="stackedbarchart5"></canvas>
                         <canvas id="stackedbarchart6"></canvas>
                         <canvas id="stackedbarchart7"></canvas>
@@ -201,7 +392,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
                 <div class="x_panel tile fixed_height_640 overflow_hidden">
                     <div class="x_title">
-                        <h2> Farm Performance </h2>
+                        <h3> Daily humidity counts </h3>
                         <ul class="nav navbar-right panel_toolbox">
                             <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             </li>
@@ -221,7 +412,7 @@
 
                     <div class="x_content">
                         <!--<span id="zensie_sensor_names"></span>-->
-                        <p> Daily humidity counts </p>
+                        <!-- <p> Daily humidity counts </p> -->
                         <canvas id="stackedbarchart15"></canvas>
                         <canvas id="stackedbarchart16"></canvas>
                         <canvas id="stackedbarchart17"></canvas>
@@ -264,6 +455,13 @@
 <script src="{{ url_for('static', filename='vendors/jqvmap/dist/maps/jquery.vmap.world.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/jqvmap/examples/js/jquery.vmap.sampledata.js') }}"></script>
 
+<!-- 3D models -->
+<script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
+<script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
+<script>
+    var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", { onProgress: UnityProgress });
+</script>
+<link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
 
 
 <script>
