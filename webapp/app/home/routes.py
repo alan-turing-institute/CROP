@@ -230,6 +230,7 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id, dt_from, dt_t
     return json_VS
 
 
+# lsdkjfldskflksj
 def temperature_analysis(df, dt_from, dt_to, bins):
     # print(df["timestamp"])
 
@@ -408,7 +409,7 @@ def route_template(template):
     )  # sensorids in positions (16B1 and 16B4)
     # print(data_to_frontend)
 
-    a = "test!!"
+    a = "test!!!"
 
     if template == "index22":
         return render_template(
