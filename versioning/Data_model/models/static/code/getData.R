@@ -1,6 +1,7 @@
 library(DBI)
 library(lubridate)
 library(reshape2)
+library(stringr)
 
 SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
@@ -101,11 +102,11 @@ limitRows = 0
 datesToGetData = getStartEndDate(numDays)
 
 energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
-write.csv(energy_raw, "../data/energy60.csv")
+#write.csv(energy_raw, "../data/energy60.csv")
 #energy_raw = read.csv("../data/energy40.csv")
 
 env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
-write.csv(env_raw, "../data/env60.csv")
+#write.csv(env_raw, "../data/env60.csv")
 #env_raw = read.csv("../data/env40.csv")
 
 #source(paste0(".","/cleandata.R"), echo=FALSE)
