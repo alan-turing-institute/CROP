@@ -7,6 +7,8 @@ install.packages("lubridate")
 install.packages("reshape2")
 install.packages("dplyr")
 install.packages("forecast")
+install.packages("stringr")
+install.packages("bsts")
 
 # install.packages("plyr")
 # install.packages("ggplot2")
