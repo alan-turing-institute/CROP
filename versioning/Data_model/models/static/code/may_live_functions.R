@@ -8,7 +8,6 @@ constructLights <- function(tobj){
   
   # identify rows where energyCP 
   for(ii in 1:length(tobj$Lights)){
-    print(ii)
     if(tobj$EnergyCP[ii] > 0.9*tobjmean[which(tobjmean$FarmDateNew==tobj$FarmDateNew[ii]),2]){
       if(tobj$EnergyCP[ii] >15){
         tobj$Lights[ii] <- 1
@@ -47,7 +46,7 @@ fill_data<-function(tobj){
   tobj$EnergyCP<- ifelse(is.na(tobj$EnergyCP), tobj$TypE,tobj$EnergyCP )
   tobj$Sensor_temp<- ifelse(is.na(tobj$Sensor_temp), tobj$TypT,tobj$Sensor_temp )
   
-  #tobj$Lights <- constructLights(tobj)
+  tobj$Lights <- constructLights(tobj)
   return(tobj)
 }
 
@@ -67,7 +66,7 @@ fill_data_mean = function(tobj){
   tobj$EnergyCP<- ifelse(is.na(tobj$EnergyCP), TypE,tobj$EnergyCP )
   tobj$Sensor_temp<- ifelse(is.na(tobj$Sensor_temp), TypT,tobj$Sensor_temp )
   
-  #tobj$Lights <- constructLights(tobj)
+  tobj$Lights <- constructLights(tobj)
   return(tobj)
 }
 
