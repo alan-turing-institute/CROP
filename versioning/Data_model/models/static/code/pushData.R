@@ -47,7 +47,7 @@ getData = function(sql_command) {
 
 writeData = function(sql_command) {
   # connect
-  print (sprintf("Running SQL: %s",sql_command))
+  print (sprintf("Running SQL: %s",str_truncate(sql_command, 20, "right")))
   conn=connectToDatabase()
   
   data_query = DBI::dbSendQuery(conn=conn, sql_command) 

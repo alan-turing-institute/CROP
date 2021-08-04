@@ -56,7 +56,7 @@ standardiseObservations = function(observations, sensor =? string) {
   observationsForThisSensor = observations
   names(observationsForThisSensor)[tolower(names(observationsForThisSensor))==tolower(sensor)] = "Sensor_temp"
   observationsForThisSensor = observationsForThisSensor[,c("EnergyCP", "FarmTime", "Sensor_temp", "DateFarm")]
-  observationsForThisSensor = fill_data_mean(observationsForThisSensor)
+  observationsForThisSensor = fill_data(observationsForThisSensor)
   observationsForThisSensor
 }
 
@@ -83,8 +83,8 @@ splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) 
 latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
 forecast_timestamp = getForecastTimestamp(latest_timestamp)
 tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
+source(paste0(".","/may_live_functions.R"), echo=FALSE)
 tobj1 = standardiseObservations(tobj0,"Temperature_FARM_16B1")
-tobj1 = constructLights(tobj1)
 
 #tobj1 = standardiseObservations(tobj0,"Temperature_FARM_16B1")
 #tobj2 = standardiseObservations(tobj0,"Temperature_FARM_16B2")
@@ -101,18 +101,6 @@ names(list_forecasts) = sensor_loc
 daysOfHistoryForTraining = 30
 historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
 forecastDataStart = forecast_timestamp
-
-tobj=tobj_mm
-daysIntoFuture = 1
-tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(daysIntoFuture*SECONDS.PERDAY)))
-#fullcov <- constructCov(tsel$Lights, tsel$FarmTime)
-# indices for training
-trainsel = 1:(which(tsel$FarmTime==(forecastDataStart))-1)
-# indices for forecasting
-testsel = rep((which(tsel$FarmTime==(forecastDataStart))-24):(which(tsel$FarmTime==(forecastDataStart))-1),2)
-
-list(tsel=tsel, trainSelIndex=trainsel, testSelIndex=testsel)
-
 split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
 
 trainArima = function(available.Data, trainIndex) {
@@ -134,8 +122,7 @@ forecastArima = function(available.Data, forecastIndex, arima.Model) {
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
-#source('~/Documents/workspace/CROP/versioning/Data_model/test_model/arima/pushData.R')
-
+source(paste0(".","/pushData.R"), echo=FALSE)
 model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
 results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
 stats.arima = sim_stats_arima(results.arima)
@@ -154,23 +141,34 @@ trainBSTS = function(available.Data, trainIndex) {
   mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
   mc = bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
   #this centres the mean towards the lower part of the day so the model is easier to explain
-  numIterations = 500 # default = 1000
+  numIterations = 50 # default = 1000
   model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
-  return (model)
+  model
 }
+
 forecastBSTS = function(available.Data, forecastIndex, model) {
   newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
   periodToForecast = 48 # default 48
-  predict(model, burn=200, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
+  predict(model, burn=20, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
 }
 
-#model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-#results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
-#stats.bsts = sim_stats_bsts(results.bsts)
+available.Data=split.Data$tsel 
+trainIndex = split.Data$trainSelIndex
+fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
+mc = list()
+mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
+mc = bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
+#this centres the mean towards the lower part of the day so the model is easier to explain
+numIterations = 50 # default = 1000
+model.bsts = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
 
-#records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
-#records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
-#records.bsts = list(records.mean.bsts, records.median.bsts)
+#model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
+stats.bsts = sim_stats_bsts(results.bsts)
+
+records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
+records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
+records.bsts = list(records.mean.bsts, records.median.bsts)
 
 #run.bsts = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$BSTS, records=records.bsts)
 #writeRun(run.bsts)
