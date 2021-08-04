@@ -70,7 +70,8 @@ splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) 
 }
 
 overrideTee = function() {
-  cleanedDataPath = "../data/t_ee.RDS"
+  #cleanedDataPath = "../data/t_ee.RDS"
+  cleanedDataPath = "../data/may_t_ee.RDS"
   readRDS(cleanedDataPath) 
 }
 
@@ -119,27 +120,39 @@ forecastArima = function(available.Data, forecastIndex, arima.Model) {
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
+runArimaPipeline = function(split.Data) {
+  model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+  results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
+  stats.arima = sim_stats_arima(results.arima)
+  
+  records.mean.arima = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.arima$mean)
+  records.upper.arima = list(measure_id = MEASURE_ID$Temperature_Upper, measure_values = results.arima$upper)
+  records.lower.arima = list(measure_id = MEASURE_ID$Temperature_Lower, measure_values = results.arima$lower)
+  records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
+  
+  run.arima = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$ARIMA, records=records.arima)
+  #writeRun(run.arima)
+}
 
-model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
-results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
-stats.arima = sim_stats_arima(results.arima)
-
-records.mean.arima = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.arima$mean)
-records.upper.arima = list(measure_id = MEASURE_ID$Temperature_Upper, measure_values = results.arima$upper)
-records.lower.arima = list(measure_id = MEASURE_ID$Temperature_Lower, measure_values = results.arima$lower)
-records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
-
-run.arima = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$ARIMA, records=records.arima)
-writeRun(run.arima)
+#runArimaPipeline(split.Data)
 
 trainBSTS = function(available.Data, trainIndex) {
+  numIterations = 50 # default = 1000
   fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
   mc = list()
   mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
-  mc = bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
-  #this centres the mean towards the lower part of the day so the model is easier to explain
-  numIterations = 50 # default = 1000
-  model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
+  mc_withRegression = try({
+    bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
+  })
+  model=NULL
+  if (inherits(mc_withRegression, "try-error")){
+    model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
+    print("no")
+  }
+  else {
+    model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc_withRegression, niter=numIterations) #iter 1000
+    print("yes")
+  }
   model
 }
 
@@ -150,13 +163,26 @@ forecastBSTS = function(available.Data, forecastIndex, model) {
   predict(model, burn=burnRate, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
 }
 
+#available.Data=split.Data$tsel
+#trainIndex = split.Data$trainSelIndex
+#fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
+#mc = list()
+#mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
+#mc = bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)])
+
 model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
 results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
-stats.bsts = sim_stats_bsts(results.bsts)
 
-records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
-records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
-records.bsts = list(records.mean.bsts, records.median.bsts)
+bstsPipeline = function(split.Data){
+  #model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+  #results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
+  stats.bsts = sim_stats_bsts(results.bsts)
+  
+  records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
+  records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
+  records.bsts = list(records.mean.bsts, records.median.bsts)
+  
+  #run.bsts = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$BSTS, records=records.bsts)
+  #writeRun(run.bsts)
+}
 
-#run.bsts = list(sensor_id=SENSOR_ID$Temperature_FARM_16B1, model_id=MODEL_ID$BSTS, records=records.bsts)
-#writeRun(run.bsts)
