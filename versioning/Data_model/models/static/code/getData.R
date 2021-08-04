@@ -100,13 +100,13 @@ numDays = 40
 limitRows = 0
 datesToGetData = getStartEndDate(numDays)
 
-#energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(energy_raw, "../data/energy40.csv")
-energy_raw = read.csv("../data/energy40.csv")
+energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+write.csv(energy_raw, "../data/energy40.csv")
+#energy_raw = read.csv("../data/energy40.csv")
 
-#env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(env_raw, "../data/env40.csv")
-env_raw = read.csv("../data/env40.csv")
+env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+write.csv(env_raw, "../data/env40.csv")
+#env_raw = read.csv("../data/env40.csv")
 
 #source(paste0(".","/cleandata.R"), echo=FALSE)
 

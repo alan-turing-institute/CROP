@@ -17,10 +17,6 @@ MODEL_ID = list(ARIMA = 1, BSTS = 2)
 source(paste0(".","/may_live_functions.R"), echo=FALSE)
 source(paste0(".","/pushData.R"), echo=FALSE)
 
-loadData = function(dataObjectPath) {
-  readRDS(dataObjectPath) 
-}
-
 standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
   # Identify time to forecast based on latest day
   if (hour(latestTimeStamp) > 16){
@@ -35,7 +31,7 @@ standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
 getForecastTimestamp = function(latestTimeStamp = ? Date) {
   twoDaysIntoPast = 2*SECONDS.PERDAY
   fourDaysIntoPast = 4*SECONDS.PERDAY
-  list_f_timestamps = seq(from=latest_timestamp-fourDaysIntoPast, to= latest_timestamp-twoDaysIntoPast, by="2 days")
+  list_f_timestamps = seq(from=latestTimeStamp-fourDaysIntoPast, to= latestTimeStamp-twoDaysIntoPast, by="2 days")
   list_f_timestamps[length(list_f_timestamps)]
 }
 
@@ -56,7 +52,7 @@ standardiseObservations = function(observations, sensor =? string) {
   observationsForThisSensor = observations
   names(observationsForThisSensor)[tolower(names(observationsForThisSensor))==tolower(sensor)] = "Sensor_temp"
   observationsForThisSensor = observationsForThisSensor[,c("EnergyCP", "FarmTime", "Sensor_temp", "DateFarm")]
-  observationsForThisSensor = fill_data(observationsForThisSensor)
+  observationsForThisSensor = fill_data_mean(observationsForThisSensor)
   observationsForThisSensor
 }
 
@@ -73,22 +69,22 @@ splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) 
   list(tsel=tsel, trainSelIndex=trainsel, testSelIndex=testsel)
 }
 
-#cleanedDataPath = "../data/may_t_ee.RDS"
-#t_ee_loaded = loadData(cleanedDataPath) 
-#latest_timestamp_loaded = standardiseLatestTimestamp(max(t_ee_loaded$FarmTimestamp))
-#forecast_timestamp_loaded = getForecastTimestamp(latest_timestamp)
-#tobj0_loaded = getOneYearDataUptoDate(observations = t_ee_loaded, forecast_timestamp = forecast_timestamp)
-#tobj1_loaded = standardiseObservations(tobj0_loaded,"Temperature_FARM_16B1")
+overrideTee = function() {
+  cleanedDataPath = "../data/t_ee.RDS"
+  readRDS(cleanedDataPath) 
+}
 
-latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
-forecast_timestamp = getForecastTimestamp(latest_timestamp)
-tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
-source(paste0(".","/may_live_functions.R"), echo=FALSE)
-tobj1 = standardiseObservations(tobj0,"Temperature_FARM_16B1")
+getCurrentData = function(t_ee) {
+  latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
+  forecast_timestamp = getForecastTimestamp(latest_timestamp)
+  tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
+  list(tobj1=standardiseObservations(tobj0,"Temperature_FARM_16B1"), forecast_timestamp=forecast_timestamp)
+}
 
-#tobj1 = standardiseObservations(tobj0,"Temperature_FARM_16B1")
-#tobj2 = standardiseObservations(tobj0,"Temperature_FARM_16B2")
-#tobj3 = standardiseObservations(tobj0,"Temperature_Farm_16B4")
+t_ee = overrideTee()
+tobj1_data = getCurrentData(t_ee)
+tobj1 = tobj1_data$tobj1
+forecast_timestamp = tobj1_data$forecast_timestamp
 
 sensor_loc = c("Middle_16B1")
 tobj_list = list(tobj1)
@@ -102,6 +98,7 @@ daysOfHistoryForTraining = 30
 historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
 forecastDataStart = forecast_timestamp
 split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
+#split.Data = splitTrainingTestData(tobj_mm, tobj_mm$FarmTime[1], tobj_mm$FarmTime[9796])
 
 trainArima = function(available.Data, trainIndex) {
   p = 4 # AR order
@@ -122,7 +119,7 @@ forecastArima = function(available.Data, forecastIndex, arima.Model) {
   list(upper=results$upper, lower=results$lower, mean=results$mean)
 }
 
-source(paste0(".","/pushData.R"), echo=FALSE)
+
 model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
 results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
 stats.arima = sim_stats_arima(results.arima)
@@ -149,20 +146,11 @@ trainBSTS = function(available.Data, trainIndex) {
 forecastBSTS = function(available.Data, forecastIndex, model) {
   newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
   periodToForecast = 48 # default 48
-  predict(model, burn=20, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
+  burnRate=20 # default 200
+  predict(model, burn=burnRate, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
 }
 
-available.Data=split.Data$tsel 
-trainIndex = split.Data$trainSelIndex
-fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
-mc = list()
-mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
-mc = bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
-#this centres the mean towards the lower part of the day so the model is easier to explain
-numIterations = 50 # default = 1000
-model.bsts = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
-
-#model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
+model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
 results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
 stats.bsts = sim_stats_bsts(results.bsts)
 
