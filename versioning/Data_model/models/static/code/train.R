@@ -165,7 +165,7 @@ setupModels = function(split.Data, sensorID) {
   runbstsPipeline(split.Data, sensorID=sensorID)
 }
 
-t_ee = overrideTee()
+#t_ee = overrideTee()
 currentData = getCurrentData(t_ee)
 tobj_list = currentData$tobj_list
 forecast_timestamp = currentData$forecast_timestamp
