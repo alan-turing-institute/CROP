@@ -118,7 +118,7 @@ setupModels = function(split.Data, sensorID) {
     records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
     
     run.arima = list(sensor_id=sensorID, model_id=MODEL_ID$ARIMA, records=records.arima)
-    #writeRun(run.arima)
+    writeRun(run.arima)
   }
   
   trainBSTS = function(available.Data, trainIndex) {
