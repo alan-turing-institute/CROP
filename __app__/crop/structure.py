@@ -44,6 +44,7 @@ from __app__.crop.constants import (
     ID_COL_NAME,
     SENSOR_UPLOAD_LOG_TABLE_NAME,
     ZENSIE_TRH_TABLE_NAME,
+    ZENSIE_WEATHER_TABLE_NAME,
     WARNINGS_TABLE_NAME,
 )
 
