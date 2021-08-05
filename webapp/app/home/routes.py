@@ -43,18 +43,15 @@ HUM_BINS = {
 }
 
 
-def resample(df, bins, dt_from, dt_to):
+def resample(df, bins):
     """
     Resamples (adds missing date/temperature bin combinations) to a dataframe.
 
     Arguments:
         df: dataframe with temperature assign to bins
-        bins: temperature bins as a list
-        dt_from: date range from
-        dt_to: date range to
+        bins: temperature or humidity bins as a list
     Returns:
-        bins_list: a list of temperature bins
-        df_list: a list of df corresponding to temperature bins
+        df: the df with grouped bins
     """
 
     bins_list = []
@@ -72,22 +69,9 @@ def resample(df, bins, dt_from, dt_to):
 
     df.reset_index(inplace=True, drop=True)
 
-    df_list = []
-
-    for bin_range in bins_list:
-
-        df_bin = df[df["bin"] == bin_range]
-
-        del df_bin["bin"]
-
-        df_bin.reset_index(inplace=True, drop=True)
-
-        df_list.append(df_bin)
-
-    return bins_list, df_list, df
+    return df
 
 
-# def weekly_calc (resampled_df_list):
 
 
 def zensie_query(
@@ -95,14 +79,13 @@ def zensie_query(
     dt_to,
 ):
     """
-    Performs data analysis for Zensie sensors.
+    Performs a query for zensie sensors.
 
     Arguments:
         dt_from_: date range from
         dt_to_: date range to
     Returns:
-        sensor_names: a list of sensor names
-        sensor_temp_ranges: json data with temperate ranges
+        df: a df with the queried data
     """
 
     logging.info(
@@ -139,7 +122,7 @@ def zensie_query(
         return df
 
     else:
-        df_mean_hr = df.empty
+        df = df.empty
 
     return df
 
@@ -154,8 +137,7 @@ def grp_per_hr_zone(temp_df, dt_from, dt_to):
         dt_from: date range from
         dt_to: date range to
     Returns:
-        sensor_names: a list of sensor names
-        sensor_temp_ranges: json data with temperate ranges
+        df_grp_zone_hr: df with temperate ranges
     """
 
     df = copy.deepcopy(temp_df)
@@ -187,8 +169,20 @@ def grp_per_hr_zone(temp_df, dt_from, dt_to):
     return df_grp_zone_hr
 
 
-def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id, dt_from, dt_to):
-
+def vertical_stratification(temp_df, dt_from, dt_to, bot_sensor_id, top_sensor_id):
+    """
+    Function to do the vertical stratification for the middle of the farm
+    sensors: 16B1 and 16B4, and returned Json. 
+    Arguments:
+        temp_df: data
+        dt_from: date range from
+        dt_to: date range to
+        bot_sensor_id: sensor Id installed at the bottom of the farm 
+        top_sensor_id: sensor id installed at the top part of the farm
+    Returns:
+        json_VS: A json file containing (bot and top) hourly values for the 
+        time series plot in front end 
+    """
     df = copy.deepcopy(temp_df)
 
     # mask per selected date
@@ -230,8 +224,20 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id, dt_from, dt_t
     return json_VS
 
 
+# lsdkjfldskflksj
 def temperature_analysis(df, dt_from, dt_to, bins):
-    # print(df["timestamp"])
+    """
+    Function to perform temerature analysis per location of the farm.
+    Counts the number of instances that occur per temp. bin. 
+    Arguments:
+        df: data
+        dt_from: date range from
+        dt_to: date range to
+        bins: a list of bins to perform the analysis
+
+    Returns:
+        temp_df_merged: A merged df with sampled values per bin
+     """
 
     df_unique_zones = df[["zone"]].drop_duplicates(["zone"])
     location_zones = df_unique_zones["zone"].tolist()
@@ -257,7 +263,7 @@ def temperature_analysis(df, dt_from, dt_to, bins):
         # renames column with counts
         bin_cnt.rename(columns={"temperature": "cnt"}, inplace=True)
 
-        bins_list, df_list, df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
+        df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
 
         # renames the values of all the zones
         df_["zone"] = zone
@@ -282,7 +288,19 @@ def temperature_analysis(df, dt_from, dt_to, bins):
 
 
 def humidity_analysis(df, dt_from, dt_to, bins):
+    """
+    Function to perform humidity analysis per location of the farm.
+    Counts the number of instances that occur per temp. bin. 
+    Arguments:
+        df: data
+        dt_from: date range from
+        dt_to: date range to
+        bins: a list of bins to perform the analysis
 
+    Returns:
+        temp_df_merged: A merged df with sampled values per bin
+ 
+    """
     df_unique_zones = df[["zone"]].drop_duplicates(["zone"])
     location_zones = df_unique_zones["zone"].tolist()
 
@@ -305,7 +323,7 @@ def humidity_analysis(df, dt_from, dt_to, bins):
         # renames column with counts
         bin_cnt.rename(columns={"humidity": "cnt"}, inplace=True)
 
-        bins_list, df_list, df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
+        df_ = resample(bin_cnt, bins[zone], dt_from, dt_to)
 
         # renames the values of all the zones
         df_["zone"] = zone
@@ -322,12 +340,19 @@ def humidity_analysis(df, dt_from, dt_to, bins):
             df_["bin"][j] = fixed_label
 
         hum_list.append(df_)
-    hum_df_merged = pd.concat(hum_list)  # merges all df in one.
+
+    # merges all df in one.
+    hum_df_merged = pd.concat(hum_list) 
 
     return hum_df_merged
 
 
 def Prepare_Json_temp(df):
+    """
+    Function to return the Json for the temperature related 
+    charts in the main dashboard
+ 
+    """
     return (
         df.groupby(["zone"], as_index=True)
         .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
@@ -338,6 +363,11 @@ def Prepare_Json_temp(df):
 
 
 def Prepare_Json_hum(df):
+    """
+    Function to return the Json for the humidity related 
+    charts in the main dashboard
+ 
+    """
     return (
         df.groupby(["zone"], as_index=True)
         .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
@@ -345,27 +375,6 @@ def Prepare_Json_hum(df):
         .rename(columns={0: "Values"})
         .to_json(orient="records")
     )
-
-
-# test_json = [
-#     {
-#         "timestamp": "2021-07-07-21",
-#         "zone": "BackFarm",
-#         "date": 1625616000000,
-#         "sensor_id": 22.0,
-#         "temperature": 26.1875004768,
-#         "humidity": 73.0,
-#     },
-#     {
-#         "timestamp": "2021-07-07-21",
-#         "zone": "FrontFarm",
-#         "date": 1625616000000,
-#         "sensor_id": 21.0,
-#         "temperature": 20.2000007629,
-#         "humidity": 74.0,
-#     },
-# ]
-
 
 @blueprint.route("/index")
 @login_required
@@ -408,8 +417,6 @@ def route_template(template):
     )  # sensorids in positions (16B1 and 16B4)
     # print(data_to_frontend)
 
-    a = "test!!"
-
     if template == "index22":
         return render_template(
             template + ".html",
@@ -422,4 +429,4 @@ def route_template(template):
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
-    return render_template(template + ".html", jim=a)
+    return render_template(template + ".html")
