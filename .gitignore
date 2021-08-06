@@ -18,6 +18,7 @@ CROP.pyproj.user
 
 # Data
 /data/ 
+/versioning/Data_model/models/dynamic/data 
 /versioning/LatestData
 *.RDS
 *.RData
@@ -28,6 +29,10 @@ CROP.pyproj.user
 *.csv
 *.tgz
 *.tar.gz
+/versioning/Data_model/models/static/data
+/versioning/Data_model/models/static/*.RDS
+/versioning/Data_model/models/static/*.tgz
+/versioning/Data_model/models/static/*.gz
 
 # PyTest
 __pycache__
