@@ -1,8 +1,8 @@
 library(plyr)
-require(dplyr)
+library(dplyr)
 library(lubridate)
-require(reshape2)
-require(forecast)
+library(reshape2)
+library(forecast)
 
 # This script outputs the hourly average temperature, rel hum and energy for the latest data
 # It then combines all the data frames using left_join with a time vector called my_time, to be sure the data contains all the timestamps in the last year, even if no data was collected
@@ -175,5 +175,5 @@ t_ee <- left_join(t_e1, t_e2)
 ## save the cleaned data frame for future use --------------
 #setwd(daughterfolder)
 
-#saveRDS(t_ee,"t_ee.RDS")
+#saveRDS(t_ee,"../data/t_ee.RDS")
 
