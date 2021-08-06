@@ -1,10 +1,15 @@
-download:
-	# This should download model code from repo
+infrastructure:
+	snap install docker
+	docker pull turingcropapp/static-models:1
+	sudo apt-get install subversion
 container:
-	# This should containerise model code
+	docker pull turingcropapp/static-models:1
+code:
+	svn checkout https://github.com/alan-turing-institute/CROP/branches/output-to-database/versioning/Data_model/models/static
 prediction:
-	# This should run analysis code
+	docker run -dt -v $(pwd)/static/code:/models turingcropapp/static-models:1
 help: 
-	$(info download : Download model code from repo)
-	$(info container : Containerise model code)
-	$(info prediction : Run model code)
+	$(info infrastructure : Set up docker and subversion)
+	$(info container : Get model container)
+	$(info code : Get model code)
+	$(info prediction : )
