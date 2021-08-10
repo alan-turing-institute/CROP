@@ -383,7 +383,7 @@ def index():
     Index page
     """
 
-    return render_template("index22.html")
+    return render_template("index.html")
 
 
 @blueprint.route("/<template>")
@@ -416,7 +416,7 @@ def route_template(template):
         df, 23, 18, dt_from, dt_to
     )  # sensorids in positions (16B1 and 16B4)
 
-    if template == "index22":
+    if template == "index":
         return render_template(
             template + ".html",
             temperature_data=weekly_temp_json,
