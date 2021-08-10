@@ -1,16 +1,20 @@
-"""
-A module for the main dashboard actions
-"""
-import logging
-import copy
-import datetime as dt
-import pandas as pd
-
+from app.home import blueprint
 from flask import render_template, request
 from flask_login import login_required
 from sqlalchemy import and_
 
-from app.home import blueprint
+import copy
+
+import datetime as dt
+
+import numpy as np
+import pandas as pd
+import json
+
+import logging
+
+
+from utilities.utils import parse_date_range_argument
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
@@ -39,15 +43,15 @@ HUM_BINS = {
 }
 
 
-def resample(df_, bins):
+def resample(df, bins):
     """
     Resamples (adds missing date/temperature bin combinations) to a dataframe.
 
     Arguments:
-        temp_df: dataframe with temperature assign to bins
+        df: dataframe with temperature assign to bins
         bins: temperature or humidity bins as a list
     Returns:
-        temp_df: the df with grouped bins
+        df: the df with grouped bins
     """
 
     bins_list = []
@@ -55,20 +59,25 @@ def resample(df_, bins):
         bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
 
     for temp_range in bins_list:
-        if len(df_[(df_["bin"] == temp_range)].index) == 0:
+        if len(df[(df["bin"] == temp_range)].index) == 0:
 
             df2 = pd.DataFrame({"bin": [temp_range], "cnt": [0]})
 
-            df_ = df_.append(df2)
+            df = df.append(df2)
 
-    df_out = df_.sort_values(by=["bin"], ascending=True)
+    df = df.sort_values(by=["bin"], ascending=True)
 
-    df_out.reset_index(inplace=True, drop=True)
+    df.reset_index(inplace=True, drop=True)
 
-    return df_out
+    return df
 
 
-def zensie_query(dt_from, dt_to):
+
+
+def zensie_query(
+    dt_from,
+    dt_to,
+):
     """
     Performs a query for zensie sensors.
 
@@ -109,8 +118,11 @@ def zensie_query(dt_from, dt_to):
 
     logging.info("Total number of records found: %d" % (len(df.index)))
 
-    if df.empty:
-        logging.debug("WARNING: Query returned empty")
+    if not df.empty:
+        return df
+
+    else:
+        df = df.empty
 
     return df
 
@@ -157,19 +169,19 @@ def grp_per_hr_zone(temp_df, dt_from, dt_to):
     return df_grp_zone_hr
 
 
-def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id, dt_from, dt_to):
+def vertical_stratification(temp_df, dt_from, dt_to, bot_sensor_id, top_sensor_id):
     """
     Function to do the vertical stratification for the middle of the farm
-    sensors: 16B1 and 16B4, and returned Json.
+    sensors: 16B1 and 16B4, and returned Json. 
     Arguments:
         temp_df: data
         dt_from: date range from
         dt_to: date range to
-        bot_sensor_id: sensor Id installed at the bottom of the farm
+        bot_sensor_id: sensor Id installed at the bottom of the farm 
         top_sensor_id: sensor id installed at the top part of the farm
     Returns:
-        json_VS: A json file containing (bot and top) hourly values for the
-        time series plot in front end
+        json_VS: A json file containing (bot and top) hourly values for the 
+        time series plot in front end 
     """
     df = copy.deepcopy(temp_df)
 
@@ -201,7 +213,7 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id, dt_from, dt_t
         .reset_index()
     )
 
-    json_vertstrat = (
+    json_VS = (
         df_grp_hr.groupby(["sensor_id"], as_index=True)
         .apply(lambda x: x[["temperature", "humidity", "date"]].to_dict("r"))
         .reset_index()
@@ -209,13 +221,13 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id, dt_from, dt_t
         .to_json(orient="records")
     )
 
-    return json_vertstrat
+    return json_VS
 
 
-def temperature_analysis(df_temp, bins):
+def temperature_analysis(df, dt_from, dt_to, bins):
     """
     Function to perform temerature analysis per location of the farm.
-    Counts the number of instances that occur per temp. bin.
+    Counts the number of instances that occur per temp. bin. 
     Arguments:
         df: data
         dt_from: date range from
@@ -224,17 +236,20 @@ def temperature_analysis(df_temp, bins):
 
     Returns:
         temp_df_merged: A merged df with sampled values per bin
-    """
-
-    df_unique_zones = df_temp[["zone"]].drop_duplicates(["zone"])
+     """
+    df_unique_zones = df[["zone"]].drop_duplicates(["zone"])
     location_zones = df_unique_zones["zone"].tolist()
+    # sensor_grp_temp = zone_hr_grp["temperature"].mean().reset_index()
 
     temp_list = []
 
     for zone in location_zones:
-        # check if zone exists in current bins dictionary:
-        if zone in bins:
-            df_each_zone = df_temp[df_temp.zone == zone]
+
+        #check if zone exists in current bins dictionary:
+        if (zone in bins):
+
+            df_each_zone = df[df.zone == zone]
+            
             # breaks df in temperature bins
             df_each_zone["bin"] = pd.cut(df_each_zone["temperature"], bins[zone])
 
@@ -267,22 +282,19 @@ def temperature_analysis(df_temp, bins):
                 df_["bin"][j] = fixed_label
 
             temp_list.append(df_)
+            
+        else: logging.info("WARNING: %s doesn't exist in current temp bin dictionary" % zone) 
 
-        else:
-            logging.info(
-                "WARNING: %s doesn't exist in current temp bin dictionary" % zone
-            )
-
-        # merges all df in one.
-        temp_df_merged = pd.concat(temp_list)
+    # merges all df in one.
+    temp_df_merged = pd.concat(temp_list)
 
     return temp_df_merged
 
 
-def humidity_analysis(df_hum, bins):
+def humidity_analysis(df, dt_from, dt_to, bins):
     """
     Function to perform humidity analysis per location of the farm.
-    Counts the number of instances that occur per temp. bin.
+    Counts the number of instances that occur per temp. bin. 
     Arguments:
         df: data
         dt_from: date range from
@@ -291,17 +303,17 @@ def humidity_analysis(df_hum, bins):
 
     Returns:
         temp_df_merged: A merged df with sampled values per bin
-
+ 
     """
-    df_unique_zones = df_hum[["zone"]].drop_duplicates(["zone"])
+    df_unique_zones = df[["zone"]].drop_duplicates(["zone"])
     location_zones = df_unique_zones["zone"].tolist()
 
     hum_list = []
     for zone in location_zones:
-        # check if zone exists in current bins dictionary:
-        if zone in bins:
+        if (zone in bins):
 
-            df_each_zone = df_hum[df_hum.zone == zone]
+            df_each_zone = df[df.zone == zone]
+
             # breaks df in temperature bins
             df_each_zone["bin"] = pd.cut(df_each_zone["humidity"], bins[zone])
 
@@ -334,26 +346,22 @@ def humidity_analysis(df_hum, bins):
                 df_["bin"][j] = fixed_label
 
             hum_list.append(df_)
-
-        else:
-            logging.info(
-                "WARNING: %s doesn't exist in current hum bin dictionary" % zone
-            )
+        else: logging.info("WARNING: %s doesn't exist in current hum bin dictionary" % zone) 
 
     # merges all df in one.
-    hum_df_merged = pd.concat(hum_list)  # merges all df in one.
+    hum_df_merged = pd.concat(hum_list) 
 
     return hum_df_merged
 
 
-def json_temp(df_temp):
+def Prepare_Json_temp(df):
     """
-    Function to return the Json for the temperature related
+    Function to return the Json for the temperature related 
     charts in the main dashboard
-
+ 
     """
     return (
-        df_temp.groupby(["zone"], as_index=True)
+        df.groupby(["zone"], as_index=True)
         .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
@@ -361,20 +369,19 @@ def json_temp(df_temp):
     )
 
 
-def json_hum(df_hum):
+def Prepare_Json_hum(df):
     """
-    Function to return the Json for the humidity related
+    Function to return the Json for the humidity related 
     charts in the main dashboard
-
+ 
     """
     return (
-        df_hum.groupby(["zone"], as_index=True)
+        df.groupby(["zone"], as_index=True)
         .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
     )
-
 
 @blueprint.route("/index")
 @login_required
@@ -389,9 +396,6 @@ def index():
 @blueprint.route("/<template>")
 @login_required
 def route_template(template):
-    """
-    Render page, send json
-    """
 
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=7)
@@ -402,19 +406,23 @@ def route_template(template):
     df_mean_hr_weekly = grp_per_hr_zone(df, dt_from, dt_to)
     df_mean_hr_daily = grp_per_hr_zone(df, dt_from_daily, dt_to)
 
-    df_temp_weekly = temperature_analysis(df_mean_hr_weekly, TEMP_BINS)
-    df_hum_weekly = humidity_analysis(df_mean_hr_weekly, HUM_BINS)
-    df_temp_daily = temperature_analysis(df_mean_hr_daily, TEMP_BINS)
-    df_hum_daily = humidity_analysis(df_mean_hr_daily, HUM_BINS)
+    df_temp_weekly = temperature_analysis(df_mean_hr_weekly, dt_from, dt_to, TEMP_BINS)
+    df_hum_weekly = humidity_analysis(df_mean_hr_weekly, dt_from, dt_to, HUM_BINS)
+    df_temp_daily = temperature_analysis(
+        df_mean_hr_daily, dt_from_daily, dt_to, TEMP_BINS
+    )
+    df_hum_daily = humidity_analysis(df_mean_hr_daily, dt_from_daily, dt_to, HUM_BINS)
 
-    weekly_temp_json = json_temp(df_temp_weekly)
-    weekly_hum_json = json_temp(df_hum_weekly)
-    daily_temp_json = json_temp(df_temp_daily)
-    daily_hum_json = json_temp(df_hum_daily)
+    weekly_temp_json = Prepare_Json_temp(df_temp_weekly)
+    weekly_hum_json = Prepare_Json_temp(df_hum_weekly)
+    daily_temp_json = Prepare_Json_temp(df_temp_daily)
+    daily_hum_json = Prepare_Json_temp(df_hum_daily)
 
-    json_vertstrat = vertical_stratification(
-        df, 23, 18, dt_from, dt_to
-    )  # sensorids in positions (16B1 and 16B4)
+    # data_to_frontend = weekly_temp_json # for the end merged json
+    #VS_json = vertical_stratification(
+    #    df, 23, 18, dt_from, dt_to
+    #)  # sensorids in positions (16B1 and 16B4)
+    # print(data_to_frontend)
 
     if template == "index22":
         return render_template(
@@ -423,7 +431,7 @@ def route_template(template):
             humidity_data=weekly_hum_json,
             temperature_data_daily=daily_temp_json,
             humidity_data_daily=daily_hum_json,
-            vertical_stratification=json_vertstrat,
+            #vertical_stratification=VS_json,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )

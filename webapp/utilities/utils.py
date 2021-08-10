@@ -105,5 +105,3 @@ def parse_date_range_argument(request_args):
 
     except ValueError:
         return get_default_datetime_range()
-
-
