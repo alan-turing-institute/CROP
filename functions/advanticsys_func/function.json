@@ -1,0 +1,15 @@
+{
+  "scriptFile": "__init__.py",
+  "entryPoint": "advanticsys_import",
+  "bindings": [
+    {
+        "name": "blobin",
+        "type": "blobTrigger",
+        "direction": "in",
+        "path": "advanticsys-raw-data/{blobname}.{blobextension}",
+        "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
+
+    
