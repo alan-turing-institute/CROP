@@ -182,9 +182,11 @@ DAILY_HARVEST_TABLE_NAME = "daily_harvest_data"
 INFRASTRUCTURE_TABLE_NAME = "infrastructure_data"
 SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
+
 WARNINGS_TABLE_NAME = "warnings"
 
 ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
+ZENSIE_WEATHER_TABLE_NAME = "zensie_weather_data"
 
 # SQL Column names
 ID_COL_NAME = "id"
