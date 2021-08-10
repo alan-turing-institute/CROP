@@ -382,17 +382,6 @@ def index():
     """
     Index page
     """
-
-    return render_template("index.html")
-
-
-@blueprint.route("/<template>")
-@login_required
-def route_template(template):
-    """
-    Render page, send json
-    """
-
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=7)
     dt_from_daily = dt_to - dt.timedelta(days=1)
@@ -416,16 +405,12 @@ def route_template(template):
         df, 23, 18, dt_from, dt_to
     )  # sensorids in positions (16B1 and 16B4)
 
-    if template == "index":
-        return render_template(
-            template + ".html",
-            temperature_data=weekly_temp_json,
-            humidity_data=weekly_hum_json,
-            temperature_data_daily=daily_temp_json,
-            humidity_data_daily=daily_hum_json,
-            vertical_stratification=json_vertstrat,
-            dt_from=dt_from.strftime("%B %d, %Y"),
-            dt_to=dt_to.strftime("%B %d, %Y"),
-        )
-
-    return render_template(template + ".html")
+    return render_template(
+        "index.html",
+        temperature_data=weekly_temp_json,
+        humidity_data=weekly_hum_json,
+        temperature_data_daily=daily_temp_json,
+        humidity_data_daily=daily_hum_json,
+        vertical_stratification=json_vertstrat,
+        dt_from=dt_from.strftime("%B %d, %Y"),
+        dt_to=dt_to.strftime("%B %d, %Y"))
