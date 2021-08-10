@@ -135,14 +135,14 @@ fi
 # Creates Function App(s)
 ###################################################################################
 
-# echo "CROP BUILD INFO: cd scripts"
-# cd scripts
+echo "CROP BUILD INFO: cd scripts"
+cd scripts
 
-# echo "CROP BUILD INFO: ./create_functionapps.sh $CONST_FUNCAPP_PLAN $CONST_LOCATION $CONST_FUNCAPP_DOCKER_IMAGE $CONNECTION_STRING"
-# ./create_functionapps.sh $CONST_FUNCAPP_PLAN $CONST_LOCATION $CONST_FUNCAPP_DOCKER_IMAGE $CONNECTION_STRING
+echo "CROP BUILD INFO: ./create_functionapps.sh $CONST_FUNCAPP_PLAN $CONST_LOCATION $CONST_FUNCAPP_DOCKER_IMAGE $CONNECTION_STRING"
+./create_functionapps.sh $CONST_FUNCAPP_PLAN $CONST_LOCATION $CONST_FUNCAPP_DOCKER_IMAGE $CONNECTION_STRING
 
-# echo "CROP BUILD INFO: cd .."
-# cd ..
+echo "CROP BUILD INFO: cd .."
+cd ..
 
 # ###################################################################################
 # # Creates WebApp
