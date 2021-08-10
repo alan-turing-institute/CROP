@@ -45,7 +45,7 @@ from __app__.crop.constants import (
     SENSOR_UPLOAD_LOG_TABLE_NAME,
     ZENSIE_TRH_TABLE_NAME,
     ZENSIE_WEATHER_TABLE_NAME,
-    WARNINGS_TABLE_NAME,
+    WARNINGS_TABLE_NAME
 )
 
 SQLA = SQLAlchemy()
@@ -101,13 +101,17 @@ class SensorClass(BASE):
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
-    advanticsys_readings_relationship = relationship("ReadingsAdvanticsysClass")
+    advanticsys_readings_relationship = relationship(
+        "ReadingsAdvanticsysClass")
     tinytag_readings_relationship = relationship("ReadingsTinyTagClass")
-    airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
-    environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
+    airvelocity_readings_relationship = relationship(
+        "ReadingsAirVelocityClass")
+    environmental_readings_relationship = relationship(
+        "ReadingsEnvironmentalClass")
 
     # arguments
-    __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
+    __table_args__ = (UniqueConstraint(
+        "type_id", "device_id", name="_type_device_uc"),)
 
 
 class LocationClass(BASE):
@@ -376,7 +380,8 @@ class CropGrowthClass(BASE):
     surplus_waste_p = Column(Float, nullable=False)
     total_waste_m2 = Column(String, nullable=False)
     total_waste_p = Column(Float, nullable=False)
-    waste_explanation = Column(String, nullable=False)  # no ref on what that is
+    # no ref on what that is
+    waste_explanation = Column(String, nullable=False)
     yield_m2 = Column(Float, nullable=False)
     propagation_days = Column(Float, nullable=False)
     days_under_lights = Column(Float, nullable=False)
