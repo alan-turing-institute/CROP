@@ -175,6 +175,37 @@ class ReadingsZensieTRHClass(BASE):
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
+class ReadingsZensieWeatherClass(BASE):
+    """
+    Base class for the 30MHz External weather readings
+    """
+
+    __tablename__ = ZENSIE_WEATHER_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    timestamp = Column(DateTime, nullable=False)
+    temperature = Column(Float, nullable=False)
+    rain_probability = Column(Float, nullable=True)
+    rain = Column(Float, nullable=True)
+    relative_humidity = Column(Float, nullable=True)
+    wind_speed = Column(Float, nullable=True)
+    wind_direction = Column(Float, nullable=True)
+    air_pressure = Column(Float, nullable=True)
+    radiation = Column(Float, nullable=True)
+
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+    
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 class ReadingsAdvanticsysClass(BASE):
     """

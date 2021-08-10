@@ -102,7 +102,7 @@ We employ a continuous delivery toolchain with Docker on Travis CI which publish
 
 #### Manual
 
-Steps of how to set up and deploy CROP locally or on Azure are documented [here](utils/deployment.md).
+Steps of how to set up and deploy CROP locally or on Azure are documented [here](https://github.com/alan-turing-institute/CROP/wiki/1.-Steps-of-how-to-set-up-and-deploy-CROP-locally-or-on-Azure).
 
 ## Getting help
 
