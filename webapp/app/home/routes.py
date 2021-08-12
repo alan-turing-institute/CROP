@@ -414,3 +414,15 @@ def index():
         vertical_stratification=json_vertstrat,
         dt_from=dt_from.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"))
+
+
+
+@blueprint.route("/<template>")
+@login_required
+def route_template(template):
+
+    """
+    Renders templates
+
+    """
+    return render_template(template + ".html")

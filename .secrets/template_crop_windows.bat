@@ -3,6 +3,7 @@
 # To set env. variable you need an administrator Command prompt
 setx PYTHONPATH ""
 
+# Flask
 setx FLASK_APP "crop_app.py"
 
 # Azure resources
