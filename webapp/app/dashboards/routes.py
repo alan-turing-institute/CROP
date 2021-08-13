@@ -580,18 +580,6 @@ def route_template(template):
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
-    elif template == "test_dashboard":
-        print("test dashboard test?!!?")
-        sensor_names, sensor_temp_ranges = zensie_analysis(dt_from, dt_to)
-
-        return render_template(
-            template + ".html",
-            num_zensie_sensors=len(sensor_names),
-            zensie_sensors=sensor_names,
-            zensie_temp_ranges=sensor_temp_ranges,
-            dt_from=dt_from.strftime("%B %d, %Y"),
-            dt_to=dt_to.strftime("%B %d, %Y"),
-        )
 
     elif template == "energy_dashboard":
 
@@ -619,7 +607,5 @@ def route_template(template):
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
-    elif template == "test":
-        return render_template(template + ".html")
 
     return render_template(template + ".html")

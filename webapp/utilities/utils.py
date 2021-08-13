@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 def query_result_to_array(query_result, date_iso=True):
     """
     Forms an array of ResultProxy results.
-
     Args:
         query_result: a ResultProxy representing results of the sql alchemy query execution
     Returns:

@@ -120,21 +120,13 @@ def route_template(template):
                         DailyHarvestClass.notes,
                         DailyHarvestClass.user,
                         DailyHarvestClass.time_created,
-                        # DailyHarvestClass.time_updated,
                     )
-                    # .filter(
-                    #    and_(
-                    #        # ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-                    #        DailyHarvestClass.time_created >= dt_from,
-                    #        DailyHarvestClass.time_created <= dt_to,
-                    #    )
-                    # )
-                    # .order_by(desc(DailyHarvestClass.time_created))
+
                     .limit(CONST_MAX_RECORDS)
                 )
 
             readings = db.session.execute(query).fetchall()
-            # print(readings, file=sys.stderr)
+            #print(readings, file=sys.stderr)
 
             results_arr = query_result_to_array(readings, date_iso=False)
 
