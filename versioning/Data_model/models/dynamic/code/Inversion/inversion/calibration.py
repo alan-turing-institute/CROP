@@ -148,6 +148,9 @@ class calibrate:
             self.mlS[i] = self.__ml[i]
 		
         # resample
+        print('Infinite in self.__ml: {0}'.format(np.isfinite(self.__ml)))
+        print('Sum of self.__ml: {0}'.format(np.sum(self.__ml)))
+        print('self.__ml: {0}'.format(self.__ml[0]))
         self.__w = self.__ml / np.sum(self.__ml)
         self.wS = self.__w
         inds = np.random.choice(np.linspace(0, np.shape(particles)[0] - 1, np.shape(particles)[0]),
@@ -156,14 +159,14 @@ class calibrate:
         self.posteriorSamples = particles[inds, :]
         
         for ii in range(np.shape(particles)[0]):
-                if self.posteriorSamples[ii, 0] > 1:
-                    self.posteriorSamples[ii, 0] = 1
-                if self.posteriorSamples[ii, 0] < 0:
-                    self.posteriorSamples[ii, 0] = 0
-                if self.posteriorSamples[ii, 1] > 1:
-                    self.posteriorSamples[ii, 1] = 1
-                if self.posteriorSamples[ii, 1] < 0:
-                    self.posteriorSamples[ii, 1] = 0    
+            if self.posteriorSamples[ii, 0] > 1:
+                self.posteriorSamples[ii, 0] = 1
+            if self.posteriorSamples[ii, 0] < 0:
+                self.posteriorSamples[ii, 0] = 0
+            if self.posteriorSamples[ii, 1] > 1:
+                self.posteriorSamples[ii, 1] = 1
+            if self.posteriorSamples[ii, 1] < 0:
+                self.posteriorSamples[ii, 1] = 0    
         
 		
         # rejuvinate variation in ensemble
