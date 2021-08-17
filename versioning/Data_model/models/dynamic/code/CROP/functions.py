@@ -21,9 +21,8 @@ from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from scipy.integrate import solve_ivp
 from inversion import *
 
-def climterp_linear(h1, h2):
-    
-    ExternalWeather = np.genfromtxt('ExternalWeather.csv', delimiter=',')
+def climterp_linear(h1, h2, filepath_weather):
+    ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
     temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
     rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
     
@@ -169,7 +168,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh):
     
     n = int(np.ceil((t-t_init)/deltaT))
     T_ext = climate[n, 0] + T_k
-    RH_e = climate[n, 1]/100;
+    RH_e = climate[n, 1]/100
     Cw_ext = RH_e * sat_conc(T_ext)
     
     daynum.append(day(t))
@@ -192,7 +191,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh):
     L_on = (day_hour>-0.01 and day_hour<09.01) or day_hour > 15.01
     AL_on = day_hour>08.01 and day_hour<16.01
     
-    T_l = L_on*T_al + (1-L_on)*T_i;
+    T_l = L_on*T_al + (1-L_on)*T_i
     
     QV_l_i = f_heat*P_al*L_on + P_ambient_al*AL_on + ndh*P_dh
         
@@ -346,10 +345,10 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh):
     return np.array([dT_cdt,dT_idt,dT_vdt,dT_mdt,dT_pdt,dT_fdt,dT_c1dt,
                  dT_c2dt,dT_c3dt,dT_c4dt,dT_c5dt,dC_wdt])
 
-def derivatives(h1, h2, paramsinput, ndp, switch1, switch2, numdh):
+def derivatives(h1, h2, paramsinput, ndp, switch1, switch2, numdh, filepath_weather):
     
     # Get weather data
-    clim = np.transpose(climterp_linear(h1,h2))
+    clim = np.transpose(climterp_linear(h1,h2,filepath_weather))
     
     # Add extra weather if scenario evaluation
     
@@ -382,8 +381,8 @@ def derivatives(h1, h2, paramsinput, ndp, switch1, switch2, numdh):
     #T_air = np.zeros((1,NP))
     #Cw_air = np.zeros((1,NP))
     #RH_air = np.zeros((1,NP))
-
-    for i in range(NP):
+    may_NP = NP
+    for i in range(may_NP): #default NP
         #tic = time.time()
         
         print(i+1)
