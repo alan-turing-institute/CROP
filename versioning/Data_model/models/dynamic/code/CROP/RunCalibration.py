@@ -5,6 +5,8 @@ Created on Mon Jun 14 09:32:23 2021
 @author: rmw61
 """
 
+# New parameters
+
 from functions import derivatives, priorPPF, sat_conc
 import pandas as pd
 import numpy as np
