@@ -42,6 +42,8 @@ for ii in range(may_sz): #default sz
     
     start = time.time()
 
+    # creates physics model, no need for datapoint
+    # to create model, it needs weather data (timestamp, temp, humidity)
     results = derivatives(h1, h2, Parameters, ndp, 0, 0, 1, filepath_weather) # runs GES model over ACH,IAS pairs
     
     T_air = results[1,-1,:]
