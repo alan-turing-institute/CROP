@@ -112,6 +112,25 @@ def getDaysWeather(numDays=2):
   #print(get_sql_from_template(query=query, bind_params=bind_params))
   getData(get_sql_from_template(query=query, bind_params=bind_params))
 
+def getHumidity(numRows=1):
+  # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
+  params = {'sensor_id':27, 'numRows':numRows}
+  humidity_transaction_template = '''
+  select
+    humidity
+  from 
+    zensie_trh_data 
+  where sensor_id = {{ sensor_id }}
+  order by 
+    timestamp desc 
+  limit {{ numRows }}
+  '''
+  j = JinjaSql(param_style='pyformat')
+  query, bind_params = j.prepare_query(humidity_transaction_template, params)
+  print(get_sql_from_template(query=query, bind_params=bind_params))
+  getData(get_sql_from_template(query=query, bind_params=bind_params))
+
 if __name__ == '__main__':
     # connect()
-  getDaysWeather()
+  # getDaysWeather()
+  getHumidity()
