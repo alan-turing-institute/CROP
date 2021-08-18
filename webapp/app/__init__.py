@@ -41,6 +41,7 @@ def register_blueprints(app):
         "sensors",
         "types",
         "users",
+        "predictions"
     )
 
     for module_name in module_list:
