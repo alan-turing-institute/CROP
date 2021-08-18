@@ -189,6 +189,11 @@ DAILY_HARVEST_TABLE_NAME = "daily_harvest_data"
 INFRASTRUCTURE_TABLE_NAME = "infrastructure_data"
 SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
+MODEL_TABLE_NAME = "model"
+MODEL_MEASURE_TABLE_NAME = "model_measure"
+MODEL_RUN_TABLE_NAME = "model_run"
+MODEL_PRODUCT_TABLE_NAME = "model_product"
+MODEL_VALUE_TABLE_NAME = "model_value"
 
 WARNINGS_TABLE_NAME = "warnings"
 
