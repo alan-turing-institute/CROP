@@ -45,11 +45,112 @@ from __app__.crop.constants import (
     SENSOR_UPLOAD_LOG_TABLE_NAME,
     ZENSIE_TRH_TABLE_NAME,
     ZENSIE_WEATHER_TABLE_NAME,
-    WARNINGS_TABLE_NAME
+    WARNINGS_TABLE_NAME,
+    MODEL_TABLE_NAME,
+    MODEL_MEASURE_TABLE_NAME,
+    MODEL_RUN_TABLE_NAME,
+    MODEL_PRODUCT_TABLE_NAME,
+    MODEL_VALUE_TABLE_NAME,
 )
 
 SQLA = SQLAlchemy()
 BASE = SQLA.Model
+
+
+
+class ModelClass(BASE):
+    """
+    This class contains a list of all models running in CROP
+    """
+
+    __tablename__ = MODEL_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    model_name = Column(String(100), nullable=False, unique=True)
+    author = Column(String(100), nullable=False, unique=False)
+
+
+class ModelMeasureClass(BASE):
+    """
+    This class contains the names of all columns in models
+    """
+
+    __tablename__ = MODEL_MEASURE_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    measure_name = Column(String(100), nullable=False, unique=True)
+    measure_description = Column(String(100), nullable=True, unique=False)
+
+
+class ModelRunClass(BASE):
+    """
+    This class contains a list of the ids all model runs
+    """
+
+    __tablename__ = MODEL_RUN_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    model_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    time_created = Column(DateTime(), server_default=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "model_id"),)
+
+class ModelValueClass(BASE):
+    """
+    This class contains the outputs of model runs
+    """
+
+    __tablename__ = MODEL_VALUE_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    product_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_PRODUCT_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    prediction_value = Column(Float, nullable=False)
+    prediction_index = Column(Integer, nullable=False)
+    measure_description = Column(String(100), nullable=True, unique=False)
+
+    # arguments
+    __table_args__ = (UniqueConstraint("product_id"),)
+
+class ModelProductClass(BASE):
+    """
+    This class contains the relationships of all model outputs
+    """
+
+    __tablename__ = MODEL_PRODUCT_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    run_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_RUN_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    measure_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_MEASURE_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    # arguments
+    __table_args__ = (UniqueConstraint("run_id", "measure_id"),)
 
 
 class TypeClass(BASE):
