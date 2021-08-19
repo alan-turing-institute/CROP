@@ -42,45 +42,7 @@
                 List of registered sensors.
               </p>
 
-              <table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
-                <thead>
-                  <tr>
-                    <th>First name</th>
-                    <th>Last name</th>
-                    <th>Position</th>
-                    <th>Office</th>
-                    <th>Age</th>
-                    <th>Start date</th>
-                    <th>Salary</th>
-                    <th>Extn.</th>
-                    <th>E-mail</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Tiger</td>
-                    <td>Nixon</td>
-                    <td>System Architect</td>
-                    <td>Edinburgh</td>
-                    <td>61</td>
-                    <td>2011/04/25</td>
-                    <td>$320,800</td>
-                    <td>5421</td>
-                    <td>t.nixon@datatables.net</td>
-                  </tr>
-                  <tr>
-                    <td>Donna</td>
-                    <td>Snider</td>
-                    <td>Customer Support</td>
-                    <td>New York</td>
-                    <td>27</td>
-                    <td>2011/01/25</td>
-                    <td>$112,000</td>
-                    <td>4226</td>
-                    <td>d.snider@datatables.net</td>
-                  </tr>
-                </tbody>
-              </table>
+
             </div>
           </div>
         </div>
@@ -109,4 +71,64 @@
   <script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
+
+  <script>
+
+    //Imports from backend
+    var arima_data = JSON.parse('{{json_arima_f | safe}}');
+    //console.warn(arima_data)
+    console.warn(arima_data[0]["Values"])
+
+
+    function time_series_charts(arima_data, canvasname) {
+
+       values_top = []
+       values_bot = []
+       values_mid = []
+       dates = []
+       console.warn(arima_data[0]["Values"])
+      //  for (j = 0; j < json_data[0]["Values"].length; j++) {
+      //      values_top.push(parseFloat(json_data[0]["Values"][j]["temperature"]))
+      //      values_bot.push(parseFloat(json_data[1]["Values"][j]["temperature"]))
+      //      dates.push(parseFloat(json_data[0]["Values"][j]["date"]))
+      //  }
+
+    //   const data = {
+    //       labels: dates,
+    //       datasets: [
+    //           {
+    //               label: 'Top',
+    //               data: values_top,
+    //               borderColor: "#ff0000",
+    //           },
+    //           {
+    //               label: 'Bottom',
+    //               data: values_bot,
+    //               borderColor: "#3399ff",
+    //           }
+    //       ]
+    //   };
+    //   const config = {
+    //       type: 'line',
+    //       data: data,
+    //       options: {
+    //           responsive: true,
+    //           plugins: {
+    //               legend: {
+    //                   position: 'top',
+    //               },
+    //               title: {
+    //                   display: true,
+    //                   text: 'Vertical Stratification'
+    //               }
+    //           }
+    //       },
+    //   };
+    //   var ctx = document.getElementById(canvasname);
+    //   var myChart = new Chart(ctx, config);
+    }
+  </script>
+
+
+
 {% endblock javascripts %}
