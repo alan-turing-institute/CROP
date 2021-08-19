@@ -5,6 +5,7 @@ Created on Tue Feb 16 09:18:07 2021
 @author: rmw61
 """
 import numpy as np
+import pandas as pd
 from parameters import T_k, deltaT
 from parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
 from parameters import V, A_c, A_f, A_v, A_m, A_p, A_l 
@@ -18,11 +19,13 @@ from parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
 from parameters import T_ss, T_al
 from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
+from parameters import ndh
 from scipy.integrate import solve_ivp
 from inversion import *
 
-def climterp_linear(h1, h2, filepath_weather):
-    ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
+def climterp_linear(h1, h2):
+    
+    ExternalWeather = np.genfromtxt('ExternalWeather.csv', delimiter=',')
     temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
     rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
     
@@ -93,15 +96,6 @@ def conduction(A, lam, l, T1, T2):
     
     return(QD_12)
     
-#def T_ext(t):
-#    # Weather data
-#
-#   climate = np.genfromtxt('climate.txt', delimiter=',')
-    
-#    n = int(np.ceil(t/deltaT))
-#    T_e = climate[n, 0] + T_k
-    
-#    return(T_e)
     
 def sat_conc(T):
 
@@ -112,17 +106,6 @@ def sat_conc(T):
     
     return a
     
-#def Cw_ext(t):
-    # Weather data
-
-#    climate = np.genfromtxt('climate.txt', delimiter=',')
-    
-#    n = int(np.ceil(t/deltaT))
-#    RH_e = climate[n, 1]/100;
-    
-#    Cw_e = RH_e * sat_conc(T_ext(t))
-    
-#    return(Cw_e)
 
 def nan_helper(y):
     """Helper to handle indices and logical indices of NaNs.
@@ -146,7 +129,7 @@ def day(t):
     day_new = np.ceil(t/86400)
     return(day_new)
 
-def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh):
+def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2):
     
     T_c = z[0]
     T_i = z[1]
@@ -168,30 +151,23 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh):
     
     n = int(np.ceil((t-t_init)/deltaT))
     T_ext = climate[n, 0] + T_k
-    RH_e = climate[n, 1]/100
+    RH_e = climate[n, 1]/100;
     Cw_ext = RH_e * sat_conc(T_ext)
     
     daynum.append(day(t))
-    #if daynum[(len(daynum)-1)] > daynum[(len(daynum)-2)]:
-    #    print(daynum[len(daynum)-1])
     
     ## Set ACH,ias
     hour = np.floor(t/3600) + 1
-    seq = range(h1+12, h2+24, 12)
-    
-    if hour >= seq[count[-1]]:
-        count_new = count[-1]+1
-        count.append(count_new)
             
-    ACH = ACHvec[count[-1]]
-    ias = iasvec[count[-1]]    
+    ACH = ACHvec 
+    ias = iasvec     
     
     ## Lights
     day_hour=(hour/24-np.floor(hour/24))*24
     L_on = (day_hour>-0.01 and day_hour<09.01) or day_hour > 15.01
     AL_on = day_hour>08.01 and day_hour<16.01
     
-    T_l = L_on*T_al + (1-L_on)*T_i
+    T_l = L_on*T_al + (1-L_on)*T_i;
     
     QV_l_i = f_heat*P_al*L_on + P_ambient_al*AL_on + ndh*P_dh
         
@@ -345,54 +321,27 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh):
     return np.array([dT_cdt,dT_idt,dT_vdt,dT_mdt,dT_pdt,dT_fdt,dT_c1dt,
                  dT_c2dt,dT_c3dt,dT_c4dt,dT_c5dt,dC_wdt])
 
-def derivatives(h1, h2, paramsinput, ndp, switch1, switch2, numdh, filepath_weather):
+def derivatives(h1, h2, paramsinput):
     
     # Get weather data
-    clim = np.transpose(climterp_linear(h1,h2,filepath_weather))
-    
-    # Add extra weather if scenario evaluation
-    
-    if switch1 == 1:
-        LastDayData = clim[-24*6:,]
-
-        ## Create extended weather file
-        ExtendClimate = np.concatenate((clim,LastDayData,LastDayData,LastDayData)) 
-        h2 = h2+3*24
-        
-        climate = ExtendClimate
-        
-    else:
-        climate = clim  
+    climate = np.transpose(climterp_linear(h1,h2))
 
     # Get parameter values
-    if switch2 == 1:
-        NP = np.shape(paramsinput)[2]
-    else:
-        NP = np.shape(paramsinput)[0]
-    #NP = 5
-    #NP = h2-h1
     
-    if switch1 == 1:
-            NOut = 1+h2-h1
-    else:
-            NOut = 2
+    NP = np.shape(paramsinput)[0]
+    
+    NOut = 2
             
     results = np.zeros((12,NOut,NP))
-    #T_air = np.zeros((1,NP))
-    #Cw_air = np.zeros((1,NP))
-    #RH_air = np.zeros((1,NP))
-    may_NP = NP
-    for i in range(may_NP): #default NP
+    
+
+    for i in range(NP):
         #tic = time.time()
         
         print(i+1)
         
-        if switch2 == 1:
-            AirChangeHour = paramsinput[:,0,i]
-            IntAirSpeed = paramsinput[:,1,i]
-        else:
-            AirChangeHour = paramsinput[i,0]*np.ones(ndp)
-            IntAirSpeed = paramsinput[i,1]*np.ones(ndp)
+        AirChangeHour = paramsinput[i,0] #*np.ones(ndp)
+        IntAirSpeed = paramsinput[i,1] #*np.ones(ndp)
         
         # Initial conditions
         T_i_0 = 295
@@ -411,7 +360,7 @@ def derivatives(h1, h2, paramsinput, ndp, switch1, switch2, numdh, filepath_weat
         z = [T_c_0, T_i_0, T_v_0, T_m_0, T_p_0, T_f_0, T_c1_0, T_c2_0, T_c3_0, T_c4_0, T_c5_0, C_w_0]
     
         daynum = [0]
-        count = [0]
+        #count = [0]
     
         ACH = AirChangeHour/3600
         ias = IntAirSpeed
@@ -419,35 +368,41 @@ def derivatives(h1, h2, paramsinput, ndp, switch1, switch2, numdh, filepath_weat
         t = [h1*3600,h2*3600]
         tval = np.linspace(h1*3600,h2*3600,NOut)
         
-        if numdh != 1:
-            if switch1==1:
-                if i == 0:
-                    ndh = 1
-            else:
-                ndh = numdh
-        else:
-            ndh = numdh
         
-        params = [climate, ACH, ias, daynum, count, h1, h2, ndh]
+        params = [climate, ACH, ias, daynum, h1, h2]
     
         output = solve_ivp(model, t, z, method='BDF', t_eval=tval, rtol = 1e-5, args = params)
         
         results[:,:,i] = output.y
-    
-        #T_air[0,i] = results[1,-1,i]
-        #Cw_air[0,i] = results[11,-1,i]
-        #RH_air[0,i] = Cw_air[0,i]/sat_conc(T_air[0,i])
         
         #toc = time.time()
         #print(toc-tic)
 
-    #df_RH = DataFrame(RH_air)
-    #export_csv = df_RH.to_csv('RH_air.csv', index = None, header = False)
-    
-    #return RH_air, T_air, Cw_air
     return results
 
 def priorPPF():
+    df_ACH = pd.read_csv("ACH_out.csv")
+    df_IAS = pd.read_csv("IAS_out.csv")
+    df_Length = pd.read_csv("Length_out.csv")
+    
+    nparticles = np.size(df_ACH,0)
+
+    jj = np.size(df_ACH,1)
+    if jj > 1:
+        
+        a_t1 = np.array(df_ACH[str(jj)])
+        a_t2 = np.array(df_IAS[str(jj)])
+        a_l = np.array(df_Length[str(jj)])
+        
+        idx = np.random.randint(0,nparticles, size=1)
+        
+        # Include re-juvenation
+        
+        t1 = a_t1[idx][0] + np.random.normal(0, 0.05)
+        t2 = a_t2[idx][0] + np.random.normal(0, 0.05)
+        l = np.exp(np.log(a_l[idx][0]) + np.random.normal(0, 0.05))
+        
+    else:
         u = np.random.uniform(0, 1, 3)
     #t1 = uniform.ppf(u[0], 1, 9)
     #t2 = uniform.ppf(u[1], 0.1, 1.0)
@@ -464,5 +419,5 @@ def priorPPF():
         l = np.exp(norm.ppf(u[2], -1.5, 0.25))
     #
     #
-        return(np.array([t1, t2, l]))
+    return(np.array([t1, t2, l]))
 

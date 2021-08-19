@@ -42,8 +42,8 @@ l_m = 0.01
 # Vegetation
 c_v = 3500.
 msd_v = 1.212
-LAI = 2.
-#LAI = 0.5 # to test
+#LAI = 2.
+LAI = 0.5 # to test
 
 # Critical dimensions
 d_c = 2.0
@@ -116,6 +116,7 @@ T_al = 25.+T_k
 
 # Dehumification heat input
 P_dh = 700
+ndh = 1
 #P_dh = 0 # to test
 
 # Moisture

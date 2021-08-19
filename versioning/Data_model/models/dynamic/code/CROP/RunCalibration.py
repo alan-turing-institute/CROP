@@ -26,8 +26,7 @@ import csv
 # fitted to the 60 RH values and input pairs. The particle filter then uses the GP
 # to calculate values for each of the particles (1000 ACH,IAS pairs).
 #
-# NB code takes ~36 hours to run full year if tolerance is 1e-5 (15 mins per step if
-# tolerance is 1e-6)
+# This version (v3) runs a single data point at a time (for inclusion in CROP)
 
 # initialize calibration class
 sigmaY = 0.5 # std measurement error GASP lambda_e
@@ -35,178 +34,149 @@ nugget = 1e-9 # same as mean GASP parameter 1/lambda_en
 cal = calibration.calibrate(priorPPF, sigmaY, nugget)
     
 ### Time period for calibration
-# Every 12 hours 3am, 3pm, starting on 11th January
+# To be run every 12 hours 3am, 3pm
 
 tic = time.time()
 
-p1 = 243 # start hour (3am on 11th January)
-ndp = 710 # number of data points 
-delta_h = 12 # hours between data points
-p2 = (ndp-1)*delta_h+p1 # end data point (3pm on 31st December)
-
-seq = np.linspace(p1,p2,ndp)
-sz = np.size(seq,)
-
-# Step through each data point
-
-for ii in range(sz):
+p1 = 243 # start hour to test code - in CROP will be hour at which the code is run 
     
 ### Calibration runs
 
-    h2 = int(seq[ii])
-    h1 = int(seq[ii]-240) # to take previous 10 days data 
+h2 = int(p1)
+h1 = int(p1-48) # to take previous 10 days data 
 
-    Parameters = np.genfromtxt('X.csv', delimiter=',') # ACH,IAS pairs
-    NP = np.shape(Parameters)[0]
+Parameters = np.genfromtxt('X.csv', delimiter=',') # ACH,IAS pairs
+NP = np.shape(Parameters)[0]
     
-    start = time.time()
+start = time.time()
 
-    results = derivatives(h1, h2, Parameters, ndp, 0, 0, 1) # runs GES model over ACH,IAS pairs
+results = derivatives(h1, h2, Parameters) # runs GES model over ACH,IAS pairs
     
-    T_air = results[1,-1,:]
-    Cw_air = results[11,-1,:]
-    RH_air = Cw_air/sat_conc(T_air)
+T_air = results[1,-1,:]
+Cw_air = results[11,-1,:]
+RH_air = Cw_air/sat_conc(T_air)
+
+end = time.time()
+print(end - start)
+
+
+### Select data
+### Here using historic data - will be replaced with datapoint from live database
+
+date_cols = ["DateTimex"]
+Data = pd.read_csv("TRHE2018.csv", parse_dates=date_cols)
+RHData =Data['MidFarmRH2']
     
-    #RH_air = results[0]
+dp = RHData[h2]
+testdp = np.isnan(dp)
 
-    end = time.time()
-    print(end - start)
+# Initialise DataPoint
+LastDataPoint = pd.read_csv('DataPoint.csv')
+jj = np.size(LastDataPoint,1)
 
-
-    ### Select data
-
-    date_cols = ["DateTimex"]
-    Data = pd.read_csv("TRHE2018.csv", parse_dates=date_cols)
-    RHData =Data['MidFarmRH2']
+if jj > 1:
+    DataPoint = float(LastDataPoint[str(jj)])
+else:
+    DataPoint = 0.5 # dummy value
     
-    dp = RHData[h2]
-    testdp = np.isnan(dp)
+if testdp == False:
+    DataPoint = dp/100
+else:
+    DataPoint = DataPoint # takes previous value if nan recorded
+
+LastDataPoint[str(jj+1)] = DataPoint 
+LastDataPoint.to_csv("DataPoint.csv", index=False)
+
+DT = Data['DateTimex']
+print(DT[h2])
+
+### Run calibration
+
+## Standardise RH_air
     
-    if testdp == False:
-        DataPoint = dp/100
-    else:
-        DataPoint = DataPoint # takes previous value if nan recorded
+ym = 0.6456 # values chosen to ensure comparability against MATLAB model
+ystd = 0.0675
 
-    DT = Data['DateTimex']
-    print(DT[h2])
-
-    ### Run calibration
-
-    ## Standardise RH_air
-
-    #ym = np.mean(RH_air)
-    #ystd = np.std(RH_air)
+RH_s = (RH_air - ym)/ystd
     
-    ym = 0.6456 # values chosen to ensure comparability against MATLAB model
-    ystd = 0.0675
+## Standardise data point
 
-    RH_s = (RH_air - ym)/ystd
+RHD_s = (DataPoint - ym)/ystd
     
-    ## Standardise data point
+# Normalise calibration parameters
 
-    RHD_s = (DataPoint - ym)/ystd
-    
-    # Normalise calibration parameters
+Pmax = np.max(Parameters, axis = 0)
+Pmin = np.min(Parameters, axis = 0)
 
-    Pmax = np.max(Parameters, axis = 0)
-    Pmin = np.min(Parameters, axis = 0)
+Cal = (Parameters - Pmin)/(Pmax - Pmin)
 
-    Cal = (Parameters - Pmin)/(Pmax - Pmin)
+## Start calibration here
+print('Calibration ...')
+start = time.time()
 
-    ## Start calibration here
-    print('Calibration ...')
-    start = time.time()
+m = 1 # No. of data points
 
-    m = 1 # No. of data points
+# params
+ts = np.linspace(1, m, m)
 
-    # params
-    ts = np.linspace(1, m, m)
+# coordinates
+xModel = np.array([0.5])
+xData = np.array([0, 0.5, 1])
 
-    # coordinates
-    xModel = np.array([0.5])
-    xData = np.array([0, 0.5, 1])
-
-    # calibration parameters
-    n = np.size(Cal,0)
+# calibration parameters
+n = np.size(Cal,0)
   
-    tModel = Cal
+tModel = Cal
 
-    yModel = np.zeros((n, len(xModel), len(ts)))
-    for i in range(n):
-        yModel[i, 0, :] = RH_s[i,]
+yModel = np.zeros((n, len(xModel), len(ts)))
+for i in range(n):
+    yModel[i, 0, :] = RH_s[i,]
 
-    yData = np.zeros((m, len(xData)))
-    for i in range(m):
-        yData[i, :] = np.ones(3) * RHD_s 
+yData = np.zeros((m, len(xData)))
+for i in range(m):
+    yData[i, :] = np.ones(3) * RHD_s 
 
-    ### implement sequential calibration
-    nparticles = 1000
-    lambda_e = 1 # same as mean of GASP parameter lambda_eta 
+### implement sequential calibration
+nparticles = 1000
+lambda_e = 1 # same as mean of GASP parameter lambda_eta 
 
-    # load coordinates and data
-    cal.updateCoordinates(xModel, xData) # OK here as data all at same location
+# load coordinates and data
+cal.updateCoordinates(xModel, xData) # OK here as data all at same location
 
-    # particle filter over data outputs
-    beta_r = np.array([0.05,0.05,0.05])
+# particle filter over data outputs
+beta_r = np.array([0.05,0.05,0.05])
+
+## initialise priorSamples/posteriors
     
-    if ii == 0:
-        posteriors = np.zeros((sz, nparticles, 3))
-        priorSamples = np.zeros((sz, nparticles, 3))
-        mlSamples = np.zeros((sz, nparticles))
-        wSamples = np.zeros((sz, nparticles))
-        indsSamples = np.zeros((sz, nparticles))
+posteriors = np.zeros((1, nparticles, 3))
+priorSamples = np.zeros((1, nparticles, 3))
 
-    cal.updateTrainingData(tModel, yModel[:, :, 0], np.reshape(yData[0, :], ((1, 3))))
-    cal.sequentialUpdate(nparticles, beta_r, logConstraint=np.array([0, 0, 1]))
-    priorSamples[ii, :, :] = cal.prior
-    posteriors[ii, :, :] = cal.posteriorSamples
-    mlSamples[ii, :] = cal.mlS
-    wSamples[ii, :] = cal.wS
-    indsSamples[ii, :] = cal.inds
-    print('... ended')
+cal.updateTrainingData(tModel, yModel[:, :, 0], np.reshape(yData[0, :], ((1, 3))))
+cal.sequentialUpdate(nparticles, beta_r, logConstraint=np.array([0, 0, 1]))
+priorSamples[0, :, :] = cal.prior
+posteriors[0, :, :] = cal.posteriorSamples
 
-    # time
-    end = time.time()
-    print(end - start)
+print('... ended')
 
-    ###
-    posterior_ACH = posteriors[ii,:,0]
-    posterior_IAS = posteriors[ii,:,1]
-    posterior_length = posteriors[ii,:,2]
-    
-    df = pd.read_csv("ACH_out.csv")
-    df[str(ii)] = posteriors[ii,:,0] 
-    df.to_csv("ACH_out.csv", index=False)
-    
-    df = pd.read_csv("IAS_out.csv")
-    df[str(ii)] = posteriors[ii,:,1] 
-    df.to_csv("IAS_out.csv", index=False)
-    
-    
+# time
+end = time.time()
+print(end - start)
+
 # Output results
+    
+df_ACH = pd.read_csv("ACH_out.csv")
+jj = np.size(df_ACH,1)+1
+df_ACH[str(jj)] = posteriors[0,:,0] 
+df_ACH.to_csv("ACH_out.csv", index=False)
+    
+df_IAS = pd.read_csv("IAS_out.csv")
+df_IAS[str(jj)] = posteriors[0,:,1] 
+df_IAS.to_csv("IAS_out.csv", index=False)
 
-from pandas import DataFrame
-df_ACH = DataFrame(posteriors[:,:,0])
-df_ACH.to_csv(r'ACH_p_1.csv',index = None, header = False) # p = python
+df_Length = pd.read_csv("Length_out.csv")
+df_Length[str(jj)] = posteriors[0,:,2] 
+df_Length.to_csv("Length_out.csv", index=False)
 
-prior_ACH = priorSamples[:,:,0]
-df_priorACH = DataFrame(prior_ACH)
-df_priorACH.to_csv(r'priorACH_p_1.csv',index = None, header = False)
-#
-df_IAS = DataFrame(posteriors[:,:,1])
-df_IAS.to_csv(r'IAS_p_1.csv',index = None, header = False)
-
-prior_IAS = priorSamples[:,:,1]
-df_priorIAS = DataFrame(prior_IAS)
-df_priorIAS.to_csv(r'priorIAS_p_1.csv',index = None, header = False)
-#
-df_Length = DataFrame(posteriors[:,:,2])
-df_Length.to_csv(r'Length_p_1.csv',index = None, header = False)
-
-prior_Length = priorSamples[:,:,2]
-df_priorLength = DataFrame(prior_Length)
-df_priorLength.to_csv(r'priorLength_p_1.csv',index = None, header = False)
-#
 
 toc = time.time()
 print(toc - tic)
