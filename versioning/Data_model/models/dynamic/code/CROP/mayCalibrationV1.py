@@ -38,7 +38,7 @@ filepath_datapoint = '/Users/myong/Documents/workspace/CROP/versioning/Data_mode
 sigmaY = 0.5 # std measurement error GASP lambda_e
 nugget = 1e-9 # same as mean GASP parameter 1/lambda_en
 cal = calibration.calibrate(priorPPF, sigmaY, nugget)
-    
+
 ### Time period for calibration
 # To be run every 12 hours 3am, 3pm
 
