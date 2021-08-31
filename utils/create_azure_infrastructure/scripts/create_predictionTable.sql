@@ -74,3 +74,21 @@ CREATE TABLE model_value (
 -- (1, 20, 10),
 -- (1, 21, 11),
 -- (1, 22, 12);
+
+CREATE TABLE model_parameter (
+  id SERIAL PRIMARY KEY,
+  parameter_id INTEGER REFERENCES parameter(id),
+  parameter_index INTEGER NOT NULL,
+  parameter_value INTEGER NOT NULL
+);
+
+CREATE TABLE parameter (
+  id SERIAL PRIMARY KEY,
+  model_id INTEGER REFERENCES model(id),
+  parameter_name VARCHAR(100) NOT NULL,
+);
+
+INSERT INTO parameter(model_id, parameter_name)
+VALUES(2, 'length_out'),
+(2, 'ACH'),
+(2, 'IAS');
