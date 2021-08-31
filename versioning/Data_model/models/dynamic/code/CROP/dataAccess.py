@@ -113,22 +113,28 @@ def getDaysWeather(numDays=2, numRows=5):
   # print(get_sql_from_template(query=query, bind_params=bind_params))
   return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
-def getHumidity(numRows=1):
+def getDaysHumidity(numDays=5, numRows=5):
   # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
-  params = {'sensor_id':27, 'numRows':numRows}
+  today = datetime.datetime.now()
+  delta = datetime.timedelta(days=numDays)
+  dateNumDaysAgo = today - delta
+  params = {'sensor_id':27,
+  'timestamp':dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"), 
+  'numRows':numRows}
+
   humidity_transaction_template = '''
   select
-    humidity
+    timestamp, temperature, humidity
   from 
     zensie_trh_data 
-  where sensor_id = {{ sensor_id }}
+  where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
   order by 
-    timestamp desc 
+    timestamp asc 
   limit {{ numRows }}
   '''
   j = JinjaSql(param_style='pyformat')
   query, bind_params = j.prepare_query(humidity_transaction_template, params)
-  # print(get_sql_from_template(query=query, bind_params=bind_params))
+  print(get_sql_from_template(query=query, bind_params=bind_params))
   return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 if __name__ == '__main__':
