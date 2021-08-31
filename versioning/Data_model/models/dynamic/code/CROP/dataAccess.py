@@ -54,6 +54,20 @@ def printRowsHead(rows, numrows=5):
   for row in rows[:numrows]:
     print(row)
 
+def deleteData(query):
+  conn = None
+  try:
+    conn = openConnection()
+    if (conn is not None):
+      cur = conn.cursor()
+      cur.execute(query)
+      conn.commit()
+      cur.close()
+  except (Exception, psycopg2.DatabaseError) as error:
+    print(error)
+  finally:
+    closeConnection(conn=conn)
+
 def getData(query):
   conn = None
   try:
@@ -139,5 +153,5 @@ def getDaysHumidity(numDays=5, numRows=5):
 
 if __name__ == '__main__':
     # connect()
-  getDaysWeather()
+  # getDaysWeather()
   # getHumidity()
