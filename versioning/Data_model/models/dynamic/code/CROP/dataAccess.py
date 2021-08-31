@@ -151,7 +151,26 @@ def getDaysHumidity(numDays=5, numRows=5):
   print(get_sql_from_template(query=query, bind_params=bind_params))
   return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
+def insert_particles(particles_array):
+  deleteQuery = "Delete from model_parameter"
+  deleteData(query=deleteQuery)
+  insertQuery = "INSERT INTO model_parameter(parameter_index, parameter_value) VALUES(%s)"
+  conn = None
+  print("VALUES({0})".format(particles_array))
+  particles_array = ((1,1.0), (2,2.0))
+  try:
+    conn = openConnection()
+    if (conn is not None):
+      cur = conn.cursor()
+      cur.executemany(insertQuery, particles_array)
+      conn.commit()
+      cur.close()
+  except (Exception, psycopg2.DatabaseError) as error:
+    print(error)
+  finally:
+    closeConnection(conn=conn)
+
 if __name__ == '__main__':
-    # connect()
+  connect()
   # getDaysWeather()
-  # getHumidity()
+  # getDaysHumidity()
