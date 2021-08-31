@@ -21,11 +21,13 @@ from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from parameters import ndh
 from scipy.integrate import solve_ivp
+import sys
+sys.path.append("/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/code/Inversion")
 from inversion import *
 
 def climterp_linear(h1, h2):
-    
-    ExternalWeather = np.genfromtxt('ExternalWeather.csv', delimiter=',')
+    filepath_weather = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather.csv'
+    ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
     temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
     rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
     

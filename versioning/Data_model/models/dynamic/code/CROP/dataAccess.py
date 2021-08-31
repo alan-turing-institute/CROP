@@ -49,7 +49,8 @@ def connect():
   finally:
     closeConnection(conn=conn)
 
-def printRowsHead(rows, numrows=10):
+def printRowsHead(rows, numrows=5):
+  print('Printing:{0} of {1}'.format(numrows, len(rows) ))
   for row in rows[:numrows]:
     print(row)
 
@@ -91,26 +92,26 @@ def get_sql_from_template(query, bind_params):
       params[key] = quote_sql_string(val)
     return query % params
 
-def getDaysWeather(numDays=2):
+def getDaysWeather(numDays=2, numRows=5):
   today = datetime.datetime.now()
   delta = datetime.timedelta(days=numDays)
   dateNumDaysAgo = today - delta
-  params = {'timestamp':dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S")}
+  params = {'timestamp':dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"), 'numRows':numRows}
 
   weather_transaction_template = '''
   select
-    temperature, relative_humidity, timestamp 
+    timestamp, temperature, relative_humidity
   from 
     iweather 
   where timestamp >= {{ timestamp }}
   order by 
     timestamp asc 
-  limit 5
+  limit {{ numRows }}
   '''
   j = JinjaSql(param_style='pyformat')
   query, bind_params = j.prepare_query(weather_transaction_template, params)
-  #print(get_sql_from_template(query=query, bind_params=bind_params))
-  getData(get_sql_from_template(query=query, bind_params=bind_params))
+  # print(get_sql_from_template(query=query, bind_params=bind_params))
+  return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 def getHumidity(numRows=1):
   # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
@@ -127,10 +128,10 @@ def getHumidity(numRows=1):
   '''
   j = JinjaSql(param_style='pyformat')
   query, bind_params = j.prepare_query(humidity_transaction_template, params)
-  print(get_sql_from_template(query=query, bind_params=bind_params))
-  getData(get_sql_from_template(query=query, bind_params=bind_params))
+  # print(get_sql_from_template(query=query, bind_params=bind_params))
+  return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 if __name__ == '__main__':
     # connect()
-  # getDaysWeather()
-  getHumidity()
+  getDaysWeather()
+  # getHumidity()
