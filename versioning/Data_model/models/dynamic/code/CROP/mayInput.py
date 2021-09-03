@@ -45,16 +45,38 @@ def compareDataPoint():
     DataPoint = float(LastDataPoint[str(jj)])
   print(DataPoint)
 
-if __name__ == '__main__':
-  filepath_ach = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ACH_v3_out.csv'
+def assembleParticlesHistory():
+  PARAMETER_ID_ACH = 2
+  PARAMETER_ID_IAS = 3
+  filepath_ach = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ACH_v2_out.csv' 
+  filepath_ias = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ACH_v2_out.csv' 
   df_ACH = pd.read_csv(filepath_ach)
-  ACH_columns = df_ACH.columns
-  ACH_array=[]
-  particleIndex = 0
-  for row in range(len(df_ACH)):
-    for col in range(1,len(ACH_columns)):
-      particleIndex = particleIndex+1
-      particleValue = df_ACH.loc[row,ACH_columns[col]]
-      # print("[{0},{1}] = {2}".format(row, col, df_ACH.loc[row,ACH_columns[col]]))
-      ACH_array.append((particleIndex, particleValue))
-  insert_particles(ACH_array)
+  insertParticlesHistory(PARAMETER_ID_ACH, df_ACH)
+  df_IAS = pd.read_csv(filepath_ias)
+  insertParticlesHistory(PARAMETER_ID_IAS, df_IAS)
+  
+def insertParticlesHistory(particle_id, particle_df):
+  particle_history_step = particle_df.columns
+  for col in range(1,len(particle_history_step)):
+    ach = particle_df.iloc[:,col]
+    ach_array = []
+    for p in range(len(ach)):
+      ach_tuple = (particle_id, p, ach[p])
+      ach_array.append(ach_tuple)
+    
+    print(ach_array)
+    insert_particles(ach_array)
+
+if __name__ == '__main__':
+  assembleParticlesHistory()
+  
+  
+  
+  
+  # for row in range(len(df_ACH)):
+  #   for col in range(1,len(ACH_columns)):
+  #     particleIndex = particleIndex+1
+  #     particleValue = df_ACH.loc[row,ACH_columns[col]]
+  #     # print("[{0},{1}] = {2}".format(row, col, df_ACH.loc[row,ACH_columns[col]]))
+  #     ACH_array.append((particleIndex, particleValue))
+  # insert_particles(ACH_array)
