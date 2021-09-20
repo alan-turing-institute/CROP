@@ -59,21 +59,21 @@
 
 
                 <!-- <div class="x_content">
-                <canvas id="c" style="width: 100%; height: 100%;"> 
+                <canvas id="c" style="width: 100%; height: 100%;">
                     Text to alert visitors that the Canvas
                     is not supported by your browser.
                 </canvas>
 
             </div> -->
 
-                <div class="webgl-content">
+                <!-- <div class="webgl-content">
                     <div id="unityContainer" style="height: 45vh"></div>
                     <div class="footer">
                         <div class="webgl-logo"></div>
                         <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
                         <div class="title">CROP_Unity_3D</div>
                     </div>
-                </div>
+                </div> -->
 
             </div>
         </div>
@@ -470,8 +470,8 @@
     //Imports from backend
     var temperature_data = JSON.parse('{{temperature_data | safe}}');
     var humidity_data = JSON.parse('{{humidity_data | safe}}');
-    var temperature_data_daily = JSON.parse('{{temperature_data_daily | safe}}');
-    var humidity_data_daily = JSON.parse('{{humidity_data_daily | safe}}');
+    //var temperature_data_daily = JSON.parse('{{temperature_data_daily | safe}}');
+    // var humidity_data_daily = JSON.parse('{{humidity_data_daily | safe}}');
     var vertical_stratification = JSON.parse('{{vertical_stratification | safe}}')
 
 
@@ -576,8 +576,7 @@
                         title: function (tooltipItems, data) {
                             return '';
                         },
-                    },
-                    yAlign: 'center'
+                    }
                 }
             }
         };
@@ -595,11 +594,11 @@
     horizontal_charts(temperature_data, 3, "stackedbarchart3")
     horizontal_charts(temperature_data, 4, "stackedbarchart4")
 
-    horizontal_charts(temperature_data_daily, 0, "stackedbarchart10")
-    horizontal_charts(temperature_data_daily, 1, "stackedbarchart11")
-    horizontal_charts(temperature_data_daily, 2, "stackedbarchart12")
-    horizontal_charts(temperature_data_daily, 3, "stackedbarchart13")
-    horizontal_charts(temperature_data_daily, 4, "stackedbarchart14")
+    //horizontal_charts(temperature_data_daily, 0, "stackedbarchart10")
+    //horizontal_charts(temperature_data_daily, 1, "stackedbarchart11")
+    //horizontal_charts(temperature_data_daily, 2, "stackedbarchart12")
+    //horizontal_charts(temperature_data_daily, 3, "stackedbarchart13")
+    //horizontal_charts(temperature_data_daily, 4, "stackedbarchart14")
 
 
     /////humidity
@@ -611,11 +610,11 @@
     horizontal_charts(humidity_data, 3, "stackedbarchart8")
     horizontal_charts(humidity_data, 4, "stackedbarchart9")
 
-    horizontal_charts(humidity_data_daily, 0, "stackedbarchart15")
-    horizontal_charts(humidity_data_daily, 1, "stackedbarchart16")
-    horizontal_charts(humidity_data_daily, 2, "stackedbarchart17")
-    horizontal_charts(humidity_data_daily, 3, "stackedbarchart18")
-    horizontal_charts(humidity_data_daily, 4, "stackedbarchart19")
+    //horizontal_charts(humidity_data_daily, 0, "stackedbarchart15")
+    //horizontal_charts(humidity_data_daily, 1, "stackedbarchart16")
+    //horizontal_charts(humidity_data_daily, 2, "stackedbarchart17")
+    //horizontal_charts(humidity_data_daily, 3, "stackedbarchart18")
+    //horizontal_charts(humidity_data_daily, 4, "stackedbarchart19")
 
 
     //vertical stratification
@@ -681,7 +680,7 @@
 </script>
 
 
-<!-- 
+<!--
 
 <script>
 

@@ -130,6 +130,8 @@ def grp_per_hr_zone(temp_df, dt_from, dt_to):
 
     df = copy.deepcopy(temp_df)
 
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+
     # mask per selected date
     mask = (df["timestamp"] >= dt_from) & (df["timestamp"] <= dt_to)
     filtered_df = df.loc[mask]
@@ -225,9 +227,12 @@ def temperature_analysis(df_temp, bins):
     Returns:
         temp_df_merged: A merged df with sampled values per bin
     """
+    #print("hello", df_temp)
 
     df_unique_zones = df_temp[["zone"]].drop_duplicates(["zone"])
     location_zones = df_unique_zones["zone"].tolist()
+
+    temp_df_merged = []
 
     temp_list = []
 
@@ -386,24 +391,32 @@ def index():
     dt_from = dt_to - dt.timedelta(days=7)
     dt_from_daily = dt_to - dt.timedelta(days=1)
 
+    # weekly
     df = zensie_query(dt_from, dt_to)
+    if not df.empty:
+        df_mean_hr_weekly = grp_per_hr_zone(df, dt_from, dt_to)
+        df_temp_weekly = temperature_analysis(df_mean_hr_weekly, TEMP_BINS)
+        df_hum_weekly = humidity_analysis(df_mean_hr_weekly, HUM_BINS)
+        weekly_temp_json = json_temp(df_temp_weekly)
+        weekly_hum_json = json_temp(df_hum_weekly)
+        json_vertstrat = vertical_stratification(
+            df, 23, 18, dt_from, dt_to
+        )  # sensorids in positions (16B1 and 16B4)
+    else:
+        weekly_hum_json = {}
+        weekly_hum_json = {}
+        json_vertstrat = {}
 
-    df_mean_hr_weekly = grp_per_hr_zone(df, dt_from, dt_to)
-    df_mean_hr_daily = grp_per_hr_zone(df, dt_from_daily, dt_to)
-
-    df_temp_weekly = temperature_analysis(df_mean_hr_weekly, TEMP_BINS)
-    df_hum_weekly = humidity_analysis(df_mean_hr_weekly, HUM_BINS)
-    df_temp_daily = temperature_analysis(df_mean_hr_daily, TEMP_BINS)
-    df_hum_daily = humidity_analysis(df_mean_hr_daily, HUM_BINS)
-
-    weekly_temp_json = json_temp(df_temp_weekly)
-    weekly_hum_json = json_temp(df_hum_weekly)
-    daily_temp_json = json_temp(df_temp_daily)
-    daily_hum_json = json_temp(df_hum_daily)
-
-    json_vertstrat = vertical_stratification(
-        df, 23, 18, dt_from, dt_to
-    )  # sensorids in positions (16B1 and 16B4)
+    df_daily = zensie_query(dt_from_daily, dt_to)
+    if not df_daily.empty:
+        df_mean_hr_daily = grp_per_hr_zone(df_daily, dt_from_daily, dt_to)
+        df_temp_daily = temperature_analysis(df_mean_hr_daily, TEMP_BINS)
+        df_hum_daily = humidity_analysis(df_mean_hr_daily, HUM_BINS)
+        daily_temp_json = json_temp(df_temp_daily)
+        daily_hum_json = json_temp(df_hum_daily)
+    else:
+        daily_temp_json = {}
+        daily_hum_json = {}
 
     return render_template(
         "index.html",
@@ -414,15 +427,3 @@ def index():
         vertical_stratification=json_vertstrat,
         dt_from=dt_from.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"))
-
-
-
-@blueprint.route("/<template>")
-@login_required
-def route_template(template):
-
-    """
-    Renders templates
-
-    """
-    return render_template(template + ".html")
