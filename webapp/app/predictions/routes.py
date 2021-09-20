@@ -70,7 +70,7 @@ def mels_query(dt_from, dt_to, model_id):
             ModelProductClass.run_id == ModelRunClass.id,
             ModelProductClass.measure_id == ModelMeasureClass.id,
             ModelValueClass.product_id == ModelProductClass.id,
-            
+
             #ModelRunClass.time_created >= dt_from,
             #ModelRunClass.time_created <= dt_to,
        )
@@ -108,6 +108,7 @@ def route_template(template, methods=['GET']):
     dt_from = dt_to - dt.timedelta(days=60)
     df_arima= mels_query(dt_from, dt_to, 1)
     json_arima = json_temp_arima(df_arima)
+    print (json_arima)
 
     #export data in csv for debugging
     #df_arima.to_csv(r'C:\Users\froumpani\OneDrive - The Alan Turing Institute\Desktop\test_data_filter.csv', index = False)
@@ -121,9 +122,9 @@ def route_template(template, methods=['GET']):
     #     print("!"*100)
 
     if template == "melmodel":
-        
-        
+
+
         return render_template(template + '.html', json_arima_f=json_arima)
 
-    
+
     else: return render_template(template + '.html')

@@ -3,131 +3,153 @@
 {% block title %} SENSOR TYPES {% endblock title %}
 
 {% block stylesheets %}
-  {{ super() }}
-  <link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}" rel="stylesheet">
+{{ super() }}
+<link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}"
+  rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}"
+  rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}"
+  rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}"
+  rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
+  rel="stylesheet">
 {% endblock stylesheets %}
 
 {% block content %}
-  <div class="right_col" role="main">
-    <div class="">
-      
-      <div class="row">
-        <div class="col-md-12 col-sm-12 col-xs-12">
-          <div class="x_panel">
-            <div class="x_title">
-              <h2>Responsive example<small>Users</small></h2>
-              <ul class="nav navbar-right panel_toolbox">
-                <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                  <ul class="dropdown-menu" role="menu">
-                    <li><a href="#">Settings 1</a>
-                    </li>
-                    <li><a href="#">Settings 2</a>
-                    </li>
-                  </ul>
-                </li>
-                <li><a class="close-link"><i class="fa fa-close"></i></a>
-                </li>
-              </ul>
-              <div class="clearfix"></div>
-            </div>
-            <div class="x_content">
-              <p class="text-muted font-13 m-b-30">
-                List of registered sensors.
-              </p>
+<div class="right_col" role="main">
+  <div class="">
+
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>Arima<small>Model</small></h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
+                    class="fa fa-wrench"></i></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="#">Settings 1</a>
+                  </li>
+                  <li><a href="#">Settings 2</a>
+                  </li>
+                </ul>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <canvas id="arima_model"></canvas>
+            <p class="text-muted font-13 m-b-30">
+              List of registered sensors.
+            </p>
 
 
-            </div>
+
           </div>
         </div>
-
-
       </div>
+
+
     </div>
   </div>
+</div>
 {% endblock content %}
 
 {% block javascripts %}
-  {{ super() }}
-  <!-- Datatables -->
-  <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.flash.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-keytable/js/dataTables.keyTable.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-scroller/js/dataTables.scroller.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
+{{ super() }}
+<!-- Datatables -->
+<script src="{{ url_for('static', filename='vendors/Chart.js/dist/Chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
+<script
+  src="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.flash.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
+<script
+  src="{{ url_for('static', filename='vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
+<script
+  src="{{ url_for('static', filename='vendors/datatables.net-keytable/js/dataTables.keyTable.min.js') }}"></script>
+<script
+  src="{{ url_for('static', filename='vendors/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
+<script
+  src="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js') }}"></script>
+<script
+  src="{{ url_for('static', filename='vendors/datatables.net-scroller/js/dataTables.scroller.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
 
-  <script>
+<script>
 
-    //Imports from backend
-    var arima_data = JSON.parse('{{json_arima_f | safe}}');
-    //console.warn(arima_data)
-    console.warn(arima_data[0]["Values"])
+  //Imports from backend
+  var arima_data = JSON.parse('{{json_arima_f | safe}}');
+  console.warn(arima_data[0]["Values"])
 
 
-    function time_series_charts(arima_data, canvasname) {
+  function time_series_charts(json_data, canvasname) {
 
-       values_top = []
-       values_bot = []
-       values_mid = []
-       dates = []
-       console.warn(arima_data[0]["Values"])
-      //  for (j = 0; j < json_data[0]["Values"].length; j++) {
-      //      values_top.push(parseFloat(json_data[0]["Values"][j]["temperature"]))
-      //      values_bot.push(parseFloat(json_data[1]["Values"][j]["temperature"]))
-      //      dates.push(parseFloat(json_data[0]["Values"][j]["date"]))
-      //  }
+    values_top = []
+    values_bot = []
+    values_mid = []
+    hours = []
 
-    //   const data = {
-    //       labels: dates,
-    //       datasets: [
-    //           {
-    //               label: 'Top',
-    //               data: values_top,
-    //               borderColor: "#ff0000",
-    //           },
-    //           {
-    //               label: 'Bottom',
-    //               data: values_bot,
-    //               borderColor: "#3399ff",
-    //           }
-    //       ]
-    //   };
-    //   const config = {
-    //       type: 'line',
-    //       data: data,
-    //       options: {
-    //           responsive: true,
-    //           plugins: {
-    //               legend: {
-    //                   position: 'top',
-    //               },
-    //               title: {
-    //                   display: true,
-    //                   text: 'Vertical Stratification'
-    //               }
-    //           }
-    //       },
-    //   };
-    //   var ctx = document.getElementById(canvasname);
-    //   var myChart = new Chart(ctx, config);
+    for (j = 0; j < json_data[1]["Values"].length; j++) {
+      values_top.push(parseFloat(json_data[0]["Values"][j]["prediction_value"]))
+      values_mid.push(parseFloat(json_data[1]["Values"][j]["prediction_value"]))
+      values_bot.push(parseFloat(json_data[2]["Values"][j]["prediction_value"]))
+      hours.push(parseFloat(json_data[0]["Values"][j]["prediction_index"]))
     }
-  </script>
+
+    const data = {
+      labels: hours,
+      datasets: [
+        {
+          label: 'Top',
+          data: values_top,
+          borderColor: "#ff0000",
+        },
+        {
+          label: 'Mid',
+          data: values_mid,
+          borderColor: "#fff000",
+        },
+        {
+          label: 'Bottom',
+          data: values_bot,
+          borderColor: "#3399ff",
+        }
+      ]
+    };
+    const config = {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Prediction Model'
+          }
+        }
+      },
+    };
+    var ctx = document.getElementById(canvasname);
+    var myChart = new Chart(ctx, config);
+  }
+
+  time_series_charts(arima_data, "arima_model");
+</script>
 
 
 
