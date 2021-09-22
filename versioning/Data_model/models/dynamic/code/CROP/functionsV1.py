@@ -24,16 +24,23 @@ from scipy.integrate import solve_ivp
 import sys
 sys.path.append("/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/code/Inversion")
 from inversion import *
+from dataAccess import getDaysWeather
 
-def climterp_linear(h1, h2):
-    filepath_weather = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather.csv'
-    ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
-    temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
-    rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
-    
-    deltaT = 600
+def climterp_linear(h1, h2, filepath_weather=None):
+    temp_in = None
+    rh_in = None
+    h1=1
+    h2=5
+    if (filepath_weather):
+        ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
+        temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
+        rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
+    else:
+        ExternalWeather = np.asarray(getDaysWeather(numDays=2, numRows=5))
+        temp_in = ExternalWeather[:,1].astype(np.float64) # +1 to ensure correct end point
+        rh_in = ExternalWeather[:,2].astype(np.float64) # +1 to ensure correct end point
 
-    # remove nans
+    # # remove nans
     nans, x= nan_helper(temp_in)
     temp_in[nans]= np.interp(x(nans), x(~nans), temp_in[~nans])
     
@@ -41,12 +48,13 @@ def climterp_linear(h1, h2):
     rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
     
     t = np.linspace(0,864000,h2+1-h1)
-
+    deltaT = 600
     mult=np.linspace(0,864000,int(1+864000/deltaT))
+    print("t: {0}, mult:{1}, input:{2}".format(t.shape,mult.shape,temp_in.shape))
 
     clim_t = np.interp(mult,t,temp_in)
     clim_rh = np.interp(mult,t,rh_in)
-    
+
     climate = np.vstack((clim_t,clim_rh))
 
     return climate
@@ -323,10 +331,10 @@ def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2):
     return np.array([dT_cdt,dT_idt,dT_vdt,dT_mdt,dT_pdt,dT_fdt,dT_c1dt,
                  dT_c2dt,dT_c3dt,dT_c4dt,dT_c5dt,dC_wdt])
 
-def derivatives(h1, h2, paramsinput):
+def derivatives(h1, h2, paramsinput, filePathWeather=None):
     
     # Get weather data
-    climate = np.transpose(climterp_linear(h1,h2))
+    climate = np.transpose(climterp_linear(h1,h2,filePathWeather))
 
     # Get parameter values
     
