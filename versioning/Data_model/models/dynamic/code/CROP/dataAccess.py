@@ -5,6 +5,7 @@ import datetime
 from jinjasql import JinjaSql
 from six import string_types
 from copy import deepcopy
+import numpy as np
 
 
 def openConnection():
@@ -77,7 +78,7 @@ def getData(query):
       cur = conn.cursor()
       cur.execute(query)
       rows = cur.fetchall()
-      printRowsHead(rows)
+      # printRowsHead(rows)
       
       # close the communication with the PostgreSQL
       cur.close()
@@ -167,7 +168,22 @@ def insert_particles(particles_array):
     closeConnection(conn=conn)
 
 if __name__ == '__main__':
-  particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
-  insert_particles(particles_array)
+  # particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
+  # insert_particles(particles_array)
+  database_weather = np.asarray(getDaysWeather())
+  filepath_weather = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather_subset.csv'
+  csv_weather = np.genfromtxt(filepath_weather, delimiter=',')
+  print ("Example weather database:{0}".format(database_weather[:,1]))
+  print ("Example weather csv:{0}".format(csv_weather[1:5,1]))
+
+  print ("Example weather dtype database:{0}".format(type(database_weather[:,1][1])))
+  print ("Example weather dtype csv:{0}".format(type(csv_weather[1:5,1][1])))
+  
+
+  
+  print (np.isnan(csv_weather[1:5,1]))
+  temp = database_weather[1:5,1].astype(np.float64)
+  print (np.isnan(temp))
+
   # getDaysWeather()
   # getDaysHumidity()

@@ -49,7 +49,7 @@ def assembleParticlesHistory():
   PARAMETER_ID_ACH = 2
   PARAMETER_ID_IAS = 3
   filepath_ach = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ACH_v2_out.csv' 
-  filepath_ias = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ACH_v2_out.csv' 
+  filepath_ias = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/IAS_v2_out.csv' 
   df_ACH = pd.read_csv(filepath_ach)
   insertParticlesHistory(PARAMETER_ID_ACH, df_ACH)
   df_IAS = pd.read_csv(filepath_ias)
@@ -57,14 +57,14 @@ def assembleParticlesHistory():
   
 def insertParticlesHistory(particle_id, particle_df):
   particle_history_step = particle_df.columns
-  for col in range(1,len(particle_history_step)):
+  for col in range(len(particle_history_step)-20, len(particle_history_step)):
     ach = particle_df.iloc[:,col]
     ach_array = []
     for p in range(len(ach)):
       ach_tuple = (particle_id, p, ach[p])
       ach_array.append(ach_tuple)
     
-    print(ach_array)
+    print("ParticleID:{0} History:{1}".format(particle_id, col))
     insert_particles(ach_array)
 
 if __name__ == '__main__':
