@@ -53,21 +53,21 @@ p1 = 243 # start hour to test code - in CROP will be hour at which the code is r
 # h2 = int(p1)
 # h1 = int(p1-48) # to take previous 10 days data
 
-h2 = 1
-h1 = 5
+h1 = 1
+h2 = 5
 
 Parameters = np.genfromtxt(filepath_X, delimiter=',') # ACH,IAS pairs
 NP = np.shape(Parameters)[0]
     
 start = time.time()
 
-results = derivatives(h1, h2, Parameters, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
-print("CSV: {0}".format(results))
+# results = derivatives(h1, h2, Parameters, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
+# print("CSV: {0}".format(results))
 results = derivatives(h1, h2, Parameters) # runs GES model over ACH,IAS pairs
-print("Database: {0}".format(results))
-# T_air = results[1,-1,:]
-# Cw_air = results[11,-1,:]
-# RH_air = Cw_air/sat_conc(T_air)
+# print("Database: {0}".format(results))
+T_air = results[1,-1,:]
+Cw_air = results[11,-1,:]
+RH_air = Cw_air/sat_conc(T_air)
 
 # end = time.time()
 # print(end - start)

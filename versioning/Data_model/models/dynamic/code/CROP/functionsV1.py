@@ -29,8 +29,6 @@ from dataAccess import getDaysWeather
 def climterp_linear(h1, h2, filepath_weather=None):
     temp_in = None
     rh_in = None
-    h1=1
-    h2=5
     if (filepath_weather):
         ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
         temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
