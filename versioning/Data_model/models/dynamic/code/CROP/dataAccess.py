@@ -6,6 +6,7 @@ from jinjasql import JinjaSql
 from six import string_types
 from copy import deepcopy
 import numpy as np
+import pandas as pd
 
 
 def openConnection():
@@ -128,18 +129,18 @@ def getDaysWeather(numDays=2, numRows=5):
   # print(get_sql_from_template(query=query, bind_params=bind_params))
   return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
-def getDaysHumidity(numDays=5, numRows=5):
+def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
   # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
   today = datetime.datetime.now()
-  delta = datetime.timedelta(days=numDays)
+  delta = datetime.timedelta(days=deltaDays)
   dateNumDaysAgo = today - delta
-  params = {'sensor_id':27,
+  params = {'sensor_id':sensorID,
   'timestamp':dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"), 
   'numRows':numRows}
 
   humidity_transaction_template = '''
   select
-    timestamp, temperature, humidity
+    timestamp, humidity
   from 
     zensie_trh_data 
   where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
@@ -149,7 +150,7 @@ def getDaysHumidity(numDays=5, numRows=5):
   '''
   j = JinjaSql(param_style='pyformat')
   query, bind_params = j.prepare_query(humidity_transaction_template, params)
-  print(get_sql_from_template(query=query, bind_params=bind_params))
+  # print(get_sql_from_template(query=query, bind_params=bind_params))
   return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 def insert_particles(particles_array):
@@ -167,9 +168,27 @@ def insert_particles(particles_array):
   finally:
     closeConnection(conn=conn)
 
-if __name__ == '__main__':
-  # particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
-  # insert_particles(particles_array)
+def getDataPointHumidity(sensorID=27, numRows=1):
+  # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
+  params = {'sensor_id':sensorID, 
+    'num_Rows':numRows}
+
+  humidity_transaction_template = '''
+  select
+    timestamp, humidity
+  from 
+    zensie_trh_data 
+  where (sensor_id = {{ sensor_id }})
+  order by 
+    timestamp desc 
+  limit {{ num_Rows }}
+  '''
+  j = JinjaSql(param_style='pyformat')
+  query, bind_params = j.prepare_query(humidity_transaction_template, params)
+  # print(get_sql_from_template(query=query, bind_params=bind_params))
+  return getData(get_sql_from_template(query=query, bind_params=bind_params))
+
+def compareWeatherSources():
   database_weather = np.asarray(getDaysWeather())
   filepath_weather = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather_subset.csv'
   csv_weather = np.genfromtxt(filepath_weather, delimiter=',')
@@ -179,11 +198,55 @@ if __name__ == '__main__':
   print ("Example weather dtype database:{0}".format(type(database_weather[:,1][1])))
   print ("Example weather dtype csv:{0}".format(type(csv_weather[1:5,1][1])))
   
-
-  
   print (np.isnan(csv_weather[1:5,1]))
   temp = database_weather[1:5,1].astype(np.float64)
   print (np.isnan(temp))
 
+def compareHumiditySources():
+  date_cols = ["DateTimex"]
+  Data_csv = pd.read_csv("/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv", parse_dates=date_cols)
+  RHData_CSV =Data_csv['MidFarmRH2']
+  print("CSV Type: {0}".format(type(RHData_CSV)))
+  print("CSV Shape: {0}".format(RHData_CSV.shape)) 
+  print("CSV: {0}".format(RHData_CSV)) 
+  
+  MidFarmRH2_ID = 27
+  Data_database=getDaysHumidity(numRows=7, sensorID=MidFarmRH2_ID)
+  humidity = []
+  temperature = []
+  for row in Data_database:
+    humidity.append(row[1])
+    temperature.append(row[0])
+  humidity = pd.Series(humidity)
+  temperature = pd.Series(temperature)
+  print("Db Type: {0}".format(type(humidity)))
+  print("Db Shape: {0}".format(humidity.shape))
+  print("Db: {0}".format(humidity))
+
+def getDataPoint(filepath=None):
+  if (filepath):
+    LastDataPoint = pd.read_csv(filepath)
+    jj = np.size(LastDataPoint,1)
+    if jj > 1:
+        DataPoint = float(LastDataPoint[str(jj)])
+    else:
+        DataPoint = 0.5 # dummy value
+    return DataPoint
+  else: 
+    dp_database = np.asarray(getDataPointHumidity())[0,1]
+    return dp_database
+
+def compareDataPoint():
+  dp_database = getDataPoint()
+  print("Source: Database Type: {0} Value:{1}".format(type(dp_database), dp_database))
+  filepath_datapoint = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
+  dp_csv = getDataPoint(filepath_datapoint)
+  print("Source: CSV Type: {0} Value:{1}".format(type(dp_csv), dp_csv))
+
+if __name__ == '__main__':
+  # particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
+  # insert_particles(particles_array)
+  # compareHumiditySources()
+  compareDataPoint()
   # getDaysWeather()
   # getDaysHumidity()

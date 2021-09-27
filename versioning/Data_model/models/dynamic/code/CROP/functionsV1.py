@@ -48,7 +48,7 @@ def climterp_linear(h1, h2, filepath_weather=None):
     t = np.linspace(0,864000,h2+1-h1)
     deltaT = 600
     mult=np.linspace(0,864000,int(1+864000/deltaT))
-    print("t: {0}, mult:{1}, input:{2}".format(t.shape,mult.shape,temp_in.shape))
+    # print("t: {0}, mult:{1}, input:{2}".format(t.shape,mult.shape,temp_in.shape))
 
     clim_t = np.interp(mult,t,temp_in)
     clim_rh = np.interp(mult,t,rh_in)
@@ -388,16 +388,26 @@ def derivatives(h1, h2, paramsinput, filePathWeather=None):
 
     return results
 
-def priorPPF():
-    df_ACH = pd.read_csv("ACH_out.csv")
-    df_IAS = pd.read_csv("IAS_out.csv")
-    df_Length = pd.read_csv("Length_out.csv")
-    
-    nparticles = np.size(df_ACH,0)
+def loadDistributions():
+    # if (filePath_ACH and filePath_IAS and filePath_Length):
+    #     df_ACH = pd.read_csv(filePath_ACH)
+    #     df_IAS = pd.read_csv(filePath_IAS)
+    #     df_Length = pd.read_csv(filePath_Length)
+    # else:
+    filepath_ACH = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ACH_out.csv'
+    filepath_IAS = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/IAS_out.csv'
+    filepath_Length = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/Length_out.csv'
 
+    df_ACH = pd.read_csv(filepath_ACH)
+    df_IAS = pd.read_csv(filepath_IAS)
+    df_Length = pd.read_csv(filepath_Length)
+    return df_ACH, df_IAS, df_Length
+
+def priorPPF():
+    df_ACH, df_IAS, df_Length = loadDistributions()
+    nparticles = np.size(df_ACH,0)
     jj = np.size(df_ACH,1)
     if jj > 1:
-        
         a_t1 = np.array(df_ACH[str(jj)])
         a_t2 = np.array(df_IAS[str(jj)])
         a_l = np.array(df_Length[str(jj)])
