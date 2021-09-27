@@ -6,7 +6,7 @@ Created on Mon Jun 14 09:32:23 2021
 """
 
 from functionsV1 import derivatives, priorPPF, sat_conc
-from dataAccess import getDaysWeather
+from dataAccess import getDaysWeather, getDaysHumidity
 import pandas as pd
 import numpy as np
 import sys
@@ -33,7 +33,7 @@ import csv
 
 filepath_X = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/X.csv'
 filepath_weather = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather.csv'
-filepath_TRHE = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/TRHE2018.csv'
+filepath_TRHE = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv'
 filepath_datapoint = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
 
 # initialize calibration class
@@ -55,16 +55,20 @@ p1 = 243 # start hour to test code - in CROP will be hour at which the code is r
 
 h1 = 1
 h2 = 5
+useDataBase=True
 
 Parameters = np.genfromtxt(filepath_X, delimiter=',') # ACH,IAS pairs
 NP = np.shape(Parameters)[0]
     
-start = time.time()
+# start = time.time()
 
-# results = derivatives(h1, h2, Parameters, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
-# print("CSV: {0}".format(results))
-results = derivatives(h1, h2, Parameters) # runs GES model over ACH,IAS pairs
-# print("Database: {0}".format(results))
+if useDataBase:
+    results = derivatives(h1, h2, Parameters) # runs GES model over ACH,IAS pairs
+else: 
+    results = derivatives(h1, h2, Parameters, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
+
+print("CSV: {0}".format(results))
+print("Database: {0}".format(results))
 T_air = results[1,-1,:]
 Cw_air = results[11,-1,:]
 RH_air = Cw_air/sat_conc(T_air)
@@ -73,29 +77,48 @@ RH_air = Cw_air/sat_conc(T_air)
 # print(end - start)
 
 
-# ### Select data
-# ### Here using historic data - will be replaced with datapoint from live database
+### Select data
+### Here using historic data - will be replaced with datapoint from live database
 
-# date_cols = ["DateTimex"]
-# Data = pd.read_csv(filepath_TRHE, parse_dates=date_cols)
-# RHData =Data['MidFarmRH2']
+def getHumidity(filepath = None):
+    if filepath:
+        date_cols = ["DateTimex"]
+        Data = pd.read_csv(filepath, parse_dates=date_cols)
+        humidity = Data['MidFarmRH2']
+        DT = Data['DateTimex']
+        return humidity, DT
+    else:
+        MidFarmRH2_ID = 27
+        humidtyList = getDaysHumidity(numRows=7, sensorID=MidFarmRH2_ID)
+        humidity = []
+        temperature = []
+        for row in humidtyList:
+            humidity.append(row[1])
+            temperature.append(row[0])
+        humidity = pd.Series(humidity)
+        temperature = pd.Series(temperature)
+        return humidity, temperature
+
+if useDataBase:
+    RHData, DT = getHumidity()
+else:
+    RHData, DT = getHumidity(filepath_TRHE)
+
+dp = RHData[h2]
+testdp = np.isnan(dp)
+
+
     
-# dp = RHData[h2]
-# testdp = np.isnan(dp)
 
 # # Initialise DataPoint
-# LastDataPoint = pd.read_csv(filepath_datapoint)
-# jj = np.size(LastDataPoint,1)
-
-# if jj > 1:
-#     DataPoint = float(LastDataPoint[str(jj)])
-# else:
-#     DataPoint = 0.5 # dummy value
+DataPoint = getDataPoint_CSV(filepath_datapoint)
     
-# if testdp == False:
-#     DataPoint = dp/100
-# else:
-#     DataPoint = DataPoint # takes previous value if nan recorded
+if testdp == False:
+    DataPoint = dp/100
+else:
+    DataPoint = DataPoint # takes previous value if nan recorded
+
+print("DataPoint:{0}".format(DataPoint))
 
 # LastDataPoint[str(jj+1)] = DataPoint 
 # LastDataPoint.to_csv("DataPoint.csv", index=False)
@@ -107,74 +130,77 @@ RH_air = Cw_air/sat_conc(T_air)
 
 # ## Standardise RH_air
     
-# ym = 0.6456 # values chosen to ensure comparability against MATLAB model
-# ystd = 0.0675
+ym = 0.6456 # values chosen to ensure comparability against MATLAB model
+ystd = 0.0675
 
-# RH_s = (RH_air - ym)/ystd
+RH_s = (RH_air - ym)/ystd
+print ("Standardised RH_air (RH_s):{0}".format(RH_s))
     
-# ## Standardise data point
+## Standardise data point
 
-# RHD_s = (DataPoint - ym)/ystd
+RHD_s = (DataPoint - ym)/ystd
     
-# # Normalise calibration parameters
+# Normalise calibration parameters
 
-# Pmax = np.max(Parameters, axis = 0)
-# Pmin = np.min(Parameters, axis = 0)
+Pmax = np.max(Parameters, axis = 0)
+Pmin = np.min(Parameters, axis = 0)
 
-# Cal = (Parameters - Pmin)/(Pmax - Pmin)
+Cal = (Parameters - Pmin)/(Pmax - Pmin)
 
-# ## Start calibration here
-# print('Calibration ...')
-# start = time.time()
+## Start calibration here
+m = 1 # No. of data points
 
-# m = 1 # No. of data points
+# params
+ts = np.linspace(1, m, m)
 
-# # params
-# ts = np.linspace(1, m, m)
+# coordinates
+xModel = np.array([0.5])
+xData = np.array([0, 0.5, 1])
 
-# # coordinates
-# xModel = np.array([0.5])
-# xData = np.array([0, 0.5, 1])
-
-# # calibration parameters
-# n = np.size(Cal,0)
+# calibration parameters
+n = np.size(Cal,0)
   
-# tModel = Cal
+tModel = Cal
 
-# yModel = np.zeros((n, len(xModel), len(ts)))
-# for i in range(n):
-#     yModel[i, 0, :] = RH_s[i,]
+yModel = np.zeros((n, len(xModel), len(ts)))
+for i in range(n):
+    yModel[i, 0, :] = RH_s[i,]
 
-# yData = np.zeros((m, len(xData)))
-# for i in range(m):
-#     yData[i, :] = np.ones(3) * RHD_s 
+yData = np.zeros((m, len(xData)))
+for i in range(m):
+    yData[i, :] = np.ones(3) * RHD_s 
 
-# ### implement sequential calibration
-# nparticles = 1000
-# lambda_e = 1 # same as mean of GASP parameter lambda_eta 
+### implement sequential calibration
+nparticles = 1000
+lambda_e = 1 # same as mean of GASP parameter lambda_eta 
 
-# # load coordinates and data
-# cal.updateCoordinates(xModel, xData) # OK here as data all at same location
+# load coordinates and data
+cal.updateCoordinates(xModel, xData) # OK here as data all at same location
 
-# # particle filter over data outputs
-# beta_r = np.array([0.05,0.05,0.05])
+# particle filter over data outputs
+beta_r = np.array([0.05,0.05,0.05])
 
-# ## initialise priorSamples/posteriors
+## initialise priorSamples/posteriors
     
-# posteriors = np.zeros((1, nparticles, 3))
-# priorSamples = np.zeros((1, nparticles, 3))
+posteriors = np.zeros((1, nparticles, 3))
+priorSamples = np.zeros((1, nparticles, 3))
 
-# cal.updateTrainingData(tModel, yModel[:, :, 0], np.reshape(yData[0, :], ((1, 3))))
-# cal.sequentialUpdate(nparticles, beta_r, logConstraint=np.array([0, 0, 1]))
-# priorSamples[0, :, :] = cal.prior
-# posteriors[0, :, :] = cal.posteriorSamples
+cal.updateTrainingData(tModel, yModel[:, :, 0], np.reshape(yData[0, :], ((1, 3))))
+cal.sequentialUpdate(nparticles, beta_r, logConstraint=np.array([0, 0, 1]))
+priorSamples[0, :, :] = cal.prior
+posteriors[0, :, :] = cal.posteriorSamples
 
-# print('... ended')
+ACH_OUT_ID = 0
+IAS_OUT_ID = 1
+LENGTH_OUT_ID = 2
+print ("ACH_out type: {0}".format(type(posteriors[0,:,ACH_OUT_ID])))
+print ("ACH_out shape: {0}".format(posteriors[0,:,ACH_OUT_ID].shape))
 
-# # time
-# end = time.time()
-# print(end - start)
+print ("ACH_out type: {0}".format(type(posteriors[0,:,IAS_OUT_ID])))
+print ("ACH_out shape: {0}".format(posteriors[0,:,IAS_OUT_ID].shape))
 
+print ("ACH_out type: {0}".format(type(posteriors[0,:,LENGTH_OUT_ID])))
+print ("ACH_out shape: {0}".format(posteriors[0,:,LENGTH_OUT_ID].shape))
 # # Output results
     
 # df_ACH = pd.read_csv("ACH_out.csv")
