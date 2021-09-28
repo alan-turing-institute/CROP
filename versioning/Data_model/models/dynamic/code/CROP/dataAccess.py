@@ -243,10 +243,15 @@ def compareDataPoint():
   dp_csv = getDataPoint(filepath_datapoint)
   print("Source: CSV Type: {0} Value:{1}".format(type(dp_csv), dp_csv))
 
+def testEnergy():
+  sql_command = "SELECT * FROM utc_energy_data WHERE utc_energy_data.timestamp >= '2021-03-12 16:03:11' AND utc_energy_data.timestamp < '2021-09-28 17:03:11'"
+  return getData(sql_command)
+
 if __name__ == '__main__':
   # particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
   # insert_particles(particles_array)
   # compareHumiditySources()
-  compareDataPoint()
+  # compareDataPoint()
   # getDaysWeather()
-  # getDaysHumidity()
+  energy = testEnergy()
+  print(energy[0])
