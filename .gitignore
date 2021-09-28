@@ -25,6 +25,7 @@ CROP.pyproj.user
 *.Rhistory
 /versioning/Data_model/test_model/arima/mlruns/
 /versioning/Data_model/test_model/mlruns/
+/versioning/Data_model/test_model/static/data/
 *.csv
 *.tgz
 *.tar.gz

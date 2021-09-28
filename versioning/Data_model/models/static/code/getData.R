@@ -19,7 +19,7 @@ connectToDatabase = function(){
   crop_port = "5432"
   crop_dbname = "app_db"
   crop_user = "cropdbadmin@cropapptestsqlserver"
-  crop_password = ""
+  crop_password = "QhXZ7qZddDr224Mc2P4k"
   
   # Connect to the MySQL database: con
   con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), 
@@ -63,6 +63,7 @@ getTemperatureHumidityData = function(limitRows, datesToGetData) {
   where_criteria1 = "WHERE sensors.id = zensie_trh_data.sensor_id"
   where_criteria2 = sprintf("AND zensie_trh_data.timestamp >= '%s'", datesToGetData$startDate)
   where_criteria3 = sprintf("AND zensie_trh_data.timestamp < '%s'", datesToGetData$endDate)
+  where_criteria3 = sprintf("order by zensie_trh_data.timestamp asc", datesToGetData$endDate)
   
   limit_command = ""
   if (limitRows > 0)
@@ -82,12 +83,14 @@ getEnergyData = function (limitRows, datesToGetData) {
   from_command = "FROM utc_energy_data"
   where_criteria1 = sprintf("WHERE utc_energy_data.timestamp >= '%s'", datesToGetData$startDate)
   where_criteria2 = sprintf("AND utc_energy_data.timestamp < '%s'", datesToGetData$endDate)
+  where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC", datesToGetData$endDate)
   
   limit_command = ""
   if (limitRows > 0)
     limit_command = sprintf("LIMIT %i", limitRows)
-  sql_command = paste(select_command,from_command, where_criteria1, where_criteria2, limit_command, sep=" ")
+  sql_command = paste(select_command,from_command, where_criteria1, where_criteria2, where_criteria3, limit_command, sep=" ")
   
+  print(sql_command)
   energy_raw = getData(sql_command)
   energy_raw$Timestamp2 <- as.POSIXct(energy_raw$timestamp,tz="UTC")
   energy_raw
@@ -97,17 +100,20 @@ getDataFromCsv = function() {
   env_raw = read.csv("./data/test10.csv")
 }
 
-numDays = 60
+numDays = 170
 limitRows = 0
 datesToGetData = getStartEndDate(numDays)
 
 energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(energy_raw, "../data/energy60.csv")
-#energy_raw = read.csv("../data/energy40.csv")
+filename=sprintf("../data/energy%i.csv", numDays)
+write.csv(energy_raw, filename)
+#write.csv(energy_raw, "../data/energy300.csv")
+#energy_raw = read.csv("../data/energy120.csv")
 
 env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(env_raw, "../data/env60.csv")
-#env_raw = read.csv("../data/env40.csv")
+filename=sprintf("../data/env%i.csv", numDays)
+write.csv(env_raw, filename)
+#env_raw = read.csv("../data/env120.csv")
 
-#source(paste0(".","/cleandata.R"), echo=FALSE)
+source(paste0(".","/cleandata.R"), echo=FALSE)
 
