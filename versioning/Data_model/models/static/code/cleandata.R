@@ -158,6 +158,9 @@ cleanEnergyData = function() {
 # nrow(my_time) -nrow(all_sensors_df2)
 # nrow(my_time) -nrow(ecp_ph)
 
+env_raw = read.csv("../data/env120.csv")
+energy_raw = read.csv("../data/energy120.csv")
+
 environmentData = cleanEnvData()
 my_time = environmentData$my_time
 all_sensors_df2 = environmentData$all_sensors_df2
@@ -175,5 +178,5 @@ t_ee <- left_join(t_e1, t_e2)
 ## save the cleaned data frame for future use --------------
 #setwd(daughterfolder)
 
-#saveRDS(t_ee,"../data/t_ee.RDS")
+saveRDS(t_ee,"../data/280921_t_ee.RDS")
 
