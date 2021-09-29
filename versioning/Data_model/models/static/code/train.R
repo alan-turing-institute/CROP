@@ -51,7 +51,7 @@ standardiseObservations = function(observations, sensor =? string) {
   observationsForThisSensor = observations
   names(observationsForThisSensor)[tolower(names(observationsForThisSensor))==tolower(sensor)] = "Sensor_temp"
   observationsForThisSensor = observationsForThisSensor[,c("EnergyCP", "FarmTime", "Sensor_temp", "DateFarm")]
-  observationsForThisSensor = fill_data_mean(observationsForThisSensor)
+  observationsForThisSensor = fill_data(observationsForThisSensor)
   observationsForThisSensor
 }
 
@@ -109,7 +109,7 @@ setupModels = function(split.Data, sensorID) {
   runArimaPipeline = function(split.Data, sensorID) {
     model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
     results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
-    print(results.arima)
+    #print(results.arima)
     stats.arima = sim_stats_arima(results.arima)
     
     records.mean.arima = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.arima$mean)
@@ -118,11 +118,11 @@ setupModels = function(split.Data, sensorID) {
     records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
     
     run.arima = list(sensor_id=sensorID, model_id=MODEL_ID$ARIMA, records=records.arima)
-    #writeRun(run.arima)
+    writeRun(run.arima)
   }
   
   trainBSTS = function(available.Data, trainIndex) {
-    numIterations = 1000 # default = 1000
+    numIterations = 500 # default = 1000
     fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
     mc = list()
     mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
@@ -158,11 +158,11 @@ setupModels = function(split.Data, sensorID) {
     records.bsts = list(records.mean.bsts, records.median.bsts)
     
     run.bsts = list(sensor_id=sensorID, model_id=MODEL_ID$BSTS, records=records.bsts)
-    #writeRun(run.bsts)
+    writeRun(run.bsts)
   }
   
-  #runArimaPipeline(split.Data, sensorID=sensorID)
-  runbstsPipeline(split.Data, sensorID=sensorID)
+  runArimaPipeline(split.Data, sensorID=sensorID)
+  #runbstsPipeline(split.Data, sensorID=sensorID)
 }
 
 reportStats = function(a_t_ee, label="Source") {
@@ -200,27 +200,31 @@ reportStats = function(a_t_ee, label="Source") {
 }
   
 cleanedDataPath = "../data/t_ee.RDS"
-mel_t_ee = overrideTee(cleanedDataPath)
-reportStats(mel_t_ee, "Mel")
+t_ee = overrideTee(cleanedDataPath)
+reportStats(t_ee, "Mel")
 
-cleanedDataPath = "../data/280921_t_ee.RDS"
-t_ee = readRDS(cleanedDataPath) 
-reportStats(t_ee, "Today")
+#cleanedDataPath = "../data/280921_60_t_ee.RDS"
+#cleanedDataPath = "../data/280921_120_t_ee.RDS"
+#cleanedDataPath = "../data/280921_170_t_ee.RDS"
+#t_ee = readRDS(cleanedDataPath) 
+#reportStats(t_ee, "Today")
 
 currentData = getCurrentData(t_ee)
 
 tobj_list = currentData$tobj_list
 forecast_timestamp = currentData$forecast_timestamp
 
-daysOfHistoryForTraining = 170
+daysOfHistoryForTraining = 365
 historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
 forecastDataStart = forecast_timestamp
 
 for (tobj_name in names(tobj_list)){
+  updateString = sprintf("Generating predictions for: %s using %s data",tobj_name,cleanedDataPath)
+  print(updateString)
   tobj_mm <- tobj_list[[tobj_name]]
   split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
   print(sprintf("SENSOR %s=%i", tobj_name, SENSOR_ID[[tobj_name]]))
-  setupModels(split.Data, sensorID=SENSOR_ID[[tobj_name]])
+  #setupModels(split.Data, sensorID=SENSOR_ID[[tobj_name]])
 }
 
 
