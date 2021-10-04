@@ -40,8 +40,11 @@ CREATE TABLE model_run (
   id SERIAL PRIMARY KEY,
   sensor_id INTEGER REFERENCES sensors(id),
   model_id INTEGER REFERENCES model(id),
+  time_forecast timestamp NOT NULL,
   time_created timestamp default current_timestamp NOT NULL
 );
+
+-- insert into model
 
 CREATE TABLE model_product (
   id SERIAL PRIMARY KEY,
@@ -50,7 +53,7 @@ CREATE TABLE model_product (
 );
 
 
--- INSERT INTO model_run(sensor_id, measure_id, model_id)
+-- INSERT INTO model_product (sensor_id, measure_id, model_id)
 -- VALUES(18, 1, 1);
 
 -- Prdiction value:

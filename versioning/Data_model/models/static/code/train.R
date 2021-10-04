@@ -86,13 +86,13 @@ getCurrentData = function(t_ee) {
   list(tobj_list=tobj_list, forecast_timestamp=forecast_timestamp)
 }
 
-setupModels = function(split.Data, sensorID) {
+setupModels = function(split.Data, sensorID, time_forecast) {
   trainArima = function(available.Data, trainIndex) {
     p = 4 # AR order
     d = 1 # degree of difference
     q = 2 # MA order
     
-    print("Training the Static model")
+    #print("Training the Static model")
     MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
     model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
                              order = c(p,d,q),
@@ -100,7 +100,7 @@ setupModels = function(split.Data, sensorID) {
   }
   
   forecastArima = function(available.Data, forecastIndex, arima.Model) {
-    print("Forecasting the Static model")
+    #print("Forecasting the Static model")
     numberOfHours=48
     results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
     list(upper=results$upper, lower=results$lower, mean=results$mean)
@@ -113,12 +113,12 @@ setupModels = function(split.Data, sensorID) {
     stats.arima = sim_stats_arima(results.arima)
     
     records.mean.arima = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.arima$mean)
-    records.upper.arima = list(measure_id = MEASURE_ID$Temperature_Upper, measure_values = results.arima$upper)
-    records.lower.arima = list(measure_id = MEASURE_ID$Temperature_Lower, measure_values = results.arima$lower)
+    records.upper.arima = list(measure_id = MEASURE_ID$Temperature_Upper, measure_values = results.arima$upper[,2])
+    records.lower.arima = list(measure_id = MEASURE_ID$Temperature_Lower, measure_values = results.arima$lower[,2])
     records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
     
     run.arima = list(sensor_id=sensorID, model_id=MODEL_ID$ARIMA, records=records.arima)
-    writeRun(run.arima)
+    writeRun(run.arima, time_forecast)
   }
   
   trainBSTS = function(available.Data, trainIndex) {
@@ -218,14 +218,41 @@ daysOfHistoryForTraining = 365
 historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
 forecastDataStart = forecast_timestamp
 
-for (tobj_name in names(tobj_list)){
-  updateString = sprintf("Generating predictions for: %s using %s data",tobj_name,cleanedDataPath)
-  print(updateString)
-  tobj_mm <- tobj_list[[tobj_name]]
-  split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
-  print(sprintf("SENSOR %s=%i", tobj_name, SENSOR_ID[[tobj_name]]))
-  #setupModels(split.Data, sensorID=SENSOR_ID[[tobj_name]])
+runModelsForSensors = function(historicalDataStart, forecastDataStart) {
+  for (tobj_name in names(tobj_list)){
+    updateString = sprintf("Generating predictions for: %s on Date %s",tobj_name,forecastDataStart)
+    print(updateString)
+    tobj_mm <- tobj_list[[tobj_name]]
+    split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
+    #print(sprintf("SENSOR %s=%i", tobj_name, SENSOR_ID[[tobj_name]]))
+    setupModels(split.Data, sensorID=SENSOR_ID[[tobj_name]],forecastDataStart)
+  }
 }
+
+get_date_days_ago = function(numDays, today) {
+  today = as.POSIXct(today)
+  today - (numDays*SECONDS.PERDAY)
+} 
+
+getDaysPrediction = function(daysOfPredictions, forecast_timestamp) {
+  get_date_days_ago = function(numDaysAgo, today) {
+    today = as.POSIXct(today)
+    dateDaysAgo = today - (numDaysAgo*SECONDS.PERDAY)
+    dateDaysAgo
+  } 
+  
+  for (d in 0:daysOfPredictions){
+    temp_forecastDataStart = get_date_days_ago(numDaysAgo=d, forecast_timestamp)
+    temp_historicalDataStart = temp_forecastDataStart - (daysOfHistoryForTraining*SECONDS.PERDAY) + (d*SECONDS.PERDAY)
+    print(sprintf("Forecast for Date: %s Historical data starts:%s",temp_forecastDataStart,temp_historicalDataStart))
+    runModelsForSensors(temp_historicalDataStart, temp_forecastDataStart)
+  }
+  
+}
+
+daysOfPredictions = 7
+getDaysPrediction(daysOfPredictions, forecast_timestamp-(0*SECONDS.PERDAY))
+
 
 
 
