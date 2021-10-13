@@ -82,7 +82,7 @@ getCurrentData = function(t_ee) {
     if (sensorName %in% names(t_ee))
       tobj_list[[sensorName]] = standardiseObservations(tobj0,sensorName)
   }
-    
+  
   list(tobj_list=tobj_list, forecast_timestamp=forecast_timestamp)
 }
 
@@ -175,19 +175,19 @@ reportStats = function(a_t_ee, label="Source") {
   
   if (label == "Today"){
     stats.temperature.numNA.a_t_ee = sprintf("%s Temperature NumNA/Rows: %i/%i = %f\n", 
-                                           label,
-                                           sum(is.na(a_t_ee$Temperature_FARM_16B1)),
-                                           length(a_t_ee$Temperature_FARM_16B1),
-                                           sum(is.na(a_t_ee$Temperature_FARM_16B1))/length(a_t_ee$Temperature_FARM_16B1))
+                                             label,
+                                             sum(is.na(a_t_ee$Temperature_FARM_16B1)),
+                                             length(a_t_ee$Temperature_FARM_16B1),
+                                             sum(is.na(a_t_ee$Temperature_FARM_16B1))/length(a_t_ee$Temperature_FARM_16B1))
     cat(stats.temperature.numNA.a_t_ee)
   }
   
   if (label == "Mel"){
     stats.temperature.numNA.a_t_ee = sprintf("%s Temperature NumNA/Rows: %i/%i = %f\n", 
-                                           label,
-                                           sum(is.na(a_t_ee$Temperature_Farm_16B2)),
-                                           length(a_t_ee$Temperature_Farm_16B2),
-                                           sum(is.na(a_t_ee$Temperature_Farm_16B2))/length(a_t_ee$Temperature_Farm_16B2))
+                                             label,
+                                             sum(is.na(a_t_ee$Temperature_Farm_16B2)),
+                                             length(a_t_ee$Temperature_Farm_16B2),
+                                             sum(is.na(a_t_ee$Temperature_Farm_16B2))/length(a_t_ee$Temperature_Farm_16B2))
     cat(stats.temperature.numNA.a_t_ee)
   }
   
@@ -198,7 +198,7 @@ reportStats = function(a_t_ee, label="Source") {
                                       sum(is.na(a_t_ee$EnergyCP))/length(a_t_ee$EnergyCP))
   cat(stats.energy.numNA.a_t_ee)
 }
-  
+
 cleanedDataPath = "../data/t_ee.RDS"
 t_ee = overrideTee(cleanedDataPath)
 reportStats(t_ee, "Mel")
