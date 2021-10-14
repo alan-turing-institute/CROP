@@ -182,7 +182,7 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     records.bsts = list(records.mean.bsts, records.median.bsts)
     
     run.bsts = list(sensor_id=sensorID, model_id=MODEL_ID$BSTS, records=records.bsts)
-    writeRun(run.bsts)
+    writeRun(run.bsts,time_forecast)
   }
   
   runArimaPipeline(split.Data, sensorID=sensorID)
@@ -291,5 +291,5 @@ rds.mel = readRDS("../data/Forecast_2021-04-26_16h.RDS")
 forecast_arima_mean = rds.mel$Middle_16B1[[2]]$mean
 forecast_bsts_mean = rds.mel$Middle_16B1[[1]]$mean
 
-getRMSE(forecast_arima_mean, results.arima$mean)
+#getRMSE(forecast_arima_mean, results.arima$mean)
 getRMSE(forecast_bsts_mean, results.bsts$mean)
