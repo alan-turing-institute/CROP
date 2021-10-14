@@ -8,7 +8,7 @@ MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
 #SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
-SENSOR_ID = list(Temperature_Farm_16B4=23)
+SENSOR_ID = list(Temperature_FARM_16B1=18)
 MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3, Temperature_Median = 4)
 MODEL_ID = list(ARIMA = 1, BSTS = 2)
 
@@ -18,11 +18,11 @@ source(paste0(".","/pushData.R"), echo=FALSE)
 standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
   # Identify time to forecast based on latest day
   if (hour(latestTimeStamp) > 16){
-    as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 16,":00:00"), tz="UTC")
+    as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 16,":00:00"), tz="GMT")
   } else if  (hour(latestTimeStamp)<=4){
-    as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))-1," ", 16,":00:00"), tz="UTC")
+    as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))-1," ", 16,":00:00"), tz="GMT")
   }else  {
-    as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 4,":00:00"), tz="UTC")
+    as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 4,":00:00"), tz="GMT")
   }
 }
 
@@ -31,17 +31,17 @@ getForecastTimestamp = function(latestTimeStamp = ? Date) {
   fourDaysIntoPast = 4*SECONDS.PERDAY
   list_f_timestamps = seq(from=latestTimeStamp-fourDaysIntoPast, to= latestTimeStamp-twoDaysIntoPast, by="2 days")
   print(list_f_timestamps)
-  list_f_timestamps[length(list_f_timestamps)]
+  #list_f_timestamps[length(list_f_timestamps)]
+  list_f_timestamps[1]
 }
 
 getOneYearDataUptoDate = function(observations, forecast_timestamp = ? Date) {
   # select one year
   oneYear = 365*SECONDS.PERDAY
   interval = lubridate::interval(forecast_timestamp-oneYear, forecast_timestamp)
-  print(interval)
   tobj0 = observations[t_ee$FarmTimestamp %within% interval,]
   tobj0$FarmTime = tobj0$FarmTimestamp
-  tobj0$DateFarm = as.Date(tobj0$FarmTimestamp) 
+  #tobj0$DateFarm = as.Date(tobj0$FarmTimestamp) 
   print (sprintf("Forecast date %s", forecast_timestamp))
   print (sprintf("1 Year data runs from %s to %s", min(tobj0$FarmTime), max(tobj0$FarmTime)))
   #tobj0$EnergyCP <- ifelse(is.na(tobj0$EnergyCP),0,tobj0$EnergyCP*2)
@@ -54,14 +54,14 @@ getOneYearDataUptoDate = function(observations, forecast_timestamp = ? Date) {
 standardiseObservations = function(observations, sensor =? string) {
   observationsForThisSensor = observations
   names(observationsForThisSensor)[tolower(names(observationsForThisSensor))==tolower(sensor)] = "Sensor_temp"
-  observationsForThisSensor = observationsForThisSensor[,c("EnergyCP", "FarmTime", "Sensor_temp", "DateFarm")]
-  observationsForThisSensor = fill_data_mean(observationsForThisSensor)
+  observationsForThisSensor = observationsForThisSensor[,c("EnergyCP", "FarmTime", "Sensor_temp")]
+  observationsForThisSensor = fill_data(observationsForThisSensor)
   observationsForThisSensor
 }
 
 splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) {
-  daysIntoFuture = 1
-  tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(daysIntoFuture*SECONDS.PERDAY)))
+  hoursIntoFuture = 48
+  tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(hoursIntoFuture*SECONDS.PERMINUTE*MINS.PERHOUR)))
   
   #fullcov <- constructCov(tsel$Lights, tsel$FarmTime)
   # indices for training
@@ -92,11 +92,11 @@ getCurrentData = function(t_ee) {
 getHistoricalData = function(t_ee, forecastDate) {
   print(sprintf("I want the forecast starting: %s", forecastDate))
   #latest_timestamp = standardiseLatestTimestamp(forecastDate)
-  latest_timestamp = forecastDate
-  print(sprintf("Latest Standardised: %s", latest_timestamp))
+  #latest_timestamp = forecastDate
+  #print(sprintf("Latest Standardised: %s", latest_timestamp))
   #forecast_timestamp = getForecastTimestamp(latest_timestamp)
   forecast_timestamp = forecastDate
-  print(sprintf("What does this have to do with anything: %s", forecast_timestamp))
+  #print(sprintf("What does this have to do with anything: %s", forecast_timestamp))
   tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
   tobj_list = list()
   for (sensorName in names(SENSOR_ID)){
@@ -122,7 +122,7 @@ setupModels = function(split.Data, sensorID, time_forecast) {
   
   forecastArima = function(available.Data, forecastIndex, arima.Model) {
     #print("Forecasting the Static model")
-    numberOfHours=16
+    numberOfHours=48
     results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
     list(upper=results$upper, lower=results$lower, mean=results$mean)
   }
@@ -130,7 +130,6 @@ setupModels = function(split.Data, sensorID, time_forecast) {
   runArimaPipeline = function(split.Data, sensorID) {
     model.arima = trainArima(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
     results.arima = forecastArima(available.Data=split.Data$tsel, forecastIndex=split.Data$testSelIndex, model.arima)
-    print(split.Data$testSelIndex)
     rds.arima=sprintf("../data/arima_208.rds")
     saveRDS(results.arima,rds.arima)
     stats.arima = sim_stats_arima(results.arima)
@@ -229,7 +228,6 @@ runModelsForSensors = function(historicalDataStart, forecastDataStart) {
     print(updateString)
     tobj_mm <- tobj_list[[tobj_name]]
     split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
-    #print(sprintf("SENSOR %s=%i", tobj_name, SENSOR_ID[[tobj_name]]))
     setupModels(split.Data, sensorID=SENSOR_ID[[tobj_name]],forecastDataStart)
   }
 }
@@ -255,13 +253,22 @@ getDaysPrediction = function(daysOfPredictions, forecast_timestamp) {
   
 }
 
+getRMSE = function (actual, predicted) {
+  rmse = vector()
+  for (t in 1:length(actual)) {
+    rmse = sqrt((actual[t]-predicted[t])*(actual[t]-predicted[t]))
+    report = sprintf("%s\n", rmse)
+    cat(report)
+  }
+}
+
 cleanedDataPath = "../data/t_ee_208.RDS"
 t_ee = overrideTee(cleanedDataPath)
 reportStats(t_ee, "T_ee_208")
 
-#forecast_timestamp = as.POSIXct('2021-04-26 12:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
-#currentData = getHistoricalData(t_ee, forecast_timestamp)
-currentData = getCurrentData(t_ee)
+forecast_timestamp = as.POSIXct('2021-04-26 16:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
+currentData = getHistoricalData(t_ee, forecast_timestamp)
+#currentData = getCurrentData(t_ee)
 
 tobj_list = currentData$tobj_list
 forecast_timestamp = currentData$forecast_timestamp
@@ -276,13 +283,9 @@ runModelsForSensors(historicalDataStart, forecastDataStart)
 rds.arima=sprintf("../data/arima_208.rds")
 results.arima = readRDS(rds.arima)
 
-#actual = currentData$tobj_list$Temperature_FARM_16B1$Sensor_temp[4801:4848]
-#predicted = results.arima$mean
-#timerange = currentData$tobj_list$Temperature_FARM_16B1$FarmTime[4801: 4848]
-#getRMSE(actual, predicted, timerange)
+forecast = readRDS("../data/Forecast_2021-04-26_16h.RDS")
+forecast_16B1 = forecast$Middle_16B1[[2]]$mean
 
+##rebecca16b1 = c(20.05463,21.52983,21.65131,21.84900,22.04775,22.16641,22.30796,22.35972,23.09360,22.62402,22.62629,22.62824,22.61587,22.64502,21.92611,21.02361,20.42478,21.10290,20.98583,19.77507,18.56227,19.15184,19.86083,20.25426,19.49776,21.58805,21.61447,21.93472,22.24408,22.45222,22.66666,22.79285,23.16319,23.02675,23.04988,23.07311,23.07105,23.10273,22.70575,21.69456,20.47196,20.79731,20.92932,20.13382,18.49771,18.43336,19.41540,20.28275)
 
-
-
-
-
+getRMSE(forecast_16B1, results.arima$mean)
