@@ -141,11 +141,10 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     
     run.arima = list(sensor_id=sensorID, model_id=MODEL_ID$ARIMA, records=records.arima)
     #writeRun(run.arima, time_forecast)
-    
   }
   
   trainBSTS = function(available.Data, trainIndex) {
-    numIterations = 500 # default = 1000
+    numIterations = 1000 # default = 1000
     fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
     mc = list()
     mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
@@ -175,6 +174,8 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
     results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
     stats.bsts = sim_stats_bsts(results.bsts)
+    rds.bsts=sprintf("../data/bsts_208.rds")
+    saveRDS(results.bsts,rds.bsts)
     
     records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
     records.median.bsts = list(measure_id = MEASURE_ID$Temperature_Median, measure_values = results.bsts$median)
@@ -185,7 +186,7 @@ setupModels = function(split.Data, sensorID, time_forecast) {
   }
   
   runArimaPipeline(split.Data, sensorID=sensorID)
-  #runbstsPipeline(split.Data, sensorID=sensorID)
+  runbstsPipeline(split.Data, sensorID=sensorID)
 }
 
 reportStats = function(a_t_ee, label="Source") {
@@ -283,9 +284,12 @@ runModelsForSensors(historicalDataStart, forecastDataStart)
 rds.arima=sprintf("../data/arima_208.rds")
 results.arima = readRDS(rds.arima)
 
-forecast = readRDS("../data/Forecast_2021-04-26_16h.RDS")
-forecast_16B1 = forecast$Middle_16B1[[2]]$mean
+rds.bsts=sprintf("../data/bsts_208.rds")
+results.bsts = readRDS(rds.bsts)
 
-##rebecca16b1 = c(20.05463,21.52983,21.65131,21.84900,22.04775,22.16641,22.30796,22.35972,23.09360,22.62402,22.62629,22.62824,22.61587,22.64502,21.92611,21.02361,20.42478,21.10290,20.98583,19.77507,18.56227,19.15184,19.86083,20.25426,19.49776,21.58805,21.61447,21.93472,22.24408,22.45222,22.66666,22.79285,23.16319,23.02675,23.04988,23.07311,23.07105,23.10273,22.70575,21.69456,20.47196,20.79731,20.92932,20.13382,18.49771,18.43336,19.41540,20.28275)
+rds.mel = readRDS("../data/Forecast_2021-04-26_16h.RDS")
+forecast_arima_mean = rds.mel$Middle_16B1[[2]]$mean
+forecast_bsts_mean = rds.mel$Middle_16B1[[1]]$mean
 
-getRMSE(forecast_16B1, results.arima$mean)
+getRMSE(forecast_arima_mean, results.arima$mean)
+getRMSE(forecast_bsts_mean, results.bsts$mean)
