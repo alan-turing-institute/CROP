@@ -16,12 +16,12 @@ def query_result_to_array(query_result, date_iso=True):
     """
 
     dict_entry, results_arr = {}, []
-    
+
     for rowproxy in query_result:
 
-
+        # NOTE: added  ._asdict() as rowproxy didnt come in the form of dict and could not read .items.
         # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
-        for column, value in rowproxy.items():
+        for column, value in rowproxy._asdict().items():
 
             if isinstance(value, datetime):
                 if date_iso:

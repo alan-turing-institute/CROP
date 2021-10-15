@@ -403,7 +403,7 @@ def index():
             df, 23, 18, dt_from, dt_to
         )  # sensorids in positions (16B1 and 16B4)
     else:
-        weekly_hum_json = {}
+        weekly_temp_json = {}
         weekly_hum_json = {}
         json_vertstrat = {}
 

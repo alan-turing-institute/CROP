@@ -57,7 +57,6 @@ SQLA = SQLAlchemy()
 BASE = SQLA.Model
 
 
-
 class ModelClass(BASE):
     """
     This class contains a list of all models running in CROP
@@ -108,6 +107,7 @@ class ModelRunClass(BASE):
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "model_id"),)
 
+
 class ModelValueClass(BASE):
     """
     This class contains the outputs of model runs
@@ -128,6 +128,7 @@ class ModelValueClass(BASE):
 
     # arguments
     __table_args__ = (UniqueConstraint("product_id"),)
+
 
 class ModelProductClass(BASE):
     """
@@ -276,6 +277,7 @@ class ReadingsZensieTRHClass(BASE):
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
+
 class ReadingsZensieWeatherClass(BASE):
     """
     Base class for the 30MHz External weather readings
@@ -301,12 +303,12 @@ class ReadingsZensieWeatherClass(BASE):
     air_pressure = Column(Float, nullable=True)
     radiation = Column(Float, nullable=True)
 
-
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
-    
+
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
+
 
 class ReadingsAdvanticsysClass(BASE):
     """

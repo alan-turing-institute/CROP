@@ -45,16 +45,16 @@ def mels_query(dt_from, dt_to, model_id):
         )
     )
 
-    #subquery to get the last model run from a given model
+    # subquery to get the last model run from a given model
     sbqr = db.session.query(
         ModelRunClass
     ).filter(
         ModelRunClass.model_id == model_id
     ).all()[-1]
 
-    #quary to get all the results from the model run in the subquery
+    # query to get all the results from the model run in the subquery
     query = db.session.query(
-        #func.max(ModelProductClass.run_id),
+        # func.max(ModelProductClass.run_id),
         ModelClass.id,
         ModelClass.model_name,
         ModelRunClass.sensor_id,
@@ -73,8 +73,9 @@ def mels_query(dt_from, dt_to, model_id):
 
             #ModelRunClass.time_created >= dt_from,
             #ModelRunClass.time_created <= dt_to,
-       )
+        )
     )
+    print(query.statement.compile(dialect=db.session.bind.dialect))
 
     df = pd.read_sql(query.statement, query.session.bind)
 
@@ -93,7 +94,7 @@ def json_temp_arima(df_temp):
 
     """
     return (
-        df_temp.groupby(["sensor_id", "measure_name"], as_index=True)#"measure_name"
+        df_temp.groupby(["sensor_id", "measure_name"], as_index=True)  # "measure_name"
         .apply(lambda x: x[["prediction_value", "prediction_index"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
@@ -106,11 +107,11 @@ def json_temp_arima(df_temp):
 def route_template(template, methods=['GET']):
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=60)
-    df_arima= mels_query(dt_from, dt_to, 1)
+    df_arima = mels_query(dt_from, dt_to, 1)
     json_arima = json_temp_arima(df_arima)
-    print (json_arima)
+    # print(json_arima)
 
-    #export data in csv for debugging
+    # export data in csv for debugging
     #df_arima.to_csv(r'C:\Users\froumpani\OneDrive - The Alan Turing Institute\Desktop\test_data_filter.csv', index = False)
 
     #print (df_arima)
@@ -123,8 +124,7 @@ def route_template(template, methods=['GET']):
 
     if template == "melmodel":
 
-
         return render_template(template + '.html', json_arima_f=json_arima)
 
-
-    else: return render_template(template + '.html')
+    else:
+        return render_template(template + '.html')

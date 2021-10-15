@@ -27,28 +27,29 @@ def create_database(conn_string, db_name):
     # Create a new database
     if not database_exists(db_conn_string):
         # try:
-            # On postgres, the postgres database is normally present by default.
-            # Connecting as a superuser (eg, postgres), allows to connect and create a new db.
-            def_engine = create_engine("{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
+        # On postgres, the postgres database is normally present by default.
+        # Connecting as a superuser (eg, postgres), allows to connect and create a new db.
+        def_engine = create_engine(
+            "{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
 
-            # You cannot use engine.execute() directly, because postgres does not allow to create
-            # databases inside transactions, inside which sqlalchemy always tries to run queries.
-            # To get around this, get the underlying connection from the engine:
-            conn = def_engine.connect()
+        # You cannot use engine.execute() directly, because postgres does not allow to create
+        # databases inside transactions, inside which sqlalchemy always tries to run queries.
+        # To get around this, get the underlying connection from the engine:
+        conn = def_engine.connect()
 
-            # But the connection will still be inside a transaction, so you have to end the open
-            # transaction with a commit:
-            conn.execute("commit")
+        # But the connection will still be inside a transaction, so you have to end the open
+        # transaction with a commit:
+        conn.execute("commit")
 
-            # Then proceed to create the database using the PostgreSQL command.
-            conn.execute("create database " + db_name)
+        # Then proceed to create the database using the PostgreSQL command.
+        conn.execute("create database " + db_name)
 
-            # Connects to the engine using the new database url
-            _, _, engine = connect_db(conn_string, db_name)
-            # Adds the tables and columns from the classes in module structure
-            BASE.metadata.create_all(engine)
+        # Connects to the engine using the new database url
+        _, _, engine = connect_db(conn_string, db_name)
+        # Adds the tables and columns from the classes in module structure
+        BASE.metadata.create_all(engine)
 
-            conn.close()
+        conn.close()
         # except:
         #     return False, "Error creating a new database"
     return True, None
@@ -97,7 +98,8 @@ def drop_db(conn_string, db_name):
         # Disconnects all users from the db we want to drop
         try:
             connection = engine.connect()
-            connection.connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            connection.connection.set_isolation_level(
+                ISOLATION_LEVEL_AUTOCOMMIT)
 
             version = connection.dialect.server_version_info
             pid_column = "pid" if (version >= (9, 2)) else "procpid"
@@ -121,7 +123,6 @@ def drop_db(conn_string, db_name):
 
 
 def check_database_structure(engine):
-
     """
     Check whether the current database matches the models declared in model base.
 
