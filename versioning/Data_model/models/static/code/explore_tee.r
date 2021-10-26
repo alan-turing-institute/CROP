@@ -93,7 +93,19 @@ testDates = function(energy, env, t_ee) {
 #testDates(energy_raw, env_raw, tee208)
 
 source(paste0(".","/may_cleandata.R"), echo=FALSE)
-#may_tee208 = readRDS("t_ee_may_208.RDS")
+may_208 = readRDS("../data/t_ee_may_208.RDS")
+may_208$Temperature_FARM_16B1[12:20]
 
-
+> tee_208$Temperature_FARM_16B1[1:8]
+[1] 20.1750 19.9500 19.6500 19.7000 20.1125 20.6125 22.2500 22.7250
+> may_208$Temperature_FARM_16B1[12:20]
+[1] 20.4750 19.9500 19.6500 19.7000 20.1125 20.6125 22.2500 22.7250 22.9625
+> may_208$Humidity_FARM_16B1[12:20]
+[1] 65.50 69.00 73.75 80.50 82.00 76.75 74.00 71.50 69.75
+> tee_208$Humidity_FARM_16B1[1:8]
+[1] 66.75 69.00 73.75 80.50 82.00 76.75 74.00 71.50
+> tee_208$EnergyCP[1:8]
+[1] 15.920 15.765 14.585 14.980 16.570 23.665 26.720 26.605
+> may_208$EnergyCP[12:20]
+[1] 15.920 15.765 14.585 14.980 16.570 23.665 26.720 26.605 27.260
 
