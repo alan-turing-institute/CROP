@@ -80,17 +80,17 @@ getTemperatureHumidityData = function(limitRows, datesToGetData) {
 getEnergyData = function (limitRows, datesToGetData) {
   
   #"""SELECT * FROM utc_energy_data WHERE utc_energy_data.timestamp >= '%s' AND utc_energy_data.timestamp < '%s'""" % (dt_from, dt_to)
-  #select_command = "SELECT DATE_TRUNC('', timestamp)"
-  #from_command = "FROM utc_energy_data"
-  #where_criteria1 = sprintf("WHERE utc_energy_data.timestamp >= '%s'", datesToGetData$startDate)
-  #where_criteria2 = sprintf("AND utc_energy_data.timestamp < '%s'", datesToGetData$endDate)
-  #where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC", datesToGetData$endDate)
-  
-  select_command = "SELECT *" 
+  select_command = "SELECT *"
   from_command = "FROM utc_energy_data"
-  where_criteria1 = sprintf("WHERE utc_energy_data.timestamp BETWEEN '%s'", datesToGetData$startDate)
-  where_criteria2 = sprintf("AND '%s'", datesToGetData$endDate)
-  where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC")
+  where_criteria1 = sprintf("WHERE utc_energy_data.timestamp >= '%s'", datesToGetData$startDate)
+  where_criteria2 = sprintf("AND utc_energy_data.timestamp < '%s'", datesToGetData$endDate)
+  where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC", datesToGetData$endDate)
+  
+  #select_command = "SELECT *" 
+  #from_command = "FROM utc_energy_data"
+  #where_criteria1 = sprintf("WHERE cast(utc_energy_data.timestamp as timestamp)  BETWEEN '%s'", datesToGetData$startDate)
+  #where_criteria2 = sprintf("AND '%s'", datesToGetData$endDate)
+  #where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC")
   
   limit_command = ""
   if (limitRows > 0){
@@ -100,32 +100,36 @@ getEnergyData = function (limitRows, datesToGetData) {
   
   print(sql_command)
   energy_raw = getData(sql_command)
-  energy_raw$Timestamp2 <- as.POSIXct(energy_raw$timestamp,tz="UTC")
+  energy_raw$Timestamp2 = as.POSIXct(energy_raw$timestamp,tz="UTC")
+  #energy_raw$timestamp = with_tz(energy_raw$timestamp,tz="UTC")
   energy_raw
 }
 
-daysIntoPast = c(30, 60, 170)
-#daysIntoPast = c(1)
-limitRows = 0
-
-for (numDays in 1: length(daysIntoPast)) {
+createHistoryData = function() {
+  daysIntoPast = c(30, 60, 170)
+  #daysIntoPast = c(1)
   limitRows = 0
-  datesToGetData = getStartEndDate(daysIntoPast[numDays])
   
-  energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
-  energy_csv=sprintf("../data/energy%i.csv", daysIntoPast[numDays])
-  print(energy_csv)
-  energy_rds=sprintf("../data/energy%i.rds", daysIntoPast[numDays])
-  write.csv(energy_raw, energy_csv)
-  saveRDS(energy_raw,energy_rds)
-  
-  env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
-  env_csv=sprintf("../data/env%i.csv", daysIntoPast[numDays])
-  print(env_csv)
-  env_rds=sprintf("../data/env%i.rds", daysIntoPast[numDays])
-  write.csv(env_raw, env_csv)
-  saveRDS(env_raw,env_rds)
+  for (numDays in 1: length(daysIntoPast)) {
+    limitRows = 0
+    datesToGetData = getStartEndDate(daysIntoPast[numDays])
+    
+    energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+    energy_csv=sprintf("../data/energy%i.csv", daysIntoPast[numDays])
+    print(energy_csv)
+    energy_rds=sprintf("../data/energy%i.rds", daysIntoPast[numDays])
+    write.csv(energy_raw, energy_csv)
+    saveRDS(energy_raw,energy_rds)
+    
+    env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+    env_csv=sprintf("../data/env%i.csv", daysIntoPast[numDays])
+    print(env_csv)
+    env_rds=sprintf("../data/env%i.rds", daysIntoPast[numDays])
+    write.csv(env_raw, env_csv)
+    saveRDS(env_raw,env_rds)
+  }
 }
+
 
 #filename=sprintf("../data/energy%i.rds", numDays)
 

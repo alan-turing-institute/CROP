@@ -182,7 +182,7 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     records.bsts = list(records.mean.bsts, records.median.bsts)
     
     run.bsts = list(sensor_id=sensorID, model_id=MODEL_ID$BSTS, records=records.bsts)
-    writeRun(run.bsts,time_forecast)
+    #writeRun(run.bsts,time_forecast)
   }
   
   runArimaPipeline(split.Data, sensorID=sensorID)

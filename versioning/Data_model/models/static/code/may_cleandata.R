@@ -41,9 +41,7 @@ hourly_av_sensor <- function(trh, sensor_index,my_time){
   trh_ph<- left_join(trh_ph,trh_ph2,by=c("Timestamp") )
   
   trh_ph$FarmTimestamp <- trh_ph$Timestamp
-  
-  trh_ph_all <- left_join(my_time, trh_ph[c("FarmTimestamp","Timestamp",
-                                            "Temperature","Humidity")])
+  trh_ph_all <- left_join(my_time, trh_ph[c("FarmTimestamp","Timestamp","Temperature","Humidity")])
   
   return(trh_ph_all)
 }
@@ -85,13 +83,16 @@ my_time <- data.frame(FarmTimestamp = seq(from= min(trh$Timestamp)+3600,
 sensor_names <- unique(trh$name)
 
 # Select sensors: "FARM_16B1" "FARM_16B4" "Farm_16B2"
-select_sensors <- sensor_names[c(1,6,9)]
+#select_sensors <- sensor_names[c(1,6,9)]
+select_sensors <- sensor_names[c(1)]
 sensor_names_2<- gsub("_T/RH", "", select_sensors)
+#sensor_names_2<- select_sensors
 
 # create list where all sensor data is saved
 all_sensors<- vector(mode = "list", length = length(select_sensors))
 names(all_sensors) <- sensor_names_2
 
+#hourly_av_sensor(trh ,"FARM_T/RH_16B1",my_time)
 
 # load hourly average temperature and RH in the list
 for (xx in 1:length(select_sensors)){
@@ -167,4 +168,4 @@ t_ee <- left_join(t_e1, t_e2)
 setwd(daughterfolder)
 
 
-saveRDS(t_ee,"t_ee.RDS")
+saveRDS(t_ee,"t_ee_may_208.RDS")

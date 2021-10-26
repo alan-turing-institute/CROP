@@ -1,5 +1,8 @@
 
 library(zoo)
+source(paste0(".","/getData.R"), echo=FALSE)
+library(testit)
+SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
 
 report_print = function(report_Object) {
   report_Source = sprintf("Source: %s", report_Object$path)
@@ -13,60 +16,84 @@ report_print = function(report_Object) {
   print("")
 }
 
-getTimeStamps = function (t_object_timestamps, startDate, days){
-  SECONDS.PERMINUTE = 60
-  MINS.PERHOUR = 60
-  HOURS.PERDAY = 24
-  SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
-  endDate = startDate + (days*SECONDS.PERDAY)
-  interval = lubridate::interval(startDate, endDate)
-  indexRange = vector()
-  indexOfT = 0
-  for (t in t_object_timestamps) {
-    indexOfT = indexOfT + 1
-    dateToCheck = as_datetime(t)
-    if (dateToCheck %within% interval) {
-      indexRange = append(indexRange, indexOfT, after=length(indexRange))
-    }
-  }
-  indexRange
-}
-
 path_208 = "../data/t_ee_208.RDS"
 tee208 = list(path=path_208, object=readRDS(path_208))
 
 path_398 = "../data/t_ee_398.RDS"
-tee398 = list(path=path_398, object=readRDS(path_398))
+#tee398 = list(path=path_398, object=readRDS(path_398))
 
 path_410 = "../data/t_ee_410.RDS"
-tee410 = list(path=path_410, object=readRDS(path_410))
+#tee410 = list(path=path_410, object=readRDS(path_410))
 
-report_Objects = list(tee208, tee398, tee410)
-forecast = readRDS("../data/Forecast_2021-04-26_16h.RDS")
-forecast_16B1 = forecast$Middle_16B1
+report_Objects = list(tee208)
 
 for (t_object in report_Objects) {
   report_print(t_object)
 }
 
-getRMSE = function (actual, predicted, timestamp) {
-  rmse = vector()
-  for (t in 1:length(actual)) {
-    rmse = sqrt((actual[t]-predicted[t])*(actual[t]-predicted[t]))
-    #report = sprintf("[%s]\t%s %s\n", timestamp[t], actual[t], predicted[t])
-    report = sprintf("[%s]\t %s\n", timestamp[t], rmse)
-    cat(report)
-  }
+t_object = tee208
+startDate = t_object$object$FarmTimestamp[1]
+endDate = t_object$object$FarmTimestamp[length(t_object$object$FarmTimestamp)]
+numberOfDays = 30
+datesToGetData = list(startDate=startDate, endDate=startDate+(numberOfDays * SECONDS.PERDAY))
+
+energy_raw = getEnergyData(limitRows = 0, datesToGetData = datesToGetData)
+energy_rds=sprintf("../data/energy_raw.rds")
+saveRDS(energy_raw,file = energy_rds)
+
+env_rds=sprintf("../data/env_raw.rds")
+env_raw = getTemperatureHumidityData(limitRows = 0, datesToGetData = datesToGetData)
+env_raw_sensor18 = env_raw[env_raw[,"sensor_id"]==18,]
+saveRDS(env_raw_sensor18, file=env_rds)
+
+testRowCount = function(energy, env, t_ee) {
+  assert("Energy has 31296 rows", {
+    length(energy$timestamp) == 31296
+  })
+  assert("Temp/Humidity has 44751 rows", {
+    length(env$timestamp) == 44751
+  })
 }
 
-daysToForecast = 0.66
-dateOfForecast = as.POSIXct('2021-04-26 12:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
-indexRange = getTimeStamps(tee208$object$FarmTimestamp, dateOfForecast, daysToForecast)
-startForecastIndex = min(indexRange)
-endForecastIndex = max(indexRange)
-temperature=tee208$object$Temperature_FARM_16B1[startForecastIndex:endForecastIndex]
-time=tee208$object$FarmTimestamp[startForecastIndex:endForecastIndex]
-predictions=forecast_16B1[[1]]$mean
-getRMSE(temperature, predictions, time)
+energy_raw=readRDS(energy_rds)
+env_raw=readRDS(env_rds)
+
+#testRowCount(energy_raw, env_raw_sensor18)
+
+testDates = function(energy, env, t_ee) {
+  tee_StartDate = as.POSIXct(t_ee$object$FarmTimestamp[1], format="%Y-%m-%d %H:%M:%S", tz="UTC")
+  tee_EndDate = as.POSIXct(t_ee$object$FarmTimestamp[length(t_ee$object$FarmTimestamp)], format="%Y-%m-%d %H:%M:%S", tz="UTC")
+  tee_Interval = lubridate::interval(startDate, endDate)
+  
+  energyAvailabilityStart = as.POSIXct(energy$timestamp[1], format="%Y-%m-%d %H:%M:%S", tz="UTC")
+  energyAvailabilityEnd = as.POSIXct(energy$timestamp[length(energy$timestamp)], format="%Y-%m-%d %H:%M:%S", tz="UTC")
+  energy_Interval = lubridate::interval(energyAvailabilityStart, energyAvailabilityEnd)
+  
+  # Checking start and end date
+  assert(sprintf("FarmTimestamp %s",tee_Interval), {
+    (t_ee$object$FarmTimestamp[1] == tee_StartDate)
+    (t_ee$object$FarmTimestamp[length(t_ee$object$FarmTimestamp)] == tee_EndDate)
+  })
+  
+  assert(sprintf("Energy %s", energy_Interval), {
+    cat (sprintf("Energy interval: %s\n",energy_Interval))
+    cat (sprintf("Tee StartDate: %s\n",tee_StartDate))
+    cat (sprintf("Tee EndDate: %s\n",tee_EndDate))
+    (energyAvailabilityStart %within% tee_Interval)
+    (energyAvailabilityEnd %within% tee_Interval)
+  })
+  
+}
+
+#testEnv = function(env_raw, tee208){
+  #assert("env_raw$temperature[1:5] == tee208",{
+#  })  
+#}
+
+#testDates(energy_raw, env_raw, tee208)
+
+source(paste0(".","/may_cleandata.R"), echo=FALSE)
+#may_tee208 = readRDS("t_ee_may_208.RDS")
+
 
 
