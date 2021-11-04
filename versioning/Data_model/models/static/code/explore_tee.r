@@ -19,10 +19,10 @@ report_print = function(report_Object) {
 path_208 = "../data/t_ee_208.RDS"
 tee208 = list(path=path_208, object=readRDS(path_208))
 
-path_398 = "../data/t_ee_398.RDS"
+#path_398 = "../data/t_ee_398.RDS"
 #tee398 = list(path=path_398, object=readRDS(path_398))
 
-path_410 = "../data/t_ee_410.RDS"
+#path_410 = "../data/t_ee_410.RDS"
 #tee410 = list(path=path_410, object=readRDS(path_410))
 
 report_Objects = list(tee208)
@@ -34,7 +34,7 @@ for (t_object in report_Objects) {
 t_object = tee208
 startDate = t_object$object$FarmTimestamp[1]
 endDate = t_object$object$FarmTimestamp[length(t_object$object$FarmTimestamp)]
-numberOfDays = 30
+numberOfDays = 270
 datesToGetData = list(startDate=startDate, endDate=startDate+(numberOfDays * SECONDS.PERDAY))
 
 energy_raw = getEnergyData(limitRows = 0, datesToGetData = datesToGetData)
