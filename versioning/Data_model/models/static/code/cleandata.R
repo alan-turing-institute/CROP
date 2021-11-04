@@ -169,9 +169,6 @@ cleanEnergyData = function() {
 # nrow(my_time) -nrow(all_sensors_df2)
 # nrow(my_time) -nrow(ecp_ph)
 
-env_raw = read.csv("../data/env170.csv")
-energy_raw = read.csv("../data/energy170.csv")
-
 environmentData = cleanEnvData()
 my_time = environmentData$my_time
 all_sensors_df2 = environmentData$all_sensors_df2

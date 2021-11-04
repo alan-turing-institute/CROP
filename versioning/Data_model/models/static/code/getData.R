@@ -130,7 +130,7 @@ createHistoryData = function() {
   }
 }
 
-numDays = 250
+numDays = 200
 limitRows = 0
 datesToGetData = getStartEndDate(numDays)
 energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
