@@ -130,16 +130,9 @@ createHistoryData = function() {
   }
 }
 
-
-#filename=sprintf("../data/energy%i.rds", numDays)
-
-#write.csv(energy_raw, filename)
-#energy_raw = read.csv("../data/energy120.csv")
-
-#env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
-#filename=sprintf("../data/env%i.csv", numDays)
-#write.csv(env_raw, filename)
-#env_raw = read.csv("../data/env120.csv")
-
-#source(paste0(".","/cleandata.R"), echo=FALSE)
+numDays = 250
+limitRows = 0
+datesToGetData = getStartEndDate(numDays)
+energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
 
