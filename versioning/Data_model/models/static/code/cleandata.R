@@ -90,11 +90,22 @@ cleanEnvData = function() {
   
   
   # Identify each unique sensor
-  sensor_names <- unique(trh$name)
+  sensor_names_from_database <- unique(trh$name)
+  sensor_names = c()
+  SENSOR_ID = list("FARM_T/RH_16B1"=18, "Farm_T/RH_16B2"=27, "Farm_T/RH_16B4"=23)
+  for (n in sensor_names_from_database)
+  {
+    #print (n)
+    if (n %in% names(SENSOR_ID)){
+      sensor_names = append(sensor_names, n)
+    }
+  }
   
   # Select sensors: "FARM_16B1" "FARM_16B4" "Farm_16B2"
-  select_sensors <- sensor_names[c(1,6,9)]
-  sensor_names_2<- gsub("_T/RH", "", select_sensors)
+  #select_sensors <- sensor_names[c(5,6,7)]
+  #sensor_names_2<- gsub("_T/RH", "", select_sensors)
+  select_sensors = sensor_names
+  sensor_names_2 = gsub("_T/RH", "", select_sensors)
   
   # create list where all sensor data is saved
   all_sensors<- vector(mode = "list", length = length(select_sensors))
@@ -178,5 +189,5 @@ t_ee <- left_join(t_e1, t_e2)
 ## save the cleaned data frame for future use --------------
 #setwd(daughterfolder)
 
-saveRDS(t_ee,"../data/170D_t_ee.RDS")
+#saveRDS(t_ee,"../data/170D_t_ee.RDS")
 
