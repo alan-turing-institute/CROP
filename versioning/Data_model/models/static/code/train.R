@@ -75,7 +75,7 @@ overrideTee = function(cleanedDataPath) {
 getCurrentData = function(t_ee) {
   latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
   forecast_timestamp = getForecastTimestamp(latest_timestamp)
-  tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
+  tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = latest_timestamp)
   
   tobj_list = list()
   for (sensorName in names(SENSOR_ID)){
@@ -96,7 +96,8 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
     model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
                              order = c(p,d,q),
-                             seasonal = list(order=c(1,1,0),period=24),method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES))
+                             seasonal = list(order=c(1,1,0),period=24),
+                             method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES))
   }
   
   forecastArima = function(available.Data, forecastIndex, arima.Model) {
@@ -122,7 +123,7 @@ setupModels = function(split.Data, sensorID, time_forecast) {
   }
   
   trainBSTS = function(available.Data, trainIndex) {
-    numIterations = 1000 # default = 1000
+    numIterations = 500 # default = 1000
     fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
     mc = list()
     mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
@@ -200,7 +201,7 @@ reportStats = function(a_t_ee, label="Source") {
   cat(stats.energy.numNA.a_t_ee)
 }
   
-#cleanedDataPath = "../data/t_ee.RDS"
+#cleanedDataPath = "../data/t_ee_398.RDS"
 #t_ee = overrideTee(cleanedDataPath)
 #reportStats(t_ee, "Mel")
 
@@ -216,7 +217,7 @@ reportStats(t_ee, "Today")
 tobj_list = currentData$tobj_list
 forecast_timestamp = currentData$forecast_timestamp
 
-daysOfHistoryForTraining = 250
+daysOfHistoryForTraining = 10
 historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
 forecastDataStart = forecast_timestamp
 
@@ -252,8 +253,9 @@ getDaysPrediction = function(daysOfPredictions, forecast_timestamp) {
   
 }
 
-daysOfPredictions = 7
-getDaysPrediction(daysOfPredictions, forecast_timestamp-(0*SECONDS.PERDAY))
+runModelsForSensors(historicalDataStart, forecastDataStart)
+#daysOfPredictions = 7
+#getDaysPrediction(daysOfPredictions, forecast_timestamp-(0*SECONDS.PERDAY))
 
 
 
