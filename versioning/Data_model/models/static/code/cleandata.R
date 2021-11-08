@@ -135,7 +135,7 @@ cleanEnergyData = function() {
   ## Clean energy data -----------------------
   ecp <- energy_raw
   
-  ecpp <- reshape2::dcast(energy_raw, Timestamp2  ~sensor_id,value.var = "electricity_consumption")
+  ecpp <- reshape2::dcast(energy_raw, Timestamp2  ~sensor_id,value.var = "electricity_consumption", mean)
   names(ecpp) <- c("Timestamp2","EnergyCC","EnergyCP")
   
   ecpp$Hour <- hour(ecpp$Timestamp2)
