@@ -3,11 +3,15 @@
 constructLights <- function(tobj){
   # lights typically come on at 4pm. So a farm cycle starts at 4pm. This algortihm identifies the likely time that the lights came on in the farm.
   tobj$FarmDateNew <- as.Date(tobj$FarmTime - 16*60*60)
-  tobjmean <- (tobj %>% group_by(FarmDateNew) %>% dplyr::summarise(meanE=mean(EnergyCP, na.rm=TRUE)))
+  #tobjmean <- (tobj %>% group_by(FarmDateNew) %>% dplyr::summarise(meanE=mean(EnergyCP, na.rm=TRUE)))
+  tobjmean <- (tobj %>% group_by(FarmDateNew) %>% dplyr::summarise(meanE=mean(EnergyCP)))
   tobj$Lights <- rep(0, length(tobj$FarmDateNew))
   
+  ii = 4768
+  tobj$EnergyCP[ii] > 0.9*tobjmean[which(tobjmean$FarmDateNew==tobj$FarmDateNew[ii]),2]
   # identify rows where energyCP 
   for(ii in 1:length(tobj$Lights)){
+    print(ii)
     if(tobj$EnergyCP[ii] > 0.9*tobjmean[which(tobjmean$FarmDateNew==tobj$FarmDateNew[ii]),2]){
       if(tobj$EnergyCP[ii] >15){
         tobj$Lights[ii] <- 1
