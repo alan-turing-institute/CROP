@@ -8,11 +8,16 @@ MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
 SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
+SENSOR_ID = list(Temperature_Farm_16B4=23)
 MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3, Temperature_Median = 4)
 MODEL_ID = list(ARIMA = 1, BSTS = 2)
 
-source(paste0(".","/may_live_functions.R"), echo=FALSE)
-source(paste0(".","/pushData.R"), echo=FALSE)
+if (exists("WRITE_TO_DATABASE")==FALSE)
+  WRITE_TO_DATABASE = FALSE
+if (exists("RUN_ARIMA")==FALSE)
+  RUN_ARIMA = FALSE
+if (exists("RUN_BSTS")==FALSE)
+  RUN_BSTS = FALSE
 
 standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
   # Identify time to forecast based on latest day
@@ -119,26 +124,28 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
     
     run.arima = list(sensor_id=sensorID, model_id=MODEL_ID$ARIMA, records=records.arima)
-    #writeRun(run.arima, time_forecast)
+    if (WRITE_TO_DATABASE==TRUE)
+      writeRun(run.arima, time_forecast)
   }
   
   trainBSTS = function(available.Data, trainIndex) {
-    numIterations = 500 # default = 1000
+    numIterations = 1000 # default = 1000
     fullcov <- constructCov(available.Data$Lights, available.Data$FarmTime)
     mc = list()
     mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
     mc_withRegression = try({
-      bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
+      bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(45)]) #remove the hour that usually happens before the lights are on
     })
     model=NULL
-    if (inherits(mc_withRegression, "try-error")){
-      model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
-      print("Ran with error")
-    }
-    else {
-      model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc_withRegression, niter=numIterations) #iter 1000
-      print("Ran with No errors")
-    }
+    model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc_withRegression, niter=numIterations)
+    #if (inherits(mc_withRegression, "try-error")){
+    #  model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
+    #  print("Ran with error")
+    #}
+    #else {
+    #  model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc_withRegression, niter=numIterations) #iter 1000
+    #  print("Ran with No errors")
+    #}
     model
   }
   
@@ -146,13 +153,13 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
     periodToForecast = 48 # default 48
     burnRate=200 # default 200
-    predict(model, burn=burnRate, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
+    predict(model, burn=burnRate, newdata=newcovtyp[,-c(45)],periodToForecast) #burn 200
   }
   
   runbstsPipeline = function(split.Data, sensorID){
     model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
     results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
-    print(results.bsts)
+    #print(results.bsts)
     stats.bsts = sim_stats_bsts(results.bsts)
     
     records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
@@ -160,11 +167,15 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     records.bsts = list(records.mean.bsts, records.median.bsts)
     
     run.bsts = list(sensor_id=sensorID, model_id=MODEL_ID$BSTS, records=records.bsts)
-    #writeRun(run.bsts)
+    if (WRITE_TO_DATABASE==TRUE)
+      writeRun(run.bsts)
   }
   
-  runArimaPipeline(split.Data, sensorID=sensorID)
-  #runbstsPipeline(split.Data, sensorID=sensorID)
+  if (RUN_ARIMA == TRUE)
+    runArimaPipeline(split.Data, sensorID=sensorID)
+  
+  if (RUN_BSTS == TRUE)
+    runbstsPipeline(split.Data, sensorID=sensorID)
 }
 
 reportStats = function(a_t_ee, label="Source") {
@@ -211,15 +222,7 @@ reportStats = function(a_t_ee, label="Source") {
 #t_ee = readRDS(cleanedDataPath) 
 #reportStats(t_ee, "Today")
 
-currentData = getCurrentData(t_ee)
-reportStats(t_ee, "Today")
 
-tobj_list = currentData$tobj_list
-forecast_timestamp = currentData$forecast_timestamp
-
-daysOfHistoryForTraining = 10
-historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
-forecastDataStart = forecast_timestamp
 
 runModelsForSensors = function(historicalDataStart, forecastDataStart) {
   for (tobj_name in names(tobj_list)){
@@ -232,10 +235,10 @@ runModelsForSensors = function(historicalDataStart, forecastDataStart) {
   }
 }
 
-get_date_days_ago = function(numDays, today) {
-  today = as.POSIXct(today)
-  today - (numDays*SECONDS.PERDAY)
-} 
+#get_date_days_ago = function(numDays, today) {
+#  today = as.POSIXct(today)
+#  today - (numDays*SECONDS.PERDAY)
+#} 
 
 getDaysPrediction = function(daysOfPredictions, forecast_timestamp) {
   get_date_days_ago = function(numDaysAgo, today) {
@@ -253,7 +256,18 @@ getDaysPrediction = function(daysOfPredictions, forecast_timestamp) {
   
 }
 
+currentData = getCurrentData(t_ee)
+reportStats(t_ee, "Today")
+
+tobj_list = currentData$tobj_list
+forecast_timestamp = currentData$forecast_timestamp
+
+daysOfHistoryForTraining = 200
+historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
+forecastDataStart = forecast_timestamp
+
 runModelsForSensors(historicalDataStart, forecastDataStart)
+
 #daysOfPredictions = 7
 #getDaysPrediction(daysOfPredictions, forecast_timestamp-(0*SECONDS.PERDAY))
 

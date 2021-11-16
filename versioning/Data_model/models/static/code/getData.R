@@ -14,6 +14,11 @@ getStartEndDate = function (numberOfDays) {
   list(startDate=previousDateTime, endDate=todayDateTime)
 }
 
+getStartDate = function (numberOfDays, forecastDate) {
+  date_dataStarts = forecastDate-(numberOfDays*SECONDS.PERDAY)
+  list(startDate=date_dataStarts, endDate=forecastDate)
+}
+
 connectToDatabase = function(){
   crop_host = "cropapptestsqlserver.postgres.database.azure.com"
   crop_port = "5432"
@@ -130,9 +135,27 @@ createHistoryData = function() {
   }
 }
 
-numDays = 200
-limitRows = 0
-datesToGetData = getStartEndDate(numDays)
-energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
-env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+createLatestData = function(numDays) {
+  limitRows = 0
+  datesToGetData = getStartEndDate(numDays)
+  energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+  env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+  list(dates = datesToGetData, energy = energy_raw, env=env_raw)
+} 
 
+createGivenDateData = function(date_Forecast, numDays) {
+  limitRows = 0
+  datesToGetData = getStartDate(numberOfDays = numDays, forecastDate = date_Forecast)
+  energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+  env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+  list(dates = datesToGetData, energy = energy_raw, env=env_raw)
+}
+
+if (exists("dateForecast")==FALSE)
+  date_Forecast = as.POSIXct('2021-11-08 12:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
+if (exists("numDaysTraining")==FALSE)
+  numDaysTraining = 200
+
+configData = createGivenDateData(date_Forecast=date_Forecast, numDays = numDaysTraining)
+env_raw = configData$env
+energy_raw = configData$energy
