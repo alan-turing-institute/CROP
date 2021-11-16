@@ -32,7 +32,7 @@ constructLights <- function(tobj){
 }
 
 
-fill_data<-function(tobj){
+fill_data_original<-function(tobj){
   # the aim of this function is to add typical values for the time of month and year if there is missing data
   # this is a rapid way of filling in missing data but it requires the old dataset to be loaded. can be changed after another year of sensing.
   my_time <- data.frame(FarmTime = seq(from=min(tobj$FarmTime), to=max(tobj$FarmTime),by="1 hour"))
@@ -41,7 +41,7 @@ fill_data<-function(tobj){
   tobj$Month <- month(tobj$FarmTime)
   tobj$WeekDay <- weekdays(tobj$FarmTime)
   
-  tobj<-tobj %>% group_by(Month, Hour,WeekDay) %>%
+  tobj<-tobj %>% group_by(Month, Hour, WeekDay) %>%
     mutate(
       TypE= mean(EnergyCP,na.rm = T),
       TypT=mean(Sensor_temp, na.rm = T)
@@ -53,6 +53,40 @@ fill_data<-function(tobj){
   tobj$Lights <- constructLights(tobj)
   return(tobj)
 }
+
+make_pseudo_season <- function(xx){
+  for (i in nrow(xx):1){xx$revMonth[i] = nrow(xx)-i}
+  season = xx$revMonth %/% 720
+  
+  return(season)
+}
+
+
+fill_data<-function(tobj){
+  # The aim of this function is to add typical values for the time of month and year if there is missing data
+  # Corrected so that nans remaining after TypE substitution are removed
+  #
+  
+  my_time <- data.frame(FarmTime = seq(from=min(tobj$FarmTime), to=max(tobj$FarmTime),by="1 hour"))
+  tobj <- left_join(my_time, tobj)
+  tobj$Hour <- hour(tobj$FarmTime)
+  tobj$Month <- month(tobj$FarmTime)
+  tobj$WeekDay <- weekdays(tobj$FarmTime)
+  tobj$Season <- make_pseudo_season(tobj)
+  
+  tobj<-tobj %>% group_by(Hour, WeekDay, Season) %>% # Season is a pseudo-month counting back in 30 days
+    mutate(
+      TypE= mean(EnergyCP,na.rm = T),
+      TypT=mean(Sensor_temp, na.rm = T)
+    )
+  
+  tobj$EnergyCP<- ifelse(is.na(tobj$EnergyCP), tobj$TypE,tobj$EnergyCP )
+  tobj$Sensor_temp<- ifelse(is.na(tobj$Sensor_temp), tobj$TypT,tobj$Sensor_temp )
+  
+  tobj$Lights <- constructLights(tobj)
+  return(tobj)
+}
+
 
 fill_data_mean = function(tobj){
   # the aim of this function is to add typical values for the time of month and year if there is missing data
@@ -115,7 +149,7 @@ runbsts_live <- function(starttm, testtm, tobj,sensor_name){
   print("Generating the 24hour forecast")
   
   newcovtyp <- constructCovTyp(tsel$FarmTime[testsel])
-  predtyp <- predict(dynamic_fit, burn=200, newdata=newcovtyp[,-c(26)],48) #burn 200
+  predtyp <- predict(dynamic_fit, burn=200, newdata=newcovtyp[,-c(45)],48) #burn 200
   
   pred_412_L <- forecast(predarima3,xreg= tsel$Lights[testsel],h=48)
   
