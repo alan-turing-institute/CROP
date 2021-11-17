@@ -1,0 +1,261 @@
+{% extends "base_site.html" %}
+
+{% block title %} INDEX {% endblock title %}
+
+{% block stylesheets %}
+{{ super() }}
+<link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
+    rel="stylesheet">
+{% endblock stylesheets %}
+
+
+
+{% block content %}
+<div class="right_col" role="main">
+    <!-- top tiles -->
+    <div class="row tile_count">
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total tonnes Growth</span>
+            <div class="count">15t</div>
+            <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-clock-o"></i> Energy use/m2</span>
+            <div class="count">123.50</div>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week1</span>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total Data Points</span>
+            <div class="count green">2,500</div>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week1</span>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total no Sensors</span>
+            <div class="count">4,567</div>
+            <span class="count_bottom"><i class="red"><i class="fa fa-sort-desc"></i>12% </i> From last Week1</span>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total Midnight Collectors</span>
+            <div class="count">2,315</div>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total Missing Entries</span>
+            <div class="count">7,325</div>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+        </div>
+    </div>
+    <!-- /top tiles -->
+
+
+    <br />
+    <div class="row">
+        <!--chart.j graph-->
+        <div class="row">
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h2> Farm Performance </h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <p>Here is my variables: {{ jim}} </p>
+                        <canvas id="stackedbarchart"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+{{ super()}}
+<!-- Chart.js -->
+<script src="{{ url_for('static', filename='vendors/Chart.js/dist/Chart.min.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<!-- gauge.js -->
+<script src="{{ url_for('static', filename='vendors/gauge.js/dist/gauge.min.js') }}"></script>
+<!-- Skycons -->
+<script src="{{ url_for('static', filename='vendors/skycons/skycons.js') }}"></script>
+<!-- Flot -->
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.pie.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.time.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.stack.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.resize.js') }}"></script>
+<!-- Flot plugins -->
+<script src="{{ url_for('static', filename='vendors/flot.orderbars/js/jquery.flot.orderBars.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/flot-spline/js/jquery.flot.spline.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/flot.curvedlines/curvedLines.js') }}"></script>
+<!-- DateJS -->
+<script src="{{ url_for('static', filename='vendors/DateJS/build/date.js') }}"></script>
+<!-- JQVMap -->
+<script src="{{ url_for('static', filename='vendors/jqvmap/dist/jquery.vmap.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jqvmap/dist/maps/jquery.vmap.world.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jqvmap/examples/js/jquery.vmap.sampledata.js') }}"></script>
+
+
+
+<script>
+    var ctx = document.getElementById('stackedbarchart');
+
+    var i, j;
+    var zensie_temp_data = JSON.parse('{{zensie_temp_ranges.data | safe}}');
+    //var json_obj = JSON.parse('{{json_values | safe}}');
+
+    var sensor_temp_data;
+    var temp_range, temp_range_data;
+    var dates, temp_cnts;
+    //console.warn(zensie_temp_data)
+
+    var zensie_locations = "{{ zensie_locations | safe}}";
+    //console.warn(json_obj);
+    var sensor_locations = zensie_locations.substring(1, zensie_locations.length).split(" ")
+    var title_date_str, title_sensor_str;
+
+    var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
+
+    cnts = []
+
+    // iterate locations
+    for (i = 0; i < zensie_temp_data.length; i++) {
+
+        sensor_temp_data = zensie_temp_data[i];
+        temp_cnts = [];
+
+        // // iterate temperature bins
+        for (j = 0; j < sensor_temp_data.length; j++) {
+
+            //console.warn(sensor_temp_data[j])
+
+            temp_range_data = sensor_temp_data[j][1];
+
+            temp_cnts.push(temp_range_data[0].temp_cnt);
+        }
+        cnts.push(temp_cnts)
+    }
+
+    const transpose = (cnts) => {
+        let [row] = cnts
+        return row.map((value, column) => cnts.map(row => row[column]))
+    }
+
+    const dataset_matrix = transpose(cnts);
+
+    TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
+
+    const datasets_ = [];
+    for (i = 0; i < dataset_matrix.length; i++) {
+        datasets_.push({
+            label: TEMP_BINS[i],
+            data: dataset_matrix[i],
+            backgroundColor: colouramp[i],
+        })
+    }
+
+
+    const data = {
+        labels: sensor_locations,
+        datasets: datasets_
+    };
+
+    console.warn(data)
+    const config = {
+        type: 'horizontalBar',
+        data: data,
+        //options: barOptions_stacked,
+        options:
+        {
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{ stacked: true }]
+            }
+        }
+    };
+    var myChart = new Chart(ctx, config);
+
+</script>
+
+
+<!-- 
+
+<script>
+
+    //var zensie_sensor_names = '{{ zensie_sensors }}';
+    // <block:setup:1>
+    var ctx = document.getElementById('stackedbarchart');
+
+    const labels = ["2014", "2013", "2012", "2011", "2010"];
+    const data = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Low',
+                data: [227, 589, 537, 543, 574],
+                backgroundColor: "rgba(63,103,126,1)",
+                //backgroundColor: '#D6E9C6' // green
+            },
+            {
+                label: 'Moderate',
+                data: [1238, 553, 746, 884, 903],
+                backgroundColor: "rgba(63,203,226,1)",
+                //backgroundColor: '#FAEBCC' // yellow
+            },
+            {
+                label: 'High',
+                data: [238, 553, 746, 884, 903],
+                backgroundColor: "rgba(180,60,60,1)",
+                //backgroundColor: '#EBCCD1' // red
+            }
+        ]
+    };
+    // </block:setup>
+
+    // <block:config:0>
+    const config = {
+        type: 'horizontalBar',
+        data: data,
+        //options: barOptions_stacked,
+        options:
+        {
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{ stacked: true }]
+            }
+        }
+    };
+
+    var myChart = new Chart(ctx, config);
+</script> -->
+
+
+{% endblock javascripts %}

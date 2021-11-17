@@ -270,6 +270,41 @@ def advanticsys_df_check_range(advanticsys_df, col_name, col_min, col_max):
     return success, log
 
 
+def advanticsys_check_warning(advanticsys_df, col_name, thold_max, thold_min):
+    """
+    Checks if value in a dataframe for a specific column are within a threshold.
+    If not issues a warning.
+
+    Args:
+        advanticsys_df - pandas dataframe representing advanticsys data file
+        col_name - column name
+        thold_max - max threshold of value
+        thold_min - min threshold of value
+    Returns:
+        success - status
+        log - error message
+    """
+
+    success = True
+    log = ""
+
+    out_of_range_df = advanticsys_df[
+        (advanticsys_df[col_name] < thold_min) | (advanticsys_df[col_name] > thold_max)
+    ]
+
+    if len(out_of_range_df) > 0:
+        success = False
+        log = (
+            +" <"
+            + col_name
+            + "> out of range (min = %f, max = %f)" % (thold_min, thold_max)
+            + " Entries: "
+            + str(list(out_of_range_df.index))
+        )
+
+    return success, log
+
+
 def insert_advanticsys_data(session, adv_df):
     """
     The function will take the prepared advanticsys data frame from the ingress module
@@ -354,5 +389,5 @@ def insert_advanticsys_data(session, adv_df):
 
     if result:
         log = "New: {} (uploaded); Duplicates: {} (ignored)".format(cnt_new, cnt_dupl)
-    
+
     return result, log

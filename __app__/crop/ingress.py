@@ -35,11 +35,8 @@ def import_data(pd_df, sensor_type, user, password, host, port, db_name):
     """
 
     connection_string = make_conn_string(SQL_ENGINE, user, password, host, port)
-
-    # Try to connect to a database that exists
-    success, log, engine = connect_db(connection_string, db_name)
-    if not success:
-        return success, log
+    
+    
 
     # Try to connect to a database that exists
     success, log, engine = connect_db(connection_string, db_name)
