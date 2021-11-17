@@ -1,68 +1,755 @@
 {% extends "base_site.html" %}
 
-{% block title %} Underground Farm {% endblock title %}
+{% block title %} INDEX {% endblock title %}
 
 {% block stylesheets %}
-  {{ super() }}
-  <link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}" rel="stylesheet">
+{{ super() }}
+<link href="{{ url_for('static', filename='vendors/datatables.net-bs/css/dataTables.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css') }}"
+    rel="stylesheet">
+<link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
+    rel="stylesheet">
 {% endblock stylesheets %}
 
-{% block content %}
-  <div class="right_col" role="main">
-    <div class="">
-      
-      <div class="row">
-        <!-- <div class="col-md-12 col-sm-12 col-xs-12"> -->
-          <div class="x_panel">
-            <div class="x_title">
-              <h2>3D model</h2>
-              <div class="clearfix"></div>
-            </div>
 
-            <!-- <div class="x_content">
-                <canvas id="c" style="width: 100%; height: 100%;"> 
+{% block content %}
+<div class="right_col" role="main">
+    <!-- top tiles -->
+    <div class="row tile_count">
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total tonnes Growth</span>
+            <div class="count">15t</div>
+            <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-clock-o"></i> Energy use/m2</span>
+            <div class="count">-</div>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>- </i> From last Week1</span>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total Data Points</span>
+            <div class="count green">200,500</div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total no Sensors</span>
+            <div class="count">8</div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total Midnight Collectors</span>
+            <div class="count">4</div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-user"></i> Total Missing Entries</span>
+            <div class="count">7,325</div>
+            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>4% </i> From last Week</span>
+        </div>
+    </div>
+    <!-- /top tiles -->
+
+    <!--3D Unity container-->
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+
+
+                <!-- <div class="x_content">
+                <canvas id="c" style="width: 100%; height: 100%;">
                     Text to alert visitors that the Canvas
                     is not supported by your browser.
                 </canvas>
 
             </div> -->
 
-            <div class="webgl-content">
-                <div id="unityContainer" style="height: 80vh"></div>
-                <div class="footer">
-                  <div class="webgl-logo"></div>
-                  <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
-                  <div class="title">CROP_unity_js</div>
+                <div class="webgl-content">
+                    <div id="unityContainer" style="height: 45vh"></div>
+                    <div class="footer">
+                        <div class="webgl-logo"></div>
+                        <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
+                        <div class="title">CROP_Unity_3D</div>
+                    </div>
                 </div>
-            </div>
-            
-          </div>
-        <!-- </div> -->
 
-      </div>
+            </div>
+        </div>
 
     </div>
-  </div>
+    <!--/3D Unity container-->
+
+    <br />
+
+    <div class="row">
+        <!--warnings feed-->
+        <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Propagation/R&D <small>Alerts</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <ul class="list-unstyled timeline widget">
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>ALL OK IN PROPAGATION AND R&D</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>1 hour ago</span> by <a>Crop</a>
+                                        </div>
+                                        <p class="excerpt">.
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--warnings feed-->
+        <div class="col-md-4 col-sm-4 col-xs-14">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Farm <small>Alerts</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <ul class="list-unstyled timeline widget">
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>High Temperature in Farm1 entrance</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>13 hours ago</span> by <a>Advanticsys 1</a>
+                                        </div>
+                                        <p class="excerpt">Sensor Advantsys recorded a temperature of 25o in the
+                                            entrace. Suggested action :
+                                            1. turn on fans
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>High Humidity Back of Farm</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>13 hours ago</span> by <a>Zenzie 3</a>
+                                        </div>
+                                        <p class="excerpt">Sensor Zenzie recorded humidity 82 in the
+                                            back of the Farm
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--warnings feed-->
+        <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Energy/Weather <small>Alerts</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <ul class="list-unstyled timeline widget">
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>High Temperature in London</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>13 hours ago</span> by <a>Advanticsys 1</a>
+                                        </div>
+                                        <p class="excerpt">Predicted hot weather today at 12:30
+                                            Temperature will reach 27o
+                                            <a>Read&nbsp;More</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br />
+
+    <br />
+    <div class="row">
+        <!--chart.j graph-->
+        <div class="row">
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h3> Weekly temperature counts </h3>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <!-- <p> Weekly temperature counts </p> -->
+                        <canvas id="stackedbarchart0"></canvas>
+                        <canvas id="stackedbarchart1"></canvas>
+                        <canvas id="stackedbarchart2"></canvas>
+                        <canvas id="stackedbarchart3"></canvas>
+                        <canvas id="stackedbarchart4"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h3> Daily temperature counts </h3>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <!-- <p> Daily temperature counts </p> -->
+                        <canvas id="stackedbarchart10"></canvas>
+                        <canvas id="stackedbarchart11"></canvas>
+                        <canvas id="stackedbarchart12"></canvas>
+                        <canvas id="stackedbarchart13"></canvas>
+                        <canvas id="stackedbarchart14"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h3> Vertical Stratification </h3>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <!-- <p> Vertical Stratification </p> -->
+                        <canvas id="stackedbarchart20"></canvas>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h3> Weekly humidity counts </h3>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <!-- <p> Weekly humidity counts </p> -->
+                        <canvas id="stackedbarchart5"></canvas>
+                        <canvas id="stackedbarchart6"></canvas>
+                        <canvas id="stackedbarchart7"></canvas>
+                        <canvas id="stackedbarchart8"></canvas>
+                        <canvas id="stackedbarchart9"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
+            <!--chart.j graph-->
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="x_panel tile fixed_height_640 overflow_hidden">
+                    <div class="x_title">
+                        <h3> Daily humidity counts </h3>
+                        <ul class="nav navbar-right panel_toolbox">
+                            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                    aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">Settings 1</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        <!--<span id="zensie_sensor_names"></span>-->
+                        <!-- <p> Daily humidity counts </p> -->
+                        <canvas id="stackedbarchart15"></canvas>
+                        <canvas id="stackedbarchart16"></canvas>
+                        <canvas id="stackedbarchart17"></canvas>
+                        <canvas id="stackedbarchart18"></canvas>
+                        <canvas id="stackedbarchart19"></canvas>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
 
 {% block javascripts %}
-  {{ super() }}
+{{ super()}}
+<!-- Chart.js -->
+<script src="{{ url_for('static', filename='vendors/Chart.js/dist/Chart.min.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<!-- gauge.js -->
+<script src="{{ url_for('static', filename='vendors/gauge.js/dist/gauge.min.js') }}"></script>
+<!-- Skycons -->
+<script src="{{ url_for('static', filename='vendors/skycons/skycons.js') }}"></script>
+<!-- Flot -->
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.pie.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.time.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.stack.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/Flot/jquery.flot.resize.js') }}"></script>
+<!-- Flot plugins -->
+<script src="{{ url_for('static', filename='vendors/flot.orderbars/js/jquery.flot.orderBars.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/flot-spline/js/jquery.flot.spline.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/flot.curvedlines/curvedLines.js') }}"></script>
+<!-- DateJS -->
+<script src="{{ url_for('static', filename='vendors/DateJS/build/date.js') }}"></script>
+<!-- JQVMap -->
+<script src="{{ url_for('static', filename='vendors/jqvmap/dist/jquery.vmap.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jqvmap/dist/maps/jquery.vmap.world.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jqvmap/examples/js/jquery.vmap.sampledata.js') }}"></script>
 
-
-  <!-- 3D models -->
-  <script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
-  <script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
-  <script>
-    var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", {onProgress: UnityProgress});
-  </script>
-
-
+<!-- 3D models -->
+<script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
+<script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
+<script>
+    var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", { onProgress: UnityProgress });
+</script>
 <link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
- 
+
+
+<script>
+
+
+    //Imports from backend
+    var temperature_json = JSON.parse('{{temperature_data | safe}}');
+    var humidity_json = JSON.parse('{{humidity_data | safe}}');
+    var temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
+    var humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
+    var vertical_stratification_json = JSON.parse('{{vertical_stratification | safe}}');
+    
+
+    //var json_obj = JSON.parse('{{json_values | safe}}');
+
+    //console.warn(temperature_data[0]["Values"][0]["bin"]);
+    function check_data(data) {
+        if (Object.keys(data).length === 0 && data.constructor === Object) {
+            concole.warn("dataset is empty")
+        }
+        else console.warn("its good data", data)
+    }
+
+    function time_series_charts(json_data, canvasname) {
+        values_top = []
+        values_bot = []
+        dates = []
+        for (j = 0; j < json_data[0]["Values"].length; j++) {
+            values_top.push(parseFloat(json_data[0]["Values"][j]["temperature"]))
+            values_bot.push(parseFloat(json_data[1]["Values"][j]["temperature"]))
+            dates.push(json_data[0]["Values"][j]["timestamp"])
+        }
+
+        const data = {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Top',
+                    data: values_top,
+                    borderColor: "#ff0000",
+                },
+                {
+                    label: 'Bottom',
+                    data: values_bot,
+                    borderColor: "#3399ff",
+                }
+            ]
+        };
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Vertical Stratification'
+                    }
+                }
+            },
+        };
+        var ctx = document.getElementById(canvasname);
+        var myChart = new Chart(ctx, config);
+    }
+
+    function horizontal_charts(json_data, zoneid, canvasname) {
+        var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
+        //iterates through zones (5)
+        bin_ = []
+        cnt_ = []
+        for (j = 0; j < json_data[zoneid]["Values"].length; j++) {
+            bin_.push(json_data[zoneid]["Values"][j]["bin"])
+            cnt_.push(parseFloat(json_data[zoneid]["Values"][j]["cnt"]))
+        }
+
+        const datasets_ = [];
+        for (i = 0; i < bin_.length; i++) {
+            datasets_.push({
+                label: bin_[i],
+                data: [cnt_[i]],
+                backgroundColor: colouramp[i],
+            })
+        }
+
+        const data = {
+            labels: [json_data[zoneid]["zone"]],
+            datasets: datasets_
+        };
+
+        const config = {
+            type: 'horizontalBar',
+            data: data,
+            options:
+            {
+
+                legend: {
+                    display: false
+                },
+                scales: {
+                    xAxes: [{
+                        stacked: true,
+                        display: false, //this will remove all the x-axis grid lines
+                    }],
+                    yAxes: [{
+                        stacked: true,
+                        //display: true,
+                        position: 'right',
+                    }]
+                },
+                aspectRatio: 10,
+                tooltips: {
+                    callbacks: {
+                        title: function (tooltipItems, data) {
+                            return '';
+                        },
+                    }
+                }
+            }
+        };
+
+        //var ctx = document.getElementById('stackedbarchart'.concat(0));
+        var ctx = document.getElementById(canvasname);
+        var myChart = new Chart(ctx, config);
+
+    }
+
+    function create_charts(temperature_data, temperature_data_daily, humidity_data, humidity_data_daily, vertical_stratification) {
+
+        //Temperature
+        horizontal_charts(temperature_data, 0, "stackedbarchart0");
+        horizontal_charts(temperature_data, 1, "stackedbarchart1");
+        horizontal_charts(temperature_data, 2, "stackedbarchart2");
+        horizontal_charts(temperature_data, 3, "stackedbarchart3");
+        horizontal_charts(temperature_data, 4, "stackedbarchart4");
+
+        horizontal_charts(temperature_data_daily, 0, "stackedbarchart10");
+        horizontal_charts(temperature_data_daily, 1, "stackedbarchart11");
+        horizontal_charts(temperature_data_daily, 2, "stackedbarchart12");
+        horizontal_charts(temperature_data_daily, 3, "stackedbarchart13");
+        horizontal_charts(temperature_data_daily, 4, "stackedbarchart14");
+
+        //vertical stratification
+        time_series_charts(vertical_stratification, "stackedbarchart20");
+
+
+        /////humidity
+
+
+        horizontal_charts(humidity_data, 0, "stackedbarchart5");
+        horizontal_charts(humidity_data, 1, "stackedbarchart6");
+        horizontal_charts(humidity_data, 2, "stackedbarchart7");
+        horizontal_charts(humidity_data, 3, "stackedbarchart8");
+        horizontal_charts(humidity_data, 4, "stackedbarchart9");
+
+        horizontal_charts(humidity_data_daily, 0, "stackedbarchart15")
+        horizontal_charts(humidity_data_daily, 1, "stackedbarchart16")
+        horizontal_charts(humidity_data_daily, 2, "stackedbarchart17")
+        horizontal_charts(humidity_data_daily, 3, "stackedbarchart18")
+        horizontal_charts(humidity_data_daily, 4, "stackedbarchart19")
+
+
+
+
+    }
+
+    check_data(temperature_json);
+    check_data(temperature_json_daily);
+    check_data(humidity_json);
+    check_data(vertical_stratification_json);
+
+    create_charts(temperature_json, temperature_json_daily, humidity_json, humidity_json_daily, vertical_stratification_json);
+
+
+
+
+
+    // iterate locations
+    // for (i = 0; i < zensie_temp_data.length; i++) {
+
+    //     sensor_temp_data = zensie_temp_data[i];
+    //     temp_cnts = [];
+
+    //     // // iterate temperature bins
+    //     for (j = 0; j < sensor_temp_data.length; j++) {
+
+    //         //console.warn(sensor_temp_data[j])
+
+    //         temp_range_data = sensor_temp_data[j][1];
+
+    //         temp_cnts.push(temp_range_data[0].temp_cnt);
+    //     }
+    //     cnts.push(temp_cnts)
+    // }
+
+    // const transpose = (cnts) => {
+    //     let [row] = cnts
+    //     return row.map((value, column) => cnts.map(row => row[column]))
+    // }
+
+    // const dataset_matrix = transpose(cnts);
+
+    // TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
+
+    // const datasets_ = [];
+    // for (i = 0; i < dataset_matrix.length; i++) {
+    //     datasets_.push({
+    //         label: TEMP_BINS[i],
+    //         data: dataset_matrix[i],
+    //         backgroundColor: colouramp[i],
+    //     })
+    // }
+
+
+    // const data = {
+    //     labels: sensor_locations,
+    //     datasets: datasets_
+    // };
+
+    // console.warn(data)
+    // const config = {
+    //     type: 'horizontalBar',
+    //     data: data,
+    //     //options: barOptions_stacked,
+    //     options:
+    //     {
+    //         scales: {
+    //             xAxes: [{ stacked: true }],
+    //             yAxes: [{ stacked: true }]
+    //         }
+    //     }
+    // };
+    // var myChart = new Chart(ctx, config);
+
+</script>
+
+
+<!--
+
+<script>
+
+    //var zensie_sensor_names = '{{ zensie_sensors }}';
+    // <block:setup:1>
+    var ctx = document.getElementById('stackedbarchart');
+
+    const labels = ["2014", "2013", "2012", "2011", "2010"];
+    const data = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Low',
+                data: [227, 589, 537, 543, 574],
+                backgroundColor: "rgba(63,103,126,1)",
+                //backgroundColor: '#D6E9C6' // green
+            },
+            {
+                label: 'Moderate',
+                data: [1238, 553, 746, 884, 903],
+                backgroundColor: "rgba(63,203,226,1)",
+                //backgroundColor: '#FAEBCC' // yellow
+            },
+            {
+                label: 'High',
+                data: [238, 553, 746, 884, 903],
+                backgroundColor: "rgba(180,60,60,1)",
+                //backgroundColor: '#EBCCD1' // red
+            }
+        ]
+    };
+    // </block:setup>
+
+    // <block:config:0>
+    const config = {
+        type: 'horizontalBar',
+        data: data,
+        //options: barOptions_stacked,
+        options:
+        {
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{ stacked: true }]
+            }
+        }
+    };
+
+    var myChart = new Chart(ctx, config);
+</script> -->
 
 
 {% endblock javascripts %}

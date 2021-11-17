@@ -8,6 +8,7 @@ from sqlalchemy import and_
 from __app__.crop.structure import (
     TypeClass,
     ReadingsZensieTRHClass,
+    ReadingsZensieWeatherClass,
 )
 
 def find_sensor_type_id(session, sensor_type):
@@ -69,6 +70,37 @@ def get_zensie_trh_sensor_data(session, sensor_id, date_from, date_to):
     if len(result_df.index) > 0:
         result_df.rename(columns={0: "Timestamp"}, inplace=True)
         
+        result_df.set_index('Timestamp', inplace=True)
+
+    return result_df
+
+def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
+    """
+    Returns zensie trh sensor data for specific period of time as pandas data frame.
+
+    Arguments:
+        session: sqlalchemy active seession object
+        sensor_id: sensor id
+        date_from: date range from
+        date_to: date range to
+    Returns:
+        data_df: data frame containing sensor data for specific period of time
+    """
+
+    query = session.query(
+        ReadingsZensieWeatherClass.timestamp,
+    ).filter(
+        and_(
+          ReadingsZensieWeatherClass.sensor_id == sensor_id,
+          ReadingsZensieWeatherClass.timestamp >= date_from,
+          ReadingsZensieWeatherClass.timestamp <= date_to,
+        )
+    )
+
+    result_df = DataFrame(session.execute(query).fetchall())
+
+    if len(result_df.index) > 0:
+        result_df.rename(columns={0: "Timestamp"}, inplace=True)
         result_df.set_index('Timestamp', inplace=True)
 
     return result_df

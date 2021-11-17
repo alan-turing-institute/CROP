@@ -19,8 +19,9 @@ from __app__.crop.structure import (
 from __app__.crop.utils import query_result_to_array
 from __app__.crop.constants import (
     CONST_CROP_30MHZ_APIKEY,
-    CONST_ZENSIE_TRH_SENSOR_TYPE,
+    CONST_ZENSIE_TRH_SENSOR_TYPE
 )
+
 from __app__.crop.ingress import log_upload_event
 from __app__.crop.sensors import get_zensie_trh_sensor_data
 
@@ -91,10 +92,9 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
 
     return success, error, data_df
 
-
 def get_zensie_sensors_list(session, sensor_type):
     """
-    Makes a list of ensie rth sensors with their check_id and ids.
+    Makes a list of zensie rth sensors with their check_id and ids.
 
     Arguments:
         session: sql session
@@ -267,7 +267,6 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
 
     return True, None
 
-
 def import_zensie_data():
     """
     Imports all zensie data
@@ -290,7 +289,5 @@ def import_zensie_data():
     
     import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
 
-
 if __name__ == "__main__":
-
     import_zensie_data()

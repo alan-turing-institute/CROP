@@ -15,6 +15,7 @@ CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
 CONST_STARK = "Stark"
 CONST_ZENSIE_TRH_SENSOR_TYPE = "30MHz T&RH"
+CONST_ZENSIE_WEATHER_SENSOR_TYPE = "30MHz Weather"
 
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
@@ -27,7 +28,8 @@ CONST_ENV_FOLDER = "Environmental"
 CONST_SENSOR_LOCATION_TESTS = "sensor_location_tests"
 
 CONST_TEST_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", CONST_TEST_FOLDER)
+    os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                 "..", CONST_TEST_FOLDER)
 )
 CONST_TEST_DIR_DATA = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER)
 CONST_COREDATA_DIR = os.path.join(
@@ -36,7 +38,8 @@ CONST_COREDATA_DIR = os.path.join(
 CONST_ADVANTICSYS_DIR = os.path.join(
     CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ADVANTICSYS_FOLDER
 )
-CONST_ENV_DIR = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER)
+CONST_ENV_DIR = os.path.join(
+    CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER)
 
 # Core data
 SENSOR_CSV = "Sensors.csv"  # List of sensors
@@ -75,10 +78,12 @@ CONST_ADVANTICSYS_TEST_2 = (
 )
 CONST_ADVANTICSYS_TEST_3 = "data-20190821-test3.csv"  # Few rows, timestamp is wrong
 CONST_ADVANTICSYS_TEST_4 = "data-20190821-test4.csv"  # Few rows, mobdusid is wrong
-CONST_ADVANTICSYS_TEST_5 = "data-20190821-test5.csv"  # Few rows, temeprature is wrong
+# Few rows, temeprature is wrong
+CONST_ADVANTICSYS_TEST_5 = "data-20190821-test5.csv"
 CONST_ADVANTICSYS_TEST_6 = "data-20190821-test6.csv"  # Few rows, humidity is wrong
 CONST_ADVANTICSYS_TEST_7 = "data-20190821-test7.csv"  # Few rows, co2 level is wrong
-CONST_ADVANTICSYS_TEST_8 = "data-20190821-test8.csv"  # Temperature and humidity empty
+# Temperature and humidity empty
+CONST_ADVANTICSYS_TEST_8 = "data-20190821-test8.csv"
 CONST_ADVANTICSYS_TEST_9 = "data-20190821-test9.csv"  # Duplicate values
 CONST_ADVANTICSYS_TEST_10 = "data-20190821-test10.csv"  # Wrong sensor id
 
@@ -134,7 +139,8 @@ STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
 
 # 30MHz (Zensie)
 CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
-CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
+CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip(
+)
 
 # Create connection string
 SQL_ENGINE = "postgresql"
@@ -165,9 +171,10 @@ SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_PORT,
 )
 
-SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
+SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (
+    SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
-
+print (SQL_CONNECTION_STRING)
 # SQL Table names
 SENSOR_TABLE_NAME = "sensors"
 SENSOR_TYPE_TABLE_NAME = "sensor_types"
@@ -176,13 +183,22 @@ ADVANTICSYS_READINGS_TABLE_NAME = "advanticsys_data"
 TINYTAG_READINGS_TABLE_NAME = "tinytag_data"
 AIR_VELOCITY_READINGS_TABLE_NAME = "air_velocity_data"
 ENVIRONMENTAL_READINGS_TABLE_NAME = "environmental_data"
-ENERGY_READINGS_TABLE_NAME = "energy_data"
+ENERGY_READINGS_TABLE_NAME = "utc_energy_data"
 CROP_GROWTH_TABLE_NAME = "crop_growth_data"
+DAILY_HARVEST_TABLE_NAME = "daily_harvest_data"
 INFRASTRUCTURE_TABLE_NAME = "infrastructure_data"
 SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
+MODEL_TABLE_NAME = "model"
+MODEL_MEASURE_TABLE_NAME = "model_measure"
+MODEL_RUN_TABLE_NAME = "model_run"
+MODEL_PRODUCT_TABLE_NAME = "model_product"
+MODEL_VALUE_TABLE_NAME = "model_value"
+
+WARNINGS_TABLE_NAME = "warnings"
 
 ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
+ZENSIE_WEATHER_TABLE_NAME = "iweather"
 
 # SQL Column names
 ID_COL_NAME = "id"
@@ -190,3 +206,9 @@ ID_COL_NAME = "id"
 CONST_MAX_RECORDS = 500
 
 CONST_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+# Warnings log
+
+WARNING_PROP_LOW_TEMPR = "Temperature is low in propagation, add heater"
+WARNING_NO_DATA_PROP = "Missing data in propagation - check sensor battery"
