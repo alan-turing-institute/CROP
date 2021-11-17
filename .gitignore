@@ -8,6 +8,7 @@ CROP.pyproj.user
 # SECRETS
 /.secrets/crop.sh
 /.secrets/local.sh
+/.secrets/template_windows_crop.bat
 
 # USERS
 /utils/upload_user_data/users.csv
@@ -17,6 +18,16 @@ CROP.pyproj.user
 
 # Data
 /data/ 
+/versioning/LatestData
+*.RDS
+*.RData
+*.Rapp.history
+*.Rhistory
+/versioning/Data_model/test_model/arima/mlruns/
+/versioning/Data_model/test_model/mlruns/
+*.csv
+*.tgz
+*.tar.gz
 
 # PyTest
 __pycache__
