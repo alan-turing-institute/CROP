@@ -25,9 +25,9 @@ from __app__.crop.structure import SQLA as db
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
 
 
-def mels_query(dt_from, dt_to, model_id):
+def arima_query(dt_from, dt_to, model_id):
     """
-    Performs a query for mels prediction model.
+    Performs a query for teh arima prediction model.
 
     Arguments:
         dt_from_: date range from
@@ -62,6 +62,7 @@ def mels_query(dt_from, dt_to, model_id):
         ModelValueClass.prediction_value,
         ModelValueClass.prediction_index,
         ModelProductClass.run_id,
+        ModelRunClass.time_created,
     ).filter(
         and_(
             ModelClass.id == model_id,
@@ -93,9 +94,18 @@ def json_temp_arima(df_temp):
     charts in the model run
 
     """
+    time_ = []
+    for i in range (len(df_temp)):
+        pred_id = int(df_temp["prediction_index"][i])
+        pred_time = df_temp["time_created"][i] + dt.timedelta(hours=pred_id)
+        format_time = pred_time.strftime("%m/%d/%Y, %H:%M:%S")
+        time_.append(format_time)
+
+    df_temp["time"]= time_
+    print ("timetype:", type(df_temp["time"][0]))
     return (
         df_temp.groupby(["sensor_id", "measure_name"], as_index=True)  # "measure_name"
-        .apply(lambda x: x[["prediction_value", "prediction_index"]].to_dict("r"))
+        .apply(lambda x: x[["prediction_value", "prediction_index", "time"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
@@ -107,7 +117,7 @@ def json_temp_arima(df_temp):
 def route_template(template, methods=['GET']):
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=60)
-    df_arima = mels_query(dt_from, dt_to, 1)
+    df_arima = arima_query(dt_from, dt_to, 1)
     json_arima = json_temp_arima(df_arima)
     # print(json_arima)
 
@@ -122,7 +132,7 @@ def route_template(template, methods=['GET']):
     #     #print(sensors)
     #     print("!"*100)
 
-    if template == "melmodel":
+    if template == "arima":
 
         return render_template(template + '.html', json_arima_f=json_arima)
 
