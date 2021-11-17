@@ -17,7 +17,6 @@
 {% endblock stylesheets %}
 
 
-
 {% block content %}
 <div class="right_col" role="main">
     <!-- top tiles -->
@@ -66,14 +65,14 @@
 
             </div> -->
 
-                <!-- <div class="webgl-content">
+                <div class="webgl-content">
                     <div id="unityContainer" style="height: 45vh"></div>
                     <div class="footer">
                         <div class="webgl-logo"></div>
                         <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
                         <div class="title">CROP_Unity_3D</div>
                     </div>
-                </div> -->
+                </div>
 
             </div>
         </div>
@@ -468,12 +467,12 @@
 
 
     //Imports from backend
-    var temperature_data = JSON.parse('{{temperature_data | safe}}');
-    var humidity_data = JSON.parse('{{humidity_data | safe}}');
-    var temperature_data_daily = JSON.parse('{{temperature_data_daily | safe}}');
-    var humidity_data_daily = JSON.parse('{{humidity_data_daily | safe}}');
-    var vertical_stratification = JSON.parse('{{vertical_stratification | safe}}')
-
+    var temperature_json = JSON.parse('{{temperature_data | safe}}');
+    var humidity_json = JSON.parse('{{humidity_data | safe}}');
+    var temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
+    var humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
+    var vertical_stratification_json = JSON.parse('{{vertical_stratification | safe}}');
+    
 
     //var json_obj = JSON.parse('{{json_values | safe}}');
 
@@ -482,19 +481,17 @@
         if (Object.keys(data).length === 0 && data.constructor === Object) {
             concole.warn("dataset is empty")
         }
-        else console.warn("its good data")
+        else console.warn("its good data", data)
     }
 
     function time_series_charts(json_data, canvasname) {
-
         values_top = []
         values_bot = []
         dates = []
-        console.warn(json_data)
         for (j = 0; j < json_data[0]["Values"].length; j++) {
             values_top.push(parseFloat(json_data[0]["Values"][j]["temperature"]))
             values_bot.push(parseFloat(json_data[1]["Values"][j]["temperature"]))
-            dates.push(parseFloat(json_data[0]["Values"][j]["date"]))
+            dates.push(json_data[0]["Values"][j]["timestamp"])
         }
 
         const data = {
@@ -535,7 +532,6 @@
     function horizontal_charts(json_data, zoneid, canvasname) {
         var colouramp = ["rgba(63,103,126,1)", "rgba(63,203,226,1)", "rgba(203,130,80,1)", "rgba(180,60,60,1)"];
         //iterates through zones (5)
-
         bin_ = []
         cnt_ = []
         for (j = 0; j < json_data[zoneid]["Values"].length; j++) {
@@ -597,47 +593,48 @@
     function create_charts(temperature_data, temperature_data_daily, humidity_data, humidity_data_daily, vertical_stratification) {
 
         //Temperature
-        horizontal_charts(temperature_data, 0, "stackedbarchart0")
-        horizontal_charts(temperature_data, 1, "stackedbarchart1")
-        horizontal_charts(temperature_data, 2, "stackedbarchart2")
-        horizontal_charts(temperature_data, 3, "stackedbarchart3")
-        horizontal_charts(temperature_data, 4, "stackedbarchart4")
+        horizontal_charts(temperature_data, 0, "stackedbarchart0");
+        horizontal_charts(temperature_data, 1, "stackedbarchart1");
+        horizontal_charts(temperature_data, 2, "stackedbarchart2");
+        horizontal_charts(temperature_data, 3, "stackedbarchart3");
+        horizontal_charts(temperature_data, 4, "stackedbarchart4");
 
-        horizontal_charts(temperature_data_daily, 0, "stackedbarchart10")
-        horizontal_charts(temperature_data_daily, 1, "stackedbarchart11")
-        horizontal_charts(temperature_data_daily, 2, "stackedbarchart12")
-        horizontal_charts(temperature_data_daily, 3, "stackedbarchart13")
-        horizontal_charts(temperature_data_daily, 4, "stackedbarchart14")
+        horizontal_charts(temperature_data_daily, 0, "stackedbarchart10");
+        horizontal_charts(temperature_data_daily, 1, "stackedbarchart11");
+        horizontal_charts(temperature_data_daily, 2, "stackedbarchart12");
+        horizontal_charts(temperature_data_daily, 3, "stackedbarchart13");
+        horizontal_charts(temperature_data_daily, 4, "stackedbarchart14");
 
         //vertical stratification
-        time_series_charts(vertical_stratification, "stackedbarchart20")
+        time_series_charts(vertical_stratification, "stackedbarchart20");
 
 
         /////humidity
 
 
-        // horizontal_charts(humidity_data, 0, "stackedbarchart5")
-        // horizontal_charts(humidity_data, 1, "stackedbarchart6")
-        // horizontal_charts(humidity_data, 2, "stackedbarchart7")
-        // horizontal_charts(humidity_data, 3, "stackedbarchart8")
-        // horizontal_charts(humidity_data, 4, "stackedbarchart9")
+        horizontal_charts(humidity_data, 0, "stackedbarchart5");
+        horizontal_charts(humidity_data, 1, "stackedbarchart6");
+        horizontal_charts(humidity_data, 2, "stackedbarchart7");
+        horizontal_charts(humidity_data, 3, "stackedbarchart8");
+        horizontal_charts(humidity_data, 4, "stackedbarchart9");
 
-        // horizontal_charts(humidity_data_daily, 0, "stackedbarchart15")
-        // horizontal_charts(humidity_data_daily, 1, "stackedbarchart16")
-        // horizontal_charts(humidity_data_daily, 2, "stackedbarchart17")
-        // horizontal_charts(humidity_data_daily, 3, "stackedbarchart18")
-        // horizontal_charts(humidity_data_daily, 4, "stackedbarchart19")
+        horizontal_charts(humidity_data_daily, 0, "stackedbarchart15")
+        horizontal_charts(humidity_data_daily, 1, "stackedbarchart16")
+        horizontal_charts(humidity_data_daily, 2, "stackedbarchart17")
+        horizontal_charts(humidity_data_daily, 3, "stackedbarchart18")
+        horizontal_charts(humidity_data_daily, 4, "stackedbarchart19")
 
 
 
 
     }
 
-    check_data(temperature_data)
-    check_data(temperature_data_daily)
-    check_data(humidity_data)
+    check_data(temperature_json);
+    check_data(temperature_json_daily);
+    check_data(humidity_json);
+    check_data(vertical_stratification_json);
 
-    create_charts(temperature_data, humidity_data, vertical_stratification)
+    create_charts(temperature_json, temperature_json_daily, humidity_json, humidity_json_daily, vertical_stratification_json);
 
 
 

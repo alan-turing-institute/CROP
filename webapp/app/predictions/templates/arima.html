@@ -46,7 +46,6 @@
           <div class="x_content">
             <canvas id="arima_model"></canvas>
             <p class="text-muted font-13 m-b-30">
-              List of registered sensors.
             </p>
 
 
@@ -105,7 +104,7 @@
       values_top.push(parseFloat(json_data[0]["Values"][j]["prediction_value"]))
       values_mid.push(parseFloat(json_data[1]["Values"][j]["prediction_value"]))
       values_bot.push(parseFloat(json_data[2]["Values"][j]["prediction_value"]))
-      hours.push(parseFloat(json_data[0]["Values"][j]["prediction_index"]))
+      hours.push(json_data[0]["Values"][j]["time"])
     }
 
     const data = {
