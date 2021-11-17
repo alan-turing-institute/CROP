@@ -21,6 +21,7 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.sql.expression import false
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -28,6 +29,7 @@ from flask_login import UserMixin
 from bcrypt import gensalt, hashpw
 
 from __app__.crop.constants import (
+    DAILY_HARVEST_TABLE_NAME,
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
@@ -43,11 +45,113 @@ from __app__.crop.constants import (
     SENSOR_UPLOAD_LOG_TABLE_NAME,
     ZENSIE_TRH_TABLE_NAME,
     ZENSIE_WEATHER_TABLE_NAME,
-
+    WARNINGS_TABLE_NAME,
+    MODEL_TABLE_NAME,
+    MODEL_MEASURE_TABLE_NAME,
+    MODEL_RUN_TABLE_NAME,
+    MODEL_PRODUCT_TABLE_NAME,
+    MODEL_VALUE_TABLE_NAME,
 )
 
 SQLA = SQLAlchemy()
 BASE = SQLA.Model
+
+
+class ModelClass(BASE):
+    """
+    This class contains a list of all models running in CROP
+    """
+
+    __tablename__ = MODEL_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    model_name = Column(String(100), nullable=False, unique=True)
+    author = Column(String(100), nullable=False, unique=False)
+
+
+class ModelMeasureClass(BASE):
+    """
+    This class contains the names of all columns in models
+    """
+
+    __tablename__ = MODEL_MEASURE_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    measure_name = Column(String(100), nullable=False, unique=True)
+    measure_description = Column(String(100), nullable=True, unique=False)
+
+
+class ModelRunClass(BASE):
+    """
+    This class contains a list of the ids all model runs
+    """
+
+    __tablename__ = MODEL_RUN_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    model_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    time_created = Column(DateTime(), server_default=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "model_id"),)
+
+
+class ModelValueClass(BASE):
+    """
+    This class contains the outputs of model runs
+    """
+
+    __tablename__ = MODEL_VALUE_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    product_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_PRODUCT_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    prediction_value = Column(Float, nullable=False)
+    prediction_index = Column(Integer, nullable=False)
+    measure_description = Column(String(100), nullable=True, unique=False)
+
+    # arguments
+    __table_args__ = (UniqueConstraint("product_id"),)
+
+
+class ModelProductClass(BASE):
+    """
+    This class contains the relationships of all model outputs
+    """
+
+    __tablename__ = MODEL_PRODUCT_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    run_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_RUN_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    measure_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_MEASURE_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    # arguments
+    __table_args__ = (UniqueConstraint("run_id", "measure_id"),)
 
 
 class TypeClass(BASE):
@@ -99,13 +203,17 @@ class SensorClass(BASE):
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
-    advanticsys_readings_relationship = relationship("ReadingsAdvanticsysClass")
+    advanticsys_readings_relationship = relationship(
+        "ReadingsAdvanticsysClass")
     tinytag_readings_relationship = relationship("ReadingsTinyTagClass")
-    airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
-    environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
+    airvelocity_readings_relationship = relationship(
+        "ReadingsAirVelocityClass")
+    environmental_readings_relationship = relationship(
+        "ReadingsEnvironmentalClass")
 
     # arguments
-    __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
+    __table_args__ = (UniqueConstraint(
+        "type_id", "device_id", name="_type_device_uc"),)
 
 
 class LocationClass(BASE):
@@ -169,6 +277,7 @@ class ReadingsZensieTRHClass(BASE):
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
+
 class ReadingsZensieWeatherClass(BASE):
     """
     Base class for the 30MHz External weather readings
@@ -194,12 +303,12 @@ class ReadingsZensieWeatherClass(BASE):
     air_pressure = Column(Float, nullable=True)
     radiation = Column(Float, nullable=True)
 
-
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
-    
+
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
+
 
 class ReadingsAdvanticsysClass(BASE):
     """
@@ -343,6 +452,35 @@ class ReadingsEnergyClass(BASE):
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 
+class DailyHarvestClass(BASE):
+    """
+    Class for creating the harvest table
+    (from manual input)
+    """
+
+    __tablename__ = DAILY_HARVEST_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    crop = Column(String, nullable=False)
+    propagation_date = Column(DateTime, nullable=True)
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    stack = Column(Integer, nullable=True)
+    total_yield_weight = Column(Float, nullable=False)
+    disease_trays = Column(Integer, nullable=True)
+    defect_trays = Column(Integer, nullable=True)
+    notes = Column(String, nullable=True)
+    user = Column(String, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+
 class CropGrowthClass(BASE):
     """
     Class for reading the crop data
@@ -376,7 +514,8 @@ class CropGrowthClass(BASE):
     surplus_waste_p = Column(Float, nullable=False)
     total_waste_m2 = Column(String, nullable=False)
     total_waste_p = Column(Float, nullable=False)
-    waste_explanation = Column(String, nullable=False)  # no ref on what that is
+    # no ref on what that is
+    waste_explanation = Column(String, nullable=False)
     yield_m2 = Column(Float, nullable=False)
     propagation_days = Column(Float, nullable=False)
     days_under_lights = Column(Float, nullable=False)
@@ -394,8 +533,7 @@ class CropGrowthClass(BASE):
 
 class InfrastructureClass(BASE):
     """
-    Class for reading the crop data
-    (from google sheets)
+    Class for the tank data
     """
 
     __tablename__ = INFRASTRUCTURE_TABLE_NAME
@@ -506,6 +644,41 @@ class UserClass(BASE, UserMixin):
         """
 
         return {"id": self.id, "username": self.username, "email": self.email}
+
+
+class DataWarningsClass(BASE):
+    """
+    Class for storing log information for warnings from sensors.
+    """
+
+    __tablename__ = WARNINGS_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    type_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TYPE_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    priority = Column(String(10), nullable=False)
+    log = Column(String(100), nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # constructor
+    def __init__(self, type_id, location_id, filename, status, log):
+        self.type_id = type_id
+        self.location_id = location_id
+        self.filename = filename
+        self.status = status
+        self.log = log
 
 
 class DataUploadLogClass(BASE):
