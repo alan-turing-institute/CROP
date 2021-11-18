@@ -6,7 +6,7 @@ export LANG=C.UTF-8
 export FLASK_APP=crop_app.py
 export FLASK_ENV=development
 
-#source ../.secrets/crop.sh
+source ../.secrets/crop.sh
 
 if [ -n "$1" ] && [ "$1" -gt "-1" ] 
 then 
