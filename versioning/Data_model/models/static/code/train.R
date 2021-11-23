@@ -8,7 +8,7 @@ MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
 SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
-SENSOR_ID = list(Temperature_Farm_16B4=23)
+#SENSOR_ID = list(Temperature_Farm_16B4=23)
 MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3, Temperature_Median = 4)
 MODEL_ID = list(ARIMA = 1, BSTS = 2)
 
@@ -41,7 +41,7 @@ getOneYearDataUptoDate = function(observations, forecast_timestamp = ? Date) {
   # select one year
   oneYear = 365*SECONDS.PERDAY
   
-  tobj0 = observations[t_ee$FarmTimestamp>=(forecast_timestamp-oneYear),]
+  tobj0 = observations[t_ee$FarmTimestamp>=(forecast_timestamp-oneYear) & t_ee$FarmTimestamp <= (forecast_timestamp),]
   tobj0$FarmTime = tobj0$FarmTimestamp
   tobj0$DateFarm = as.Date(tobj0$FarmTimestamp) 
   
@@ -61,8 +61,8 @@ standardiseObservations = function(observations, sensor =? string) {
 }
 
 splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) {
-  daysIntoFuture = 1
-  tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(daysIntoFuture*SECONDS.PERDAY)))
+  #daysIntoFuture = 2
+  tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart))
   
   #fullcov <- constructCov(tsel$Lights, tsel$FarmTime)
   # indices for training
@@ -80,7 +80,7 @@ overrideTee = function(cleanedDataPath) {
 getCurrentData = function(t_ee) {
   latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
   forecast_timestamp = getForecastTimestamp(latest_timestamp)
-  tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = latest_timestamp)
+  tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
   
   tobj_list = list()
   for (sensorName in names(SENSOR_ID)){
@@ -107,7 +107,7 @@ setupModels = function(split.Data, sensorID, time_forecast) {
   
   forecastArima = function(available.Data, forecastIndex, arima.Model) {
     #print("Forecasting the Static model")
-    numberOfHours=16
+    numberOfHours=48
     results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
     list(upper=results$upper, lower=results$lower, mean=results$mean)
   }

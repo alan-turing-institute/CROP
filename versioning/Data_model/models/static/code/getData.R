@@ -89,7 +89,7 @@ getEnergyData = function (limitRows, datesToGetData) {
   from_command = "FROM utc_energy_data"
   where_criteria1 = sprintf("WHERE utc_energy_data.timestamp >= '%s'", datesToGetData$startDate)
   where_criteria2 = sprintf("AND utc_energy_data.timestamp < '%s'", datesToGetData$endDate)
-  where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC", datesToGetData$endDate)
+  where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC")
   
   #select_command = "SELECT *" 
   #from_command = "FROM utc_energy_data"
@@ -151,7 +151,7 @@ createGivenDateData = function(date_Forecast, numDays) {
   list(dates = datesToGetData, energy = energy_raw, env=env_raw)
 }
 
-if (exists("dateForecast")==FALSE)
+if (exists("date_Forecast")==FALSE)
   date_Forecast = as.POSIXct('2021-11-08 12:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
 if (exists("numDaysTraining")==FALSE)
   numDaysTraining = 200
