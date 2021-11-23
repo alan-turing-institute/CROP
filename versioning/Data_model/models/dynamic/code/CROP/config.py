@@ -4,7 +4,7 @@ def config(filename='/Users/myong/Documents/workspace/CROP/versioning/Data_model
     # create a parser
     parser = ConfigParser()
     # read config file
-    parser.read(filename)
+    parser.read(filename, encoding='utf-8-sig')
 
     # get section, default to postgresql
     db = {}
