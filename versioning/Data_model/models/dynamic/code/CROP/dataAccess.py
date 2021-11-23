@@ -51,10 +51,14 @@ def connect():
   finally:
     closeConnection(conn=conn)
 
-def printRowsHead(rows, numrows=5):
+def printRowsHead(rows, numrows=0):
   print('Printing:{0} of {1}'.format(numrows, len(rows) ))
-  for row in rows[:numrows]:
-    print(row)
+  if (numrows == 0):
+    for row in rows[:len(rows)]:
+      print(row)  
+  else:
+    for row in rows[:numrows]:
+      print(row)
 
 def deleteData(query):
   conn = None
@@ -79,7 +83,7 @@ def getData(query):
       cur = conn.cursor()
       cur.execute(query)
       rows = cur.fetchall()
-      # printRowsHead(rows)
+      printRowsHead(rows)
       
       # close the communication with the PostgreSQL
       cur.close()
@@ -252,6 +256,22 @@ if __name__ == '__main__':
   # insert_particles(particles_array)
   # compareHumiditySources()
   # compareDataPoint()
-  # getDaysWeather()
-  energy = testEnergy()
-  print(energy[0])
+  #getDaysWeather(numDays=7, numRows=10)
+  humidityDataList = getDaysHumidity(deltaDays=1, numRows=1000)
+  # for row in humidityList:
+    # print(row)
+  dp = getDataPointHumidity()  
+  humidityList = []
+  # temperature = []
+  for row in humidityDataList:
+      humidityList.append(row[1])
+      print(row[1])
+      print(row[0])
+
+  humidity = pd.Series(humidityList)
+  # take average and turn to hourly data
+  DT = humidityDataList[len(humidityDataList)-1][0] 
+  print(DT)
+
+  #energy = testEnergy()
+  #print(energy[0])
