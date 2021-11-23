@@ -9,6 +9,7 @@ CROP.pyproj.user
 /.secrets/crop.sh
 /.secrets/local.sh
 /.secrets/template_windows_crop.bat
+/versioning/Data_model/models/dynamic/code/CROP/database.ini
 
 # USERS
 /utils/upload_user_data/users.csv
@@ -18,6 +19,7 @@ CROP.pyproj.user
 
 # Data
 /data/ 
+/versioning/Data_model/models/dynamic/data 
 /versioning/LatestData
 *.RDS
 *.RData
@@ -29,6 +31,10 @@ CROP.pyproj.user
 *.csv
 *.tgz
 *.tar.gz
+/versioning/Data_model/models/static/data
+/versioning/Data_model/models/static/*.RDS
+/versioning/Data_model/models/static/*.tgz
+/versioning/Data_model/models/static/*.gz
 
 # PyTest
 __pycache__
