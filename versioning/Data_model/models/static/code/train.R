@@ -168,7 +168,7 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     
     run.bsts = list(sensor_id=sensorID, model_id=MODEL_ID$BSTS, records=records.bsts)
     if (WRITE_TO_DATABASE==TRUE)
-      writeRun(run.bsts)
+      writeRun(run.bsts, time_forecast)
   }
   
   if (RUN_ARIMA == TRUE)
