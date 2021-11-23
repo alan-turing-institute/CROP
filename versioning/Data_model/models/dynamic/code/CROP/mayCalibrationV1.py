@@ -6,7 +6,7 @@ Created on Mon Jun 14 09:32:23 2021
 """
 
 from functionsV1 import derivatives, priorPPF, sat_conc
-from dataAccess import getDaysWeather, getDaysHumidity
+from dataAccess import getDaysWeather, getDaysHumidity, getDataPointHumidity
 import pandas as pd
 import numpy as np
 import sys
@@ -89,32 +89,30 @@ def getHumidity(filepath = None):
         return humidity, DT
     else:
         MidFarmRH2_ID = 27
-        humidtyList = getDaysHumidity(numRows=7, sensorID=MidFarmRH2_ID)
-        humidity = []
-        temperature = []
-        for row in humidtyList:
-            humidity.append(row[1])
-            temperature.append(row[0])
-        humidity = pd.Series(humidity)
-        temperature = pd.Series(temperature)
-        return humidity, temperature
+        humidityDataList = getDaysHumidity(numRows=7, sensorID=MidFarmRH2_ID)
+        humidityList = []
+        datetimeList = []
+        for row in humidityDataList:
+            humidityList.append(row[1])
+            datetimeList.append(row[0])
+        humidity = pd.Series(humidityList)
+        datetimeList = pd.Series(datetimeList)
+        DT = humidityDataList[len(humidityDataList)-1][0]
+        return humidity, DT
 
 if useDataBase:
     RHData, DT = getHumidity()
 else:
     RHData, DT = getHumidity(filepath_TRHE)
 
-dp = RHData[h2]
-testdp = np.isnan(dp)
-
-
-    
-
+dp = getDataPointHumidity()
+testdp = np.isnan(dp[0][1])
+print(testdp)
 # # Initialise DataPoint
-DataPoint = getDataPoint_CSV(filepath_datapoint)
+DataPoint = dp[0][1]
     
 if testdp == False:
-    DataPoint = dp/100
+    DataPoint = DataPoint/100
 else:
     DataPoint = DataPoint # takes previous value if nan recorded
 
