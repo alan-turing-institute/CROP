@@ -226,76 +226,76 @@ ax3.axvline(x=0, color='k')
 ax3.set_xlim(-120, 72)
 
 
-# # plt.subplots_adjust(wspace=0.5)
+plt.subplots_adjust(wspace=0.5)
 
-# # # Calculate statistics and produce pie charts. Note need too cold as well? Check
-# # # setpoints with Mel
+# Calculate statistics and produce pie charts. Note need too cold as well? Check
+# setpoints with Mel
 
-# # setTmax = 25 + 273.15
-# # setTmin = 20 + 273.15
-# # setRHmax = 0.85
-# # setRHmin = 0.5
+setTmax = 25 + 273.15
+setTmin = 20 + 273.15
+setRHmax = 0.85
+setRHmin = 0.5
 
-# # TBAUstat = T_air[-73:,0]
-# # TSEstat = T_air[-73:,1]
+TBAUstat = T_air[-73:,0]
+TSEstat = T_air[-73:,1]
 
-# # RHBAUstat = RH_air[-73:,0]
-# # RHSEstat = RH_air[-73:,1]
+RHBAUstat = RH_air[-73:,0]
+RHSEstat = RH_air[-73:,1]
 
-# # testTBAU = TBAUstat>setTmax
-# # testTBAU_low = TBAUstat<setTmin
-# # testTSE = TSEstat>setTmax
-# # testTSE_low = TSEstat<setTmin
+testTBAU = TBAUstat>setTmax
+testTBAU_low = TBAUstat<setTmin
+testTSE = TSEstat>setTmax
+testTSE_low = TSEstat<setTmin
 
-# # testRHBAU = RHBAUstat>setRHmax
-# # testRHBAU_low = RHBAUstat<setRHmin
-# # testRHSE = RHSEstat>setRHmax
-# # testRHSE_low = RHSEstat<setRHmin
+testRHBAU = RHBAUstat>setRHmax
+testRHBAU_low = RHBAUstat<setRHmin
+testRHSE = RHSEstat>setRHmax
+testRHSE_low = RHSEstat<setRHmin
 
-# # #y1 = ([np.sum(testTBAU), 72])
-# # y1 = {'T<Tmin': np.sum(testTBAU_low), 'T OK': 72-np.sum(testTBAU)-np.sum(testTBAU_low), 'T>Tset': np.sum(testTBAU)}
-# # names1 = [key for key,value in y1.items() if value!=0]
-# # values1 = [value for value in y1.values() if value!=0]
+#y1 = ([np.sum(testTBAU), 72])
+y1 = {'T<Tmin': np.sum(testTBAU_low), 'T OK': 72-np.sum(testTBAU)-np.sum(testTBAU_low), 'T>Tset': np.sum(testTBAU)}
+names1 = [key for key,value in y1.items() if value!=0]
+values1 = [value for value in y1.values() if value!=0]
 
-# # #y2 = ([np.sum(testTSE), 72])
-# # #y2 = {'T<Tset': 72-np.sum(testTSE), 'T>Tset': np.sum(testTSE)}
-# # y2 = {'T<Tmin': np.sum(testTSE_low), 'T OK': 72-np.sum(testTSE)-np.sum(testTSE_low), 'T>Tset': np.sum(testTSE)}
-# # names2 = [key for key,value in y2.items() if value!=0]
-# # values2 = [value for value in y2.values() if value!=0]
+#y2 = ([np.sum(testTSE), 72])
+#y2 = {'T<Tset': 72-np.sum(testTSE), 'T>Tset': np.sum(testTSE)}
+y2 = {'T<Tmin': np.sum(testTSE_low), 'T OK': 72-np.sum(testTSE)-np.sum(testTSE_low), 'T>Tset': np.sum(testTSE)}
+names2 = [key for key,value in y2.items() if value!=0]
+values2 = [value for value in y2.values() if value!=0]
 
-# # #y3 = ([np.sum(testRHBAU), 72])
-# # #y3 = {'RH<RHset': 72-np.sum(testRHBAU), 'RH>RHset': np.sum(testRHBAU)}
-# # y3 = {'RH<RHmin': np.sum(testRHBAU_low), 'RH OK': 72-np.sum(testRHBAU)-np.sum(testRHBAU_low), 'RH>RHset': np.sum(testRHBAU)}
-# # names3 = [key for key,value in y3.items()]
-# # values3 = [value for value in y3.values()]
+#y3 = ([np.sum(testRHBAU), 72])
+#y3 = {'RH<RHset': 72-np.sum(testRHBAU), 'RH>RHset': np.sum(testRHBAU)}
+y3 = {'RH<RHmin': np.sum(testRHBAU_low), 'RH OK': 72-np.sum(testRHBAU)-np.sum(testRHBAU_low), 'RH>RHset': np.sum(testRHBAU)}
+names3 = [key for key,value in y3.items()]
+values3 = [value for value in y3.values()]
 
-# # #y4 = ([np.sum(testRHSE), 72])
-# # #y4 = {'RH<RHset': 72-np.sum(testRHSE), 'RH>RHset': np.sum(testRHSE)}
-# # y4 = {'RH<RHmin': np.sum(testRHSE_low), 'RH OK': 72-np.sum(testRHSE)-np.sum(testRHSE_low), 'RH>RHset': np.sum(testRHSE)}
-# # names4 = [key for key,value in y4.items()]
-# # values4 = [value for value in y4.values()]
+#y4 = ([np.sum(testRHSE), 72])
+#y4 = {'RH<RHset': 72-np.sum(testRHSE), 'RH>RHset': np.sum(testRHSE)}
+y4 = {'RH<RHmin': np.sum(testRHSE_low), 'RH OK': 72-np.sum(testRHSE)-np.sum(testRHSE_low), 'RH>RHset': np.sum(testRHSE)}
+names4 = [key for key,value in y4.items()]
+values4 = [value for value in y4.values()]
 
-# # fig2 = plt.figure()
+fig2 = plt.figure()
 
-# # #Tlabels = ['T>Tset', 'T<Tset']
-# # #RHlabels = ['RH>RHset', 'RH<RHset']
+#Tlabels = ['T>Tset', 'T<Tset']
+#RHlabels = ['RH>RHset', 'RH<RHset']
 
-# # ax11 = fig2.add_subplot(2,2,1)
+ax11 = fig2.add_subplot(2,2,1)
 
-# # plt.pie(values1, colors = ['blue','green','red'], startangle = 90, labels = names1, textprops={'fontsize': 8}) 
-# # ax11.set_title('Temperature - BAU', fontsize = 8) 
+plt.pie(values1, colors = ['blue','green','red'], startangle = 90, labels = names1, textprops={'fontsize': 8}) 
+ax11.set_title('Temperature - BAU', fontsize = 8) 
  
-# # ax12 = fig2.add_subplot(2,2,3)   
+ax12 = fig2.add_subplot(2,2,3)   
  
-# # plt.pie(values2, colors = ['blue','green','red'], startangle = 90, labels = names2, textprops={'fontsize': 8})
-# # ax12.set_title('Temperature - Scenario', fontsize = 8) 
+plt.pie(values2, colors = ['blue','green','red'], startangle = 90, labels = names2, textprops={'fontsize': 8})
+ax12.set_title('Temperature - Scenario', fontsize = 8) 
 
-# # ax31 = fig2.add_subplot(2,2,2)
+ax31 = fig2.add_subplot(2,2,2)
 
-# # plt.pie(values3, colors = ['blue','green','red'], startangle = 90, labels = names3, textprops={'fontsize': 8})  
-# # ax31.set_title('RH - BAU', fontsize = 8) 
+plt.pie(values3, colors = ['blue','green','red'], startangle = 90, labels = names3, textprops={'fontsize': 8})  
+ax31.set_title('RH - BAU', fontsize = 8) 
  
-# # ax32 = fig2.add_subplot(2,2,4)   
+ax32 = fig2.add_subplot(2,2,4)   
  
-# # plt.pie(values4, colors = ['blue','green','red'], startangle = 90, labels = names4, textprops={'fontsize': 8})
-# # ax32.set_title('RH - Scenario', fontsize = 8) 
+plt.pie(values4, colors = ['blue','green','red'], startangle = 90, labels = names4, textprops={'fontsize': 8})
+ax32.set_title('RH - Scenario', fontsize = 8) 
