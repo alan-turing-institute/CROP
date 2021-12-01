@@ -25,13 +25,11 @@ h2 = 240
 h1 = h2-240 # select previous 10 days
 ndp = int((h2-h1)/12) # number of data points used for calibration
 numDays = 10
-
 # Input calibrated parameters output from calibration model
 # Stored in database? Currently output to csv file
 
 ACH_OUT_PATH:str = os.path.join(os.path.dirname(__file__),'ACH_out.csv')
 IAS_OUT_PATH:str = os.path.join(os.path.dirname(__file__),'IAS_out.csv')
-# print('ACH: {0}'.format(ACH_OUT_PATH))
 ACHinp:np.ndarray = np.genfromtxt(ACH_OUT_PATH, delimiter=',')
 IASinp:np.ndarray = np.genfromtxt(IAS_OUT_PATH, delimiter=',')
 
@@ -39,7 +37,6 @@ IASinp:np.ndarray = np.genfromtxt(IAS_OUT_PATH, delimiter=',')
 
 ACHcal = ACHinp[1:,-1*ndp:]*9+1 # selects ACH values corresponding to the last ndp data points
 ACHmean = np.mean(ACHcal,0)
-print(ACHmean)
 ACHuq = np.quantile(ACHcal,0.95,0)
 ACHlq = np.quantile(ACHcal,0.05,0)
 
@@ -73,161 +70,160 @@ test[:,1,3] = IASuq
 test[:,2,3] = 1
 test[:,3,3] = 0
 
-# # Scenario 1 - vary ACH
-# N = 1 # ventilation rate inout from slider
+# Scenario 1 - vary ACH
+N = 1 # ventilation rate inout from slider
 
-# ScenEval = np.zeros((8,4,4))
-# ScenEval[:,0,0] = ACHmean[-1]
-# ScenEval[:,0,1] = N # input from slider
-# ScenEval[:,0,2] = ACHuq[-1]
-# ScenEval[:,0,3] = ACHlq[-1]
+ScenEval = np.zeros((8,4,4))
+ScenEval[:,0,0] = ACHmean[-1]
+ScenEval[:,0,1] = N # input from slider
+ScenEval[:,0,2] = ACHuq[-1]
+ScenEval[:,0,3] = ACHlq[-1]
 
-# ScenEval[:,1,0] = IASmean[-1]
-# ScenEval[:,1,1] = IASmean[-1]
-# ScenEval[:,1,2] = IASlq[-1]
-# ScenEval[:,1,3] = IASuq[-1]
+ScenEval[:,1,0] = IASmean[-1]
+ScenEval[:,1,1] = IASmean[-1]
+ScenEval[:,1,2] = IASlq[-1]
+ScenEval[:,1,3] = IASuq[-1]
 
-# # Scenario 2 - vary number of dehumidifiers
-# ndh = 2 # number of dehumidifiers 
+# Scenario 2 - vary number of dehumidifiers
+ndh = 2 # number of dehumidifiers 
 
-# ScenEval[:,2,0] = 1
-# ScenEval[:,2,1] = ndh/2 # ndh input from slider (integer) (/2 as half farm modelled)
-# ScenEval[:,2,2] = 1
-# ScenEval[:,2,3] = 1
+ScenEval[:,2,0] = 1
+ScenEval[:,2,1] = ndh/2 # ndh input from slider (integer) (/2 as half farm modelled)
+ScenEval[:,2,2] = 1
+ScenEval[:,2,3] = 1
 
-# # Scenario 3 - shift lighting schedule (+/-hours)
-# lshift = -3
+# Scenario 3 - shift lighting schedule (+/-hours)
+lshift = -3
 
-# ScenEval[:,3,0] = 1
-# ScenEval[:,3,1] = lshift # lshift input from slider 
-# ScenEval[:,3,2] = 1
-# ScenEval[:,3,3] = 1
+ScenEval[:,3,0] = 1
+ScenEval[:,3,1] = lshift # lshift input from slider 
+ScenEval[:,3,2] = 1
+ScenEval[:,3,3] = 1
 
-# params = np.concatenate((test, ScenEval)) # put scenario on the end of the calibrated parameters
+params = np.concatenate((test, ScenEval)) # put scenario on the end of the calibrated parameters
 
-# ## Run model, using time varying ACH, IAS corresponding to outputs from calibration for 
-# #  first 10 days, then scenario evaluation values for last 3 days
+## Run model, using time varying ACH, IAS corresponding to outputs from calibration for 
+#  first 10 days, then scenario evaluation values for last 3 days
 
-# useDataBase=True
+useDataBase=True
 
-# if useDataBase:
-#     results = derivatives(h1, h2, numDays, params, ndp) # runs GES model over ACH,IAS pairs, h2 a dummy variable here
-# else: 
-#     results = derivatives(h1, h2, numDays, params, ndp, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
+if useDataBase:
+    results = derivatives(h1, h2, numDays, params, ndp) # runs GES model over ACH,IAS pairs, h2 a dummy variable here
+else: 
+    results = derivatives(h1, h2, numDays, params, ndp, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
     
-# T_air = results[1,:,:]
-# Cw_air = results[11,:,:]
-# RH_air = Cw_air/sat_conc(T_air)
+T_air = results[1,:,:]
+Cw_air = results[11,:,:]
+RH_air = Cw_air/sat_conc(T_air)
 
-# ## Plot Results
-# # Weather
-# # ExternalWeather = np.asarray(getDaysWeather(numDays+1, numRows=(numDays+1)*24))
+## Plot Results
+ExternalWeather = np.asarray(getDaysWeather(numDays+1, numRows=(numDays+1)*24))
 
-# # ind = h2-h1+1
+ind = h2-h1+1
 
-# # TWeather= ExternalWeather[-ind:,1].astype(np.float64) # +1 to ensure correct end point
-# # RHWeather = ExternalWeather[-ind:,2].astype(np.float64)
+TWeather= ExternalWeather[-ind:,1].astype(np.float64) # +1 to ensure correct end point
+RHWeather = ExternalWeather[-ind:,2].astype(np.float64)
 
 
-# # # Internal conditions
+# Internal conditions
 
-# # MidFarmRH2_ID = 27
-# # deltaDays = 11
-# # sensorID=MidFarmRH2_ID
-# # numRows = deltaDays*24*6
-# # today = datetime.datetime.now()
-# # delta = datetime.timedelta(days=deltaDays)
-# # dateNumDaysAgo = today - delta
+MidFarmRH2_ID = 27
+deltaDays = 11
+sensorID=MidFarmRH2_ID
+numRows = deltaDays*24*6
+today = datetime.datetime.now()
+delta = datetime.timedelta(days=deltaDays)
+dateNumDaysAgo = today - delta
 
-# # params = {'sensor_id':sensorID,
-# #   'timestamp':dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"), 
-# #   'numRows':numRows}
+params = {'sensor_id':sensorID,
+  'timestamp':dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"), 
+  'numRows':numRows}
 
-# # humidity_transaction_template = '''
-# #   select
-# #     timestamp, humidity, temperature
-# #   from 
-# #     zensie_trh_data 
-# #   where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
-# #   order by 
-# #     timestamp asc 
-# #   limit {{ numRows }}
-# #   '''
-# # j = JinjaSql(param_style='pyformat')
-# # query, bind_params = j.prepare_query(humidity_transaction_template, params)
-# #   # print(get_sql_from_template(query=query, bind_params=bind_params))
+humidity_transaction_template = '''
+  select
+    timestamp, humidity, temperature
+  from 
+    zensie_trh_data 
+  where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
+  order by 
+    timestamp asc 
+  limit {{ numRows }}
+  '''
+j = JinjaSql(param_style='pyformat')
+query, bind_params = j.prepare_query(humidity_transaction_template, params)
+print(get_sql_from_template(query=query, bind_params=bind_params))
 
-# # test = getData(get_sql_from_template(query=query, bind_params=bind_params))
+test = getData(get_sql_from_template(query=query, bind_params=bind_params))
 
-# # idx = [x[0] for x in test]
-# # val1 = [x[1] for x in test]
-# # val2 = [x[2] for x in test]
+idx = [x[0] for x in test]
+val1 = [x[1] for x in test]
+val2 = [x[2] for x in test]
 
-# # RH_10_minutes = pd.Series(val1, index=idx)
-# # T_10_minutes = pd.Series(val2, index=idx)
+RH_10_minutes = pd.Series(val1, index=idx)
+T_10_minutes = pd.Series(val2, index=idx)
 
-# # RHData = RH_10_minutes.resample('H').mean()
-# # TData = T_10_minutes.resample('H').mean()
+RHData = RH_10_minutes.resample('H').mean()
+TData = T_10_minutes.resample('H').mean()
 
-# # #
+#
 
-# # p1 = h1 # start hour 
-# # delta_h = 12 # hours between data points
-# # p2 = ndp*delta_h+p1 # end data point 
+p1 = h1 # start hour 
+delta_h = 12 # hours between data points
+p2 = ndp*delta_h+p1 # end data point 
 
-# # sq = np.linspace(p1,p2,ndp+1,endpoint='true')
-# # seq = sq.astype(np.int64)
+sq = np.linspace(p1,p2,ndp+1,endpoint='true')
+seq = sq.astype(np.int64)
 
-# # #date_cols = ["DateTimex"]
-# # #Data = pd.read_csv("TRHE2018.csv", parse_dates=date_cols)
-# # #RHData =Data['MidFarmRH2']
-# # #TData =Data['MidFarmT']
+#date_cols = ["DateTimex"]
+#Data = pd.read_csv("TRHE2018.csv", parse_dates=date_cols)
+#RHData =Data['MidFarmRH2']
+#TData =Data['MidFarmT']
     
-# # #t = np.linspace(h1,h2+3*24,1+240+3*24)
-# # t = np.linspace(h1-h2,3*24,1+240+3*24)
-# # t1 = np.linspace(0,3*24,1+3*24)
-# # td = np.linspace(h1-h2,0,21)
+#t = np.linspace(h1,h2+3*24,1+240+3*24)
+t = np.linspace(h1-h2,3*24,1+240+3*24)
+t1 = np.linspace(0,3*24,1+3*24)
+td = np.linspace(h1-h2,0,21)
 
-# # dpRH = RHData[seq]
-# # dpT = TData[seq]+273.15
-# # dpCw = dpRH/100 * sat_conc(dpT)
+dpRH = RHData[seq]
+dpT = TData[seq]+273.15
+dpCw = dpRH/100 * sat_conc(dpT)
 
-# # fig = plt.figure()
+fig = plt.figure()
 
-# # ax1 = fig.add_subplot(1,2,1)
-# # plt.plot(t,T_air[:,0]-273.15,'r')
-# # #p1 = plt.plot(t,T_air[:,2]-273.15,'r:')
-# # #p2 = plt.plot(t,T_air[:,3]-273.15,'r:')
-# # ax1.fill_between(t[:-73], T_air[:-73,2]-273.15, T_air[:-73,3]-273.15, color='red', alpha = 0.2)
-# # #plt.plot(t,T_air[:,1],'b--')
-# # plt.plot(t1,T_air[-73:,1]-273.15,'b--')
-# # plt.scatter(td,dpT-273.15, marker='.', color='k')
-# # plt.xticks(fontsize=8)
-# # plt.yticks(fontsize=8)
-# # ax1.set_xlabel('Hour', fontsize=8)
-# # ax1.set_ylabel('Temperature ($\mathregular{^{o}}$C)', fontsize=8)
-# # ax1.set_title('Temperature', fontsize=10)
-# # ax1.axvline(x=0, color='k')
-# # ax1.set_xlim(-120, 72)
+ax1 = fig.add_subplot(1,2,1)
+plt.plot(t,T_air[:,0]-273.15,'r')
+#p1 = plt.plot(t,T_air[:,2]-273.15,'r:')
+#p2 = plt.plot(t,T_air[:,3]-273.15,'r:')
+ax1.fill_between(t[:-73], T_air[:-73,2]-273.15, T_air[:-73,3]-273.15, color='red', alpha = 0.2)
+#plt.plot(t,T_air[:,1],'b--')
+plt.plot(t1,T_air[-73:,1]-273.15,'b--')
+plt.scatter(td,dpT-273.15, marker='.', color='k')
+plt.xticks(fontsize=8)
+plt.yticks(fontsize=8)
+ax1.set_xlabel('Hour', fontsize=8)
+ax1.set_ylabel('Temperature ($\mathregular{^{o}}$C)', fontsize=8)
+ax1.set_title('Temperature', fontsize=10)
+ax1.axvline(x=0, color='k')
+ax1.set_xlim(-120, 72)
 
-# # ax3 = fig.add_subplot(1,2,2)
-# # lbl1 = str(int(N)) + ' ACH'
-# # lbl2 = ', ' + str(int(ndh)) + ' DH'
-# # lbl3 = ', ' + str(int(lshift)) + ' hours'
-# # plt.plot(t,100*RH_air[:,0],'r', label='BAU')
-# # ax3.fill_between(t[:-73], 100*RH_air[:-73,2], 100*RH_air[:-73,3], color='red', alpha = 0.2)
+ax3 = fig.add_subplot(1,2,2)
+lbl1 = str(int(N)) + ' ACH'
+lbl2 = ', ' + str(int(ndh)) + ' DH'
+lbl3 = ', ' + str(int(lshift)) + ' hours'
+plt.plot(t,100*RH_air[:,0],'r', label='BAU')
+ax3.fill_between(t[:-73], 100*RH_air[:-73,2], 100*RH_air[:-73,3], color='red', alpha = 0.2)
 
-# # #plt.plot(t,100*RH_air[:,1],'b--', label='Max N')
-# # plt.plot(t1,100*RH_air[-73:,1],'b--', label= lbl1 + lbl2 + lbl3)
-# # plt.scatter(td,dpRH, marker='.', color='k', label='Data')
-# # ax3.set_title('Relative Humidity', fontsize=10)
-# # plt.xticks(fontsize=8)
-# # plt.yticks(fontsize=8)
-# # ax3.set_xlabel('Hour', fontsize=8)
-# # ax3.set_ylabel('Relative Humidity (%)', fontsize=8)
-# # ax3.legend(loc='best', fontsize='small')
-# # ax3.axvline(x=0, color='k')
-# # ax3.set_xlim(-120, 72)
+#plt.plot(t,100*RH_air[:,1],'b--', label='Max N')
+plt.plot(t1,100*RH_air[-73:,1],'b--', label= lbl1 + lbl2 + lbl3)
+plt.scatter(td,dpRH, marker='.', color='k', label='Data')
+ax3.set_title('Relative Humidity', fontsize=10)
+plt.xticks(fontsize=8)
+plt.yticks(fontsize=8)
+ax3.set_xlabel('Hour', fontsize=8)
+ax3.set_ylabel('Relative Humidity (%)', fontsize=8)
+ax3.legend(loc='best', fontsize='small')
+ax3.axvline(x=0, color='k')
+ax3.set_xlim(-120, 72)
 
 
 # # plt.subplots_adjust(wspace=0.5)
