@@ -19,8 +19,10 @@ from parameters import T_ss, T_al
 from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from scipy.integrate import solve_ivp
-import sys
-sys.path.append("C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/Inversion")
+import sys,os
+INVERSION_DIR = os.path.join(os.path.dirname(__file__),os.pardir,"Inversion")
+sys.path.append(INVERSION_DIR)
+
 from inversion import *
 from dataAccess import getDaysWeather
 

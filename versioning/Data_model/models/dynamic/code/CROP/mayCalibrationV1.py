@@ -199,20 +199,21 @@ print ("ACH_out shape: {0}".format(posteriors[0,:,IAS_OUT_ID].shape))
 
 print ("ACH_out type: {0}".format(type(posteriors[0,:,LENGTH_OUT_ID])))
 print ("ACH_out shape: {0}".format(posteriors[0,:,LENGTH_OUT_ID].shape))
-# # Output results
-    
-# df_ACH = pd.read_csv("ACH_out.csv")
-# jj = np.size(df_ACH,1)+1
-# df_ACH[str(jj)] = posteriors[0,:,0] 
-# df_ACH.to_csv("ACH_out.csv", index=False)
-    
-# df_IAS = pd.read_csv("IAS_out.csv")
-# df_IAS[str(jj)] = posteriors[0,:,1] 
-# df_IAS.to_csv("IAS_out.csv", index=False)
 
-# df_Length = pd.read_csv("Length_out.csv")
-# df_Length[str(jj)] = posteriors[0,:,2] 
-# df_Length.to_csv("Length_out.csv", index=False)
+# Output results
+    
+df_ACH = pd.read_csv("ACH_out.csv")
+jj = np.size(df_ACH,1)+1
+df_ACH[str(jj)] = posteriors[0,:,0] 
+df_ACH.to_csv("ACH_out.csv", index=False)
+    
+df_IAS = pd.read_csv("IAS_out.csv")
+df_IAS[str(jj)] = posteriors[0,:,1] 
+df_IAS.to_csv("IAS_out.csv", index=False)
+
+df_Length = pd.read_csv("Length_out.csv")
+df_Length[str(jj)] = posteriors[0,:,2] 
+df_Length.to_csv("Length_out.csv", index=False)
 
 
 # toc = time.time()
