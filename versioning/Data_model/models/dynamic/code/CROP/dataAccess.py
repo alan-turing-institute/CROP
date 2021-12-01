@@ -83,7 +83,7 @@ def getData(query):
       cur = conn.cursor()
       cur.execute(query)
       rows = cur.fetchall()
-      printRowsHead(rows)
+      printRowsHead(rows, numrows=10)
       
       # close the communication with the PostgreSQL
       cur.close()
@@ -130,6 +130,30 @@ def getDaysWeather(numDays=2, numRows=5):
   '''
   j = JinjaSql(param_style='pyformat')
   query, bind_params = j.prepare_query(weather_transaction_template, params)
+  # print(get_sql_from_template(query=query, bind_params=bind_params))
+  return getData(get_sql_from_template(query=query, bind_params=bind_params))
+
+def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
+  # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
+  today = datetime.datetime.now()
+  delta = datetime.timedelta(days=deltaDays)
+  dateNumDaysAgo = today - delta
+  params = {'sensor_id':sensorID,
+  'timestamp':dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"), 
+  'numRows':numRows}
+  
+  humidity_transaction_template = '''
+  select
+    timestamp, humidity
+  from 
+    zensie_trh_data 
+  where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
+  order by 
+    timestamp asc 
+  limit {{ numRows }}
+  '''
+  j = JinjaSql(param_style='pyformat')
+  query, bind_params = j.prepare_query(humidity_transaction_template, params)
   # print(get_sql_from_template(query=query, bind_params=bind_params))
   return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
