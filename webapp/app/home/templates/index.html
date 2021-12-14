@@ -501,11 +501,15 @@
                     label: 'Top',
                     data: values_top,
                     borderColor: "#ff0000",
+                    pointRadius:1,
+                    borderWidth: 1
                 },
                 {
                     label: 'Bottom',
                     data: values_bot,
                     borderColor: "#3399ff",
+                    pointRadius:1,
+                    borderWidth:1
                 }
             ]
         };
@@ -573,9 +577,11 @@
                         position: 'right',
                     }]
                 },
-                aspectRatio: 10,
+                aspectRatio: 6.5,
                 tooltips: {
+                    
                     callbacks: {
+                        position: 'average',
                         title: function (tooltipItems, data) {
                             return '';
                         },

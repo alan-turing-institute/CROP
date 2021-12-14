@@ -491,6 +491,7 @@ def route_template(template):
 
             # unique sensors
             adv_sensors = df.sensor_id.unique()
+            print ("advant", adv_sensors)
             adv_sensors_modbus_ids = df.id.unique()
 
             # extracting date from datetime

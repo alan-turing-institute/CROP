@@ -49,6 +49,8 @@ def route_template(template):
         sensors = db.session.execute(query).fetchall()
 
         sensors_arr = query_result_to_array(sensors, date_iso=False)
+        
+        #print (sensors_arr)
 
         return render_template(template + '.html', sensors=sensors_arr)
 
@@ -122,4 +124,5 @@ def route_template(template):
                 sensor = None
                 sensors_locs_arr = None
 
+            
             return render_template(template + '.html', action=action, sensor=sensor, sensor_locations=sensors_locs_arr, sensor_id=sensor_id)

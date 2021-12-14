@@ -52,12 +52,12 @@
                     for t_reading in readings:
                 %}
                 <tr>
-                    <td>{{ t_reading.zensie_trh_data_timestamp }}</td>
-                    <td>{{ t_reading.sensors_id }}</td>
-                    <td>{{ t_reading.sensors_name }}</td>
-                    <td>{{ t_reading.zensie_trh_data_temperature }}</td>
-                    <td>{{ t_reading.zensie_trh_data_humidity }}</td>
-                    <td>{{ t_reading.zensie_trh_data_time_created }}</td>
+                    <td>{{ t_reading.timestamp }}</td>
+                    <td>{{ t_reading.id }}</td>
+                    <td>{{ t_reading.name }}</td>
+                    <td>{{ t_reading.temperature }}</td>
+                    <td>{{ t_reading.humidity }}</td>
+                    <td>{{ t_reading.time_created }}</td>
                 </tr>
                 {%
                     endfor
