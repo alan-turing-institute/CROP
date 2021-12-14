@@ -20,14 +20,66 @@ from __app__.crop.structure import (
     ModelRunClass,
     ModelValueClass,
     ModelProductClass,
+    ReadingsZensieTRHClass,
+    SensorLocationClass,
+    LocationClass,
+    SensorClass
 )
+
 from __app__.crop.structure import SQLA as db
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
 
 
+def zensie_query(dt_from, dt_to):
+    """
+    Performs a query for zensie sensors.
+
+    Arguments:
+        dt_from_: date range from
+        dt_to_: date range to
+    Returns:
+        df: a df with the queried data
+    """
+
+    logging.info(
+        "Calling zensie_analysis with parameters %s %s"
+        % (
+            dt_from.strftime(CONST_TIMESTAMP_FORMAT),
+            dt_to.strftime(CONST_TIMESTAMP_FORMAT),
+        )
+    )
+
+    query = db.session.query(
+        ReadingsZensieTRHClass.timestamp,
+        ReadingsZensieTRHClass.sensor_id,
+        # SensorClass.name,
+        ReadingsZensieTRHClass.temperature,
+        ReadingsZensieTRHClass.humidity,
+        # SensorLocationClass.location_id,
+        LocationClass.zone,
+    ).filter(
+        and_(
+            SensorLocationClass.location_id == LocationClass.id,
+            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
+            ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
+            ReadingsZensieTRHClass.timestamp >= dt_from,
+            ReadingsZensieTRHClass.timestamp <= dt_to,
+        )
+    )
+
+    df = pd.read_sql(query.statement, query.session.bind)
+
+    logging.info("Total number of records found: %d" % (len(df.index)))
+
+    if df.empty:
+        logging.debug("WARNING: Query returned empty")
+
+    return df
+
+
 def arima_query(dt_from, dt_to, model_id):
     """
-    Performs a query for teh arima prediction model.
+    Performs a query for the arima prediction model.
 
     Arguments:
         dt_from_: date range from
@@ -38,7 +90,7 @@ def arima_query(dt_from, dt_to, model_id):
     """
 
     logging.info(
-        "Calling zensie_analysis with parameters %s %s"
+        "Calling arima model with parameters %s %s"
         % (
             dt_from.strftime(CONST_TIMESTAMP_FORMAT),
             dt_to.strftime(CONST_TIMESTAMP_FORMAT),
@@ -63,6 +115,7 @@ def arima_query(dt_from, dt_to, model_id):
         ModelValueClass.prediction_index,
         ModelProductClass.run_id,
         ModelRunClass.time_created,
+        ModelRunClass.time_forecast
     ).filter(
         and_(
             ModelClass.id == model_id,
@@ -76,7 +129,7 @@ def arima_query(dt_from, dt_to, model_id):
             #ModelRunClass.time_created <= dt_to,
         )
     )
-    print(query.statement.compile(dialect=db.session.bind.dialect))
+    #print(query.statement.compile(dialect=db.session.bind.dialect))
 
     df = pd.read_sql(query.statement, query.session.bind)
 
@@ -87,44 +140,105 @@ def arima_query(dt_from, dt_to, model_id):
 
     return df
 
+def resample(df):
+    """
+    Resamples (date per hour) to a dataframe.
 
-def json_temp_arima(df_temp):
+    Arguments:
+        temp_df: dataframe with temperature assign to bins
+        bins: temperature or humidity bins as a list
+    Returns:
+        temp_df: the df with grouped bins
+    """
+
+
+    # Reseting index
+    df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
+    df_grp_hr = df.groupby('sensor_id').resample('H', on='timestamp').agg({'temperature':'mean', 'humidity':'mean'}).reset_index()
+
+    return df_grp_hr
+
+
+
+def json_temp_arima(df_arima):
     """
     Function to return the Json for the temperature related
     charts in the model run
 
     """
-    time_ = []
-    for i in range (len(df_temp)):
-        pred_id = int(df_temp["prediction_index"][i])
-        pred_time = df_temp["time_created"][i] + dt.timedelta(hours=pred_id)
-        format_time = pred_time.strftime("%m/%d/%Y, %H:%M:%S")
-        time_.append(format_time)
 
-    df_temp["time"]= time_
-    print ("timetype:", type(df_temp["time"][0]))
+    #create timestamps from prediction index and convert date to string
+    time_ = []
+    timestamp_ = []
+    for i in range (len(df_arima)):
+        pred_id = int(df_arima["prediction_index"][i])
+        pred_time = df_arima["time_forecast"][i] + dt.timedelta(hours=pred_id)
+        format_time = pred_time.strftime("%d-%m-%Y %H:%M:%S")
+        time_.append(format_time)
+        timestamp_.append(pred_time)
+
+    df_arima["time"]= time_
+    df_arima["timestamp"]= timestamp_
+
+    #print ("timetype:", type(df_temp["time"][0]))
     return (
-        df_temp.groupby(["sensor_id", "measure_name"], as_index=True)  # "measure_name"
-        .apply(lambda x: x[["prediction_value", "prediction_index", "time"]].to_dict("r"))
+        df_arima.groupby(["sensor_id", "measure_name"], as_index=True)  # "measure_name"
+        .apply(lambda x: x[["prediction_value", "prediction_index", "run_id","time", "timestamp"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
     )
 
 
+def json_temp_zensie (dt_from_daily, dt_to):
+    df = zensie_query(dt_from_daily, dt_to)  
+    
+    if not df.empty:
+        #resample zensie data per hour
+        df_grp_hr = resample(df)
+        
+        time_ = []
+        for i in range (len(df_grp_hr)):
+            time = df_grp_hr["timestamp"][i]
+            format_time = time.strftime("%d-%m-%Y %H:%M:%S")
+            time_.append(format_time)
+
+        df_grp_hr["time"]= time_
+
+        #.groupby('sensor_id').resample('H', on='timestamp').agg({'temperature':'mean', 'humidity':'mean'})
+        return (
+            df_grp_hr.groupby(["sensor_id"], as_index=True)  # "measure_name"
+            .apply(lambda x: x[["temperature", "humidity", "time", "timestamp"]].to_dict("r"))
+            .reset_index()
+            .rename(columns={0: "Values"})
+            .to_json(orient="records")
+        )
+    else:
+        return ({})
+
+
 @blueprint.route('/<template>')
 @login_required
 def route_template(template, methods=['GET']):
+    #arima data
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=60)
     df_arima = arima_query(dt_from, dt_to, 1)
     json_arima = json_temp_arima(df_arima)
-    # print(json_arima)
+
+
+    #zensie data
+    unique_time_forecast = df_arima['time_forecast'].unique()
+    date_time = pd.to_datetime(unique_time_forecast[0])
+    dt_to_z = date_time + dt.timedelta(days=+3) #datetime(2021, 6, 16)
+    dt_from_z = dt_to_z + dt.timedelta(days=-5)
+    json_zensie = json_temp_zensie(dt_from_z , dt_to_z)
+
+
 
     # export data in csv for debugging
     #df_arima.to_csv(r'C:\Users\froumpani\OneDrive - The Alan Turing Institute\Desktop\test_data_filter.csv', index = False)
 
-    #print (df_arima)
 
     # if request.method == 'GET':
     #     print("!"*100)
@@ -134,7 +248,10 @@ def route_template(template, methods=['GET']):
 
     if template == "arima":
 
-        return render_template(template + '.html', json_arima_f=json_arima)
+        return render_template(template + '.html', 
+        json_arima_f=json_arima,
+        json_zensie_f=json_zensie
+        )
 
     else:
         return render_template(template + '.html')

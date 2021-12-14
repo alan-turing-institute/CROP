@@ -102,6 +102,7 @@ class ModelRunClass(BASE):
         ForeignKey("{}.{}".format(MODEL_TABLE_NAME, ID_COL_NAME)),
         nullable=False,
     )
+    time_forecast = Column(DateTime())
     time_created = Column(DateTime(), server_default=func.now())
 
     # arguments

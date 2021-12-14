@@ -21,7 +21,11 @@ def query_result_to_array(query_result, date_iso=True):
 
         # NOTE: added  ._asdict() as rowproxy didnt come in the form of dict and could not read .items.
         # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
-        for column, value in rowproxy._asdict().items():
+        if not isinstance(rowproxy,dict):
+            rowproxy=rowproxy._asdict()
+            #print ("rowproxy: ", rowproxy)
+
+        for column, value in rowproxy.items():
 
             if isinstance(value, datetime):
                 if date_iso:
@@ -33,6 +37,7 @@ def query_result_to_array(query_result, date_iso=True):
                     }
             else:
                 dict_entry = {**dict_entry, **{column: value}}
+        #dict_entry["ID"]=21
         results_arr.append(dict_entry)
 
     return results_arr
