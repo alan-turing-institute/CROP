@@ -21,10 +21,10 @@ def query_result_to_array(query_result, date_iso=True):
 
         # NOTE: added  ._asdict() as rowproxy didnt come in the form of dict and could not read .items.
         # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
-        if '_as_dict' in dir(rowproxy):
-            rowproxy=rowproxy
+        #if '_as_dict' in dir(rowproxy):
+        #    rowproxy=rowproxy
             #print ("rowproxy: ", rowproxy)#
-        else:  rowproxy=rowproxy._asdict()
+        #else:  rowproxy=rowproxy._asdict()
 
         for column, value in rowproxy.items():
 
