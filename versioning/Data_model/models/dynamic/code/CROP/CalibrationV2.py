@@ -5,13 +5,14 @@ Created on Mon Jun 14 09:32:23 2021
 @author: rmw61
 """
 
-from functionsV2 import derivatives, priorPPF, sat_conc
+from functions_calibrationV2 import derivatives, priorPPF, sat_conc
 from dataAccess import getDaysWeather, getDaysHumidityTemp, getDataPointHumidity
 import pandas as pd
 from pandas import DataFrame
 import numpy as np
-import sys
-sys.path.append("C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/Inversion")
+import sys,os
+INVERSION_DIR = os.path.join(os.path.dirname(__file__),os.pardir,"Inversion")
+sys.path.append(INVERSION_DIR)
 from inversion import *
 import time
 import csv
@@ -163,16 +164,6 @@ for ii in range(sz):
         DataPoint = DataPoint # takes previous value if nan recorded
 
     print("DataPoint:{0}".format(DataPoint))
-
-# LastDataPoint[str(jj+1)] = DataPoint 
-# LastDataPoint.to_csv("DataPoint.csv", index=False)
-
-# DT = Data['DateTimex']
-# print(DT[h2])
-
-# ### Run calibration
-
-# ## Standardise RH_air
     
     ym = 0.6456 # values chosen to ensure comparability against MATLAB model
     ystd = 0.0675
@@ -180,25 +171,25 @@ for ii in range(sz):
     RH_s = (RH_air - ym)/ystd
     print ("Standardised RH_air (RH_s):{0}".format(RH_s))
     
-## Standardise data point
+    ## Standardise data point
 
     RHD_s = (DataPoint - ym)/ystd
     
-# Normalise calibration parameters
+    # Normalise calibration parameters
 
     Pmax = np.max(Parameters, axis = 0)
     Pmin = np.min(Parameters, axis = 0)
 
     Cal = (Parameters - Pmin)/(Pmax - Pmin)
 
-## Start calibration here
+    ## Start calibration here
     print('Calibration ...')
     m = 1 # No. of data points
 
-# params
+    # params
     ts = np.linspace(1, m, m)
 
-# coordinates
+    # coordinates
     xModel = np.array([0.5])
     xData = np.array([0, 0.5, 1])
 

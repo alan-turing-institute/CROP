@@ -21,10 +21,10 @@ from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from parameters import ndh
 from scipy.integrate import solve_ivp
-import sys
-sys.path.append("C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/Inversion")
+import sys,os
+INVERSION_DIR = os.path.join(os.path.dirname(__file__),os.pardir,"Inversion")
+sys.path.append(INVERSION_DIR)
 from inversion import *
-from dataAccess import getDaysWeather
 
 def climterp_linear(h1, h2, ExternalWeather):
     temp_in = None
@@ -166,7 +166,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2):
     
     n = int(np.ceil((t-t_init)/deltaT))
     T_ext = climate[n, 0] + T_k
-    RH_e = climate[n, 1]/100;
+    RH_e = climate[n, 1]/100
     Cw_ext = RH_e * sat_conc(T_ext)
     
     daynum.append(day(t))
