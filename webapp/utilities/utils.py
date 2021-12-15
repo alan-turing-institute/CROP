@@ -24,7 +24,7 @@ def query_result_to_array(query_result, date_iso=True):
         if '_as_dict' in dir(rowproxy):
             rowproxy=rowproxy._asdict()
             #print ("rowproxy: ", rowproxy)#
-        else:  rowproxy=rowproxy._asdict()
+        else:  None
 
         for column, value in rowproxy.items():
 
