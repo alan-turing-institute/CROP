@@ -103,3 +103,57 @@ VALUES (2, 0, 0.4594613726254301),
 (2, 2, 0.7340651592924317), 
 (2, 3, 0.7047730309779485), 
 (2, 4, 0.4595117250921914)
+
+SELECT model.id, model.model_name, model_run.sensor_id, model_run.time_forecast, model_product.run_id, model_value.prediction_index, model_value.prediction_value 
+FROM model, model_run, model_measure, model_product, model_value 
+WHERE model.id =1 
+AND model_run.model_id = model.id  
+AND model_product.run_id = 133 
+AND model_product.measure_id = model_measure.id 
+AND model_value.product_id = model_product.id 
+
+SELECT model.id, model.model_name, 
+  model_run.id, model_run.sensor_id, model_run.time_forecast,
+  model_product.id,
+  model_value.product_id,
+  model_value.prediction_value
+FROM model, model_run, model_product, model_value, model_measure
+WHERE model.id = 1 
+  AND model_run.model_id = model.id 
+  AND model_run.id=133
+  AND model_product.measure_id=99
+  AND model_value.product_id=model_product.id 
+LIMIT 5
+
+SELECT model.id as model_id, model.model_name, 
+  model_run.id, model_run.sensor_id, model_run.time_forecast,
+  model_product.id,
+  model_value.product_id,
+  model_value.prediction_value
+FROM model, model_run, model_product, model_value, model_measure
+WHERE model.id = 1 
+  AND model_run.model_id = model.id 
+  AND model_run.id=133
+  AND model_value.product_id=model_product.id 
+LIMIT 5
+
+SELECT model.id as m_id, 
+  model.model_name as m_name, 
+  model_run.id as run, 
+  model_run.sensor_id as sensor, 
+  model_run.time_forecast as forecast,
+  model_product.id as product,
+  model_value.product_id as value_product,
+  model_value.prediction_value as p_value,
+  model_value.prediction_index as p_index,
+  model_value.id as p_id,
+  model_measure.measure_name
+FROM model, model_run, model_product, model_value, model_measure
+WHERE model.id = 1 
+  AND model_run.model_id = model.id 
+  AND model_run.id=133
+  AND model_product.run_id = model_run.id
+  AND model_product.measure_id = 1
+  AND model_value.product_id = model_product.id
+  AND model_measure.id = model_product.measure_id
+ORDER BY model_value.prediction_index asc
