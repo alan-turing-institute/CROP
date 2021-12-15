@@ -144,7 +144,7 @@ def day(t):
     day_new = np.ceil(t/86400)
     return(day_new)
 
-def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2):
+def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2, LatestTimeHourValue):
     
     T_c = z[0]
     T_i = z[1]
@@ -164,7 +164,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2):
     
     t_init = h1*3600
     
-    n = int(np.ceil((t-t_init)/deltaT))
+    n = int(np.floor((t-t_init)/deltaT)) # previously ceil?
     T_ext = climate[n, 0] + T_k
     RH_e = climate[n, 1]/100
     Cw_ext = RH_e * sat_conc(T_ext)
@@ -172,13 +172,13 @@ def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2):
     daynum.append(day(t))
     
     ## Set ACH,ias
-    hour = np.floor(t/3600) + 1
+    hour = np.floor(t/3600) # + 1?
             
     ACH = ACHvec 
     ias = iasvec     
     
     ## Lights
-    day_hour=(hour/24-np.floor(hour/24))*24
+    day_hour=((hour+LatestTimeHourValue)/24-np.floor((hour+LatestTimeHourValue)/24))*24
     L_on = (day_hour>-0.01 and day_hour<09.01) or day_hour > 15.01
     AL_on = day_hour>08.01 and day_hour<16.01
     
@@ -336,7 +336,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2):
     return np.array([dT_cdt,dT_idt,dT_vdt,dT_mdt,dT_pdt,dT_fdt,dT_c1dt,
                  dT_c2dt,dT_c3dt,dT_c4dt,dT_c5dt,dC_wdt])
 
-def derivatives(h1, h2, paramsinput, Weather):
+def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
     
     # Get weather data
     climate = np.transpose(climterp_linear(h1, h2, Weather))
@@ -383,7 +383,7 @@ def derivatives(h1, h2, paramsinput, Weather):
         t = [h1*3600,h2*3600]
         tval = np.linspace(h1*3600,h2*3600,NOut)
                
-        params = [climate, ACH, ias, daynum, h1, h2]
+        params = [climate, ACH, ias, daynum, h1, h2, LatestTimeHourValue]
     
         output = solve_ivp(model, t, z, method='BDF', t_eval=tval, rtol = 1e-5, args = params)
         
