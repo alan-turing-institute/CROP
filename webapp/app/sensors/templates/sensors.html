@@ -18,6 +18,7 @@
       <div class="page-title">
         <div class="title_left">
             <h3>List of Sensors</h3>
+            <p>{{ sensors }}></p>
         </div>
       </div>
 
@@ -50,8 +51,8 @@
                 <tbody>
                     {% for t_sensor in sensors %}
                     <tr class='clickable-row' method = POST>
-                      <td>{{ t_sensor.sensors_id }}</td>
-                      <td>{{ t_sensor.sensors_sensor_type }}</td>
+                      <td>{{ t_sensor.id }}</td>
+                      <td>{{ t_sensor.sensor_types_sensor_type }}</td>
                       <td>{{ t_sensor.sensors_device_id }}</td>
                       <td>{{ t_sensor.sensors_name }}</td>
                       <td>{{ t_sensor.sensors_last_updated }}</td>
