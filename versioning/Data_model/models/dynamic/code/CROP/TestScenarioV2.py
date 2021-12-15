@@ -10,7 +10,7 @@ import functions_scenarioV1 as functions_scenario
 import numpy as np
 import os
 USE_LIVE = True
-filepath_weather = os.path.join(os.path.dirname(__file__),'ExternalWeather.csv')
+filepath_weather = os.path.join(os.path.dirname(__file__),'Weather.csv')
 
 def setTimeParameters(h2:int=240, numDays:int=10) -> Dict:
   # Start hour h2 is for test only - in live version will be current time
