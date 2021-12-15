@@ -144,7 +144,7 @@ def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
   
   humidity_transaction_template = '''
   select
-    timestamp, humidity
+    timestamp, temperature, humidity
   from 
     zensie_trh_data 
   where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})

@@ -17,6 +17,8 @@ import time
 import csv
 import datetime
 
+np.random.seed(1000)
+
 # Code to run the GU physics-based simulation (GES) to predict temperature and relative
 # humidity (RH) in the tunnel, then calibrate the parameters ACH (ventilation rate) and
 # IAS (internal air speed) using monitored data.
@@ -34,10 +36,12 @@ import datetime
 # This version (may_v2) downloads data from the data base and runs the model 
 # calibration over the previous 20 days.
 
-filepath_X = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/X_high.csv'
+filepath_X = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/X.csv'
 filepath_weather = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather.csv'
 filepath_TRHE = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv'
 filepath_datapoint = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
+
+tic = time.time()
 
 useDataBase=True
 DataPoint = 0.7 # Dummy value in case of nan at first point
@@ -76,6 +80,10 @@ LatestTime = min((Monitored_hour[-1:].index), (Weather_hour[-1:].index))
 
 print(LatestTime)
 
+# Identify start hour to feed into light setting
+LatestTimeHour = LatestTime.hour.astype(float)
+LatestTimeHourValue = LatestTimeHour[0]
+
 # Select data for 20 days prior to selected timestamp
 deltaDays = 20
 delta = datetime.timedelta(days=deltaDays)
@@ -108,8 +116,6 @@ cal = calibration.calibrate(priorPPF, sigmaY, nugget)
 # To be run every 12 hours ideally 3am, 3pm but for now every 12 hours from 
 # start of the data
 
-tic = time.time()
-
 p1 = 240 # start hour (11th day 240 )
 ndp = 21 # number of data points 21
 delta_h = 12 # hours between data points 12
@@ -119,6 +125,8 @@ seq = np.linspace(p1,p2,ndp)
 sz = np.size(seq,)
 
 # Step through each data point
+
+LastDataPoint = pd.DataFrame()
 
 for ii in range(sz):
     
@@ -134,7 +142,7 @@ for ii in range(sz):
     print('Running model ...')
 
     if useDataBase:
-        results = derivatives(h1, h2, Parameters, Weather) # runs GES model over ACH,IAS pairs
+        results = derivatives(h1, h2, Parameters, Weather, LatestTimeHourValue) # runs GES model over ACH,IAS pairs
     else: 
         results = derivatives(h1, h2, Parameters, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
 
@@ -154,18 +162,18 @@ for ii in range(sz):
     
     DataPoint = Monitored.RH_i[h2]
     testdp = np.isnan(DataPoint)
-    print(testdp)
-    print(DataPoint)
+    #print(testdp)
+    #print(DataPoint)
     
     if testdp == False:
         DataPoint = DataPoint/100
     else:
-        DataPoint = DataPoint # takes previous value if nan recorded
+        DataPoint = (LastDataPoint[-1:]).DataPoint[0] # takes previous value if nan recorded
 
     print("DataPoint:{0}".format(DataPoint))
-
-# LastDataPoint[str(jj+1)] = DataPoint 
-# LastDataPoint.to_csv("DataPoint.csv", index=False)
+       
+    dpnew = pd.DataFrame({'DataPoint': DataPoint}, { Monitored.DateTime[h2]})
+    LastDataPoint = LastDataPoint.append(dpnew) 
 
 # DT = Data['DateTimex']
 # print(DT[h2])
@@ -258,37 +266,41 @@ for ii in range(sz):
     df[str(ii)] = posteriors[ii,:,2] 
     df.to_csv("Length_out.csv", index=False)
  
+# Time
+toc = time.time()
+print(toc - tic)
     
 # Output results
 
 df_ACH = DataFrame(posteriors[:,:,0])
-df_ACH.to_csv(r'ACH_12.csv',index = None, header = False) # p = python
+df_ACH.to_csv(r'ACH_low_12.csv',index = None, header = False) # p = python
 
 prior_ACH = priorSamples[:,:,0]
 df_priorACH = DataFrame(prior_ACH)
-df_priorACH.to_csv(r'priorACH_12.csv',index = None, header = False)
+df_priorACH.to_csv(r'priorACH_low_12.csv',index = None, header = False)
 #
 df_IAS = DataFrame(posteriors[:,:,1])
-df_IAS.to_csv(r'IAS_12.csv',index = None, header = False)
+df_IAS.to_csv(r'IAS_low_12.csv',index = None, header = False)
 
 prior_IAS = priorSamples[:,:,1]
 df_priorIAS = DataFrame(prior_IAS)
-df_priorIAS.to_csv(r'priorIAS_12.csv',index = None, header = False)
+df_priorIAS.to_csv(r'priorIAS_low_12.csv',index = None, header = False)
 #
 df_Length = DataFrame(posteriors[:,:,2])
-df_Length.to_csv(r'Length_12.csv',index = None, header = False)
+df_Length.to_csv(r'Length_low_12.csv',index = None, header = False)
 
 prior_Length = priorSamples[:,:,2]
 df_priorLength = DataFrame(prior_Length)
-df_priorLength.to_csv(r'priorLength_12.csv',index = None, header = False)
+df_priorLength.to_csv(r'priorLength_low_12.csv',index = None, header = False)
 
 df_Weather = DataFrame(Weather)
-df_Weather.to_csv(r'Weather_12.csv',index = None, header = False) # p = python
+df_Weather.to_csv(r'Weather_low_12.csv',index = None, header = False) # p = python
 
 df_Monitored = DataFrame(Monitored)
-df_Monitored.to_csv(r'Monitored_12.csv',index = None, header = False) # p = python
+df_Monitored.to_csv(r'Monitored_low_12.csv',index = None, header = False) # p = python
 
-
+LastDataPoint = LastDataPoint.reset_index()
+LastDataPoint.to_csv(r'LastDataPoint_low_12.csv',index = None, header = False)
 #    
 
 
