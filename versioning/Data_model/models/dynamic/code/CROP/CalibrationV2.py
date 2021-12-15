@@ -37,10 +37,15 @@ np.random.seed(1000)
 # This version (may_v2) downloads data from the data base and runs the model 
 # calibration over the previous 20 days.
 
-filepath_X = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/X.csv'
-filepath_weather = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather.csv'
-filepath_TRHE = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv'
-filepath_datapoint = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
+# filepath_X = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/X.csv'
+# filepath_weather = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ExternalWeather.csv'
+# filepath_TRHE = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv'
+# filepath_datapoint = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
+
+filepath_X = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/X.csv'
+filepath_weather = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/Weather.csv'
+filepath_TRHE = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv'
+filepath_datapoint = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
 
 tic = time.time()
 
@@ -90,8 +95,8 @@ deltaDays = 20
 delta = datetime.timedelta(days=deltaDays)
 StartTime = LatestTime - delta
 
-t1 = StartTime.strftime("%y-%m-%d %h:%m:%s")
-t2 = LatestTime.strftime("%y-%m-%d %h:%m:%s")
+t1 = StartTime.strftime("%Y-%m-%d %H:%M:%S")
+t2 = LatestTime.strftime("%Y-%m-%d %H:%M:%S")
 
 Monitored = Monitored_hour.loc[t1[0]:t2[0]]
 Weather = Weather_hour.loc[t1[0]:t2[0]]

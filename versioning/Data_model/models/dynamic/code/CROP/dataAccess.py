@@ -275,27 +275,58 @@ def testEnergy():
   sql_command = "SELECT * FROM utc_energy_data WHERE utc_energy_data.timestamp >= '2021-03-12 16:03:11' AND utc_energy_data.timestamp < '2021-09-28 17:03:11'"
   return getData(sql_command)
 
+def insertData(query, parameters):
+  conn = None
+  new_row_id = None
+  try:
+    conn = openConnection()
+    if (conn is not None):
+      # create a cursor
+      cur = conn.cursor()
+      cur.execute(query, parameters)
+      new_row_id = cur.fetchone()[0]
+      conn.commit()
+      
+      # close the communication with the PostgreSQL
+      cur.close()
+  except (Exception, psycopg2.DatabaseError) as error:
+    print(error)
+  finally:
+    closeConnection(conn=conn)
+    return new_row_id
+
+def testInsert():
+  sql = """INSERT INTO test_model(model_name, author)
+  VALUES (%s,%s) RETURNING id;"""
+  parameters = ("amodel","anauthor")
+  print(insertData(sql,parameters=parameters))
+
+# def insertModelRun():
+
+
+
 if __name__ == '__main__':
+  testInsert()
   # particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
   # insert_particles(particles_array)
   # compareHumiditySources()
   # compareDataPoint()
   #getDaysWeather(numDays=7, numRows=10)
-  humidityDataList = getDaysHumidity(deltaDays=1, numRows=1000)
-  # for row in humidityList:
-    # print(row)
-  dp = getDataPointHumidity()  
-  humidityList = []
-  # temperature = []
-  for row in humidityDataList:
-      humidityList.append(row[1])
-      print(row[1])
-      print(row[0])
+  # humidityDataList = getDaysHumidity(deltaDays=1, numRows=1000)
+  # # for row in humidityList:
+  #   # print(row)
+  # dp = getDataPointHumidity()  
+  # humidityList = []
+  # # temperature = []
+  # for row in humidityDataList:
+  #     humidityList.append(row[1])
+  #     print(row[1])
+  #     print(row[0])
 
-  humidity = pd.Series(humidityList)
-  # take average and turn to hourly data
-  DT = humidityDataList[len(humidityDataList)-1][0] 
-  print(DT)
+  # humidity = pd.Series(humidityList)
+  # # take average and turn to hourly data
+  # DT = humidityDataList[len(humidityDataList)-1][0] 
+  # print(DT)
 
   #energy = testEnergy()
   #print(energy[0])

@@ -403,7 +403,7 @@ def loadDistributions():
     filepath_ACH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_out.csv'
     filepath_IAS = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_out.csv'
     filepath_Length = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_out.csv'
-
+    # filepath_ACH = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data","ACH_out.csv")
     df_ACH = pd.read_csv(filepath_ACH)
     df_IAS = pd.read_csv(filepath_IAS)
     df_Length = pd.read_csv(filepath_Length)
