@@ -1,6 +1,7 @@
 from dataAccess import getDaysWeather, getDaysHumidity, insert_particles
 import numpy as np
 import pandas as pd
+import os
 
 def compareWeather():
   temperatureIndex = 1
@@ -68,9 +69,10 @@ def insertParticlesHistory(particle_id, particle_df):
     insert_particles(ach_array)
 
 if __name__ == '__main__':
-  assembleParticlesHistory()
-  
-  
+  # assembleParticlesHistory()
+  filepath_ACH = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data","ACH_out.csv")
+  df_ACH = pd.read_csv(filepath_ACH)
+  print(df_ACH.tail(1))
   
   
   # for row in range(len(df_ACH)):

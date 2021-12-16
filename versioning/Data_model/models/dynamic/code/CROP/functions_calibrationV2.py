@@ -22,68 +22,66 @@ from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from parameters import ndh
 from scipy.integrate import solve_ivp
 import sys,os
-INVERSION_DIR = os.path.join(os.path.dirname(__file__),os.pardir,"Inversion")
-sys.path.append(INVERSION_DIR)
+DIR_CROP = os.path.join(os.path.dirname(__file__),os.pardir)
+DIR_DATA = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data")
+DIR_INVERSION = os.path.join(DIR_CROP,"Inversion")
+FILEPATH_ACH = os.path.join(DIR_DATA,"ACH_out.csv")
+FILEPATH_IAS = os.path.join(DIR_DATA,"IAS_out.csv")
+FILEPATH_LEN = os.path.join(DIR_DATA,"Length_out.csv")  
+
+FILEPATH_X = os.path.join(DIR_DATA,'X.csv')
+FILEPATH_WEATHER = os.path.join(DIR_DATA,'Weather.csv')
+FILEPATH_TRHE = os.path.join(DIR_DATA,'TRHE2018_subset.csv')
+FILEPATH_DATAPOINT = os.path.join(DIR_DATA,'DataPoint.csv')
+
+FILEPATH_ACH_LOW_12 =  os.path.join(DIR_DATA,'ACH_low_12.csv')
+FILEPATH_PRIOR_ACH_LOW_12 =  os.path.join(DIR_DATA,'priorACH_low_12.csv')
+FILEPATH_IAS_LOW_12 = os.path.join(DIR_DATA,'IAS_low_12.csv')
+FILEPATH_PRIOR_IAS_LOW_12 = os.path.join(DIR_DATA,'priorIAS_low_12.csv')
+FILEPATH_LEN_LOW_12 = os.path.join(DIR_DATA,'Length_low_12.csv')
+FILEPATH_PRIOR_LEN_LOW_12 = os.path.join(DIR_DATA,'priorLength_low_12.csv')
+
+FILEPATH_WEATHER_LOW_12 = os.path.join(DIR_DATA,'Weather_low_12.csv')
+FILEPATH_MONITORED_LOW_12 = os.path.join(DIR_DATA,'Monitored_low_12.csv')
+FILEPATH_DATAPOINT_LOW_12 = os.path.join(DIR_DATA,'LastDataPoint_low_12.csv')
+
+sys.path.append(DIR_INVERSION)
 from inversion import *
 
 def climterp_linear(h1, h2, ExternalWeather):
     temp_in = None
     rh_in = None
-    #if (filepath_weather):
-    #    ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
-    #    temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
-    #    rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
-    #else:
-    #    ExternalWeather = np.asarray(getDaysWeather(numDays, numRows=numDays*24))
-    #    temp_in = ExternalWeather[h1:h2+1,1].astype(np.float64) # +1 to ensure correct end point
-    #    rh_in = ExternalWeather[h1:h2+1,2].astype(np.float64) # +1 to ensure correct end point
-
+    
     temp_in = (ExternalWeather.T_e[h1:h2+1]).to_numpy() # +1 to ensure correct end point
     rh_in = (ExternalWeather.RH_e[h1:h2+1]).to_numpy() # +1 to ensure correct end point
     
     # # remove nans
     nans, x= nan_helper(temp_in)
     temp_in[nans]= np.interp(x(nans), x(~nans), temp_in[~nans])
-    
     nans, x= nan_helper(rh_in)
     rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
-    
     t = np.linspace(0,864000-3600,(h2-h1+1)) # 864000 = 240 hours i.e. 10 days
     deltaT = 600 # 10 minutes
     mult=np.linspace(0,864000,int(1+864000/deltaT))
-    # print("t: {0}, mult:{1}, input:{2}".format(t.shape,mult.shape,temp_in.shape))
-
-    #ind = h2-h1+1
-
-    #clim_t = np.interp(mult,t,temp_in[-ind:])
-    #clim_rh = np.interp(mult,t,rh_in[-ind:])
     clim_t = np.interp(mult,t,temp_in)
     clim_rh = np.interp(mult,t,rh_in)
-
     climate = np.vstack((clim_t,clim_rh))
 
     return climate
 
 def lamorturb(Gr, Re):
-    
     Le = 0.819
-
     free = Gr < 1e5
     Nu_G = 0.5 * free * Gr**0.25 + 0.13*(1-free)*Gr**0.33
-
     forced = Re < 2e4
     Nu_R = 0.6*forced*Re**0.5 + 0.032*(1-forced)*Re**0.8  
-
     x = Nu_G > Nu_R
-
     Nu = x*Nu_G + (1-x)*Nu_R
-
     Sh = x*Nu*Le**0.25 + (1-x)*Nu*Le**0.33
 
     return(Nu, Sh)
 
 def convection(d, A, T1, T2, ias):
-    
     g = 9.81
     nu = 15.1e-6
     lam = 0.025
@@ -98,7 +96,6 @@ def convection(d, A, T1, T2, ias):
     return(QV_1_2, QP_1_2)
 
 def radiation(eps_1, eps_2, rho_1, rho_2, F_1_2, F_2_1, A_1, T_1, T_2):
-    
     sigm = 5.67e-8
     
     k = eps_1*eps_2/(1-rho_1*rho_2*F_1_2*F_2_1)
@@ -113,7 +110,6 @@ def conduction(A, lam, l, T1, T2):
     
     
 def sat_conc(T):
-
     TC = T - T_k   
     spec_hum = np.exp(11.56 - 4030/(TC + 235))
     air_dens = -0.0046*TC + 1.2978
@@ -395,18 +391,9 @@ def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
     return results
 
 def loadDistributions():
-    # if (filePath_ACH and filePath_IAS and filePath_Length):
-    #     df_ACH = pd.read_csv(filePath_ACH)
-    #     df_IAS = pd.read_csv(filePath_IAS)
-    #     df_Length = pd.read_csv(filePath_Length)
-    # else:
-    filepath_ACH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_out.csv'
-    filepath_IAS = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_out.csv'
-    filepath_Length = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_out.csv'
-    # filepath_ACH = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data","ACH_out.csv")
-    df_ACH = pd.read_csv(filepath_ACH)
-    df_IAS = pd.read_csv(filepath_IAS)
-    df_Length = pd.read_csv(filepath_Length)
+    df_ACH = pd.read_csv(FILEPATH_ACH)
+    df_IAS = pd.read_csv(FILEPATH_IAS)
+    df_Length = pd.read_csv(FILEPATH_LEN)
     return df_ACH, df_IAS, df_Length
 
 def priorPPF():
