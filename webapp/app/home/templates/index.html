@@ -479,9 +479,9 @@
     //console.warn(temperature_data[0]["Values"][0]["bin"]);
     function check_data(data) {
         if (Object.keys(data).length === 0 && data.constructor === Object) {
-            concole.warn("dataset is empty")
+            console.warn("dataset is empty")
         }
-        else console.warn("its good data", data)
+        else console.log("its good data", data)
     }
 
     function time_series_charts(json_data, canvasname) {
