@@ -62,6 +62,7 @@ def printRowsHead(rows, numrows=0):
       print(row)
 
 def deleteData(query):
+  result=[]
   conn = None
   try:
     conn = openConnection()
@@ -75,7 +76,7 @@ def deleteData(query):
     print(error)
   finally:
     closeConnection(conn=conn)
-    return result
+    return len(result)
 
 def getData(query):
   conn = None
@@ -299,17 +300,20 @@ def insertRow(query, parameters):
 
 def insertRows(query, parameters):
   conn = None
+  new_row_ids = []
   try:
     conn = openConnection()
     if (conn is not None):
       cur = conn.cursor()
       execute_values(cur, query, parameters)
       conn.commit()
+      new_row_ids = cur.fetchall()[0]
       cur.close()
   except (Exception, psycopg2.DatabaseError) as error:
     print(error)
   finally:
     closeConnection(conn=conn)
+    return len(new_row_ids)
 
 # def testInsert():
 #   sql = """INSERT INTO test_model(model_name, author)
@@ -327,31 +331,33 @@ def insertModelRun(sensor_id=None, model_id=None,time_forecast=None):
         return insertRow(sql, parameters)
   return None
 
-def insertModelProducts(run_id=None, measures=None):
+def insertModelProduct(run_id=None, measure_id=None):
   if run_id is not None:
-    if measures is not None:
-      if len(measures) > 0:
-        for measure in measures:
-          sql = """INSERT INTO test_model_product(run_id, measure_id)
-                VALUES (%s,%s) RETURNING id;"""
-          product_id = insertRow(sql, (run_id, measure))
-          print("Product inserted, logged as ID: {0}".format(product_id))
+    if measure_id is not None:
+      sql = """INSERT INTO test_model_product(run_id, measure_id)
+            VALUES (%s,%s) RETURNING id;"""
+      product_id = insertRow(sql, (run_id, measure_id))
+      print("Product inserted, logged as ID: {0}".format(product_id))
+      return product_id
+  return None
 
-def insertModelProducts(run_id=None, measures=None):
-  if run_id is not None:
-    if measures is not None:
-      if len(measures) > 0:
-        for measure in measures:
-          sql = """INSERT INTO test_model_product(run_id, measure_id)
-                VALUES (%s,%s) RETURNING id;"""
-          product_id = insertRow(sql, (run_id, measure))
-          print("Product inserted, logged as ID: {0}".format(product_id))
+def insertModelPrediction(parameters=None):
+  num_rows_inserted = 0
+  if parameters is not None:
+    if len(parameters) > 0:
+      sql = """INSERT INTO test_model_value(product_id,prediction_value, prediction_index)
+        VALUES %s RETURNING id"""
+      num_rows_inserted = insertRows(sql, parameters)
+      return num_rows_inserted
+  return num_rows_inserted
 
 def deleteResults():
-  delete_id=deleteData("delete from test_model_product returning id;")
-  print ("Delete from test_model_product: {0}".format(delete_id))
-  delete_id = deleteData("delete from test_model_run returning id;")
-  print ("Delete from test_model_run: {0}".format(delete_id))
+  num_delete_id=deleteData("delete from test_model_value returning id;")
+  print ("Delete from test_model_value: {0}".format(num_delete_id))
+  num_delete_id=deleteData("delete from test_model_product returning id;")
+  print ("Delete from test_model_product: {0}".format(num_delete_id))
+  num_delete_id = deleteData("delete from test_model_run returning id;")
+  print ("Delete from test_model_run: {0}".format(num_delete_id))
 # if __name__ == '__main__':
   # testInsert()
   # particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
