@@ -96,14 +96,14 @@ CREATE TABLE test_model_product (
 -- VALUES(18, 1, 1);
 
 -- Prdiction value:
-CREATE TABLE model_value (
+CREATE TABLE test_model_value (
   id SERIAL PRIMARY KEY,
-  product_id INTEGER REFERENCES model_product(id),
+  product_id INTEGER REFERENCES test_model_product(id),
   prediction_value FLOAT NOT NULL,
   prediction_index INTEGER NOT NULL
 );
 
--- INSERT INTO model_prediction(run_id,prediction_value, prediction_index)
+-- INSERT INTO test_model_value(run_id,prediction_value, prediction_index)
 -- VALUES(1, 11, 1),
 -- (1, 12, 2),
 -- (1, 13, 3),
