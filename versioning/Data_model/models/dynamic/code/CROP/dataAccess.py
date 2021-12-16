@@ -1,6 +1,7 @@
 from jinjasql.core import bind
 from config import config
 import psycopg2
+from psycopg2.extras import execute_values
 import datetime
 from jinjasql import JinjaSql
 from six import string_types
@@ -68,11 +69,13 @@ def deleteData(query):
       cur = conn.cursor()
       cur.execute(query)
       conn.commit()
+      result = cur.fetchall()
       cur.close()
   except (Exception, psycopg2.DatabaseError) as error:
     print(error)
   finally:
     closeConnection(conn=conn)
+    return result
 
 def getData(query):
   conn = None
@@ -275,7 +278,7 @@ def testEnergy():
   sql_command = "SELECT * FROM utc_energy_data WHERE utc_energy_data.timestamp >= '2021-03-12 16:03:11' AND utc_energy_data.timestamp < '2021-09-28 17:03:11'"
   return getData(sql_command)
 
-def insertData(query, parameters):
+def insertRow(query, parameters):
   conn = None
   new_row_id = None
   try:
@@ -286,7 +289,6 @@ def insertData(query, parameters):
       cur.execute(query, parameters)
       new_row_id = cur.fetchone()[0]
       conn.commit()
-      
       # close the communication with the PostgreSQL
       cur.close()
   except (Exception, psycopg2.DatabaseError) as error:
@@ -295,18 +297,63 @@ def insertData(query, parameters):
     closeConnection(conn=conn)
     return new_row_id
 
-def testInsert():
-  sql = """INSERT INTO test_model(model_name, author)
-  VALUES (%s,%s) RETURNING id;"""
-  parameters = ("amodel","anauthor")
-  print(insertData(sql,parameters=parameters))
+def insertRows(query, parameters):
+  conn = None
+  try:
+    conn = openConnection()
+    if (conn is not None):
+      cur = conn.cursor()
+      execute_values(cur, query, parameters)
+      conn.commit()
+      cur.close()
+  except (Exception, psycopg2.DatabaseError) as error:
+    print(error)
+  finally:
+    closeConnection(conn=conn)
 
-# def insertModelRun():
+# def testInsert():
+#   sql = """INSERT INTO test_model(model_name, author)
+#   VALUES (%s,%s) RETURNING id;"""
+#   parameters = ("amodel","anauthor")
+#   print(insertRow(sql,parameters=parameters))
 
+def insertModelRun(sensor_id=None, model_id=None,time_forecast=None):
+  if sensor_id is not None:
+    if model_id is not None:
+      if (time_forecast is not None):
+        parameters = (sensor_id, model_id,time_forecast)
+        sql = """INSERT INTO test_model_run(sensor_id, model_id, time_forecast)
+        VALUES (%s,%s,%s) RETURNING id;"""
+        return insertRow(sql, parameters)
+  return None
 
+def insertModelProducts(run_id=None, measures=None):
+  if run_id is not None:
+    if measures is not None:
+      if len(measures) > 0:
+        for measure in measures:
+          sql = """INSERT INTO test_model_product(run_id, measure_id)
+                VALUES (%s,%s) RETURNING id;"""
+          product_id = insertRow(sql, (run_id, measure))
+          print("Product inserted, logged as ID: {0}".format(product_id))
 
-if __name__ == '__main__':
-  testInsert()
+def insertModelProducts(run_id=None, measures=None):
+  if run_id is not None:
+    if measures is not None:
+      if len(measures) > 0:
+        for measure in measures:
+          sql = """INSERT INTO test_model_product(run_id, measure_id)
+                VALUES (%s,%s) RETURNING id;"""
+          product_id = insertRow(sql, (run_id, measure))
+          print("Product inserted, logged as ID: {0}".format(product_id))
+
+def deleteResults():
+  delete_id=deleteData("delete from test_model_product returning id;")
+  print ("Delete from test_model_product: {0}".format(delete_id))
+  delete_id = deleteData("delete from test_model_run returning id;")
+  print ("Delete from test_model_run: {0}".format(delete_id))
+# if __name__ == '__main__':
+  # testInsert()
   # particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
   # insert_particles(particles_array)
   # compareHumiditySources()
