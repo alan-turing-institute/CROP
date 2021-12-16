@@ -5,14 +5,22 @@ Created on Mon Jun 14 09:32:23 2021
 @author: rmw61
 """
 
-from functions_calibrationV2 import derivatives, priorPPF, sat_conc
-from dataAccess import getDaysWeather, getDaysHumidityTemp, getDataPointHumidity
+from functions_calibrationV2 import (
+    derivatives, priorPPF, sat_conc, 
+    DIR_INVERSION, 
+    FILEPATH_LEN, FILEPATH_ACH, FILEPATH_IAS,
+    FILEPATH_X, FILEPATH_WEATHER, FILEPATH_TRHE, FILEPATH_DATAPOINT,
+    FILEPATH_ACH_LOW_12, FILEPATH_PRIOR_ACH_LOW_12,
+    FILEPATH_IAS_LOW_12, FILEPATH_PRIOR_IAS_LOW_12,
+    FILEPATH_LEN_LOW_12, FILEPATH_PRIOR_LEN_LOW_12,
+    FILEPATH_WEATHER_LOW_12, FILEPATH_MONITORED_LOW_12, FILEPATH_DATAPOINT_LOW_12)
+
+from dataAccess import getDaysWeather, getDaysHumidityTemp
 import pandas as pd
 from pandas import DataFrame
 import numpy as np
 import sys,os
-INVERSION_DIR = os.path.join(os.path.dirname(__file__),os.pardir,"Inversion")
-sys.path.append(INVERSION_DIR)
+sys.path.append(DIR_INVERSION)
 from inversion import *
 import time
 import csv
@@ -42,10 +50,6 @@ np.random.seed(1000)
 # filepath_TRHE = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv'
 # filepath_datapoint = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
 
-filepath_X = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/X.csv'
-filepath_weather = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/Weather.csv'
-filepath_TRHE = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/TRHE2018_subset.csv'
-filepath_datapoint = '/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/data/DataPoint.csv'
 
 tic = time.time()
 
@@ -135,13 +139,12 @@ sz = np.size(seq,)
 LastDataPoint = pd.DataFrame()
 
 for ii in range(sz):
-    
-### Calibration runs
+    ### Calibration runs
 
     h2 = int(seq[ii])
     h1 = int(seq[ii]-239) # to take previous 10 days data 239
 
-    Parameters = np.genfromtxt(filepath_X, delimiter=',') # ACH,IAS pairs
+    Parameters = np.genfromtxt(FILEPATH_X, delimiter=',') # ACH,IAS pairs
     NP = np.shape(Parameters)[0]
     
     start = time.time()
@@ -150,17 +153,13 @@ for ii in range(sz):
     if useDataBase:
         results = derivatives(h1, h2, Parameters, Weather, LatestTimeHourValue) # runs GES model over ACH,IAS pairs
     else: 
-        results = derivatives(h1, h2, Parameters, filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
+        results = derivatives(h1, h2, Parameters, filePathWeather=FILEPATH_WEATHER) # runs GES model over ACH,IAS pairs
 
-    #print("CSV: {0}".format(results))
-    #print("Database: {0}".format(results))
     T_air = results[1,-1,:]
     Cw_air = results[11,-1,:]
     RH_air = Cw_air/sat_conc(T_air)
     
     print('... ended')
-    
-    
     end = time.time()
     print(end - start)
 
@@ -168,8 +167,6 @@ for ii in range(sz):
     
     DataPoint = Monitored.RH_i[h2]
     testdp = np.isnan(DataPoint)
-    #print(testdp)
-    #print(DataPoint)
     
     if testdp == False:
         DataPoint = DataPoint/100
@@ -260,17 +257,17 @@ for ii in range(sz):
     posterior_IAS = posteriors[ii,:,1]
     posterior_length = posteriors[ii,:,2]
     
-    df = pd.read_csv("ACH_out.csv")
+    df = pd.read_csv(FILEPATH_ACH)
     df[str(ii)] = posteriors[ii,:,0] 
-    df.to_csv("ACH_out.csv", index=False)
+    df.to_csv(FILEPATH_ACH, index=False)
     
-    df = pd.read_csv("IAS_out.csv")
+    df = pd.read_csv(FILEPATH_IAS)
     df[str(ii)] = posteriors[ii,:,1] 
-    df.to_csv("IAS_out.csv", index=False)
+    df.to_csv(FILEPATH_IAS, index=False)
  
-    df = pd.read_csv("Length_out.csv")
+    df = pd.read_csv(FILEPATH_LEN)
     df[str(ii)] = posteriors[ii,:,2] 
-    df.to_csv("Length_out.csv", index=False)
+    df.to_csv(FILEPATH_LEN, index=False)
  
 # Time
 toc = time.time()
@@ -279,34 +276,34 @@ print(toc - tic)
 # Output results
 
 df_ACH = DataFrame(posteriors[:,:,0])
-df_ACH.to_csv(r'ACH_low_12.csv',index = None, header = False) # p = python
+df_ACH.to_csv(FILEPATH_ACH_LOW_12,index = None, header = False) # p = python
 
 prior_ACH = priorSamples[:,:,0]
 df_priorACH = DataFrame(prior_ACH)
-df_priorACH.to_csv(r'priorACH_low_12.csv',index = None, header = False)
+df_priorACH.to_csv(FILEPATH_PRIOR_ACH_LOW_12,index = None, header = False)
 #
 df_IAS = DataFrame(posteriors[:,:,1])
-df_IAS.to_csv(r'IAS_low_12.csv',index = None, header = False)
+df_IAS.to_csv(FILEPATH_IAS_LOW_12,index = None, header = False)
 
 prior_IAS = priorSamples[:,:,1]
 df_priorIAS = DataFrame(prior_IAS)
-df_priorIAS.to_csv(r'priorIAS_low_12.csv',index = None, header = False)
+df_priorIAS.to_csv(FILEPATH_PRIOR_IAS_LOW_12,index = None, header = False)
 #
 df_Length = DataFrame(posteriors[:,:,2])
-df_Length.to_csv(r'Length_low_12.csv',index = None, header = False)
+df_Length.to_csv(FILEPATH_LEN_LOW_12,index = None, header = False)
 
 prior_Length = priorSamples[:,:,2]
 df_priorLength = DataFrame(prior_Length)
-df_priorLength.to_csv(r'priorLength_low_12.csv',index = None, header = False)
+df_priorLength.to_csv(FILEPATH_PRIOR_LEN_LOW_12,index = None, header = False)
 
 df_Weather = DataFrame(Weather)
-df_Weather.to_csv(r'Weather_low_12.csv',index = None, header = False) # p = python
+df_Weather.to_csv(FILEPATH_WEATHER_LOW_12,index = None, header = False) # p = python
 
 df_Monitored = DataFrame(Monitored)
-df_Monitored.to_csv(r'Monitored_low_12.csv',index = None, header = False) # p = python
+df_Monitored.to_csv(FILEPATH_MONITORED_LOW_12,index = None, header = False) # p = python
 
 LastDataPoint = LastDataPoint.reset_index()
-LastDataPoint.to_csv(r'LastDataPoint_low_12.csv',index = None, header = False)
+LastDataPoint.to_csv(FILEPATH_DATAPOINT_LOW_12,index = None, header = False)
 #    
 
 
