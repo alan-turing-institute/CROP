@@ -15,24 +15,27 @@ MEASURE_SCENARIO_TEMPERATURE = {'measure_id':9, 'result_index':1}
 MEASURE_UPPER_TEMPERATURE = {'measure_id':2, 'result_index':3}
 MEASURE_LOWER_TEMPERATURE = {'measure_id':3, 'result_index':2}
 
-# MEASURE_MEAN_HUMIDITY = 10
-# MEASURE_SCENARIO_HUMIDITY = 11
-# MEASURE_LOWER_HUMIDITY = 12
-# MEASURE_UPPER_HUMIDITY = 13
+MEASURE_MEAN_HUMIDITY = {'measure_id':10, 'result_index':0}
+MEASURE_SCENARIO_HUMIDITY = {'measure_id':11, 'result_index':1}
+MEASURE_LOWER_HUMIDITY = {'measure_id':12, 'result_index':2}
+MEASURE_UPPER_HUMIDITY = {'measure_id':13, 'result_index':3}
+
 def assemble_temperature_values(product_id, result_index, T_air):
   def to_celcius(temp_kelvin):
     return (temp_kelvin-273.15)   
   prediction_parameters = []
   for prediction_index, hr in enumerate(T_air):
-    prediction_parameters.append((product_id, hr[result_index], prediction_index))
+    prediction_parameters.append((product_id, to_celcius(hr[result_index]), prediction_index))
   return prediction_parameters
 
 if __name__ == '__main__':
 
-  measures_temperature = [MEASURE_MEAN_TEMPERATURE]
-  MEASURE_SCENARIO_TEMPERATURE, 
-  MEASURE_LOWER_TEMPERATURE,
-  MEASURE_UPPER_TEMPERATURE]
+  measures_temperature = [MEASURE_MEAN_TEMPERATURE,
+  MEASURE_SCENARIO_TEMPERATURE] 
+  # MEASURE_LOWER_TEMPERATURE,
+  # MEASURE_UPPER_TEMPERATURE]
+
+  measures_humidity = []
 
   # results = testScenario()
   T_air=[[294.95083093, 294.95083093, 294.04751092, 295.95938605],
@@ -47,8 +50,8 @@ if __name__ == '__main__':
   print("Forecast Date: {0}".format(forecast_date))
   
   run_id = insertModelRun(sensor_id=SENSOR_RH_16B2_ID,
-   model_id=MODEL_GES_ID,
-   time_forecast=forecast_date)
+    model_id=MODEL_GES_ID,
+    time_forecast=forecast_date)
 
   if run_id is not None:
     print("Run inserted, logged as ID: {0}".format(run_id))
@@ -61,8 +64,6 @@ if __name__ == '__main__':
       print(value_parameters)
       num_rows_inserted = insertModelPrediction(value_parameters)
       print("{0} rows inserted".format(num_rows_inserted))
-  #   measures = [MEASURE_TEMPERATURE, MEASURE_HUMIDITY]
-  #   insertModelProducts(run_id=run_id, measures=measures)
   
     
   
