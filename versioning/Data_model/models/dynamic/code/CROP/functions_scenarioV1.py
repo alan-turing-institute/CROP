@@ -20,8 +20,15 @@ from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from scipy.integrate import solve_ivp
 import sys,os
-INVERSION_DIR = os.path.join(os.path.dirname(__file__),os.pardir,"Inversion")
-sys.path.append(INVERSION_DIR)
+DIR_CROP = os.path.join(os.path.dirname(__file__),os.pardir)
+DIR_DATA = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data")
+DIR_INVERSION = os.path.join(DIR_CROP,"Inversion")
+FILEPATH_WEATHER = os.path.join(DIR_DATA,'Weather.csv')
+FILEPATH_ACH = os.path.join(DIR_DATA,"ACH_out.csv")
+FILEPATH_IAS = os.path.join(DIR_DATA,"IAS_out.csv")
+FILEPATH_LEN = os.path.join(DIR_DATA,"Length_out.csv")  
+
+sys.path.append(DIR_INVERSION)
 
 from inversion import *
 from dataAccess import getDaysWeather

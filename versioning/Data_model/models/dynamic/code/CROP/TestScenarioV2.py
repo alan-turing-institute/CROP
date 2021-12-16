@@ -6,11 +6,13 @@ This is a temporary script file.
 """
 
 from typing import Dict
-import functions_scenarioV1 as functions_scenario
+from functions_scenarioV1 import (
+  derivatives, sat_conc, 
+  FILEPATH_WEATHER, 
+  FILEPATH_ACH, FILEPATH_IAS)
 import numpy as np
 import os
 USE_LIVE = True
-filepath_weather = os.path.join(os.path.dirname(__file__),'Weather.csv')
 
 def setTimeParameters(h2:int=240, numDays:int=10) -> Dict:
   # Start hour h2 is for test only - in live version will be current time
@@ -124,7 +126,7 @@ def runModel(time_parameters:Dict,
   filepath_weather=None,
   params:np.ndarray=[]) -> Dict: 
 
-  results = functions_scenario.derivatives(time_parameters['h1'], 
+  results = derivatives(time_parameters['h1'], 
     time_parameters['h2'], 
     time_parameters['numDays'], 
     params, 
@@ -132,26 +134,23 @@ def runModel(time_parameters:Dict,
     filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
   T_air = results[1,:,:]
   Cw_air = results[11,:,:]
-  RH_air = Cw_air/functions_scenario.sat_conc(T_air)
+  RH_air = Cw_air/sat_conc(T_air)
   results_to_store = {
     'T_air': T_air,
     'RH_air': RH_air  
   }
-  print("T_air: {0} RH_air: {1}".format(T_air, RH_air))
   return results_to_store
 
 def testScenario():
   # Get calibrated parameters output from calibration model
   # Stored in database? Currently output to csv file
-  ACH_OUT_PATH:str = os.path.join(os.path.dirname(__file__),'ACH_out.csv')
-  IAS_OUT_PATH:str = os.path.join(os.path.dirname(__file__),'IAS_out.csv')
   h2:int = 240
   numDays:int = 10
 
   time_parameters:Dict = setTimeParameters(h2=h2, numDays=numDays)
-  ach_parameters = setACHParameters(ACH_OUT_PATH=ACH_OUT_PATH, 
+  ach_parameters = setACHParameters(ACH_OUT_PATH=FILEPATH_ACH, 
     ndp=time_parameters['ndp'])
-  ias_parameters:Dict = setIASParameters(IAS_OUT_PATH=IAS_OUT_PATH,
+  ias_parameters:Dict = setIASParameters(IAS_OUT_PATH=FILEPATH_IAS,
     ndp=time_parameters['ndp']
   )
 
@@ -172,7 +171,7 @@ def testScenario():
   params:np.ndarray = np.concatenate((model, scenario)) # put scenario on the end of the calibrated parameters
   
   results = runModel(time_parameters=time_parameters,
-    filepath_weather= None if USE_LIVE else filepath_weather,
+    filepath_weather= None if USE_LIVE else FILEPATH_WEATHER,
     params=params)
   
   return results

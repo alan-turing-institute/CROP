@@ -44,9 +44,26 @@ CREATE TABLE model_measure (
 -- insert into model_measure (measure_name) 
 -- values ('Median Temperature (Degree Celcius)');
 
--- insert into model_measure (measure_name)
--- values ('Relative Humidity (Percent)')
--- ;
+insert into model_measure (measure_name)
+values ('Scenario Temperature (Degree Celcius)')
+
+insert into model_measure (measure_name)
+values ('Mean Relative Humidity (Percent)')
+
+insert into model_measure (measure_name)
+values ('Scenario Relative Humidity (Percent)')
+
+insert into model_measure (measure_name)
+values ('Lower Bound Relative Humidity (Percent)')
+
+insert into model_measure (measure_name)
+values ('Upper Bound Relative Humidity (Percent)')
+
+
+
+
+
+
 
 
 -- Record run:
@@ -68,9 +85,9 @@ CREATE TABLE test_model_run (
 
 -- insert into model
 
-CREATE TABLE model_product (
+CREATE TABLE test_model_product (
   id SERIAL PRIMARY KEY,
-  run_id INTEGER REFERENCES model_run(id),
+  run_id INTEGER REFERENCES test_model_run(id),
   measure_id INTEGER REFERENCES model_measure(id)
 );
 
