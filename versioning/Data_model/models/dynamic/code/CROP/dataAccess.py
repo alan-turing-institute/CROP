@@ -307,7 +307,7 @@ def insertRows(query, parameters):
       cur = conn.cursor()
       execute_values(cur, query, parameters)
       conn.commit()
-      new_row_ids = cur.fetchall()[0]
+      new_row_ids = cur.fetchall()
       cur.close()
   except (Exception, psycopg2.DatabaseError) as error:
     print(error)
