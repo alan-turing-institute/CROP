@@ -6,18 +6,18 @@ from dataAccess import (deleteResults,
   insertModelProduct, 
   insertModelPrediction)
 
-MODEL_GES_ID = 3
-SENSOR_RH_16B2_ID = 27
+MODEL_GES_DATABASE_ID = 3
+SENSOR_RH_16B2_DATABASE_ID = 27
 
-MEASURE_MEAN_TEMPERATURE = {'measure_id':1, 'result_index':0, 'preprocess':'to_celcius', 'result_key':'T_air'}
-MEASURE_SCENARIO_TEMPERATURE = {'measure_id':9, 'result_index':1, 'preprocess':'to_celcius', 'result_key':'T_air'}
-MEASURE_UPPER_TEMPERATURE = {'measure_id':2, 'result_index':3, 'preprocess':'to_celcius', 'result_key':'T_air'}
-MEASURE_LOWER_TEMPERATURE = {'measure_id':3, 'result_index':2, 'preprocess':'to_celcius', 'result_key':'T_air'}
+MEASURE_MEAN_TEMPERATURE = {'measure_database_id':1, 'result_index':0, 'preprocess':'to_celcius', 'result_key':'T_air'}
+MEASURE_SCENARIO_TEMPERATURE = {'measure_database_id':9, 'result_index':1, 'preprocess':'to_celcius', 'result_key':'T_air'}
+MEASURE_UPPER_TEMPERATURE = {'measure_database_id':2, 'result_index':3, 'preprocess':'to_celcius', 'result_key':'T_air'}
+MEASURE_LOWER_TEMPERATURE = {'measure_database_id':3, 'result_index':2, 'preprocess':'to_celcius', 'result_key':'T_air'}
 
-MEASURE_MEAN_HUMIDITY = {'measure_id':10, 'result_index':0, 'preprocess':'to_percent', 'result_key':'RH_air'}
-MEASURE_SCENARIO_HUMIDITY = {'measure_id':11, 'result_index':1, 'preprocess':'to_percent', 'result_key':'RH_air'}
-MEASURE_LOWER_HUMIDITY = {'measure_id':12, 'result_index':2, 'preprocess':'to_percent', 'result_key':'RH_air'}
-MEASURE_UPPER_HUMIDITY = {'measure_id':13, 'result_index':3, 'preprocess':'to_percent', 'result_key':'RH_air'}
+MEASURE_MEAN_HUMIDITY = {'measure_database_id':10, 'result_index':0, 'preprocess':'to_percent', 'result_key':'RH_air'}
+MEASURE_SCENARIO_HUMIDITY = {'measure_database_id':11, 'result_index':1, 'preprocess':'to_percent', 'result_key':'RH_air'}
+MEASURE_LOWER_HUMIDITY = {'measure_database_id':12, 'result_index':2, 'preprocess':'to_percent', 'result_key':'RH_air'}
+MEASURE_UPPER_HUMIDITY = {'measure_database_id':13, 'result_index':3, 'preprocess':'to_percent', 'result_key':'RH_air'}
 
 def mock_data():
   T_air=[[294.95083093, 294.95083093, 294.04751092, 295.95938605],
@@ -70,20 +70,19 @@ if __name__ == '__main__':
   MEASURE_LOWER_HUMIDITY,
   MEASURE_UPPER_HUMIDITY]
 
-
-  result = mock_data()
+  # result = mock_data()
   result = testScenario()
 
   deleteResults()
-  run_id = insertModelRun(sensor_id=SENSOR_RH_16B2_ID,
-    model_id=MODEL_GES_ID,
+  run_id = insertModelRun(sensor_id=SENSOR_RH_16B2_DATABASE_ID,
+    model_id=MODEL_GES_DATABASE_ID,
     time_forecast=forecast_date)
 
   if run_id is not None:
     print("Run inserted, logged as ID: {0}".format(run_id))
     for measure in measures:
       product_id = insertModelProduct(run_id=run_id, 
-        measure_id=measure['measure_id'])
+        measure_id=measure['measure_database_id'])
       value_parameters = assemble_values(product_id=product_id, 
         measure=measure,
         all_results=result)
