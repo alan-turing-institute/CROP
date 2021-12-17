@@ -338,3 +338,6 @@ def runCalibration():
 
 # toc = time.time()
 # print(toc - tic)
+
+if __name__ == '__main__':
+    runCalibration()
