@@ -5,7 +5,6 @@ Created on Tue Feb 16 09:18:07 2021
 @author: rmw61
 """
 import numpy as np
-import pandas as pd
 from parameters import T_k, deltaT
 from parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
 from parameters import V, A_c, A_f, A_v, A_m, A_p, A_l 
@@ -18,38 +17,20 @@ from parameters import rho_c, rho_f, rho_v, rho_m, rho_p, rho_l
 from parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
 from parameters import T_ss, T_al
 from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
-from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
+from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat, ndh
 from scipy.integrate import solve_ivp
 import sys,os
-DIR_CROP = os.path.join(os.path.dirname(__file__),os.pardir)
-DIR_DATA = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data")
-DIR_INVERSION = os.path.join(DIR_CROP,"Inversion")
-FILEPATH_WEATHER = os.path.join(DIR_DATA,'Weather.csv')
-FILEPATH_ACH = os.path.join(DIR_DATA,"ACH_out.csv")
-FILEPATH_IAS = os.path.join(DIR_DATA,"IAS_out.csv")
-FILEPATH_LEN = os.path.join(DIR_DATA,"Length_out.csv")  
-
-sys.path.append(DIR_INVERSION)
+INVERSION_DIR = os.path.join(os.path.dirname(__file__),os.pardir,"Inversion")
+sys.path.append(INVERSION_DIR)
 
 from inversion import *
-from dataAccess import getDaysWeather
+#from dataAccess import getDaysWeather
 
 
-def climterp_linear(h1, h2, numDays, filepath_weather=None):
-    temp_in = None
-    rh_in = None
-    if (filepath_weather):
-        header_list = ["DateTime", "T_e", "RH_e"]
-        ExternalWeather = pd.read_csv(filepath_weather, delimiter=',', names=header_list)
-        #ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
-        #temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
-        #rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
-        temp_in = ExternalWeather.T_e 
-        rh_in = ExternalWeather.RH_e
-    else:
-        ExternalWeather = np.asarray(getDaysWeather(numDays+1, numRows=(numDays+1)*24))
-        temp_in = ExternalWeather[:,1].astype(np.float64) # +1 to ensure correct end point
-        rh_in = ExternalWeather[:,2].astype(np.float64) # +1 to ensure correct end point
+def climterp_linear(h1, h2, Weather):
+
+    temp_in = Weather.T_e # +1 to ensure correct end point
+    rh_in = Weather.RH_e # +1 to ensure correct end point
     
     deltaT = 600
 
@@ -60,14 +41,14 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
     #nans, x= nan_helper(rh_in)
     #rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
     
-    t = np.linspace(0,864000,h2+1-h1)
+    t = np.linspace(0,20*24*3600,h2-h1) # 864000
 
-    mult=np.linspace(0,864000,int(1+864000/deltaT))
+    mult=np.linspace(0,20*24*3600,int(1+20*24*3600/deltaT))
     
-    ind = h2-h1+1
+    #ind = h2-h1+1
     
-    clim_t = np.interp(mult,t,temp_in[-ind:])
-    clim_rh = np.interp(mult,t,rh_in[-ind:])
+    clim_t = np.interp(mult,t,temp_in)
+    clim_rh = np.interp(mult,t,rh_in)
     
     climate = np.vstack((clim_t,clim_rh))
 
@@ -173,7 +154,7 @@ def day(t):
     day_new = np.ceil(t/86400)
     return(day_new)
 
-def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec, LatestTimeHourValue):
+def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh, lshift, LatestTimeHourValue):
     
     T_c = z[0]
     T_i = z[1]
@@ -194,6 +175,10 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec
     t_init = h1*3600
     
     n = int(np.ceil((t-t_init)/deltaT))
+    
+    #if n >= 2880:
+    #    print('debug here')
+        
     T_ext = climate[n, 0] + T_k
     RH_e = climate[n, 1]/100;
     Cw_ext = RH_e * sat_conc(T_ext)
@@ -203,17 +188,28 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec
     #    print(daynum[len(daynum)-1])
     
     ## Set ACH,ias
-    hour = np.floor(t/3600) + 1
-    seq = range(h1+12, h2+24, 12)
+    hour = np.floor(t/3600)
+    #print(hour)
+    #print(n)
+    #if hour == 480:
+    #    print('debug here')
+        
+    seq = range(h1+240, h2+12, 12)
     
     if hour >= seq[count[-1]]:
         count_new = count[-1]+1
         count.append(count_new)
+        #print(n)
+        #print(hour)
+        #print(count[-1])
+        #print(n)
+        #if count[-1] == 61:
+        #    print('debug')
             
     ACH = ACHvec[count[-1]]
     ias = iasvec[count[-1]]
-    ndh = ndhvec[count[-1]]
-    lshift = lshiftvec[count[-1]]    
+    #ndh = ndhvec[count[-1]]
+    #lshift = 0   
     
     ## Lights
     day_hour=((hour+LatestTimeHourValue)/24-np.floor((hour+LatestTimeHourValue)/24))*24
@@ -374,25 +370,25 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec
     return np.array([dT_cdt,dT_idt,dT_vdt,dT_mdt,dT_pdt,dT_fdt,dT_c1dt,
                  dT_c2dt,dT_c3dt,dT_c4dt,dT_c5dt,dC_wdt])
 
-def derivatives(h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHourValue):
+def derivatives(h1, h2, paramsinput, ndp, Weather, LatestTimeHourValue):
     
     # Get weather data
-    clim = np.transpose(climterp_linear(h1,h2, numDays, filePathWeather))
+    clim = np.transpose(climterp_linear(h1, h2, Weather))
     
     # Add extra weather if scenario evaluation
     
     #if switch1 == 1: # Testing scenario
-    LastDayData = clim[-24*6:,]
+    #LastDayData = clim[-24*6:,]
 
     ## Create extended weather file
-    ExtendClimate = np.concatenate((clim,LastDayData,LastDayData,LastDayData)) 
-    h2 = h2+3*24
+    #ExtendClimate = np.concatenate((clim,LastDayData,LastDayData,LastDayData)) 
+    #h2 = h2+3*24
         
-    climate = ExtendClimate
+    #climate = ExtendClimate
         
     NP = np.shape(paramsinput)[2]
     
-    NOut = 1+h2-h1
+    NOut = h2-h1
             
     results = np.zeros((12,NOut,NP))
 
@@ -403,8 +399,9 @@ def derivatives(h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHo
         
         AirChangeHour = paramsinput[:,0,i]
         IntAirSpeed = paramsinput[:,1,i]
-        ndh = paramsinput[:,2,i]
-        lshift = paramsinput[:,3,i]
+        #ndh = paramsinput[:,2,i]
+        #lshift = paramsinput[:,3,i]
+        lshift = 0
         
         # Initial conditions
         T_i_0 = 295
@@ -428,10 +425,10 @@ def derivatives(h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHo
         ACH = AirChangeHour/3600
         ias = IntAirSpeed
     
-        t = [h1*3600,h2*3600]
-        tval = np.linspace(h1*3600,h2*3600,NOut)
+        t = [h1*3600,(h2-1)*3600]
+        tval = np.linspace(h1*3600,(h2-1)*3600,NOut)
         
-        params = [climate, ACH, ias, daynum, count, h1, h2, ndh, lshift, LatestTimeHourValue]
+        params = [clim, ACH, ias, daynum, count, h1, h2, ndh, lshift, LatestTimeHourValue]
     
         output = solve_ivp(model, t, z, method='BDF', t_eval=tval, rtol = 1e-5, args = params)
         

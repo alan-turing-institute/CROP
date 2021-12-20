@@ -1,10 +1,13 @@
-from TestScenarioV2 import testScenario
-from CalibrationV2 import runCalibration, FILEPATH_WEATHER_LOW_12
+from TestScenarioV2 import testScenario, FILEPATH_WEATHER
+#from CalibrationV2 import runCalibration
 import pandas as pd
 from dataAccess import (deleteResults, 
   insertModelRun, 
   insertModelProduct, 
   insertModelPrediction)
+
+filepath_resultsRH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRH.csv'
+filepath_resultsT = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsT.csv'
 
 MODEL_GES_DATABASE_ID = 3
 SENSOR_RH_16B2_DATABASE_ID = 27
@@ -31,7 +34,7 @@ def mock_data():
   return result
 
 def get_forecast_date():
-  df_weather = pd.read_csv(FILEPATH_WEATHER_LOW_12, 
+  df_weather = pd.read_csv(FILEPATH_WEATHER, 
     header=None, 
     names=['Timestamp','Temperature','Humidity'])
   forecast_date = pd.to_datetime(df_weather.tail(1)['Timestamp'].item())
@@ -72,6 +75,10 @@ if __name__ == '__main__':
 
   # result = mock_data()
   result = testScenario()
+  df_resultsRH = pd.DataFrame(result['RH_air'])
+  df_resultsRH.to_csv(filepath_resultsRH, header = False)
+  df_resultsT = pd.DataFrame(result['T_air'])
+  df_resultsT.to_csv(filepath_resultsT, header = False)
 
   deleteResults()
   run_id = insertModelRun(sensor_id=SENSOR_RH_16B2_DATABASE_ID,
