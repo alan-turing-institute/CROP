@@ -19,56 +19,47 @@ from parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
 from parameters import T_ss, T_al
 from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
+from parameters import ndh
 from scipy.integrate import solve_ivp
-import sys,os
-DIR_CROP = os.path.join(os.path.dirname(__file__),os.pardir)
-DIR_DATA = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data")
-DIR_INVERSION = os.path.join(DIR_CROP,"Inversion")
-FILEPATH_WEATHER = os.path.join(DIR_DATA,'Weather.csv')
-FILEPATH_ACH = os.path.join(DIR_DATA,"ACH_out.csv")
-FILEPATH_IAS = os.path.join(DIR_DATA,"IAS_out.csv")
-FILEPATH_LEN = os.path.join(DIR_DATA,"Length_out.csv")  
-
-sys.path.append(DIR_INVERSION)
-
+import sys
+sys.path.append("C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/Inversion")
 from inversion import *
 from dataAccess import getDaysWeather
 
-
-def climterp_linear(h1, h2, numDays, filepath_weather=None):
+def climterp_linear(h1, h2, ExternalWeather):
     temp_in = None
     rh_in = None
-    if (filepath_weather):
-        header_list = ["DateTime", "T_e", "RH_e"]
-        ExternalWeather = pd.read_csv(filepath_weather, delimiter=',', names=header_list)
-        #ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
-        #temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
-        #rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
-        temp_in = ExternalWeather.T_e 
-        rh_in = ExternalWeather.RH_e
-    else:
-        ExternalWeather = np.asarray(getDaysWeather(numDays+1, numRows=(numDays+1)*24))
-        temp_in = ExternalWeather[:,1].astype(np.float64) # +1 to ensure correct end point
-        rh_in = ExternalWeather[:,2].astype(np.float64) # +1 to ensure correct end point
-    
-    deltaT = 600
+    #if (filepath_weather):
+    #    ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
+    #    temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
+    #    rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
+    #else:
+    #    ExternalWeather = np.asarray(getDaysWeather(numDays, numRows=numDays*24))
+    #    temp_in = ExternalWeather[h1:h2+1,1].astype(np.float64) # +1 to ensure correct end point
+    #    rh_in = ExternalWeather[h1:h2+1,2].astype(np.float64) # +1 to ensure correct end point
 
-    # remove nans
-    #nans, x= nan_helper(temp_in)
-    #temp_in[nans]= np.interp(x(nans), x(~nans), temp_in[~nans])
+    temp_in = (ExternalWeather.T_e[h1:h2+1]).to_numpy() # +1 to ensure correct end point
+    rh_in = (ExternalWeather.RH_e[h1:h2+1]).to_numpy() # +1 to ensure correct end point
     
-    #nans, x= nan_helper(rh_in)
-    #rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
+    # # remove nans
+    nans, x= nan_helper(temp_in)
+    temp_in[nans]= np.interp(x(nans), x(~nans), temp_in[~nans])
     
-    t = np.linspace(0,864000,h2+1-h1)
-
+    nans, x= nan_helper(rh_in)
+    rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
+    
+    t = np.linspace(0,864000-3600,(h2-h1+1)) # 864000 = 240 hours i.e. 10 days
+    deltaT = 600 # 10 minutes
     mult=np.linspace(0,864000,int(1+864000/deltaT))
-    
-    ind = h2-h1+1
-    
-    clim_t = np.interp(mult,t,temp_in[-ind:])
-    clim_rh = np.interp(mult,t,rh_in[-ind:])
-    
+    # print("t: {0}, mult:{1}, input:{2}".format(t.shape,mult.shape,temp_in.shape))
+
+    #ind = h2-h1+1
+
+    #clim_t = np.interp(mult,t,temp_in[-ind:])
+    #clim_rh = np.interp(mult,t,rh_in[-ind:])
+    clim_t = np.interp(mult,t,temp_in)
+    clim_rh = np.interp(mult,t,rh_in)
+
     climate = np.vstack((clim_t,clim_rh))
 
     return climate
@@ -120,15 +111,6 @@ def conduction(A, lam, l, T1, T2):
     
     return(QD_12)
     
-#def T_ext(t):
-#    # Weather data
-#
-#   climate = np.genfromtxt('climate.txt', delimiter=',')
-    
-#    n = int(np.ceil(t/deltaT))
-#    T_e = climate[n, 0] + T_k
-    
-#    return(T_e)
     
 def sat_conc(T):
 
@@ -139,17 +121,6 @@ def sat_conc(T):
     
     return a
     
-#def Cw_ext(t):
-    # Weather data
-
-#    climate = np.genfromtxt('climate.txt', delimiter=',')
-    
-#    n = int(np.ceil(t/deltaT))
-#    RH_e = climate[n, 1]/100;
-    
-#    Cw_e = RH_e * sat_conc(T_ext(t))
-    
-#    return(Cw_e)
 
 def nan_helper(y):
     """Helper to handle indices and logical indices of NaNs.
@@ -173,7 +144,7 @@ def day(t):
     day_new = np.ceil(t/86400)
     return(day_new)
 
-def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec, LatestTimeHourValue):
+def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2, LatestTimeHourValue):
     
     T_c = z[0]
     T_i = z[1]
@@ -193,31 +164,22 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec
     
     t_init = h1*3600
     
-    n = int(np.ceil((t-t_init)/deltaT))
+    n = int(np.floor((t-t_init)/deltaT)) # previously ceil?
     T_ext = climate[n, 0] + T_k
     RH_e = climate[n, 1]/100;
     Cw_ext = RH_e * sat_conc(T_ext)
     
     daynum.append(day(t))
-    #if daynum[(len(daynum)-1)] > daynum[(len(daynum)-2)]:
-    #    print(daynum[len(daynum)-1])
     
     ## Set ACH,ias
-    hour = np.floor(t/3600) + 1
-    seq = range(h1+12, h2+24, 12)
-    
-    if hour >= seq[count[-1]]:
-        count_new = count[-1]+1
-        count.append(count_new)
+    hour = np.floor(t/3600) # + 1?
             
-    ACH = ACHvec[count[-1]]
-    ias = iasvec[count[-1]]
-    ndh = ndhvec[count[-1]]
-    lshift = lshiftvec[count[-1]]    
+    ACH = ACHvec 
+    ias = iasvec     
     
     ## Lights
     day_hour=((hour+LatestTimeHourValue)/24-np.floor((hour+LatestTimeHourValue)/24))*24
-    L_on = (day_hour>-0.01 and day_hour<(09.01 + lshift)) or day_hour > (15.01 + lshift)
+    L_on = (day_hour>-0.01 and day_hour<09.01) or day_hour > 15.01
     AL_on = day_hour>08.01 and day_hour<16.01
     
     T_l = L_on*T_al + (1-L_on)*T_i;
@@ -374,37 +336,27 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec
     return np.array([dT_cdt,dT_idt,dT_vdt,dT_mdt,dT_pdt,dT_fdt,dT_c1dt,
                  dT_c2dt,dT_c3dt,dT_c4dt,dT_c5dt,dC_wdt])
 
-def derivatives(h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHourValue):
+def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
     
     # Get weather data
-    clim = np.transpose(climterp_linear(h1,h2, numDays, filePathWeather))
-    
-    # Add extra weather if scenario evaluation
-    
-    #if switch1 == 1: # Testing scenario
-    LastDayData = clim[-24*6:,]
+    climate = np.transpose(climterp_linear(h1, h2, Weather))
 
-    ## Create extended weather file
-    ExtendClimate = np.concatenate((clim,LastDayData,LastDayData,LastDayData)) 
-    h2 = h2+3*24
-        
-    climate = ExtendClimate
-        
-    NP = np.shape(paramsinput)[2]
+    # Get parameter values
     
-    NOut = 1+h2-h1
+    NP = np.shape(paramsinput)[0]
+    
+    NOut = 2
             
     results = np.zeros((12,NOut,NP))
+    
 
     for i in range(NP):
         #tic = time.time()
         
         print(i+1)
         
-        AirChangeHour = paramsinput[:,0,i]
-        IntAirSpeed = paramsinput[:,1,i]
-        ndh = paramsinput[:,2,i]
-        lshift = paramsinput[:,3,i]
+        AirChangeHour = paramsinput[i,0] #*np.ones(ndp)
+        IntAirSpeed = paramsinput[i,1] #*np.ones(ndp)
         
         # Initial conditions
         T_i_0 = 295
@@ -423,23 +375,58 @@ def derivatives(h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHo
         z = [T_c_0, T_i_0, T_v_0, T_m_0, T_p_0, T_f_0, T_c1_0, T_c2_0, T_c3_0, T_c4_0, T_c5_0, C_w_0]
     
         daynum = [0]
-        count = [0]
+        #count = [0]
     
         ACH = AirChangeHour/3600
         ias = IntAirSpeed
     
         t = [h1*3600,h2*3600]
         tval = np.linspace(h1*3600,h2*3600,NOut)
-        
-        params = [climate, ACH, ias, daynum, count, h1, h2, ndh, lshift, LatestTimeHourValue]
+               
+        params = [climate, ACH, ias, daynum, h1, h2, LatestTimeHourValue]
     
         output = solve_ivp(model, t, z, method='BDF', t_eval=tval, rtol = 1e-5, args = params)
         
         results[:,:,i] = output.y
-    
+        
+        #toc = time.time()
+        #print(toc-tic)
+
     return results
 
+def loadDistributions():
+    # if (filePath_ACH and filePath_IAS and filePath_Length):
+    #     df_ACH = pd.read_csv(filePath_ACH)
+    #     df_IAS = pd.read_csv(filePath_IAS)
+    #     df_Length = pd.read_csv(filePath_Length)
+    # else:
+    filepath_ACH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_out.csv'
+    filepath_IAS = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_out.csv'
+    filepath_Length = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_out.csv'
+
+    df_ACH = pd.read_csv(filepath_ACH)
+    df_IAS = pd.read_csv(filepath_IAS)
+    df_Length = pd.read_csv(filepath_Length)
+    return df_ACH, df_IAS, df_Length
+
 def priorPPF():
+    df_ACH, df_IAS, df_Length = loadDistributions()
+    nparticles = np.size(df_ACH,0)
+    jj = np.size(df_ACH,1)
+    if jj > 1:
+        a_t1 = np.array(df_ACH.iloc[:,-1])
+        a_t2 = np.array(df_IAS.iloc[:,-1])
+        a_l = np.array(df_Length.iloc[:,-1])
+        
+        idx = np.random.randint(0,nparticles, size=1)
+        
+        # Include re-juvenation
+        
+        t1 = a_t1[idx][0] + np.random.normal(0, 0.05)
+        t2 = a_t2[idx][0] + np.random.normal(0, 0.05)
+        l = np.exp(np.log(a_l[idx][0]) + np.random.normal(0, 0.05))
+        
+    else:
         u = np.random.uniform(0, 1, 3)
     #t1 = uniform.ppf(u[0], 1, 9)
     #t2 = uniform.ppf(u[1], 0.1, 1.0)
@@ -456,5 +443,5 @@ def priorPPF():
         l = np.exp(norm.ppf(u[2], -1.5, 0.25))
     #
     #
-        return(np.array([t1, t2, l]))
+    return(np.array([t1, t2, l]))
 

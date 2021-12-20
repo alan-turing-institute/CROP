@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
+#
 
 from typing import Dict
 from functions_scenarioV1 import (
@@ -11,8 +6,18 @@ from functions_scenarioV1 import (
   FILEPATH_WEATHER, 
   FILEPATH_ACH, FILEPATH_IAS)
 import numpy as np
+import pandas as pd
 import os
-USE_LIVE = True
+USE_LIVE = False
+
+# Import Weather Data
+header_list = ["DateTime", "T_e", "RH_e"]
+Weather = pd.read_csv(FILEPATH_WEATHER, delimiter=',', names=header_list)
+
+# Latest timestamp for weather and monitored data - hour (for lights)
+Weather_hour = pd.DataFrame(Weather, columns = ['DateTime','T_e', 'RH_e']).set_index('DateTime')
+LatestTime = Weather_hour[-1:]
+LatestTimeHourValue = pd.DatetimeIndex(LatestTime.index).hour.astype(float)[0]
 
 def setTimeParameters(h2:int=240, numDays:int=10) -> Dict:
   # Start hour h2 is for test only - in live version will be current time
@@ -113,10 +118,10 @@ def setScenario(ventilation_rate:int=1,
   ScenEval[:,2,3] = 1
 
   # Scenario 3 - shift lighting schedule (+/-hours)
-  ScenEval[:,3,0] = 1
+  ScenEval[:,3,0] = 0
   ScenEval[:,3,1] = shift_lighting 
-  ScenEval[:,3,2] = 1
-  ScenEval[:,3,3] = 1
+  ScenEval[:,3,2] = 0
+  ScenEval[:,3,3] = 0
 
   return ScenEval
 
@@ -124,14 +129,15 @@ def setScenario(ventilation_rate:int=1,
 #  first 10 days, then scenario evaluation values for last 3 days
 def runModel(time_parameters:Dict,
   filepath_weather=None,
-  params:np.ndarray=[]) -> Dict: 
+  params:np.ndarray=[], LatestTimeHourValue = LatestTimeHourValue) -> Dict: 
 
   results = derivatives(time_parameters['h1'], 
     time_parameters['h2'], 
     time_parameters['numDays'], 
     params, 
     time_parameters['ndp'],
-    filePathWeather=filepath_weather) # runs GES model over ACH,IAS pairs
+    filePathWeather=filepath_weather,
+    LatestTimeHourValue = LatestTimeHourValue) # runs GES model over ACH,IAS pairs
   T_air = results[1,:,:]
   Cw_air = results[11,:,:]
   RH_air = Cw_air/sat_conc(T_air)
@@ -172,7 +178,7 @@ def testScenario():
   
   results = runModel(time_parameters=time_parameters,
     filepath_weather= None if USE_LIVE else FILEPATH_WEATHER,
-    params=params)
+    params=params, LatestTimeHourValue = LatestTimeHourValue)
   
   return results
 
