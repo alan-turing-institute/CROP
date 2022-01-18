@@ -17,8 +17,6 @@
 {% endblock stylesheets %}
 
 
-
-
 {% block content %}
 <div class="right_col" role="main">
     <!-- top tiles -->
@@ -84,242 +82,12 @@
 
     <br />
 
-    
     <div class="row">
-
-        <!--round charts-->
-        <div class="col-md-12 col-sm-12 col-xs-12">
-            <div class="x_panel">
-                <div class="x_title">
-                    <h2>Performance  <small> </small></h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                        </li>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                            <ul class="dropdown-menu" role="menu">
-                                <li><a href="#">Settings 1</a>
-                                </li>
-                                <li><a href="#">Settings 2</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li><a class="close-link"><i class="fa fa-close"></i></a>
-                        </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                </div>
-                <div class="x_content">
-                    <div class="dashboard-widget-content">
-                        <div class="block">
-                            <div class="block_content">
-                                
-                                <table style="table-layout: fixed;width:100%; overflow:visible">
-                                    <tr>
-                                        <th bgcolor="#e7e7e7">Main Farm</th>
-                                        <th bgcolor="#f3f3f3">Main Farm</th>
-                                        <th bgcolor="#e7e7e7">Main Farm</th>
-                                        <th bgcolor="#f3f3f3"><span id="zone3_name"></span></th>
-                                        <th bgcolor="#e7e7e7"><span id="zone4_name"></span></th>
-                                    </tr>
-                                </table>
-
-
-                                <table style="table-layout: fixed;width:100%; overflow:visible">
-                                    <tr>
-                                        <th bgcolor="#e7e7e7"><span id="zone1_name" ></span></th>
-                                        <th bgcolor="#f3f3f3"><span id="zone2_name"></span></th>
-                                        <th bgcolor="#e7e7e7"><span id="zone0_name" ></span></th>
-                                        <th bgcolor="#f3f3f3"></th>
-                                        <th bgcolor="#e7e7e7"></th>
-                                    </tr>
-                                </table>
-
-                                <table style="table-layout: fixed;width:100%; overflow:visible">
-                                    <tr>
-                                        <th bgcolor="#e7e7e7"><span id="tempFF" style="font-size: 30px"></span>&#8451;</th>
-                                        <th bgcolor="#f3f3f3"><span id="tempFM" style="font-size: 30px"></span>&#8451;</th>
-                                        <th bgcolor="#e7e7e7"><span id="tempFB" style="font-size: 30px"></span>&#8451;</th>
-                                        <th bgcolor="#f3f3f3"><span id="tempPR" style="font-size: 30px"></span>&#8451;</th>
-                                        <th bgcolor="#e7e7e7"><span id="tempRD" style="font-size: 30px"></span>&#8451;</th>
-                                    </tr>
-                                </table>
-
-
-                                <table style="table-layout: fixed;width:100%; overflow:visible">
-                                    <tr >
-                                        <th width=25% bgcolor="#e7e7e7">
-                                                <canvas id="roundchart1" ></canvas>
-                                                <p style="font-weight:normal">weekly</p>
-                                            </th>
-                                        <th width=15% valign="top" bgcolor="#e7e7e7">
-                                                <canvas id="roundchart11" ></canvas>
-                                                <p style="font-weight:normal">daily</p>
-                                            </th>
-                                        <th width=25% bgcolor="#f3f3f3">
-                                            <span id="zone2_name"></span>
-                                            <canvas id="roundchart2" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#f3f3f3">
-                                            <canvas id="roundchart12"></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                        <th width=25% bgcolor="#e7e7e7"> 
-                                            <span id="zone0_name"></span>
-                                            <canvas id="roundchart0" ></canvas>
-                                            <p style="font-weight:normal">weekly</p> 
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#e7e7e7">
-                                            <canvas id="roundchart10" ></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                        <th width=25% bgcolor="#f3f3f3">
-                                            <canvas id="roundchart3" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#f3f3f3">
-                                            <canvas id="roundchart13" ></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                        <th width=25% bgcolor="#e7e7e7">
-                                            <canvas id="roundchart4" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#e7e7e7">
-                                            <canvas id="roundchart14" ></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                    </tr>
-                                </table>
-
-                                <table style="table-layout: fixed;width:100%; overflow:visible">
-                                    <tr>
-                                        <th bgcolor="#e7e7e7"> <span id="humFF" style="font-size: 30px"></span>%rh</th>
-                                        <th bgcolor="#f3f3f3"> <span id="humFM" style="font-size: 30px"></span>%rh</th>
-                                        <th bgcolor="#e7e7e7"> <span id="humFB" style="font-size: 30px"></span>%rh</th>
-                                        <th bgcolor="#f3f3f3"> <span id="humPR" style="font-size: 30px"></span>%rh</th>
-                                        <th bgcolor="#e7e7e7"> <span id="humRD" style="font-size: 30px"></span>%rh</th>
-                                    </tr>
-                                </table>
-
-                                <table style="table-layout: fixed;width:100%; overflow:visible">
-                                    <tr >
-                                        <th width=25% bgcolor="#e7e7e7">
-                                            <canvas id="roundchart6" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#e7e7e7">
-                                            <canvas id="roundchart16" ></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                        <th width=25% bgcolor="#f3f3f3">
-                                            <canvas id="roundchart7" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#f3f3f3">
-                                            <canvas id="roundchart17"></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                        <th width=25% bgcolor="#e7e7e7"> 
-                                            <canvas id="roundchart5" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#e7e7e7">
-                                            <canvas id="roundchart15" ></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                        <th width=25% bgcolor="#f3f3f3">
-                                            <canvas id="roundchart8" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#f3f3f3">
-                                            <canvas id="roundchart18" ></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                        <th width=25% bgcolor="#e7e7e7">
-                                            <canvas id="roundchart9" ></canvas>
-                                            <p style="font-weight:normal">weekly</p>
-                                        </th>
-                                        <th width=15% valign="top" bgcolor="#e7e7e7">
-                                            <canvas id="roundchart19" ></canvas>
-                                            <p style="font-weight:normal">daily</p>
-                                        </th>
-                                    </tr>
-
-                                </table>
-                                <table>
-                                    <tr >
-                                        
-                                        <div>
-                                            Temperature: 
-                                            <span style= "color: rgb(39, 39, 97); font-size: 20px" >&#9632; </span> freeze 
-                                            <span style= "color: rgb(6, 163, 85); font-size: 20px" >&#9632; </span> cold
-                                            <span style= "color: rgb(124, 236, 79); font-size: 20px" >&#9632; </span> warm
-                                            <span style= "color: rgb(207, 0, 52); font-size: 20px" >&#9632; </span> hot
-                                        </div>
-                                        <div>
-                                            Humidity: 
-                                            <span style= "color: rgb(39, 39, 97); font-size: 20px" >&#9632; </span> dry 
-                                            <span style= "color: rgb(16, 72, 155); font-size: 20px" >&#9632; </span> comfort
-                                            <span style= "color: rgb(81, 163, 230); font-size: 20px" >&#9632; </span> humid
-                                            <span style= "color: rgb(134, 217, 255); font-size: 20px" >&#9632; </span> moist
-                                        </div>
-                                        
-                                    </tr>
-                                </table>
-                                      
-                            </div>
-                        </div>
-                        
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        
-    </div>
-    <br />
-
-    <br />
-    <div class  ="row">
-        <div class="col-md-6 col-sm-6 col-xs-12">
-            <div class="x_panel tile fixed_height_640 overflow_hidden">
-                <div class="x_title">
-                    <h2>Vertical Stratification  <small></small></h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                        </li>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                            <ul class="dropdown-menu" role="menu">
-                                <li><a href="#">Settings 1</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li><a class="close-link"><i class="fa fa-close"></i></a>
-                        </li>
-                    </ul>
-                    <div class="clearfix"></div>
-                </div>
-
-                <div class="x_content">
-                    <!--<span id="zensie_sensor_names"></span>-->
-                    <!-- <p> Vertical Stratification </p> -->
-                    <canvas id="stackedbarchart20"></canvas>
-                </div>
-
-            </div>
-        </div>
-
         <!--warnings feed-->
-        <div class="col-md-6 col-sm-6 col-xs-14">
+        <div class="col-md-4 col-sm-4 col-xs-12">
             <div class="x_panel">
                 <div class="x_title">
-                    <h2>Alerts <small></small></h2>
+                    <h2>Propagation/R&D <small>Alerts</small></h2>
                     <ul class="nav navbar-right panel_toolbox">
                         <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                         </li>
@@ -345,40 +113,67 @@
                                 <div class="block">
                                     <div class="block_content">
                                         <h2 class="title">
-                                            <a>Sensor in R&D not producing any data</a>
+                                            <a>ALL OK IN PROPAGATION AND R&D</a>
                                         </h2>
                                         <div class="byline">
-                                            <span>1 hours ago</span> by <a>Zenzie</a>
+                                            <span>1 hour ago</span> by <a>Crop</a>
                                         </div>
+                                        <p class="excerpt">.
+                                            <a>Read&nbsp;More</a>
+                                        </p>
                                     </div>
                                 </div>
                             </li>
-                            
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!--warnings feed-->
+        <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Energy/Weather <small>Alerts</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <ul class="list-unstyled timeline widget">
                             <li>
                                 <div class="block">
                                     <div class="block_content">
                                         <h2 class="title">
-                                            <a>High Humidity Back of Farm</a>
+                                            <a>High Temperature in London</a>
                                         </h2>
                                         <div class="byline">
-                                            <span>8 hours ago</span> by <a>Zenzie</a>
+                                            <span>13 hours ago</span> by <a>Advanticsys 1</a>
                                         </div>
+                                        <p class="excerpt">Predicted hot weather today at 12:30
+                                            Temperature will reach 27o
+                                            <a>Read&nbsp;More</a>
+                                        </p>
                                     </div>
                                 </div>
                             </li>
-                            <li>
-                                <div class="block">
-                                    <div class="block_content">
-                                        <h2 class="title">
-                                            <a>High Temperature in MidFarm</a>
-                                        </h2>
-                                        <div class="byline">
-                                            <span>13 hours ago</span> by <a>Zenzie</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                            
                         </ul>
                     </div>
                 </div>
@@ -386,14 +181,130 @@
         </div>
     </div>
 
-
-
-
     <br />
 
     <br />
-
     <div class="row">
+        <!-- main farm -->
+        <!--round charts-->
+        <div class="col-md-8 col-sm-8 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Main Farm  <small>Performance</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                                <li><a href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="dashboard-widget-content">
+                        <div class="block">
+                            <div class="block_content">
+                                <!-- <style>
+                                    table, th, td {
+                                      border:1px solid black;
+                                      overflow:visible;
+                                    }
+                                </style> -->
+                                <table style="table-layout: fixed;width:100%; overflow:visible">
+                                    <tr>
+                                        <th><span id="zone1_name"></span></th>
+                                        <th><span id="zone2_name"></span></th>
+                                        <th><span id="zone0_name"></span></th>
+                                    </tr>
+                                </table>
+
+                                <table style="table-layout: fixed;width:100%; overflow:visible">
+                                    <tr >
+                                        <p>Temperature Counts</p>
+
+                                        <th width=25% >
+                                                <canvas id="roundchart1" ></canvas>
+                                                <p>weekly</p>
+                                            </th>
+                                        <th width=15% valign="top">
+                                                <canvas id="roundchart11" ></canvas>
+                                                <p>daily</p>
+                                            </th>
+                                        <th width=25% >
+                                            <span id="zone2_name"></span>
+                                            <canvas id="roundchart2" ></canvas>
+                                            <p>weekly</p>
+                                        </th>
+                                        <th width=15% valign="top" >
+                                            <canvas id="roundchart12"></canvas>
+                                            <p>daily</p>
+                                        </th>
+                                        <th width=25% > 
+                                            <span id="zone0_name"></span>
+                                            <canvas id="roundchart0" ></canvas>
+                                            <p>weekly</p> 
+                                        </th>
+                                        <th width=15% valign="top">
+                                            <canvas id="roundchart10" ></canvas>
+                                            <p>daily</p>
+                                        </th>
+                                    </tr>
+                                </table>
+
+                                <table style="table-layout: fixed;width:100%; overflow:visible">
+                                    <tr >
+                                        <p>Humidity Counts</p>
+                                        <th width=25% >
+                                            <canvas id="roundchart6" ></canvas>
+                                            <p>weekly</p>
+                                        </th>
+                                        <th width=15% valign="top">
+                                            <canvas id="roundchart16" ></canvas>
+                                            <p>daily</p>
+                                        </th>
+                                        <th width=25% >
+                                            <canvas id="roundchart7" ></canvas>
+                                            <p>weekly</p>
+                                        </th>
+                                        <th width=15% valign="top" >
+                                            <canvas id="roundchart17"></canvas>
+                                            <p>daily</p>
+                                        </th>
+                                        <th width=25% > 
+                                            <canvas id="roundchart5" ></canvas>
+                                            <p>weekly</p>
+                                        </th>
+                                        <th width=15% valign="top">
+                                            <canvas id="roundchart15" ></canvas>
+                                            <p>daily</p>
+                                        </th>
+                                    </tr>
+
+                                </table>
+                                      
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="x_content">
+                    <h4>Vertical Stratification</h4>
+                    <!--<span id="zensie_sensor_names"></span>-->
+                    <!-- <p> Vertical Stratification </p> -->
+                    <canvas id="stackedbarchart20"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!--warnings feed-->
         <div class="col-md-4 col-sm-4 col-xs-14">
             <div class="x_panel">
@@ -456,12 +367,17 @@
                 </div>
             </div>
         </div>
+    </div>
+    <br />
 
-        <!--warnings feed-->
-        <div class="col-md-4 col-sm-4 col-xs-12">
+    <br />
+    <div class="row">
+        <!-- Propagation -->
+        <!--round charts-->
+        <div class="col-md-6 col-sm-6 col-xs-12">
             <div class="x_panel">
                 <div class="x_title">
-                    <h2>Propagation/R&D <small>Alerts</small></h2>
+                    <h2>Propagation  <small>Performance</small></h2>
                     <ul class="nav navbar-right panel_toolbox">
                         <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                         </li>
@@ -482,33 +398,48 @@
                 </div>
                 <div class="x_content">
                     <div class="dashboard-widget-content">
-                        <ul class="list-unstyled timeline widget">
-                            <li>
-                                <div class="block">
-                                    <div class="block_content">
-                                        <h2 class="title">
-                                            <a>ALL OK IN PROPAGATION AND R&D</a>
-                                        </h2>
-                                        <div class="byline">
-                                            <span>1 hour ago</span> by <a>Crop</a>
-                                        </div>
-                                        <p class="excerpt">.
-                                            <a>Read&nbsp;More</a>
-                                        </p>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
+                        <div class="block">
+                            <div class="block_content">
+                                <table style="table-layout: fixed;width:100%; overflow:visible">
+                                    <tr>
+                                        <td>Temperature</td>
+                                        <td>Humidity</td>
+                                    </tr>
+                                </table>
+
+                                <table style="table-layout: fixed;width:100%; overflow:visible">
+                                    <tr >
+                                        <b><span id="zone3_name"></span></b>
+                                        <td width=25% >
+                                                <canvas id="roundchart3" ></canvas>
+                                                <p>weekly</p>
+                                            </td>
+                                        <td width=15% valign="top">
+                                                <canvas id="roundchart13" ></canvas>
+                                                <p>daily</p>
+                                            </td>
+                                        <td width=25% >
+                                            <canvas id="roundchart8" ></canvas>
+                                            <p>weekly</p>
+                                        </td>
+                                        <td width=15% valign="top">
+                                            <canvas id="roundchart18" ></canvas>
+                                            <p>daily</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!--warnings feed-->
-        <div class="col-md-4 col-sm-4 col-xs-12">
+        <div class="col-md-6 col-sm-6 col-xs-14">
             <div class="x_panel">
                 <div class="x_title">
-                    <h2>Energy/Weather <small>Alerts</small></h2>
+                    <h2>Farm <small>Alerts</small></h2>
                     <ul class="nav navbar-right panel_toolbox">
                         <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                         </li>
@@ -534,14 +465,29 @@
                                 <div class="block">
                                     <div class="block_content">
                                         <h2 class="title">
-                                            <a>High Temperature in London</a>
+                                            <a>High Temperature in Farm1 entrance</a>
                                         </h2>
                                         <div class="byline">
                                             <span>13 hours ago</span> by <a>Advanticsys 1</a>
                                         </div>
-                                        <p class="excerpt">Predicted hot weather today at 12:30
-                                            Temperature will reach 27o
-                                            <a>Read&nbsp;More</a>
+                                        <p class="excerpt">Sensor Advantsys recorded a temperature of 25o in the
+                                            entrace. Suggested action :
+                                            1. turn on fans
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="block">
+                                    <div class="block_content">
+                                        <h2 class="title">
+                                            <a>High Humidity Back of Farm</a>
+                                        </h2>
+                                        <div class="byline">
+                                            <span>13 hours ago</span> by <a>Zenzie 3</a>
+                                        </div>
+                                        <p class="excerpt">Sensor Zenzie recorded humidity 82 in the
+                                            back of the Farm
                                         </p>
                                     </div>
                                 </div>
@@ -552,7 +498,6 @@
             </div>
         </div>
     </div>
-
     <br />
 
     <br />
@@ -596,28 +541,6 @@
 </script>
 <link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
 
-<script type="module">
-    const colors = {
-        darkblue: "rgba(63,103,126,1)", 
-        blue_l: "rgba(27,196,121,1)", 
-        tirquaze: "rgba(137,214,11,1)", 
-        red_d: "rgba(207,19,10,1)",
-        bertaBlue: "#4BDAFF",
-        black: "#000000",
-        bloodBurst: "#FF4B4B",
-        bloodOrgan: "#630E10",
-        blueSparkle: "#0076FF",
-        chickenComb: "#DE2525",
-        deepLilac: "#9B59B6",
-        heartBeat: "#AA0000",
-        mango: "#FFA628",
-        nero: "#262626",
-        palePurple: "#B089D5",
-        schoolBusYellow: "#ffd800",
-    };
-    export default colors;
-</script>
-
 
 <script>
 
@@ -628,11 +551,7 @@
     var temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
     var humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
     var vertical_stratification_json = JSON.parse('{{vertical_stratification | safe}}');
-    var hourly_data_json = JSON.parse('{{hourly_data | safe}}');
-    console.log (hourly_data_json)
     
-    //get hourly values
-
 
     //var json_obj = JSON.parse('{{json_values | safe}}');
 
@@ -642,30 +561,6 @@
             console.warn("dataset is empty")
         }
         else console.log("its good data", data)
-    }
-
-    function set_hourly_values (hourly_data_json) {
-        var tempFF = hourly_data_json[1]["temperature"]
-        document.getElementById("tempFF").innerHTML = tempFF;
-        var tempFM = hourly_data_json[2]["temperature"]
-        document.getElementById("tempFM").innerHTML = tempFM;
-        var tempFB = hourly_data_json[0]["temperature"]
-        document.getElementById("tempFB").innerHTML = tempFB;
-        var tempPR = hourly_data_json[3]["temperature"]
-        document.getElementById("tempPR").innerHTML = tempPR;
-        var tempRD = hourly_data_json[4]["temperature"]
-        document.getElementById("tempRD").innerHTML = tempRD;
-
-        var humFF = hourly_data_json[1]["humidity"]
-        document.getElementById("humFF").innerHTML = humFF;
-        var humFM = hourly_data_json[2]["humidity"]
-        document.getElementById("humFM").innerHTML = humFM;
-        var humFB = hourly_data_json[0]["humidity"]
-        document.getElementById("humFB").innerHTML = humFB;
-        var humPR = hourly_data_json[3]["humidity"]
-        document.getElementById("humPR").innerHTML = humPR;
-        var humRD = hourly_data_json[4]["humidity"]
-        document.getElementById("humRD").innerHTML = humRD;
     }
 
     function time_series_charts(json_data, canvasname) {
@@ -823,13 +718,9 @@
     }
 
     function create_charts(temperature_data, temperature_data_daily, humidity_data, humidity_data_daily, vertical_stratification) {
-        
-        set_hourly_values (hourly_data_json)
-
         var colouramp_redblue = ["rgba(63,103,126,1)", "rgba(27,196,121,1)", "rgba(137,214,11,1)", "rgba(207,19,10,1)"]; //blue to red
         var colouramp_blue = ["rgba(27,55,74,1)", "rgba(0,96,196,1)", "rgba(0,129,196,1)", "rgba(141,245,252,1)"];
 
-        
         //main farm
         //round charts ("roundchart0")
         var zone0_name = temperature_data[0]["zone"]
@@ -865,21 +756,12 @@
 
         //Propagation
         var zone3_name = temperature_data[3]["zone"]
-        document.getElementById("zone3_name").innerHTML = zone3_name;
+        document.getElementById("zone3_name").innerHTML = zone0_name;
         roundcharts (temperature_data, 3, "roundchart3", colouramp_redblue) 
         roundcharts (temperature_data_daily, 3, "roundchart13",colouramp_redblue)
 
         roundcharts(humidity_data, 3, "roundchart8",colouramp_blue);
         roundcharts(humidity_data_daily, 3, "roundchart18",colouramp_blue)
-
-        //R&D
-        var zone4_name = temperature_data[4]["zone"]
-        document.getElementById("zone4_name").innerHTML = zone4_name;
-        roundcharts (temperature_data, 4, "roundchart4", colouramp_redblue) 
-        roundcharts (temperature_data_daily, 4, "roundchart14",colouramp_redblue)
-
-        roundcharts(humidity_data, 4, "roundchart9",colouramp_blue);
-        roundcharts(humidity_data_daily, 4, "roundchart19",colouramp_blue)
 
 
     }
