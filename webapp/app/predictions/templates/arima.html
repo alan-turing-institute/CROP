@@ -44,10 +44,34 @@
             <div class="clearfix"></div>
           </div>
           <div class="x_content">
-            <h4> <p id="output"></h4></p>
-            <canvas id="arima_model"></canvas>
-            <p class="text-muted font-13 m-b-30">
-            </p>
+
+            <div class="" role="tabpanel" data-example-id="togglable-tabs">
+
+              <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
+                  {% for i in range(0, 1) %}
+                      <li role="presentation" class="">
+                          <a href="#tab_content{{i}}" role="tab" data-toggle="tab"> whate</a>
+                      </li>
+                  {% endfor %}
+              </ul>
+
+              <div id="myTabContent" class="tab-content">
+                  {% for i in range(0, 1) %}
+                      <div role="tabpanel" class="tab-pane fade active in" id="tab_content{{i}}">
+                          <div class="x_content">
+                              <!-- <div id="plotDiv{{i}}"></div> -->
+                              <h4> <p  id="arima_model0title"></h4></p>
+                              <canvas id="arima_model0"></canvas>
+                              <h4> <p  id="arima_model1title"></h4></p>
+                              <canvas id="arima_model1"></canvas>
+                              <h4> <p  id="arima_model2title"></h4></p>
+                              <canvas id="arima_model2"></canvas>
+                              <p class="text-muted font-13 m-b-30"></p>
+                          </div>
+                      </div>
+                  {% endfor %}
+              </div>
+            </div>
 
           </div>
         </div>
@@ -90,14 +114,21 @@
 
   //Imports from backend
   var arima_data = JSON.parse('{{json_arima_f | safe}}');
+  //console.log(arima_data)
   var zensie_data = JSON.parse ('{{json_zensie_f | safe}}');
+  var zensie_data_18 = JSON.parse ('{{json_zensie_18_f | safe}}');
+  var zensie_data_23 = JSON.parse ('{{json_zensie_23_f | safe}}');
+  var zensie_data_27 = JSON.parse ('{{json_zensie_27_f | safe}}');
+
+  const zensie_data_dict = {18: zensie_data_18, 23: zensie_data_23, 27:zensie_data_27}
+  console.log(zensie_data_dict)
   console.warn(arima_data);
   console.warn(zensie_data);
 
   function dictionary_scatter(x , y)
   {
     value_array = []
-    for (j=0; j< y.length; j++)
+    for (var j=0; j< y.length; j++)
     {
       const mydict = {x: x[j], y:y[j]}
       value_array.push(mydict)
@@ -107,13 +138,6 @@
 
   function time_series_charts(json_arima, zensie_json, canvasname) {
 
-    //get unique sensor ids
-    list_sensors = []
-    for (i = 0; i < json_arima.length; i++){
-      list_sensors.push(json_arima[i]["sensor_id"])
-    }
-    let unique_sensors = [...new Set(list_sensors)];
-
     //create arrays for data
     values_top = [];
     values_bot = [];
@@ -122,7 +146,8 @@
     hours = [];
     //parcing json to lists
     //TODO: loop sensors
-    for (j = 0; j < json_arima[1]["Values"].length; j++) {
+
+    for (var j = 0; j < json_arima[1]["Values"].length; j++) {
       values_top.push(parseFloat(json_arima[2]["Values"][j]["prediction_value"]))
       values_mid.push(parseFloat(json_arima[1]["Values"][j]["prediction_value"]))
       values_bot.push(parseFloat(json_arima[0]["Values"][j]["prediction_value"]))
@@ -134,12 +159,12 @@
     zensie_values = []
     zensie_time = []
     
-    for (i = 0; i < zensie_json.length; i++){
-      if (zensie_json[i]["sensor_id"] == 23){
-        const sensor_id = zensie_json[i]["sensor_id"]
+    for (var i = 0; i <zensie_json.length; i++){
+      if (zensie_json[i]["sensor_id"] == json_arima[1]["sensor_id"]){
+        var sensor_id = zensie_json[i]["sensor_id"]
         for (ii = 0; ii < zensie_json[i]["Values"].length;ii++){
           zensie_values.push(parseFloat(zensie_json[i]["Values"][ii]["temperature"]))
-          const date_z = new Date(zensie_json[i]["Values"][ii]["timestamp"])
+          var date_z = new Date(zensie_json[i]["Values"][ii]["timestamp"])
           zensie_time.push(date_z)
         }
       }
@@ -150,9 +175,7 @@
     const bot_scatter = dictionary_scatter(hours, values_bot)
     const zensie_scatter = dictionary_scatter(zensie_time, zensie_values)
 
-    //console.warn(zensie_scatter)
-    //console.warn(zensie_time)
-    //console.warn(hours)
+    
    
  
     const data = {
@@ -228,14 +251,51 @@
         }
       }
     };
+
+    
+    //title
+    console.log (canvasname+"title")
+    document.getElementById(canvasname+"title").innerHTML =  "sensor id: "+ json_arima[0]["sensor_id"] + "     |   " + "run id: " + json_arima[0]["Values"][0]["run_id"];
+
     var ctx = document.getElementById(canvasname);
     var myChart = new Chart(ctx, config);
     myChart.update();
   }
 
-  time_series_charts(arima_data, zensie_data, "arima_model");
+  function sensor_loop (json_arima, json_zensie )
+  {
+    
+    //get unique sensor ids
+    list_sensors = []
+    for (var i = 0; i < json_arima.length; i++){
+      list_sensors.push(json_arima[i]["sensor_id"])
+    }
+    let unique_sensors = [...new Set(list_sensors)];
+    
+    
+
+    for (var i = 0; i < unique_sensors.length; i++) {
+      console.log ("sensors:", i)
+      json_arima_sensor = []
+     
+      for (var j = 0; j < json_arima.length; j++) {
+        if (json_arima[j]["sensor_id"] == unique_sensors[i])
+        {
+          var current_sensor =  unique_sensors[i]
+          json_arima_sensor.push(json_arima[j]);
+        }
+      }
+
+      time_series_charts(json_arima_sensor, json_zensie[String(current_sensor)], "arima_model"+[i]);
+    }
+  }
+
+  sensor_loop (arima_data, zensie_data_dict)
+  
+  //time_series_charts(arima_data, zensie_data, "arima_model");
   //console.warn(arima_data[0]["Values"][0]["run_id"])
-  document.getElementById('output').innerHTML =  "sensor id: 23      |   " + "run id: " + arima_data[0]["Values"][0]["run_id"];
+  //document.getElementById('arima_model0title').innerHTML =  "sensor id: 23      |   " + "run id: " + arima_data[0]["Values"][0]["run_id"];
+
 </script>
 
 

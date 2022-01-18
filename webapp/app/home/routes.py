@@ -63,12 +63,43 @@ def resample(df_, bins):
 
             df_ = df_.append(df2)
     
-
     df_out = df_.sort_values(by=["bin"], ascending=True)
 
     df_out.reset_index(inplace=True, drop=True)
 
     return df_out
+
+# def warnings_query(dt_from, dt_to):
+#     """
+#     Performs a query for warnings.
+
+#     Arguments:
+#         dt_from_: date range from
+#         dt_to_: date range to
+#     Returns:
+#         df: a df with the queried data
+#     """
+#     query = db.session.query(
+
+#         LocationClass.zone,
+#     ).filter(
+#         and_(
+#             SensorLocationClass.location_id == LocationClass.id,
+#             ReadingsZensieTRHClass.sensor_id == SensorClass.id,
+#             ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
+#             ReadingsZensieTRHClass.timestamp >= dt_from,
+#             ReadingsZensieTRHClass.timestamp <= dt_to,
+#         )
+#     )
+
+#     df = pd.read_sql(query.statement, query.session.bind)
+
+#     logging.info("Total number of records found: %d" % (len(df.index)))
+#     if df.empty:
+#         logging.debug("WARNING: Query returned empty")
+
+#     return df
+
 
 
 def zensie_query(dt_from, dt_to):
@@ -370,6 +401,7 @@ def json_temp(df_temp):
     )
 
 
+
 def json_hum(df_hum):
     """
     Function to return the Json for the humidity related
@@ -384,6 +416,25 @@ def json_hum(df_hum):
         .to_json(orient="records")
     )
 
+def current_values_json(df_hourly):
+
+    df_test = df_hourly.loc[df_hourly.groupby('zone').timestamp.idxmax()]
+    df_test['temperature'] = df_test['temperature'].astype(int)
+    
+    for i in range(len(LOCATION_ZONES)):
+        if not df_test['zone'].str.contains(LOCATION_ZONES[i]).any():
+            df2 = pd.DataFrame({"zone": [LOCATION_ZONES[i]]})
+            df_ = df_test.append(df2)
+    
+   
+    return (df_.to_json(orient="records")
+    )
+
+
+# @blueprint.route("/<template>")
+# @login_required
+# def route_template(template):
+
 
 @blueprint.route("/index")
 @login_required
@@ -394,6 +445,7 @@ def index():
     dt_to = dt.datetime.now()
     dt_from_weekly = dt_to - dt.timedelta(days=7)
     dt_from_daily = dt_to - dt.timedelta(days=1)
+    dt_from_hourly = dt_to - dt.timedelta(hours=2)
 
     # weekly
     df = zensie_query(dt_from_weekly, dt_to)
@@ -421,8 +473,18 @@ def index():
         daily_temp_json = {}
         daily_hum_json = {}
 
+    df_hourly = zensie_query(dt_from_hourly, dt_to)
+    if not df_hourly.empty:
+        hourly_json = current_values_json(df_hourly)
+    else:
+        hourly_json = {}
+
+    
+
+
     return render_template(
         "index.html",
+        hourly_data = hourly_json,
         temperature_data=weekly_temp_json,
         humidity_data=weekly_hum_json,
         temperature_data_daily=daily_temp_json,
