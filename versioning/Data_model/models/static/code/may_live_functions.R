@@ -83,7 +83,7 @@ fill_data<-function(tobj){
   tobj$EnergyCP<- ifelse(is.na(tobj$EnergyCP), tobj$TypE,tobj$EnergyCP )
   tobj$Sensor_temp<- ifelse(is.na(tobj$Sensor_temp), tobj$TypT,tobj$Sensor_temp )
   
-  tobj$Lights <- constructLights(tobj)
+  #tobj$Lights <- constructLights(tobj)
   return(tobj)
 }
 

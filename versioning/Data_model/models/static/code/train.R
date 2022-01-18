@@ -7,8 +7,8 @@ SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
-#SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
-SENSOR_ID = list(Temperature_Farm_16B4=23)
+SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
+#SENSOR_ID = list(Temperature_Farm_16B4=23)
 MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3, Temperature_Median = 4)
 MODEL_ID = list(ARIMA = 1, BSTS = 2)
 
@@ -99,7 +99,8 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     
     #print("Training the Static model")
     MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
-    model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
+    #model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
+    model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg = NULL,
                              order = c(p,d,q),
                              seasonal = list(order=c(1,1,0),period=24),
                              method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES))
@@ -108,7 +109,8 @@ setupModels = function(split.Data, sensorID, time_forecast) {
   forecastArima = function(available.Data, forecastIndex, arima.Model) {
     #print("Forecasting the Static model")
     numberOfHours=48
-    results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
+    #results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
+    results = forecast::forecast(arima.Model, xreg = NULL, h=numberOfHours)
     list(upper=results$upper, lower=results$lower, mean=results$mean)
   }
   
