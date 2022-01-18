@@ -420,14 +420,18 @@ def current_values_json(df_hourly):
 
     df_test = df_hourly.loc[df_hourly.groupby('zone').timestamp.idxmax()]
     df_test['temperature'] = df_test['temperature'].astype(int)
-    
+
+
     for i in range(len(LOCATION_ZONES)):
+
         if not df_test['zone'].str.contains(LOCATION_ZONES[i]).any():
+            print ( df_test['zone'])
             df2 = pd.DataFrame({"zone": [LOCATION_ZONES[i]]})
-            df_ = df_test.append(df2)
-    
+            df_test = df_test.append(df2)
+
+
    
-    return (df_.to_json(orient="records")
+    return (df_test.to_json(orient="records")
     )
 
 
