@@ -49,6 +49,7 @@ def route_template(template):
                         ReadingsAdvanticsysClass.co2,
                         ReadingsAdvanticsysClass.time_created,
                         ReadingsAdvanticsysClass.time_updated,
+                        ReadingsAdvanticsysClass.sensor_id,
                     )
                     .filter(
                         and_(
@@ -89,12 +90,12 @@ def route_template(template):
                 query = (
                     db.session.query(
                         ReadingsZensieTRHClass.timestamp,
-                        SensorClass.id,
                         SensorClass.name,
                         ReadingsZensieTRHClass.temperature,
                         ReadingsZensieTRHClass.humidity,
                         ReadingsZensieTRHClass.time_created,
                         ReadingsZensieTRHClass.time_updated,
+                        ReadingsZensieTRHClass.sensor_id,
                     )
                     .filter(
                         and_(

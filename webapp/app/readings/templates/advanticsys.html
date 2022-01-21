@@ -52,12 +52,12 @@
                     for t_reading in readings:
                 %}
                 <tr>
-                    <td>{{ t_reading.timestamp }}</td>
-                    <td>{{ t_reading.id }}</td>
-                    <td>{{ t_reading.temperature }}</td>
-                    <td>{{ t_reading.humidity }}</td>
-                    <td>{{ t_reading.co2 }}</td>
-                    <td>{{ t_reading.time_created }}</td>
+                    <td>{{ t_reading.advanticsys_data_timestamp }}</td>
+                    <td>{{ t_reading.advanticsys_data_sensor_id }}</td>
+                    <td>{{ t_reading.advanticsys_data_temperature }}</td>
+                    <td>{{ t_reading.advanticsys_data_humidity }}</td>
+                    <td>{{ t_reading.advanticsys_data_co2 }}</td>
+                    <td>{{ t_reading.advanticsys_data_time_created }}</td>
                 </tr>
                 {%
                     endfor
