@@ -239,7 +239,11 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id):
 
     json_vertstrat = (
         df_grp_hr.groupby(["sensor_id"], as_index=True)
-        .apply(lambda x: x[["temperature", "humidity", "timestamp"]].to_dict("r"))
+        .apply(
+            lambda x: x[["temperature", "humidity", "timestamp"]].to_dict(
+                orient="records"
+            )
+        )
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
@@ -274,9 +278,11 @@ def temperature_analysis(df_temp, bins):
     for zone in LOCATION_ZONES:
         # check if zone exists in current bins dictionary:
         if zone in bins:
-            df_each_zone = df_temp[df_temp.zone == zone]
+            df_each_zone = df_temp.loc[df_temp.zone == zone, :].copy()
             # breaks df in temperature bins
-            df_each_zone["bin"] = pd.cut(df_each_zone["temperature"], bins[zone])
+            df_each_zone["bin"] = pd.cut(
+                df_each_zone["temperature"], bins[zone]
+            )
 
             # converting bins to str
             df_each_zone["bin"] = df_each_zone["bin"].astype(str)
@@ -304,7 +310,7 @@ def temperature_analysis(df_temp, bins):
                     .replace(", ", "-")
                     .replace(".0", "")
                 )
-                df_["bin"][j] = fixed_label
+                df_.loc["bin", j] = fixed_label
 
             temp_list.append(df_)
 
@@ -341,7 +347,7 @@ def humidity_analysis(df_hum, bins):
         # check if zone exists in current bins dictionary:
         if zone in bins:
 
-            df_each_zone = df_hum[df_hum.zone == zone]
+            df_each_zone = df_hum.loc[df_hum.zone == zone, :].copy()
             # breaks df in temperature bins
             df_each_zone["bin"] = pd.cut(df_each_zone["humidity"], bins[zone])
 
@@ -371,7 +377,7 @@ def humidity_analysis(df_hum, bins):
                     .replace(", ", "-")
                     .replace(".0", "")
                 )
-                df_["bin"][j] = fixed_label
+                df_.loc["bin", j] = fixed_label
 
             hum_list.append(df_)
 
@@ -394,12 +400,11 @@ def json_temp(df_temp):
     """
     return (
         df_temp.groupby(["zone"], as_index=True)
-        .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
+        .apply(lambda x: x[["bin", "cnt"]].to_dict(orient="records"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
     )
-
 
 
 def json_hum(df_hum):
