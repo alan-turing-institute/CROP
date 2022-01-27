@@ -23,6 +23,6 @@ RUN export LDFLAGS="-L/home/linuxbrew/.linuxbrew/opt/libpq/lib"
 RUN export CPPFLAGS="-I/home/linuxbrew/.linuxbrew/opt/libpq/include"
 RUN apt-get -y install libpq-dev
 
-
+# CMD =[Rscript /code/requirements.R]
 RUN Rscript /code/requirements.R
 RUN Rscript /code/test_connection.R

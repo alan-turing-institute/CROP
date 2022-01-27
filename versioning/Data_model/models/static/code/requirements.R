@@ -9,6 +9,7 @@ install.packages("dplyr")
 install.packages("forecast")
 install.packages("stringr")
 install.packages("bsts")
+install.packages("testit")
 
 # install.packages("plyr")
 # install.packages("ggplot2")
