@@ -194,8 +194,20 @@ def json_temp_arima(df_arima):
 
     #print ("timetype:", type(df_temp["time"][0]))
     return (
-        df_arima.groupby(["sensor_id" , "measure_name","run_id"], as_index=True)  # "measure_name"
-        .apply(lambda x: x[["prediction_value", "prediction_index", "run_id","time", "timestamp"]].to_dict("r"))
+        df_arima.groupby(
+            ["sensor_id", "measure_name", "run_id"], as_index=True
+        )  # "measure_name"
+        .apply(
+            lambda x: x[
+                [
+                    "prediction_value",
+                    "prediction_index",
+                    "run_id",
+                    "time",
+                    "timestamp",
+                ]
+            ].to_dict(orient="records")
+        )
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
@@ -220,7 +232,11 @@ def json_temp_zensie (dt_from_daily, dt_to):
         #.groupby('sensor_id').resample('H', on='timestamp').agg({'temperature':'mean', 'humidity':'mean'})
         return (
             df_grp_hr.groupby(["sensor_id"], as_index=True)  # "measure_name"
-            .apply(lambda x: x[["temperature", "humidity", "time", "timestamp"]].to_dict("r"))
+            .apply(
+                lambda x: x[
+                    ["temperature", "humidity", "time", "timestamp"]
+                ].to_dict(orient="records")
+            )
             .reset_index()
             .rename(columns={0: "Values"})
             .to_json(orient="records")
@@ -231,9 +247,10 @@ def json_temp_zensie (dt_from_daily, dt_to):
 
 @blueprint.route('/<template>')
 @login_required
-def route_template(template, methods=['GET']):
-    #arima data
-    dt_to = dt.datetime(2021, 12, 4, 00, 00) #dt.datetime.now()
+def route_template(template, methods=["GET"]):
+    # arima data
+    # dt_to = dt.datetime(2021, 12, 4, 00, 00)  # dt.datetime.now()
+    dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
 
     df_arima_18 = arima_query(dt_from, dt_to, 1, 18)
