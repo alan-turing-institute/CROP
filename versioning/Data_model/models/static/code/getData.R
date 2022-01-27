@@ -14,12 +14,17 @@ getStartEndDate = function (numberOfDays) {
   list(startDate=previousDateTime, endDate=todayDateTime)
 }
 
+getStartDate = function (numberOfDays, forecastDate) {
+  date_dataStarts = forecastDate-(numberOfDays*SECONDS.PERDAY)
+  list(startDate=date_dataStarts, endDate=forecastDate)
+}
+
 connectToDatabase = function(){
   crop_host = "cropapptestsqlserver.postgres.database.azure.com"
   crop_port = "5432"
   crop_dbname = "app_db"
   crop_user = "cropdbadmin@cropapptestsqlserver"
-  crop_password = ""
+  crop_password = "QhXZ7qZddDr224Mc2P4k"
   
   # Connect to the MySQL database: con
   con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), 
@@ -58,16 +63,18 @@ getData = function(sql_command) {
 
 getTemperatureHumidityData = function(limitRows, datesToGetData) {
   
-  select_command = "SELECT sensors.name, zensie_trh_data.*"
+  select_command = "SELECT DISTINCT sensors.name, zensie_trh_data.*"
   from_command = "FROM sensor_types, sensors, zensie_trh_data"
   where_criteria1 = "WHERE sensors.id = zensie_trh_data.sensor_id"
   where_criteria2 = sprintf("AND zensie_trh_data.timestamp >= '%s'", datesToGetData$startDate)
   where_criteria3 = sprintf("AND zensie_trh_data.timestamp < '%s'", datesToGetData$endDate)
+  where_criteria4 = sprintf("order by zensie_trh_data.timestamp asc")
   
   limit_command = ""
   if (limitRows > 0)
     limit_command = sprintf("LIMIT %i", limitRows)
-  sql_command = paste(select_command,from_command, where_criteria1, where_criteria2, where_criteria3, limit_command, sep=" ")
+  
+  sql_command = paste(select_command,from_command, where_criteria1, where_criteria2, where_criteria3, where_criteria4, limit_command, sep=" ")
 
   print(sql_command)
   env_raw = getData(sql_command)
@@ -82,32 +89,73 @@ getEnergyData = function (limitRows, datesToGetData) {
   from_command = "FROM utc_energy_data"
   where_criteria1 = sprintf("WHERE utc_energy_data.timestamp >= '%s'", datesToGetData$startDate)
   where_criteria2 = sprintf("AND utc_energy_data.timestamp < '%s'", datesToGetData$endDate)
+  where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC")
+  
+  #select_command = "SELECT *" 
+  #from_command = "FROM utc_energy_data"
+  #where_criteria1 = sprintf("WHERE cast(utc_energy_data.timestamp as timestamp)  BETWEEN '%s'", datesToGetData$startDate)
+  #where_criteria2 = sprintf("AND '%s'", datesToGetData$endDate)
+  #where_criteria3 = sprintf("ORDER BY utc_energy_data.timestamp ASC")
   
   limit_command = ""
-  if (limitRows > 0)
+  if (limitRows > 0){
     limit_command = sprintf("LIMIT %i", limitRows)
-  sql_command = paste(select_command,from_command, where_criteria1, where_criteria2, limit_command, sep=" ")
+  }
+  sql_command = paste(select_command,from_command, where_criteria1, where_criteria2, where_criteria3, limit_command, sep=" ")
   
+  print(sql_command)
   energy_raw = getData(sql_command)
-  energy_raw$Timestamp2 <- as.POSIXct(energy_raw$timestamp,tz="UTC")
+  energy_raw$Timestamp2 = as.POSIXct(energy_raw$timestamp,tz="UTC")
+  #energy_raw$timestamp = with_tz(energy_raw$timestamp,tz="UTC")
   energy_raw
 }
 
-getDataFromCsv = function() {
-  env_raw = read.csv("./data/test10.csv")
+createHistoryData = function() {
+  daysIntoPast = c(30, 60, 170)
+  #daysIntoPast = c(1)
+  limitRows = 0
+  
+  for (numDays in 1: length(daysIntoPast)) {
+    limitRows = 0
+    datesToGetData = getStartEndDate(daysIntoPast[numDays])
+    
+    energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+    energy_csv=sprintf("../data/energy%i.csv", daysIntoPast[numDays])
+    print(energy_csv)
+    energy_rds=sprintf("../data/energy%i.rds", daysIntoPast[numDays])
+    write.csv(energy_raw, energy_csv)
+    saveRDS(energy_raw,energy_rds)
+    
+    env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+    env_csv=sprintf("../data/env%i.csv", daysIntoPast[numDays])
+    print(env_csv)
+    env_rds=sprintf("../data/env%i.rds", daysIntoPast[numDays])
+    write.csv(env_raw, env_csv)
+    saveRDS(env_raw,env_rds)
+  }
 }
 
-numDays = 60
-limitRows = 0
-datesToGetData = getStartEndDate(numDays)
+createLatestData = function(numDays) {
+  limitRows = 0
+  datesToGetData = getStartEndDate(numDays)
+  energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+  env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+  list(dates = datesToGetData, energy = energy_raw, env=env_raw)
+} 
 
-energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(energy_raw, "../data/energy60.csv")
-#energy_raw = read.csv("../data/energy40.csv")
+createGivenDateData = function(date_Forecast, numDays) {
+  limitRows = 0
+  datesToGetData = getStartDate(numberOfDays = numDays, forecastDate = date_Forecast)
+  energy_raw = getEnergyData(limitRows = limitRows, datesToGetData = datesToGetData)
+  env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
+  list(dates = datesToGetData, energy = energy_raw, env=env_raw)
+}
 
-env_raw = getTemperatureHumidityData(limitRows = limitRows, datesToGetData = datesToGetData)
-#write.csv(env_raw, "../data/env60.csv")
-#env_raw = read.csv("../data/env40.csv")
+if (exists("date_Forecast")==FALSE)
+  date_Forecast = as.POSIXct('2021-11-08 12:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
+if (exists("numDaysTraining")==FALSE)
+  numDaysTraining = 200
 
-#source(paste0(".","/cleandata.R"), echo=FALSE)
-
+configData = createGivenDateData(date_Forecast=date_Forecast, numDays = numDaysTraining)
+env_raw = configData$env
+energy_raw = configData$energy

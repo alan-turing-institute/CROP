@@ -8,7 +8,7 @@ connectToDatabase = function(){
   crop_port = "5432"
   crop_dbname = "app_db"
   crop_user = "cropdbadmin@cropapptestsqlserver"
-  crop_password = ""
+  crop_password = "QhXZ7qZddDr224Mc2P4k"
   
   # Connect to the MySQL database: con
   con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), 
@@ -71,23 +71,25 @@ getPredictions = function(limitRows) {
   getData(sql_command)
 }
 
-writeRun=function(run.model){
-  run_id = writeRunTable(run.model$model_id, run.model$sensor_id)
+writeRun=function(run.model, time_forecast){
+  run_id = writeRunTable(run.model$model_id, run.model$sensor_id, time_forecast)
   for (r in 1:length(run.model$records)) {
     product_id = writeProductTable(run_id, run.model$records[[r]]$measure_id)
     writePredictionTable(product_id = product_id, values=run.model$records[[r]]$measure_values)
   }
 }
 
-writeRunTable=function(model_id, sensor_id) {
+writeRunTable=function(model_id, sensor_id, time_forecast) {
   #INSERT INTO model_run(sensor_id, measure_id, model_id)
   table_name = "model_run"
-  insert_command = sprintf("Insert into %s (model_id, sensor_id) values", table_name)
-  value_command = sprintf("(%i,%i)", model_id, sensor_id)
+  insert_command = sprintf("Insert into %s (model_id, sensor_id, time_forecast) values", table_name)
+  value_command = sprintf("(%i,%i,'%s')", model_id, sensor_id, time_forecast)
   return_command = "RETURNING id"
   sql_command = paste(insert_command,value_command, return_command, sep=" ")
+  #print(sql_command)
   run = writeData(sql_command = sql_command)
-  print(run$id)
+  #print(run$id)
+  run$id
 }
 
 writeProductTable=function(run_id, measure_id) {
