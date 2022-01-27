@@ -49,10 +49,8 @@ def route_template(template):
         sensors = db.session.execute(query).fetchall()
 
         sensors_arr = query_result_to_array(sensors, date_iso=False)
-        
-        #print (sensors_arr)
 
-        return render_template(template + '.html', sensors=sensors_arr)
+        return render_template(template + ".html", sensors=sensors_arr)
 
     elif template == "sensor_form":
 
