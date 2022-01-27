@@ -63,16 +63,16 @@
                 for t_reading in readings:
                 %}
                 <tr>
-                  <td>{{ t_reading.daily_harvest_data_crop }}</td>
-                  <td>{{ t_reading.daily_harvest_data_propagation_date }}</td>
-                  <td>{{ t_reading.daily_harvest_data_location_id}}</td>
-                  <td>{{ t_reading.daily_harvest_data_stack}}</td>
-                  <td>{{ t_reading.daily_harvest_data_total_yield_weight}}</td>
-                  <td>{{ t_reading.daily_harvest_data_disease_trays}}</td>
-                  <td>{{ t_reading.daily_harvest_data_defect_trays}}</td>
-                  <td>{{ t_reading.daily_harvest_data_notes}}</td>
-                  <td>{{ t_reading.daily_harvest_data_user}}</td>
-                  <td>{{ t_reading.daily_harvest_data_time_created }}</td>
+                  <td>{{ t_reading.crop }}</td>
+                  <td>{{ t_reading.propagation_date }}</td>
+                  <td>{{ t_reading.location_id}}</td>
+                  <td>{{ t_reading.stack}}</td>
+                  <td>{{ t_reading.total_yield_weight}}</td>
+                  <td>{{ t_reading.disease_trays}}</td>
+                  <td>{{ t_reading.defect_trays}}</td>
+                  <td>{{ t_reading.notes}}</td>
+                  <td>{{ t_reading.user}}</td>
+                  <td>{{ t_reading.time_created }}</td>
                 </tr>
                 {%
                 endfor
