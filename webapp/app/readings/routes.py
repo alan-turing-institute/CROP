@@ -32,109 +32,107 @@ def route_template(template):
     Main method to render templates.
     """
 
-    if request.method == "GET":
+    if request.method != "GET":
+        # TODO What's the right way to fail here?
+        return None
 
-        dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-        if template in ["advanticsys", "energy", "zensie_trh", "dailyharvest"]:
-            if template == "advanticsys":
+    if template not in ["advanticsys", "energy", "zensie_trh", "dailyharvest"]:
+        # TODO What's the right way to fail here?
+        return None
 
-                query = (
-                    db.session.query(
-                        ReadingsAdvanticsysClass.timestamp,
-                        SensorClass.id,
-                        SensorClass.name,
-                        ReadingsAdvanticsysClass.temperature,
-                        ReadingsAdvanticsysClass.humidity,
-                        ReadingsAdvanticsysClass.co2,
-                        ReadingsAdvanticsysClass.time_created,
-                        ReadingsAdvanticsysClass.time_updated,
-                    )
-                    .filter(
-                        and_(
-                            ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
-                            ReadingsAdvanticsysClass.timestamp >= dt_from,
-                            ReadingsAdvanticsysClass.timestamp <= dt_to,
-                        )
-                    )
-                    .order_by(desc(ReadingsAdvanticsysClass.timestamp))
-                    .limit(CONST_MAX_RECORDS)
-                )
+    if template == "advanticsys":
 
-            elif template == "energy":
-
-                query = (
-                    db.session.query(
-                        ReadingsEnergyClass.timestamp,
-                        SensorClass.id,
-                        SensorClass.name,
-                        TypeClass.sensor_type,
-                        ReadingsEnergyClass.electricity_consumption,
-                        ReadingsEnergyClass.time_created,
-                    )
-                    .filter(
-                        and_(
-                            SensorClass.type_id == TypeClass.id,
-                            ReadingsEnergyClass.sensor_id == SensorClass.id,
-                            ReadingsEnergyClass.timestamp >= dt_from,
-                            ReadingsEnergyClass.timestamp <= dt_to,
-                        )
-                    )
-                    .order_by(desc(ReadingsEnergyClass.timestamp))
-                    .limit(CONST_MAX_RECORDS)
-                )
-
-            elif template == "zensie_trh":
-
-                query = (
-                    db.session.query(
-                        ReadingsZensieTRHClass.timestamp,
-                        SensorClass.id,
-                        SensorClass.name,
-                        ReadingsZensieTRHClass.temperature,
-                        ReadingsZensieTRHClass.humidity,
-                        ReadingsZensieTRHClass.time_created,
-                        ReadingsZensieTRHClass.time_updated,
-                    )
-                    .filter(
-                        and_(
-                            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-                            ReadingsZensieTRHClass.timestamp >= dt_from,
-                            ReadingsZensieTRHClass.timestamp <= dt_to,
-                        )
-                    )
-                    .order_by(desc(ReadingsZensieTRHClass.timestamp))
-                    .limit(CONST_MAX_RECORDS)
-                )
-
-            elif template == "dailyharvest":
-                query = (
-                    db.session.query(
-                        DailyHarvestClass.crop,
-                        DailyHarvestClass.propagation_date,
-                        DailyHarvestClass.location_id,
-                        DailyHarvestClass.stack,
-                        DailyHarvestClass.total_yield_weight,
-                        DailyHarvestClass.disease_trays,
-                        DailyHarvestClass.defect_trays,
-                        DailyHarvestClass.notes,
-                        DailyHarvestClass.user,
-                        DailyHarvestClass.time_created,
-                    )
-
-                    .limit(CONST_MAX_RECORDS)
-                )
-
-            readings = db.session.execute(query).fetchall()
-            #print(readings, file=sys.stderr)
-
-            results_arr = query_result_to_array(readings, date_iso=False)
-
-            return render_template(
-                template + ".html",
-                readings=results_arr,
-                dt_from=dt_from.strftime("%B %d, %Y"),
-                dt_to=dt_to.strftime("%B %d, %Y"),
+        query = (
+            db.session.query(
+                ReadingsAdvanticsysClass.timestamp,
+                SensorClass.id,
+                SensorClass.name,
+                ReadingsAdvanticsysClass.temperature,
+                ReadingsAdvanticsysClass.humidity,
+                ReadingsAdvanticsysClass.co2,
+                ReadingsAdvanticsysClass.time_created,
+                ReadingsAdvanticsysClass.time_updated,
             )
+            .filter(
+                and_(
+                    ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
+                    ReadingsAdvanticsysClass.timestamp >= dt_from,
+                    ReadingsAdvanticsysClass.timestamp <= dt_to,
+                )
+            )
+            .order_by(desc(ReadingsAdvanticsysClass.timestamp))
+            .limit(CONST_MAX_RECORDS)
+        )
 
-    return None
+    elif template == "energy":
+
+        query = (
+            db.session.query(
+                ReadingsEnergyClass.timestamp,
+                SensorClass.id,
+                SensorClass.name,
+                TypeClass.sensor_type,
+                ReadingsEnergyClass.electricity_consumption,
+                ReadingsEnergyClass.time_created,
+            )
+            .filter(
+                and_(
+                    SensorClass.type_id == TypeClass.id,
+                    ReadingsEnergyClass.sensor_id == SensorClass.id,
+                    ReadingsEnergyClass.timestamp >= dt_from,
+                    ReadingsEnergyClass.timestamp <= dt_to,
+                )
+            )
+            .order_by(desc(ReadingsEnergyClass.timestamp))
+            .limit(CONST_MAX_RECORDS)
+        )
+
+    elif template == "zensie_trh":
+
+        query = (
+            db.session.query(
+                ReadingsZensieTRHClass.timestamp,
+                SensorClass.id,
+                SensorClass.name,
+                ReadingsZensieTRHClass.temperature,
+                ReadingsZensieTRHClass.humidity,
+                ReadingsZensieTRHClass.time_created,
+                ReadingsZensieTRHClass.time_updated,
+            )
+            .filter(
+                and_(
+                    ReadingsZensieTRHClass.sensor_id == SensorClass.id,
+                    ReadingsZensieTRHClass.timestamp >= dt_from,
+                    ReadingsZensieTRHClass.timestamp <= dt_to,
+                )
+            )
+            .order_by(desc(ReadingsZensieTRHClass.timestamp))
+            .limit(CONST_MAX_RECORDS)
+        )
+
+    elif template == "dailyharvest":
+        query = db.session.query(
+            DailyHarvestClass.crop,
+            DailyHarvestClass.propagation_date,
+            DailyHarvestClass.location_id,
+            DailyHarvestClass.stack,
+            DailyHarvestClass.total_yield_weight,
+            DailyHarvestClass.disease_trays,
+            DailyHarvestClass.defect_trays,
+            DailyHarvestClass.notes,
+            DailyHarvestClass.user,
+            DailyHarvestClass.time_created,
+        ).limit(CONST_MAX_RECORDS)
+
+    readings = db.session.execute(query).fetchall()
+
+    results_arr = query_result_to_array(readings, date_iso=False)
+
+    return render_template(
+        template + ".html",
+        readings=results_arr,
+        dt_from=dt_from.strftime("%B %d, %Y"),
+        dt_to=dt_to.strftime("%B %d, %Y"),
+    )
