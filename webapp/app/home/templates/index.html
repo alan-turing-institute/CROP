@@ -37,7 +37,7 @@
             </div> -->
 
                 <div class="webgl-content">
-                    <div id="unityContainer" style="height: 45vh"></div>
+                    <div id="unityContainer" style= "height: 48vh"></div>
                     <div class="footer">
                         <div class="webgl-logo"></div>
                         <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
@@ -399,6 +399,8 @@
 <script>
     var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", { onProgress: UnityProgress });
 </script>
+
+
 <link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
 
 <script type="module">
