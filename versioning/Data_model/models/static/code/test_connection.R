@@ -16,7 +16,6 @@ getConnection = function(){
                    port = crop_port,
                    user = crop_user,
                    password = crop_password)
-  
 }
 
 disconnect = function(con) {
