@@ -18,7 +18,6 @@
       <div class="page-title">
         <div class="title_left">
             <h3>List of Sensors</h3>
-            <p>{{ sensors }}></p>
         </div>
       </div>
 
@@ -56,7 +55,7 @@
                       <td>{{ t_sensor.sensors_device_id }}</td>
                       <td>{{ t_sensor.sensors_name }}</td>
                       <td>{{ t_sensor.sensors_last_updated }}</td>
-                      <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.sensors_id }}">Edit</a> 
+                      <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.sensors_id }}">Edit</a>
                     </tr>
                     {% endfor %}
                 </tbody>
