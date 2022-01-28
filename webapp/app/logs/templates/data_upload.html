@@ -43,11 +43,11 @@
                     for t_log in logs:
                   %}
                   <tr>
-                    <td>{{ t_log.time_created }}</td>
-                    <td>{{ t_log.sensor_type }}</td>
-                    <td>{{ t_log.filename }}</td>
-                    <td class="log_status">{{ t_log.status }}</td>
-                    <td>{{ t_log.log }}</td>
+                    <td>{{ t_log.sensor_upload_log_time_created }}</td>
+                    <td>{{ t_log.sensor_types_sensor_type }}</td>
+                    <td>{{ t_log.sensor_upload_log_filename }}</td>
+                    <td class="log_status">{{ t_log.sensor_upload_log_status }}</td>
+                    <td>{{ t_log.sensor_upload_log_log }}</td>
                   </tr>
                   {%
                     endfor
