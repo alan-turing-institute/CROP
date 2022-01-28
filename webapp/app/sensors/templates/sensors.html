@@ -50,12 +50,12 @@
                 <tbody>
                     {% for t_sensor in sensors %}
                     <tr class='clickable-row' method = POST>
-                      <td>{{ t_sensor.id }}</td>
-                      <td>{{ t_sensor.sensor_type }}</td>
-                      <td>{{ t_sensor.device_id }}</td>
-                      <td>{{ t_sensor.name }}</td>
-                      <td>{{ t_sensor.last_updated }}</td>
-                      <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.id }}">Edit</a>
+                      <td>{{ t_sensor.sensors_id }}</td>
+                      <td>{{ t_sensor.sensor_types_sensor_type }}</td>
+                      <td>{{ t_sensor.sensors_device_id }}</td>
+                      <td>{{ t_sensor.sensors_name }}</td>
+                      <td>{{ t_sensor.sensors_last_updated }}</td>
+                      <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.sensors_id }}">Edit</a>
                     </tr>
                     {% endfor %}
                 </tbody>
