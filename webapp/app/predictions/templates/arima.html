@@ -24,7 +24,7 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
-            <h2>Arima: Two days Temperature prediction per sensor</h2>
+            <h2>Arima: Temperature and humidity predictions</h2>
             <ul class="nav navbar-right panel_toolbox">
               <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
               </li>
@@ -43,41 +43,26 @@
             </ul>
             <div class="clearfix"></div>
           </div>
+
           <div class="x_content">
-
             <div class="" role="tabpanel" data-example-id="togglable-tabs">
-
-              <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
-                  {% for i in range(0, 1) %}
-                      <li role="presentation" class="">
-                          <a href="#tab_content{{i}}" role="tab" data-toggle="tab"> whate</a>
-                      </li>
-                  {% endfor %}
-              </ul>
-
               <div id="myTabContent" class="tab-content">
-                  {% for i in range(0, 1) %}
-                      <div role="tabpanel" class="tab-pane fade active in" id="tab_content{{i}}">
-                          <div class="x_content">
-                              <!-- <div id="plotDiv{{i}}"></div> -->
-                              <h4> <p  id="arima_model0title"></h4></p>
-                              <canvas id="arima_model0"></canvas>
-                              <h4> <p  id="arima_model1title"></h4></p>
-                              <canvas id="arima_model1"></canvas>
-                              <h4> <p  id="arima_model2title"></h4></p>
-                              <canvas id="arima_model2"></canvas>
-                              <p class="text-muted font-13 m-b-30"></p>
-                          </div>
-                      </div>
-                  {% endfor %}
+                <div role="tabpanel" class="tab-pane fade active in" id="tab_content0">
+                  <div class="x_content">
+                    <h4> <p  id="arima_model0title"></h4></p>
+                    <canvas id="arima_model0"></canvas>
+                    <h4> <p  id="arima_model1title"></h4></p>
+                    <canvas id="arima_model1"></canvas>
+                    <h4> <p  id="arima_model2title"></h4></p>
+                    <canvas id="arima_model2"></canvas>
+                    <p class="text-muted font-13 m-b-30"></p>
+                  </div>
+                </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
-
-
     </div>
   </div>
 </div>
@@ -111,40 +96,26 @@
 <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
 
 <script>
-
-  //Imports from backend
-  var arima_data = JSON.parse('{{json_arima_f | safe}}');
-  //console.log(arima_data)
-  var zensie_data = JSON.parse ('{{json_zensie_f | safe}}');
-  var zensie_data_18 = JSON.parse ('{{json_zensie_18_f | safe}}');
-  var zensie_data_23 = JSON.parse ('{{json_zensie_23_f | safe}}');
-  var zensie_data_27 = JSON.parse ('{{json_zensie_27_f | safe}}');
-
-  const zensie_data_dict = {18: zensie_data_18, 23: zensie_data_23, 27:zensie_data_27}
-  console.log(zensie_data_dict)
-  console.warn(arima_data);
-  console.warn(zensie_data);
-
-  function dictionary_scatter(x , y)
-  {
+  // Zip to arrays [x0, x1, x2, ...] and [y0, y1, y2, ...] into
+  // [{x: x0, y: 01}, {x: x1, y: y1}, {x: x2, y: y2}, ...]
+  // Used to gather data for plots into a format preferred by Chart.js
+  function dictionary_scatter(x , y) {
     value_array = []
-    for (var j=0; j< y.length; j++)
-    {
-      const mydict = {x: x[j], y:y[j]}
+    for (var j=0; j < y.length; j++) {
+      const mydict = {x: x[j], y: y[j]}
       value_array.push(mydict)
     }
-    return (value_array)
+    return value_array
   }
 
-  function time_series_charts(json_arima, zensie_json, canvasname) {
-
+  function time_series_charts_arima(json_arima, zensie_json, canvasname) {
     //create arrays for data
     values_top = [];
     values_bot = [];
     values_mid = [];
     sensors_id = [];
     hours = [];
-    //parcing json to lists
+    //parsing json to lists
     //TODO: loop sensors
 
     for (var j = 0; j < json_arima[1]["Values"].length; j++) {
@@ -159,7 +130,7 @@
     zensie_values = []
     zensie_time = []
     
-    for (var i = 0; i <zensie_json.length; i++){
+    for (var i = 0; i < zensie_json.length; i++){
       if (zensie_json[i]["sensor_id"] == json_arima[1]["sensor_id"]){
         var sensor_id = zensie_json[i]["sensor_id"]
         for (ii = 0; ii < zensie_json[i]["Values"].length;ii++){
@@ -175,55 +146,42 @@
     const bot_scatter = dictionary_scatter(hours, values_bot)
     const zensie_scatter = dictionary_scatter(zensie_time, zensie_values)
 
-    
-   
- 
     const data = {
-      //labels: hours,
       label: "Arima Prediction",
       datasets: [
         {
-          //type: 'line',
           label: 'Upper Bound',
           data: top_scatter,
           borderColor: "#ee978c",
           fill: false,
           borderDash: [1],
-          //pointBorderWidth: 0.1,
           pointRadius:1,
           showLine: true
           
         },
         {
-          //type: 'scatter',
           label: 'Mean Temperature',
           data: mid_scatter,
           borderColor: "#ff0000",
           fill: '-1',
           borderDash: [2],
-          //pointBorderWidth: 0.1,
           pointRadius:1.5,
           showLine: true
         },
         {
-          //type: 'line',
           label: 'Lower Bound',
           data: bot_scatter,
           borderColor: "#ee978c",
           fill: '-1',
           borderDash: [1],
-          //pointBorderWidth: 0.1,
           pointRadius:1,
           showLine: true
         },
         {
-          //type: 'scatter',
-          label: 'Zenzie Temperature',
+          label: 'Zensie Temperature',
           data: zensie_scatter,
           borderColor: "#a0a0a0",
           fill: false,
-          //borderDash: [1],
-          //pointBorderWidth: 0.1,
           pointRadius:1.5,
           showLine: true
         },
@@ -251,18 +209,16 @@
         }
       }
     };
-
     
     //title
-    console.log (canvasname+"title")
-    document.getElementById(canvasname+"title").innerHTML =  "sensor id: "+ json_arima[0]["sensor_id"] + "     |   " + "run id: " + json_arima[0]["Values"][0]["run_id"];
+    document.getElementById(canvasname+"title").innerHTML = "sensor id: "+ json_arima[0]["sensor_id"] + "     |   " + "run id: " + json_arima[0]["Values"][0]["run_id"];
 
     var ctx = document.getElementById(canvasname);
     var myChart = new Chart(ctx, config);
     myChart.update();
   }
 
-  function sensor_loop (json_arima, json_zensie )
+  function sensor_loop(json_arima, json_zensie )
   {
     
     //get unique sensor ids
@@ -286,16 +242,17 @@
         }
       }
 
-      time_series_charts(json_arima_sensor, json_zensie[String(current_sensor)], "arima_model"+[i]);
+      time_series_charts_arima(json_arima_sensor, json_zensie[String(current_sensor)], "arima_model"+[i]);
     }
   }
 
-  sensor_loop (arima_data, zensie_data_dict)
-  
-  //time_series_charts(arima_data, zensie_data, "arima_model");
-  //console.warn(arima_data[0]["Values"][0]["run_id"])
-  //document.getElementById('arima_model0title').innerHTML =  "sensor id: 23      |   " + "run id: " + arima_data[0]["Values"][0]["run_id"];
-
+  var arima_data = JSON.parse('{{json_arima_f | safe}}');
+  var zensie_data = JSON.parse('{{json_zensie_f | safe}}');
+  var zensie_data_18 = JSON.parse('{{json_zensie_18_f | safe}}');
+  var zensie_data_23 = JSON.parse('{{json_zensie_23_f | safe}}');
+  var zensie_data_27 = JSON.parse('{{json_zensie_27_f | safe}}');
+  const zensie_data_dict = {18: zensie_data_18, 23: zensie_data_23, 27:zensie_data_27}
+  sensor_loop(arima_data, zensie_data_dict)
 </script>
 
 
