@@ -21,10 +21,15 @@ from __app__.crop.structure import (
     ModelRunClass,
     ModelValueClass,
     ModelProductClass,
+    TestModelClass,
+    TestModelMeasureClass,
+    TestModelRunClass,
+    TestModelValueClass,
+    TestModelProductClass,
     ReadingsZensieTRHClass,
     SensorLocationClass,
     LocationClass,
-    SensorClass
+    SensorClass,
 )
 
 from __app__.crop.structure import SQLA as db
@@ -78,18 +83,18 @@ def zensie_query(dt_from, dt_to):
     return df
 
 
-def arima_query(dt_from, dt_to, model_id, sensor_id):
+def model_query(dt_from, dt_to, model_id, sensor_id, test=False):
     """
-    Performs a query for the arima prediction model.
+    Performs a query for a prediction model.
 
     Arguments:
         dt_from_: date range from
         dt_to_: date range to
         model_id: id for a particular model
+        test: If True, use the test_model tables instead. False by default.
     Returns:
         df: a df with the queried data
     """
-
     logging.info(
         "Calling arima model with parameters %s %s"
         % (
@@ -98,44 +103,53 @@ def arima_query(dt_from, dt_to, model_id, sensor_id):
         )
     )
 
+    if test:
+        model_class = TestModelClass
+        model_measure_class = TestModelMeasureClass
+        model_run_class = TestModelRunClass
+        model_value_class = TestModelValueClass
+        model_product_class = TestModelProductClass
+    else:
+        model_class = ModelClass
+        model_measure_class = ModelMeasureClass
+        model_run_class = ModelRunClass
+        model_value_class = ModelValueClass
+        model_product_class = ModelProductClass
+
     # subquery to get the last model run from a given model
-
-    sbqr = db.session.query(
-        ModelRunClass
-    ).filter(
-        ModelRunClass.model_id == model_id,
-        ModelRunClass.sensor_id == sensor_id,
-    ).all()[-1]
-    
-
+    sbqr = (
+        db.session.query(model_run_class)
+        .filter(
+            model_run_class.model_id == model_id,
+            model_run_class.sensor_id == sensor_id,
+        )
+        .all()[-1]
+    )
 
     # query to get all the results from the model run in the subquery
     query = db.session.query(
-        # func.max(ModelProductClass.run_id),
-        ModelClass.id,
-        ModelClass.model_name,
-        ModelRunClass.sensor_id,
-        ModelMeasureClass.measure_name,
-        ModelValueClass.prediction_value,
-        ModelValueClass.prediction_index,
-        ModelProductClass.run_id,
-        ModelRunClass.time_created,
-        ModelRunClass.time_forecast
+        model_class.id,
+        model_class.model_name,
+        model_run_class.sensor_id,
+        model_measure_class.measure_name,
+        model_value_class.prediction_value,
+        model_value_class.prediction_index,
+        model_product_class.run_id,
+        model_run_class.time_created,
+        model_run_class.time_forecast,
     ).filter(
         and_(
-            ModelClass.id == model_id,
-            ModelRunClass.model_id == ModelClass.id,
-            ModelRunClass.id == sbqr.id,
-            ModelProductClass.run_id == ModelRunClass.id,
-            ModelProductClass.measure_id == ModelMeasureClass.id,
-            ModelValueClass.product_id == ModelProductClass.id,
-            ModelRunClass.sensor_id == sensor_id,
-
-            #ModelRunClass.time_created >= dt_from,
-            #ModelRunClass.time_created <= dt_to,
+            model_class.id == model_id,
+            model_run_class.model_id == model_class.id,
+            model_run_class.id == sbqr.id,
+            model_product_class.run_id == model_run_class.id,
+            model_product_class.measure_id == model_measure_class.id,
+            model_value_class.product_id == model_product_class.id,
+            model_run_class.sensor_id == sensor_id,
+            model_run_class.time_created >= dt_from,
+            model_run_class.time_created <= dt_to,
         )
     )
-    #print(query.statement.compile(dialect=db.session.bind.dialect))
 
     df = pd.read_sql(query.statement, query.session.bind)
 
@@ -145,6 +159,7 @@ def arima_query(dt_from, dt_to, model_id, sensor_id):
         logging.debug("WARNING: Query returned empty")
 
     return df
+
 
 def resample(df):
     """
@@ -157,43 +172,41 @@ def resample(df):
         temp_df: the df with grouped bins
     """
 
-
     # Reseting index
     df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
-    df_grp_hr = df.groupby('sensor_id').resample('H', on='timestamp').agg({'temperature':'mean', 'humidity':'mean'}).reset_index()
+    df_grp_hr = (
+        df.groupby("sensor_id")
+        .resample("H", on="timestamp")
+        .agg({"temperature": "mean", "humidity": "mean"})
+        .reset_index()
+    )
 
     return df_grp_hr
 
 
-
-def json_temp_arima(df_arima):
-    """
-    Function to return the Json for the temperature related
-    charts in the model run
-
-    """
-
-    #create timestamps from prediction index and convert date to string
+def add_time_columns(df):
+    """Create timestamps from prediction index and convert date to string."""
     time_ = []
     timestamp_ = []
-    for i in range (len(df_arima)):
-        pred_id = int(df_arima["prediction_index"][i])
-        pred_time = df_arima["time_forecast"][i] + dt.timedelta(hours=pred_id)
+    for i in range(len(df)):
+        pred_id = int(df["prediction_index"][i])
+        pred_time = df["time_forecast"][i] + dt.timedelta(hours=pred_id)
         format_time = pred_time.strftime("%d-%m-%Y %H:%M:%S")
         time_.append(format_time)
         timestamp_.append(pred_time)
-
-    df_arima["time"]= time_
-    df_arima["timestamp"]= timestamp_
-
-    # df_temp =  df_arima.groupby(["sensor_id", "measure_name"], as_index=True).apply(lambda x: x[["prediction_value", "prediction_index", "run_id","time", "timestamp"]].to_dict("r")).reset_index()
-    # print ("ajja", df_temp)
-    # df_temp2 =  DataFrame({'Values' : df_temp.groupby( "sensor_id" ).apply(lambda x: x[["measure_name"]].to_dict("r"))}).reset_index()
-    # print ("asdf", df_temp2["Values"][0])
+    df["time"] = time_
+    df["timestamp"] = timestamp_
+    return df
 
 
-    #print ("timetype:", type(df_temp["time"][0]))
-    return (
+def json_temp_arima(df_arima):
+    """
+    Function to return the JSON for the temperature related
+    charts in the model run
+
+    """
+    df_arima = add_time_columns(df_arima)
+    json_str = (
         df_arima.groupby(
             ["sensor_id", "measure_name", "run_id"], as_index=True
         )  # "measure_name"
@@ -212,24 +225,25 @@ def json_temp_arima(df_arima):
         .rename(columns={0: "Values"})
         .to_json(orient="records")
     )
+    return json_str
 
 
-def json_temp_zensie (dt_from_daily, dt_to):
-    df = zensie_query(dt_from_daily, dt_to)  
-    
+def json_temp_zensie(dt_from_daily, dt_to):
+    df = zensie_query(dt_from_daily, dt_to)
+
     if not df.empty:
-        #resample zensie data per hour
+        # resample zensie data per hour
         df_grp_hr = resample(df)
-        
+
         time_ = []
-        for i in range (len(df_grp_hr)):
+        for i in range(len(df_grp_hr)):
             time = df_grp_hr["timestamp"][i]
             format_time = time.strftime("%d-%m-%Y %H:%M:%S")
             time_.append(format_time)
 
-        df_grp_hr["time"]= time_
+        df_grp_hr["time"] = time_
 
-        #.groupby('sensor_id').resample('H', on='timestamp').agg({'temperature':'mean', 'humidity':'mean'})
+        # .groupby('sensor_id').resample('H', on='timestamp').agg({'temperature':'mean', 'humidity':'mean'})
         return (
             df_grp_hr.groupby(["sensor_id"], as_index=True)  # "measure_name"
             .apply(
@@ -242,74 +256,117 @@ def json_temp_zensie (dt_from_daily, dt_to):
             .to_json(orient="records")
         )
     else:
-        return ({})
+        return {}
 
 
-@blueprint.route('/<template>')
-@login_required
-def route_template(template, methods=["GET"]):
+def json_temp_ges(df):
+    """
+    Function to return the JSON for the temperature related charts in the GES
+    model run.
+    """
+    df = add_time_columns(df)
+    json_str = (
+        df.groupby(["sensor_id", "measure_name", "run_id"], as_index=True)
+        .apply(
+            lambda x: x[
+                [
+                    "prediction_value",
+                    "prediction_index",
+                    "run_id",
+                    "time",
+                    "timestamp",
+                ]
+            ].to_dict(orient="records")
+        )
+        .reset_index()
+        .rename(columns={0: "Values"})
+        .to_json(orient="records")
+    )
+    return json_str
+
+
+def arima_template():
     # arima data
     # dt_to = dt.datetime(2021, 12, 4, 00, 00)  # dt.datetime.now()
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
 
-    df_arima_18 = arima_query(dt_from, dt_to, 1, 18)
-    df_arima_23 = arima_query(dt_from, dt_to, 1, 23)
-    df_arima_27 = arima_query(dt_from, dt_to, 1, 27)
-    
-    df_arima_ = df_arima_23.append(df_arima_18, ignore_index = True)
-    df_arima = df_arima_.append(df_arima_27, ignore_index = True)
-    
+    # Model number 1 is Arima, 2 is BSTS, 3 is for GES.
+    df_arima_18 = model_query(dt_from, dt_to, 1, 18)
+    df_arima_23 = model_query(dt_from, dt_to, 1, 23)
+    df_arima_27 = model_query(dt_from, dt_to, 1, 27)
+
+    df_arima_ = df_arima_23.append(df_arima_18, ignore_index=True)
+    df_arima = df_arima_.append(df_arima_27, ignore_index=True)
+
     json_arima = json_temp_arima(df_arima)
 
-
-    #zensie data
-    unique_time_forecast = df_arima['time_forecast'].unique()
+    # zensie data
+    unique_time_forecast = df_arima["time_forecast"].unique()
     date_time = pd.to_datetime(unique_time_forecast[0])
-    dt_to_z = date_time + dt.timedelta(days=+3) #datetime(2021, 6, 16)
+    dt_to_z = date_time + dt.timedelta(days=+3)
     dt_from_z = dt_to_z + dt.timedelta(days=-5)
-    json_zensie = json_temp_zensie(dt_from_z , dt_to_z)
+    json_zensie = json_temp_zensie(dt_from_z, dt_to_z)
 
-    unique_time_forecast_18 = df_arima_18['time_forecast'].unique()
+    unique_time_forecast_18 = df_arima_18["time_forecast"].unique()
     date_time_18 = pd.to_datetime(unique_time_forecast_18[0])
-    dt_to_z_18 = date_time_18 + dt.timedelta(days=+3) #datetime(2021, 6, 16)
+    dt_to_z_18 = date_time_18 + dt.timedelta(days=+3)
     dt_from_z_18 = dt_to_z_18 + dt.timedelta(days=-5)
-    json_zensie_18 = json_temp_zensie(dt_from_z_18 , dt_to_z_18)
+    json_zensie_18 = json_temp_zensie(dt_from_z_18, dt_to_z_18)
 
-    unique_time_forecast_23 = df_arima_23['time_forecast'].unique()
+    unique_time_forecast_23 = df_arima_23["time_forecast"].unique()
     date_time_23 = pd.to_datetime(unique_time_forecast_23[0])
-    dt_to_z_23 = date_time_23 + dt.timedelta(days=+3) #datetime(2021, 6, 16)
+    dt_to_z_23 = date_time_23 + dt.timedelta(days=+3)
     dt_from_z_23 = dt_to_z_23 + dt.timedelta(days=-5)
-    json_zensie_23 = json_temp_zensie(dt_from_z_23 , dt_to_z_23)
+    json_zensie_23 = json_temp_zensie(dt_from_z_23, dt_to_z_23)
 
-    unique_time_forecast_27 = df_arima_27['time_forecast'].unique()
+    unique_time_forecast_27 = df_arima_27["time_forecast"].unique()
     date_time_27 = pd.to_datetime(unique_time_forecast_27[0])
-    dt_to_z_27 = date_time_27 + dt.timedelta(days=+3) #datetime(2021, 6, 16)
+    dt_to_z_27 = date_time_27 + dt.timedelta(days=+3)
     dt_from_z_27 = dt_to_z_27 + dt.timedelta(days=-5)
-    json_zensie_27 = json_temp_zensie(dt_from_z_27 , dt_to_z_27)
+    json_zensie_27 = json_temp_zensie(dt_from_z_27, dt_to_z_27)
 
-
-    # export data in csv for debugging
-    #df_arima.to_csv(r'C:\Users\froumpani\OneDrive - The Alan Turing Institute\Desktop\test_data_filter.csv', index = False)
-
-
-    # if request.method == 'GET':
-    #     print("!"*100)
-    #     #sensors = structure.Sensor.query.all()
-    #     #print(sensors)
-    #     print("!"*100)
-
-    if template == "arima":
-
-        return render_template(template + '.html',
+    return render_template(
+        "arima.html",
         json_arima_f=json_arima,
         json_zensie_f=json_zensie,
         json_zensie_18_f=json_zensie_18,
         json_zensie_23_f=json_zensie_23,
         json_zensie_27_f=json_zensie_27,
+    )
 
 
-        )
+def ges_template():
+    # arima data
+    # dt_to = dt.datetime(2021, 12, 4, 00, 00)  # dt.datetime.now()
+    dt_to = dt.datetime.now()
+    dt_from = dt_to - dt.timedelta(days=3)
 
+    # TODO Fix the starting time, now using a whole year because last run is so
+    # old.
+    df_ges = model_query(
+        dt_to - dt.timedelta(days=365), dt_to, 3, 27, test=True
+    )
+    json_ges = json_temp_ges(df_ges)
+
+    # zensie data
+    unique_time_forecast = df_ges["time_forecast"].unique()
+    date_time = pd.to_datetime(unique_time_forecast[0])
+    dt_to_z = date_time + dt.timedelta(days=+3)
+    dt_from_z = dt_to_z + dt.timedelta(days=-5)
+    json_zensie = json_temp_zensie(dt_from_z, dt_to_z)
+
+    return render_template(
+        "ges.html", json_ges_f=json_ges, json_zensie_f=json_zensie,
+    )
+
+
+@blueprint.route("/<template>")
+@login_required
+def route_template(template, methods=["GET"]):
+    if template == "arima":
+        return arima_template()
+    elif template == "ges":
+        return ges_template()
     else:
-        return render_template(template + '.html')
+        return render_template(template + ".html")
