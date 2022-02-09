@@ -184,13 +184,15 @@ def resample(df):
     return df_grp_hr
 
 
-def add_time_columns(df):
+def add_time_columns(df, shift_hours=0):
     """Create timestamps from prediction index and convert date to string."""
     time_ = []
     timestamp_ = []
     for i in range(len(df)):
         pred_id = int(df["prediction_index"][i])
-        pred_time = df["time_forecast"][i] + dt.timedelta(hours=pred_id)
+        pred_time = df["time_forecast"][i] + dt.timedelta(
+            hours=pred_id - shift_hours
+        )
         format_time = pred_time.strftime("%d-%m-%Y %H:%M:%S")
         time_.append(format_time)
         timestamp_.append(pred_time)
@@ -264,7 +266,6 @@ def json_temp_ges(df):
     Function to return the JSON for the temperature related charts in the GES
     model run.
     """
-    df = add_time_columns(df)
     json_str = (
         df.groupby(["sensor_id", "measure_name", "run_id"], as_index=True)
         .apply(
@@ -341,20 +342,23 @@ def ges_template():
     # dt_to = dt.datetime(2021, 12, 4, 00, 00)  # dt.datetime.now()
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
-
-    # TODO Fix the starting time, now using a whole year because last run is so
-    # old.
-    df_ges = model_query(
-        dt_to - dt.timedelta(days=365), dt_to, 3, 27, test=True
-    )
-    json_ges = json_temp_ges(df_ges)
+    df_ges = model_query(dt_from, dt_to, 3, 27, test=True)
+    # TODO This is a hard coded constant for now, marking the length of the
+    # calibration period, because this data is lacking in the DB.
+    time_shift = 24 * 10 - 1
+    df_ges = add_time_columns(df_ges, time_shift)
 
     # zensie data
     unique_time_forecast = df_ges["time_forecast"].unique()
-    date_time = pd.to_datetime(unique_time_forecast[0])
-    dt_to_z = date_time + dt.timedelta(days=+3)
+    forecast_time = pd.to_datetime(unique_time_forecast[0])
+    dt_to_z = forecast_time + dt.timedelta(days=+3)
     dt_from_z = dt_to_z + dt.timedelta(days=-5)
     json_zensie = json_temp_zensie(dt_from_z, dt_to_z)
+
+    # Keep only three days of calibration data.
+    dt_from_calibration = forecast_time - dt.timedelta(days=3)
+    df_ges = df_ges[dt_from_calibration <= df_ges["timestamp"]]
+    json_ges = json_temp_ges(df_ges)
 
     return render_template(
         "ges.html", json_ges_f=json_ges, json_zensie_f=json_zensie,

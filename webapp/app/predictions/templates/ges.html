@@ -102,10 +102,11 @@
   const ges_json = JSON.parse('{{json_ges_f | safe}}');
   const zensie_json = JSON.parse('{{json_zensie_f | safe}}');
   const canvasname = "ges_model";
+  const scenario_name = "1 ACH, 1 DH, -3 hours";
   document.getElementById(canvasname+"_title").innerHTML = "sensor id: "+ ges_json[0]["sensor_id"] + "     |   " + "run id: " + ges_json[0]["Values"][0]["run_id"];
   // See static/javascript/predictions.js for the plot function.
-  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], zensie_json, "temperature", canvasname + "_temperature", "Temperature (°C)", true);
-  plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], zensie_json, "humidity", canvasname + "_humidity", "Relative humidity", false);
+  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], zensie_json, "temperature", canvasname + "_temperature", "Temperature (°C)", true, scenario_name);
+  plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], zensie_json, "humidity", canvasname + "_humidity", "Relative humidity (%)", false, scenario_name);
 </script>
 
 
