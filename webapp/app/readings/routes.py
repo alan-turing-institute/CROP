@@ -53,7 +53,8 @@ def route_template(template):
                     )
                     .filter(
                         and_(
-                            ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
+                            ReadingsAdvanticsysClass.sensor_id
+                            == SensorClass.id,
                             ReadingsAdvanticsysClass.timestamp >= dt_from,
                             ReadingsAdvanticsysClass.timestamp <= dt_to,
                         )
@@ -109,25 +110,21 @@ def route_template(template):
                 )
 
             elif template == "dailyharvest":
-                query = (
-                    db.session.query(
-                        DailyHarvestClass.crop,
-                        DailyHarvestClass.propagation_date,
-                        DailyHarvestClass.location_id,
-                        DailyHarvestClass.stack,
-                        DailyHarvestClass.total_yield_weight,
-                        DailyHarvestClass.disease_trays,
-                        DailyHarvestClass.defect_trays,
-                        DailyHarvestClass.notes,
-                        DailyHarvestClass.user,
-                        DailyHarvestClass.time_created,
-                    )
-
-                    .limit(CONST_MAX_RECORDS)
-                )
+                query = db.session.query(
+                    DailyHarvestClass.crop,
+                    DailyHarvestClass.propagation_date,
+                    DailyHarvestClass.location_id,
+                    DailyHarvestClass.stack,
+                    DailyHarvestClass.total_yield_weight,
+                    DailyHarvestClass.disease_trays,
+                    DailyHarvestClass.defect_trays,
+                    DailyHarvestClass.notes,
+                    DailyHarvestClass.user,
+                    DailyHarvestClass.time_created,
+                ).limit(CONST_MAX_RECORDS)
 
             readings = db.session.execute(query).fetchall()
-            #print(readings, file=sys.stderr)
+            # print(readings, file=sys.stderr)
 
             results_arr = query_result_to_array(readings, date_iso=False)
 

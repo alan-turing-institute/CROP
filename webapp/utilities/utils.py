@@ -21,10 +21,11 @@ def query_result_to_array(query_result, date_iso=True):
 
         # NOTE: added  ._asdict() as rowproxy didnt come in the form of dict and could not read .items.
         # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
-        if '_asdict' in dir(rowproxy):
-            rowproxy=rowproxy._asdict()
-            #print ("rowproxy: ", rowproxy)#
-        else:  None
+        if "_asdict" in dir(rowproxy):
+            rowproxy = rowproxy._asdict()
+            # print ("rowproxy: ", rowproxy)#
+        else:
+            None
 
         for column, value in rowproxy.items():
 
@@ -38,7 +39,7 @@ def query_result_to_array(query_result, date_iso=True):
                     }
             else:
                 dict_entry = {**dict_entry, **{column: value}}
-        #dict_entry["ID"]=21
+        # dict_entry["ID"]=21
         results_arr.append(dict_entry)
 
     return results_arr
@@ -56,7 +57,9 @@ def jasonify_query_result(query_result):
 
     results_arr = query_result_to_array(query_result)
 
-    result = json.dumps(results_arr, ensure_ascii=True, indent=4, sort_keys=True)
+    result = json.dumps(
+        results_arr, ensure_ascii=True, indent=4, sort_keys=True
+    )
 
     return result
 
@@ -104,9 +107,9 @@ def parse_date_range_argument(request_args):
             + timedelta(milliseconds=-1)
         )
 
-        dt_from = datetime.strptime(request_args.split("-")[0], "%Y%m%d").replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        dt_from = datetime.strptime(
+            request_args.split("-")[0], "%Y%m%d"
+        ).replace(hour=0, minute=0, second=0, microsecond=0)
 
         return dt_from, dt_to
 

@@ -37,7 +37,8 @@ HUM_BINS = {
     "BackFarm": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70,
     "R&D": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70,
 }
-LOCATION_ZONES = ["Propagation","FrontFarm","MidFarm","BackFarm","R&D"]
+LOCATION_ZONES = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
+
 
 def resample(df_, bins):
     """
@@ -50,24 +51,24 @@ def resample(df_, bins):
         temp_df: the df with grouped bins
     """
 
-
     bins_list = []
     for i in range(len(bins) - 1):
         bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
 
-    #resamples with 0 if there are no data in a bin
+    # resamples with 0 if there are no data in a bin
     for temp_range in bins_list:
         if len(df_[(df_["bin"] == temp_range)].index) == 0:
 
             df2 = pd.DataFrame({"bin": [temp_range], "cnt": [0]})
 
             df_ = df_.append(df2)
-    
+
     df_out = df_.sort_values(by=["bin"], ascending=True)
 
     df_out.reset_index(inplace=True, drop=True)
 
     return df_out
+
 
 # def warnings_query(dt_from, dt_to):
 #     """
@@ -99,7 +100,6 @@ def resample(df_, bins):
 #         logging.debug("WARNING: Query returned empty")
 
 #     return df
-
 
 
 def zensie_query(dt_from, dt_to):
@@ -164,11 +164,11 @@ def grp_per_hr_zone(temp_df):
 
     df = copy.deepcopy(temp_df)
 
-    #df["timestamp"] = pd.to_datetime(df["timestamp"])
+    # df["timestamp"] = pd.to_datetime(df["timestamp"])
 
     # mask per selected date
-    #mask = (df["timestamp"] >= dt_from) & (df["timestamp"] <= dt_to)
-    #filtered_df = df.loc[mask]
+    # mask = (df["timestamp"] >= dt_from) & (df["timestamp"] <= dt_to)
+    # filtered_df = df.loc[mask]
 
     # extracting date from datetime
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
@@ -180,7 +180,8 @@ def grp_per_hr_zone(temp_df):
         df.groupby(
             by=[
                 df.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
+                    lambda x: "%04d-%02d-%02d-%02d"
+                    % (x.year, x.month, x.day, x.hour)
                 ),
                 "zone",
                 "date",
@@ -210,8 +211,8 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id):
     df = copy.deepcopy(temp_df)
 
     # mask per selected date
-    #mask = (df["timestamp"] >= dt_from) & (df["timestamp"] <= dt_to)
-    #filtered_df = df.loc[mask]
+    # mask = (df["timestamp"] >= dt_from) & (df["timestamp"] <= dt_to)
+    # filtered_df = df.loc[mask]
 
     # extracting date from datetime
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
@@ -227,7 +228,8 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id):
         df_.groupby(
             by=[
                 df_.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
+                    lambda x: "%04d-%02d-%02d-%02d"
+                    % (x.year, x.month, x.day, x.hour)
                 ),
                 "date",
                 "sensor_id",
@@ -265,11 +267,10 @@ def temperature_analysis(df_temp, bins):
     Returns:
         temp_df_merged: A merged df with sampled values per bin
     """
-    #print("hello", df_temp)
+    # print("hello", df_temp)
 
-    #df_unique_zones = df_temp[["zone"]].drop_duplicates(["zone"])
-    #location_zones = df_unique_zones["zone"].tolist()
-    
+    # df_unique_zones = df_temp[["zone"]].drop_duplicates(["zone"])
+    # location_zones = df_unique_zones["zone"].tolist()
 
     temp_df_merged = []
 
@@ -316,7 +317,8 @@ def temperature_analysis(df_temp, bins):
 
         else:
             logging.info(
-                "WARNING: %s doesn't exist in current temp bin dictionary" % zone
+                "WARNING: %s doesn't exist in current temp bin dictionary"
+                % zone
             )
 
         # merges all df in one.
@@ -339,8 +341,8 @@ def humidity_analysis(df_hum, bins):
         temp_df_merged: A merged df with sampled values per bin
 
     """
-    #df_unique_zones = df_hum[["zone"]].drop_duplicates(["zone"])
-    #location_zones = df_unique_zones["zone"].tolist()
+    # df_unique_zones = df_hum[["zone"]].drop_duplicates(["zone"])
+    # location_zones = df_unique_zones["zone"].tolist()
 
     hum_list = []
     for zone in LOCATION_ZONES:
@@ -383,7 +385,8 @@ def humidity_analysis(df_hum, bins):
 
         else:
             logging.info(
-                "WARNING: %s doesn't exist in current hum bin dictionary" % zone
+                "WARNING: %s doesn't exist in current hum bin dictionary"
+                % zone
             )
 
     # merges all df in one.
@@ -421,23 +424,20 @@ def json_hum(df_hum):
         .to_json(orient="records")
     )
 
+
 def current_values_json(df_hourly):
 
-    df_test = df_hourly.loc[df_hourly.groupby('zone').timestamp.idxmax()]
-    df_test['temperature'] = df_test['temperature'].astype(int)
-
+    df_test = df_hourly.loc[df_hourly.groupby("zone").timestamp.idxmax()]
+    df_test["temperature"] = df_test["temperature"].astype(int)
 
     for i in range(len(LOCATION_ZONES)):
 
-        if not df_test['zone'].str.contains(LOCATION_ZONES[i]).any():
-            print ( df_test['zone'])
+        if not df_test["zone"].str.contains(LOCATION_ZONES[i]).any():
+            print(df_test["zone"])
             df2 = pd.DataFrame({"zone": [LOCATION_ZONES[i]]})
             df_test = df_test.append(df2)
 
-
-   
-    return (df_test.to_json(orient="records")
-    )
+    return df_test.to_json(orient="records")
 
 
 # @blueprint.route("/<template>")
@@ -465,7 +465,8 @@ def index():
         weekly_temp_json = json_temp(df_temp_weekly)
         weekly_hum_json = json_temp(df_hum_weekly)
         json_vertstrat = vertical_stratification(
-            df, 23, 18)  # sensorids in positions (16B1 and 16B4)
+            df, 23, 18
+        )  # sensorids in positions (16B1 and 16B4)
     else:
         weekly_temp_json = {}
         weekly_hum_json = {}
@@ -488,16 +489,14 @@ def index():
     else:
         hourly_json = {}
 
-    
-
-
     return render_template(
         "index.html",
-        hourly_data = hourly_json,
+        hourly_data=hourly_json,
         temperature_data=weekly_temp_json,
         humidity_data=weekly_hum_json,
         temperature_data_daily=daily_temp_json,
         humidity_data_daily=daily_hum_json,
         vertical_stratification=json_vertstrat,
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
-        dt_to=dt_to.strftime("%B %d, %Y"))
+        dt_to=dt_to.strftime("%B %d, %Y"),
+    )

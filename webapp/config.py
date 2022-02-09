@@ -2,16 +2,16 @@ from os import environ
 
 
 class Config(object):
-    SECRET_KEY = 'key'
+    SECRET_KEY = "key"
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
 
     # PostgreSQL database
-    SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(
-        environ.get('CROP_SQL_USER'),
-        environ.get('CROP_SQL_PASS'),
-        environ.get('CROP_SQL_HOST'),
-        environ.get('CROP_SQL_PORT'),
-        environ.get('CROP_SQL_DBNAME')
+    SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}:{}/{}".format(
+        environ.get("CROP_SQL_USER"),
+        environ.get("CROP_SQL_PASS"),
+        environ.get("CROP_SQL_HOST"),
+        environ.get("CROP_SQL_PORT"),
+        environ.get("CROP_SQL_DBNAME"),
     )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -34,12 +34,12 @@ class ProductionConfig(Config):
     REMEMBER_COOKIE_DURATION = 3600
 
     # PostgreSQL database
-    SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(
-        environ.get('CROP_SQL_USER'),
-        environ.get('CROP_SQL_PASS'),
-        environ.get('CROP_SQL_HOST'),
-        environ.get('CROP_SQL_PORT'),
-        environ.get('CROP_SQL_DBNAME')
+    SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}:{}/{}".format(
+        environ.get("CROP_SQL_USER"),
+        environ.get("CROP_SQL_PASS"),
+        environ.get("CROP_SQL_HOST"),
+        environ.get("CROP_SQL_PORT"),
+        environ.get("CROP_SQL_DBNAME"),
     )
 
 
@@ -47,7 +47,5 @@ class DebugConfig(Config):
     DEBUG = True
     DISABLE_REGISTER = True
 
-config_dict = {
-    'Production': ProductionConfig,
-    'Debug': DebugConfig
-}
+
+config_dict = {"Production": ProductionConfig, "Debug": DebugConfig}

@@ -57,7 +57,9 @@ def login():
             "login/login.html",
             login_form=login_form,
             create_account_form=create_account_form,
-            disable_register=(environ.get("CROP_DISABLE_REGISTER", "True") == "True"),
+            disable_register=(
+                environ.get("CROP_DISABLE_REGISTER", "True") == "True"
+            ),
         )
     return redirect(url_for("home_blueprint.index"))
 
