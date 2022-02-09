@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} SENSOR TYPES {% endblock title %}
+{% block title %} ARIMA PREDICTIONS {% endblock title %}
 
 {% block stylesheets %}
 {{ super() }}
@@ -14,6 +14,7 @@
   rel="stylesheet">
 <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
   rel="stylesheet">
+<link href="{{ url_for('static', filename='css/predictions.css') }}" rel="stylesheet">
 {% endblock stylesheets %}
 
 {% block content %}
@@ -24,7 +25,7 @@
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
           <div class="x_title">
-            <h2>Arima: Temperature and humidity predictions</h2>
+            <h2>Arima: Temperature predictions</h2>
             <ul class="nav navbar-right panel_toolbox">
               <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
               </li>
@@ -50,11 +51,17 @@
                 <div role="tabpanel" class="tab-pane fade active in" id="tab_content0">
                   <div class="x_content">
                     <h4> <p  id="arima_model0title"></h4></p>
-                    <canvas id="arima_model0"></canvas>
+                    <div class="canvas_wrapper">
+                      <canvas id="arima_model0"></canvas>
+                    </div>
                     <h4> <p  id="arima_model1title"></h4></p>
-                    <canvas id="arima_model1"></canvas>
+                    <div class="canvas_wrapper">
+                      <canvas id="arima_model1"></canvas>
+                    </div>
                     <h4> <p  id="arima_model2title"></h4></p>
-                    <canvas id="arima_model2"></canvas>
+                    <div class="canvas_wrapper">
+                      <canvas id="arima_model2"></canvas>
+                    </div>
                     <p class="text-muted font-13 m-b-30"></p>
                   </div>
                 </div>
@@ -73,6 +80,7 @@
 <!-- Datatables -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<script src="{{ url_for('static', filename='javascript/predictions.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
@@ -96,131 +104,7 @@
 <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
 
 <script>
-  // Zip to arrays [x0, x1, x2, ...] and [y0, y1, y2, ...] into
-  // [{x: x0, y: 01}, {x: x1, y: y1}, {x: x2, y: y2}, ...]
-  // Used to gather data for plots into a format preferred by Chart.js
-  function dictionary_scatter(x , y) {
-    value_array = []
-    for (var j=0; j < y.length; j++) {
-      const mydict = {x: x[j], y: y[j]}
-      value_array.push(mydict)
-    }
-    return value_array
-  }
-
-  function time_series_charts_arima(json_arima, zensie_json, canvasname) {
-    //create arrays for data
-    values_top = [];
-    values_bot = [];
-    values_mid = [];
-    sensors_id = [];
-    hours = [];
-    //parsing json to lists
-    //TODO: loop sensors
-
-    for (var j = 0; j < json_arima[1]["Values"].length; j++) {
-      values_top.push(parseFloat(json_arima[2]["Values"][j]["prediction_value"]))
-      values_mid.push(parseFloat(json_arima[1]["Values"][j]["prediction_value"]))
-      values_bot.push(parseFloat(json_arima[0]["Values"][j]["prediction_value"]))
-      sensors_id.push(parseFloat(json_arima[0]["sensor_id"]))
-      const date_ar = new Date(json_arima[0]["Values"][j]["timestamp"])
-      hours.push(date_ar)
-    }
-        
-    zensie_values = []
-    zensie_time = []
-    
-    for (var i = 0; i < zensie_json.length; i++){
-      if (zensie_json[i]["sensor_id"] == json_arima[1]["sensor_id"]){
-        var sensor_id = zensie_json[i]["sensor_id"]
-        for (ii = 0; ii < zensie_json[i]["Values"].length;ii++){
-          zensie_values.push(parseFloat(zensie_json[i]["Values"][ii]["temperature"]))
-          var date_z = new Date(zensie_json[i]["Values"][ii]["timestamp"])
-          zensie_time.push(date_z)
-        }
-      }
-    }
-
-    const mid_scatter = dictionary_scatter(hours , values_mid)
-    const top_scatter = dictionary_scatter(hours, values_top)
-    const bot_scatter = dictionary_scatter(hours, values_bot)
-    const zensie_scatter = dictionary_scatter(zensie_time, zensie_values)
-
-    const data = {
-      label: "Arima Prediction",
-      datasets: [
-        {
-          label: 'Upper Bound',
-          data: top_scatter,
-          borderColor: "#ee978c",
-          fill: false,
-          borderDash: [1],
-          pointRadius:1,
-          showLine: true
-          
-        },
-        {
-          label: 'Mean Temperature',
-          data: mid_scatter,
-          borderColor: "#ff0000",
-          fill: '-1',
-          borderDash: [2],
-          pointRadius:1.5,
-          showLine: true
-        },
-        {
-          label: 'Lower Bound',
-          data: bot_scatter,
-          borderColor: "#ee978c",
-          fill: '-1',
-          borderDash: [1],
-          pointRadius:1,
-          showLine: true
-        },
-        {
-          label: 'Zensie Temperature',
-          data: zensie_scatter,
-          borderColor: "#a0a0a0",
-          fill: false,
-          pointRadius:1.5,
-          showLine: true
-        },
-      ],
-    };
-   
-    const config = {
-      type: "scatter",
-      data: data,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "right"
-          },
-          title: {
-            display: true,
-            text: "Prediction Model"
-          }
-        },
-        scales: {
-          xAxes: [{
-            type: 'time'
-          }]
-        }
-      }
-    };
-    
-    //title
-    document.getElementById(canvasname+"title").innerHTML = "sensor id: "+ json_arima[0]["sensor_id"] + "     |   " + "run id: " + json_arima[0]["Values"][0]["run_id"];
-
-    var ctx = document.getElementById(canvasname);
-    var myChart = new Chart(ctx, config);
-    myChart.update();
-  }
-
-  function sensor_loop(json_arima, json_zensie )
-  {
-    
+  function sensor_loop(json_arima, zensie_data_dict ) {
     //get unique sensor ids
     list_sensors = []
     for (var i = 0; i < json_arima.length; i++){
@@ -228,12 +112,8 @@
     }
     let unique_sensors = [...new Set(list_sensors)];
     
-    
-
     for (var i = 0; i < unique_sensors.length; i++) {
-      console.log ("sensors:", i)
       json_arima_sensor = []
-     
       for (var j = 0; j < json_arima.length; j++) {
         if (json_arima[j]["sensor_id"] == unique_sensors[i])
         {
@@ -241,8 +121,13 @@
           json_arima_sensor.push(json_arima[j]);
         }
       }
-
-      time_series_charts_arima(json_arima_sensor, json_zensie[String(current_sensor)], "arima_model"+[i]);
+      //title
+      const canvasname = "arima_model"+[i]
+      document.getElementById(canvasname+"title").innerHTML = "sensor id: "+ json_arima[0]["sensor_id"] + "     |   " + "run id: " + json_arima[0]["Values"][0]["run_id"];
+      // See static/javascript/predictions.js for the plot function.
+      const show_legend = i == 0
+      const axis_title = "Temperature (°C)"
+      plot(json_arima_sensor[2], json_arima_sensor[1], json_arima_sensor[0], null, zensie_data_dict[String(current_sensor)], "temperature", canvasname, axis_title, show_legend);
     }
   }
 
@@ -251,6 +136,8 @@
   var zensie_data_18 = JSON.parse('{{json_zensie_18_f | safe}}');
   var zensie_data_23 = JSON.parse('{{json_zensie_23_f | safe}}');
   var zensie_data_27 = JSON.parse('{{json_zensie_27_f | safe}}');
+  // TODO The zensie data format is a redundant, all the three elements
+  //  actually hold all the data. Sort this out.
   const zensie_data_dict = {18: zensie_data_18, 23: zensie_data_23, 27:zensie_data_27}
   sensor_loop(arima_data, zensie_data_dict)
 </script>
