@@ -39,7 +39,9 @@ def get_all_sensors():
     sensor_temp = (
         db.session.query(
             SensorLocationClass.sensor_id,
-            func.max(SensorLocationClass.installation_date).label("installation_date"),
+            func.max(SensorLocationClass.installation_date).label(
+                "installation_date"
+            ),
         )
         .group_by(SensorLocationClass.sensor_id)
         .subquery()
@@ -57,7 +59,8 @@ def get_all_sensors():
     ).filter(
         and_(
             sensor_temp.c.sensor_id == SensorLocationClass.sensor_id,
-            sensor_temp.c.installation_date == SensorLocationClass.installation_date,
+            sensor_temp.c.installation_date
+            == SensorLocationClass.installation_date,
             sensor_temp.c.sensor_id == SensorClass.id,
             SensorClass.type_id == TypeClass.id,
             SensorLocationClass.location_id == LocationClass.id,
@@ -67,7 +70,7 @@ def get_all_sensors():
     execute_result = db.session.execute(query).fetchall()
 
     result = jasonify_query_result(execute_result)
-    #print("ffff", result)
+    # print("ffff", result)
 
     return result
 

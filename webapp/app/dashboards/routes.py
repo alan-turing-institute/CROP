@@ -61,7 +61,14 @@ def resample(df, bins, dt_from, dt_to):
         day = date_min + timedelta(n)
 
         for temp_range in bins_list:
-            if len(df[(df["date"] == day) & (df["temp_bin"] == temp_range)].index) == 0:
+            if (
+                len(
+                    df[
+                        (df["date"] == day) & (df["temp_bin"] == temp_range)
+                    ].index
+                )
+                == 0
+            ):
 
                 df2 = pd.DataFrame(
                     {"date": [day], "temp_bin": [temp_range], "temp_cnt": [0]}
@@ -388,7 +395,9 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
 
     df = copy.deepcopy(temp_df)
 
-    df_unique_sensors = df[["sensor_id", "name"]].drop_duplicates(["sensor_id", "name"])
+    df_unique_sensors = df[["sensor_id", "name"]].drop_duplicates(
+        ["sensor_id", "name"]
+    )
 
     sensor_ids = df_unique_sensors["sensor_id"].tolist()
     sensor_names = df_unique_sensors["name"].tolist()
@@ -403,7 +412,8 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
     sensor_grp = df.groupby(
         by=[
             df.timestamp.map(
-                lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
+                lambda x: "%04d-%02d-%02d-%02d"
+                % (x.year, x.month, x.day, x.hour)
             ),
             "sensor_id",
             "date",
@@ -414,13 +424,17 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
     sensor_grp_temp = sensor_grp["temperature"].mean().reset_index()
 
     # binning temperature values
-    sensor_grp_temp["temp_bin"] = pd.cut(sensor_grp_temp["temperature"], TEMP_BINS)
+    sensor_grp_temp["temp_bin"] = pd.cut(
+        sensor_grp_temp["temperature"], TEMP_BINS
+    )
 
     # converting bins to str
     sensor_grp_temp["temp_bin"] = sensor_grp_temp["temp_bin"].astype(str)
 
     # get bin counts for each sensor-day combination
-    sensor_grp_date = sensor_grp_temp.groupby(by=["sensor_id", "date", "temp_bin"])
+    sensor_grp_date = sensor_grp_temp.groupby(
+        by=["sensor_id", "date", "temp_bin"]
+    )
 
     sensor_cnt = sensor_grp_date["temperature"].count().reset_index()
     sensor_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
@@ -444,7 +458,11 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
             ).dt.strftime("%Y-%m-%d")
 
             bins_json.append(
-                '["' + bin_range + '",' + temp_bin_df.to_json(orient="records") + "]"
+                '["'
+                + bin_range
+                + '",'
+                + temp_bin_df.to_json(orient="records")
+                + "]"
             )
 
         json_data.append("[" + ",".join(bins_json) + "]")
@@ -491,14 +509,16 @@ def route_template(template):
 
             # unique sensors
             adv_sensors = df.sensor_id.unique()
-            print ("advant", adv_sensors)
+            print("advant", adv_sensors)
             adv_sensors_modbus_ids = df.id.unique()
 
             # extracting date from datetime
             df["date"] = pd.to_datetime(df["timestamp"].dt.date)
 
             # Reseting index
-            df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
+            df.sort_values(by=["timestamp"], ascending=True).reset_index(
+                inplace=True
+            )
 
             # grouping data by date-hour and sensor id
             adv_grp = df.groupby(
@@ -516,13 +536,17 @@ def route_template(template):
             adv_grp_temp = adv_grp["temperature"].mean().reset_index()
 
             # binning temperature values
-            adv_grp_temp["temp_bin"] = pd.cut(adv_grp_temp["temperature"], TEMP_BINS)
+            adv_grp_temp["temp_bin"] = pd.cut(
+                adv_grp_temp["temperature"], TEMP_BINS
+            )
 
             # converting bins to str
             adv_grp_temp["temp_bin"] = adv_grp_temp["temp_bin"].astype(str)
 
             # get bin counts for each sensor-day combination
-            adv_grp_date = adv_grp_temp.groupby(by=["sensor_id", "date", "temp_bin"])
+            adv_grp_date = adv_grp_temp.groupby(
+                by=["sensor_id", "date", "temp_bin"]
+            )
             adv_cnt = adv_grp_date["temperature"].count().reset_index()
             adv_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
 
@@ -534,7 +558,9 @@ def route_template(template):
                 del adv_cnt_sensor["sensor_id"]
 
                 # Adding missing date/temp_bin combos
-                bins_list, df_list = resample(adv_cnt_sensor, TEMP_BINS, dt_from, dt_to)
+                bins_list, df_list = resample(
+                    adv_cnt_sensor, TEMP_BINS, dt_from, dt_to
+                )
 
                 bins_json = []
 
@@ -581,7 +607,6 @@ def route_template(template):
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
 
-
     elif template == "energy_dashboard":
 
         energy_data = {}
@@ -607,6 +632,5 @@ def route_template(template):
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
-
 
     return render_template(template + ".html")
