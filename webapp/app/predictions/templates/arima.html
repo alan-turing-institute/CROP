@@ -123,11 +123,12 @@
       }
       //title
       const canvasname = "arima_model"+[i]
-      document.getElementById(canvasname+"title").innerHTML = "sensor id: "+ json_arima[0]["sensor_id"] + "     |   " + "run id: " + json_arima[0]["Values"][0]["run_id"];
+      const title = "sensor id: " + current_sensor + "     |   " + "run id: " + json_arima[i]["Values"][0]["run_id"];
+      document.getElementById(canvasname+"title").innerHTML = title
       // See static/javascript/predictions.js for the plot function.
       const show_legend = i == 0
       const axis_title = "Temperature (°C)"
-      plot(json_arima_sensor[2], json_arima_sensor[1], json_arima_sensor[0], null, zensie_data_dict[String(current_sensor)], "temperature", canvasname, axis_title, show_legend);
+      plot(json_arima_sensor[2], json_arima_sensor[1], json_arima_sensor[0], null, zensie_data_dict[String(current_sensor)], "temperature", canvasname, axis_title, show_legend, null);
     }
   }
 

@@ -17,7 +17,7 @@ function sort_by_numerical(arr, elname) {
   return arr.sort((e1, e2) => e1[elname] - e2[elname])
 }
 
-function plot(top_json, mid_json, bot_json, sce_json, zensie_json, zensie_measure, canvasname, y_label, legend) {
+function plot(top_json, mid_json, bot_json, sce_json, zensie_json, zensie_measure, canvasname, y_label, show_legend, scenario_name) {
   sort_by_numerical(top_json["Values"], "prediction_index")
   sort_by_numerical(mid_json["Values"], "prediction_index")
   sort_by_numerical(bot_json["Values"], "prediction_index")
@@ -63,7 +63,7 @@ function plot(top_json, mid_json, bot_json, sce_json, zensie_json, zensie_measur
     label: "GES Prediction",
     datasets: [
       {
-        label: 'Upper Bound',
+        label: 'Upper bound',
         data: top_scatter,
         borderColor: "#ee978c",
         fill: false,
@@ -82,7 +82,7 @@ function plot(top_json, mid_json, bot_json, sce_json, zensie_json, zensie_measur
         showLine: true
       },
       {
-        label: 'Lower Bound',
+        label: 'Lower bound',
         data: bot_scatter,
         borderColor: "#ee978c",
         fill: '-1',
@@ -102,7 +102,7 @@ function plot(top_json, mid_json, bot_json, sce_json, zensie_json, zensie_measur
   };
   if ( sce_json != null ) {
       data.datasets[4] = {
-        label: 'Scenario',
+        label: scenario_name,
         data: sce_scatter,
         borderColor: "#8eb0ee",
         fill: false,
@@ -119,7 +119,7 @@ function plot(top_json, mid_json, bot_json, sce_json, zensie_json, zensie_measur
       responsive: true,
       maintainAspectRatio: false,
       legend: {
-        display: legend,
+        display: show_legend,
         position: "top"
       },
       scales: {
