@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} SENSOR TYPES {% endblock title %}
+{% block title %} GES PREDICTIONS {% endblock title %}
 
 {% block stylesheets %}
 {{ super() }}
@@ -14,6 +14,7 @@
   rel="stylesheet">
 <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
   rel="stylesheet">
+<link href="{{ url_for('static', filename='css/predictions.css') }}" rel="stylesheet">
 {% endblock stylesheets %}
 
 {% block content %}
@@ -50,10 +51,12 @@
                 <div role="tabpanel" class="tab-pane fade active in" id="tab_content1">
                   <div class="x_content">
                     <h4> <p  id="ges_model_title"></h4></p>
-                    <h3> <p  id="ges_model_temperature_title">Temperature</h5></p>
-                    <canvas id="ges_model_temperature"></canvas>
-                    <h3> <p  id="ges_model_humidity_title">Humidity</h5></p>
-                    <canvas id="ges_model_humidity"></canvas>
+                    <div class="canvas_wrapper">
+                      <canvas id="ges_model_temperature"></canvas>
+                    </div>
+                    <div class="canvas_wrapper">
+                      <canvas id="ges_model_humidity"></canvas>
+                    </div>
                     <p class="text-muted font-13 m-b-30"></p>
                   </div>
                 </div>
@@ -72,6 +75,7 @@
 <!-- Datatables -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<script src="{{ url_for('static', filename='javascript/predictions.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
@@ -95,142 +99,13 @@
 <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
 
 <script>
-  // Zip to arrays [x0, x1, x2, ...] and [y0, y1, y2, ...] into
-  // [{x: x0, y: 01}, {x: x1, y: y1}, {x: x2, y: y2}, ...]
-  // Used to gather data for plots into a format preferred by Chart.js
-  function dictionary_scatter(x , y) {
-    value_array = []
-    for (var j=0; j < y.length; j++) {
-      const mydict = {x: x[j], y: y[j]}
-      value_array.push(mydict)
-    }
-    return value_array
-  }
-
-  function plot(top_json, mid_json, bot_json, sce_json, zensie_json, zensie_measure, canvasname) {
-    //create arrays for data
-    values_top = [];
-    values_bot = [];
-    values_mid = [];
-    values_sce = [];
-    sensors_id = [];
-    hours = [];
-    //parsing json to lists
-    //TODO: loop sensors
-
-    for (var j = 0; j < top_json["Values"].length; j++) {
-      values_top.push(parseFloat(top_json["Values"][j]["prediction_value"]))
-      values_mid.push(parseFloat(mid_json["Values"][j]["prediction_value"]))
-      values_bot.push(parseFloat(bot_json["Values"][j]["prediction_value"]))
-      values_sce.push(parseFloat(sce_json["Values"][j]["prediction_value"]))
-      sensors_id.push(parseFloat(top_json["sensor_id"]))
-      const date_ar = new Date(top_json["Values"][j]["timestamp"])
-      hours.push(date_ar)
-    }
-        
-    zensie_values = []
-    zensie_time = []
-    
-    for (var i = 0; i < zensie_json.length; i++) {
-      if (zensie_json[i]["sensor_id"] == top_json["sensor_id"]) {
-        var sensor_id = zensie_json[i]["sensor_id"]
-        for (ii = 0; ii < zensie_json[i]["Values"].length;ii++) {
-          zensie_values.push(parseFloat(zensie_json[i]["Values"][ii][zensie_measure]))
-          var date_z = new Date(zensie_json[i]["Values"][ii]["timestamp"])
-          zensie_time.push(date_z)
-        }
-      }
-    }
-
-    const mid_scatter = dictionary_scatter(hours , values_mid)
-    const top_scatter = dictionary_scatter(hours, values_top)
-    const bot_scatter = dictionary_scatter(hours, values_bot)
-    const sce_scatter = dictionary_scatter(hours, values_sce)
-    const zensie_scatter = dictionary_scatter(zensie_time, zensie_values)
-
-    const data = {
-      label: "GES Prediction",
-      datasets: [
-        {
-          label: 'Upper Bound',
-          data: top_scatter,
-          borderColor: "#ee978c",
-          fill: false,
-          borderDash: [1],
-          pointRadius:1,
-          showLine: true
-          
-        },
-        {
-          label: 'Mean',
-          data: mid_scatter,
-          borderColor: "#ff0000",
-          fill: '-1',
-          borderDash: [2],
-          pointRadius:1.5,
-          showLine: true
-        },
-        {
-          label: 'Lower Bound',
-          data: bot_scatter,
-          borderColor: "#ee978c",
-          fill: '-1',
-          borderDash: [1],
-          pointRadius:1,
-          showLine: true
-        },
-        {
-          label: 'Scenario',
-          data: sce_scatter,
-          borderColor: "#8eb0ee",
-          fill: false,
-          borderDash: [3],
-          pointRadius:1,
-          showLine: true
-        },
-        {
-          label: 'Zensie',
-          data: zensie_scatter,
-          borderColor: "#a0a0a0",
-          fill: false,
-          pointRadius:1.5,
-          showLine: true
-        },
-      ],
-    };
-   
-    const config = {
-      type: "scatter",
-      data: data,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "right"
-          },
-          title: {
-            display: true,
-            text: "Prediction Model"
-          }
-        },
-        scales: {
-          xAxes: [{
-            type: 'time'
-          }]
-        }
-      }
-    };
-    var ctx = document.getElementById(canvasname);
-    var myChart = new Chart(ctx, config);
-    myChart.update();
-  }
-
   const ges_json = JSON.parse('{{json_ges_f | safe}}');
   const zensie_json = JSON.parse('{{json_zensie_f | safe}}');
   const canvasname = "ges_model";
   document.getElementById(canvasname+"_title").innerHTML = "sensor id: "+ ges_json[0]["sensor_id"] + "     |   " + "run id: " + ges_json[0]["Values"][0]["run_id"];
-  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], zensie_json, "temperature", canvasname + "_temperature");
-  plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], zensie_json, "humidity", canvasname + "_humidity");
+  // See static/javascript/predictions.js for the plot function.
+  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], zensie_json, "temperature", canvasname + "_temperature", "Temperature (°C)", true);
+  plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], zensie_json, "humidity", canvasname + "_humidity", "Relative humidity", false);
 </script>
 
 
