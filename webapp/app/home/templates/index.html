@@ -253,7 +253,10 @@
                 </div>
 
                 <div class="x_content">
-                    <canvas id="canvas_vertical_stratification"></canvas>
+                    <canvas id="vertical_temp_stratification"></canvas>
+                </div>
+                <div class="x_content">
+                    <canvas id="vertical_humidity_stratification"></canvas>
                 </div>
 
             </div>
@@ -271,7 +274,10 @@
                 </div>
 
                 <div class="x_content">
-                    <canvas id="canvas_horizontal_stratification"></canvas>
+                    <canvas id="horizontal_temp_stratification"></canvas>
+                </div>
+                <div class="x_content">
+                    <canvas id="horizontal_humidity_stratification"></canvas>
                 </div>
 
             </div>
@@ -386,29 +392,6 @@
 <script src="{{ url_for('static', filename='javascript/home.js') }}"></script>
 
 <link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
-
-<script type="module">
-  const colors = {
-        darkblue: "rgba(63,103,126,1)", 
-        blue_l: "rgba(27,196,121,1)", 
-        tirquaze: "rgba(137,214,11,1)", 
-        red_d: "rgba(207,19,10,1)",
-        bertaBlue: "#4BDAFF",
-        black: "#000000",
-        bloodBurst: "#FF4B4B",
-        bloodOrgan: "#630E10",
-        blueSparkle: "#0076FF",
-        chickenComb: "#DE2525",
-        deepLilac: "#9B59B6",
-        heartBeat: "#AA0000",
-        mango: "#FFA628",
-        nero: "#262626",
-        palePurple: "#B089D5",
-        schoolBusYellow: "#ffd800",
-    };
-    export default colors;
-</script>
-
 
 <script>
   // Imports from backend
