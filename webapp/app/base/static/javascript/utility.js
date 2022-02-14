@@ -3,13 +3,12 @@
 // Used to gather data for plots into a format preferred by Chart.js
 function dictionary_scatter(x, y) {
   value_array = [];
-  for (let j=0; j < y.length; j++) {
-    const mydict = {x: x[j], y: y[j]};
+  for (let j = 0; j < y.length; j++) {
+    const mydict = { x: x[j], y: y[j] };
     value_array.push(mydict);
   }
   return value_array;
 }
-
 
 // Sort an array of objects by the field elname, which each object is assumed
 // to have, and which is assumed to be a number. Operates in place.

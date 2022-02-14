@@ -10,30 +10,31 @@ function plot(
   show_legend,
   scenario_name
 ) {
-  sort_by_numerical(top_json['Values'], 'prediction_index');
-  sort_by_numerical(mid_json['Values'], 'prediction_index');
-  sort_by_numerical(bot_json['Values'], 'prediction_index');
-  if ( sce_json != null ) {
-    sort_by_numerical(sce_json['Values'], 'prediction_index');
+  sort_by_numerical(top_json["Values"], "prediction_index");
+  sort_by_numerical(mid_json["Values"], "prediction_index");
+  sort_by_numerical(bot_json["Values"], "prediction_index");
+  if (sce_json != null) {
+    sort_by_numerical(sce_json["Values"], "prediction_index");
   }
-  const values_top = top_json['Values'].map((e) =>
-    parseFloat(e['prediction_value'])
+  const values_top = top_json["Values"].map((e) =>
+    parseFloat(e["prediction_value"])
   );
-  const times_top = top_json['Values'].map((e) => new Date(e['timestamp']));
-  const values_mid = mid_json['Values'].map((e) =>
-    parseFloat(e['prediction_value'])
+  const times_top = top_json["Values"].map((e) => new Date(e["timestamp"]));
+  const values_mid = mid_json["Values"].map((e) =>
+    parseFloat(e["prediction_value"])
   );
-  const times_mid = mid_json['Values'].map((e) => new Date(e['timestamp']));
-  const values_bot = bot_json['Values'].map((e) =>
-    parseFloat(e['prediction_value'])
+  const times_mid = mid_json["Values"].map((e) => new Date(e["timestamp"]));
+  const values_bot = bot_json["Values"].map((e) =>
+    parseFloat(e["prediction_value"])
   );
-  const times_bot = bot_json['Values'].map((e) => new Date(e['timestamp']));
-  let values_sce; let times_sce;
-  if ( sce_json != null ) {
-    values_sce = sce_json['Values'].map((e) =>
-      parseFloat(e['prediction_value'])
+  const times_bot = bot_json["Values"].map((e) => new Date(e["timestamp"]));
+  let values_sce;
+  let times_sce;
+  if (sce_json != null) {
+    values_sce = sce_json["Values"].map((e) =>
+      parseFloat(e["prediction_value"])
     );
-    times_sce = sce_json['Values'].map((e) => new Date(e['timestamp']));
+    times_sce = sce_json["Values"].map((e) => new Date(e["timestamp"]));
   } else {
     values_sce = [];
     times_sce = [];
@@ -43,12 +44,12 @@ function plot(
   zensie_time = [];
 
   for (let i = 0; i < zensie_json.length; i++) {
-    if (zensie_json[i]['sensor_id'] == top_json['sensor_id']) {
-      for (ii = 0; ii < zensie_json[i]['Values'].length; ii++) {
-        zensie_values.push(parseFloat(
-          zensie_json[i]['Values'][ii][zensie_measure]
-        ));
-        let date_z = new Date(zensie_json[i]['Values'][ii]['timestamp']);
+    if (zensie_json[i]["sensor_id"] == top_json["sensor_id"]) {
+      for (ii = 0; ii < zensie_json[i]["Values"].length; ii++) {
+        zensie_values.push(
+          parseFloat(zensie_json[i]["Values"][ii][zensie_measure])
+        );
+        let date_z = new Date(zensie_json[i]["Values"][ii]["timestamp"]);
         zensie_time.push(date_z);
       }
     }
@@ -61,79 +62,82 @@ function plot(
   const zensie_scatter = dictionary_scatter(zensie_time, zensie_values);
 
   const data = {
-    label: 'GES Prediction',
+    label: "GES Prediction",
     datasets: [
       {
-        label: 'Upper bound',
+        label: "Upper bound",
         data: top_scatter,
-        borderColor: '#ee978c',
+        borderColor: "#ee978c",
         fill: false,
         borderDash: [1],
         pointRadius: 1,
         showLine: true,
-
       },
       {
-        label: 'Mean',
+        label: "Mean",
         data: mid_scatter,
-        borderColor: '#ff0000',
-        fill: '-1',
+        borderColor: "#ff0000",
+        fill: "-1",
         borderDash: [2],
         pointRadius: 1.5,
         showLine: true,
       },
       {
-        label: 'Lower bound',
+        label: "Lower bound",
         data: bot_scatter,
-        borderColor: '#ee978c',
-        fill: '-1',
+        borderColor: "#ee978c",
+        fill: "-1",
         borderDash: [1],
         pointRadius: 1,
         showLine: true,
       },
       {
-        label: 'Zensie',
+        label: "Zensie",
         data: zensie_scatter,
-        borderColor: '#a0a0a0',
+        borderColor: "#a0a0a0",
         fill: false,
         pointRadius: 1.5,
         showLine: true,
       },
     ],
   };
-  if ( sce_json != null ) {
-      data.datasets[4] = {
-        label: scenario_name,
-        data: sce_scatter,
-        borderColor: '#8eb0ee',
-        fill: false,
-        borderDash: [3],
-        pointRadius: 1,
-        showLine: true,
-      };
+  if (sce_json != null) {
+    data.datasets[4] = {
+      label: scenario_name,
+      data: sce_scatter,
+      borderColor: "#8eb0ee",
+      fill: false,
+      borderDash: [3],
+      pointRadius: 1,
+      showLine: true,
+    };
   }
 
   const config = {
-    type: 'scatter',
+    type: "scatter",
     data: data,
     options: {
       responsive: true,
       maintainAspectRatio: false,
       legend: {
         display: show_legend,
-        position: 'top',
+        position: "top",
       },
       scales: {
-        yAxes: [{
-          scaleLabel: {
-            display: true,
-            labelString: y_label,
-            fontSize: 18,
+        yAxes: [
+          {
+            scaleLabel: {
+              display: true,
+              labelString: y_label,
+              fontSize: 18,
+            },
           },
-        }],
-        xAxes: [{
-          type: 'time',
-        }],
+        ],
+        xAxes: [
+          {
+            type: "time",
+          },
+        ],
       },
     },
   };
