@@ -28,10 +28,12 @@ function set_hourly_values(hourly_data_json) {
   document.getElementById('humRD').innerHTML = humRD;
 }
 
-function time_series_charts(json_data, series, limits, canvasname) {
+function time_series_charts(
+  json_data, series, limits, zensie_measure, y_label, canvasname
+) {
   const data = {
     datasets: series.map((item) => {
-      const temps = json_data[item.id].map((row) => row['temperature']);
+      const temps = json_data[item.id].map((row) => row[zensie_measure]);
       const dates = json_data[item.id].map((row) => row['timestamp']);
       return {
         label: item.label,
@@ -56,7 +58,7 @@ function time_series_charts(json_data, series, limits, canvasname) {
         yAxes: [{
           scaleLabel: {
             display: true,
-            labelString: 'Temperature (°C)',
+            labelString: y_label,
             fontSize: 18,
           },
           ticks: {
@@ -174,6 +176,21 @@ function horizontal_charts(json_data, zoneid, canvasname, colouramp) {
   new Chart(ctx, config);
 }
 
+function stratification_minmax(data, measure_name) {
+  const min_temps = Object.values(data).map(
+    (x) => Math.min(...x.map((row) => row[measure_name]))
+  );
+  const min_temp = Math.min(...min_temps);
+  const max_temps = Object.values(data).map(
+    (x) => Math.max(...x.map((row) => row[measure_name]))
+  );
+  const max_temp = Math.max(...max_temps);
+  return {
+    min: min_temp,
+    max: max_temp,
+  };
+}
+
 function create_charts(temperature_data, temperature_data_daily, humidity_data,
   humidity_data_daily, stratification) {
   set_hourly_values(hourly_data_json);
@@ -216,39 +233,39 @@ function create_charts(temperature_data, temperature_data_daily, humidity_data,
   roundcharts(humidity_data_daily, 2, 'roundchart17', colouramp_blue);
 
 
-  // Find out min and max temperatures, to set the axis limits.
-  const min_temps = Object.values(stratification_json).map(
-    (x) => Math.min(...x.map((row) => row['temperature']))
+  // Find out min and max values, to set the axis limits.
+  const temperature_limits = stratification_minmax(
+    stratification_json, 'temperature'
   );
-  const min_temp = Math.min(...min_temps);
-  const max_temps = Object.values(stratification_json).map(
-    (x) => Math.max(...x.map((row) => row['temperature']))
+  const humidity_limits = stratification_minmax(
+    stratification_json, 'humidity'
   );
-  const max_temp = Math.max(...max_temps);
-  limits = {
-    min: min_temp,
-    max: max_temp,
-  };
   // Sensor id locations:
   // 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
-  // Vertical stratification
   vertical_series = [
     {id: 23, color: '#ff0000', label: 'Top'},
     {id: 18, color: '#3399ff', label: 'Bottom'},
   ];
-  time_series_charts(
-    stratification, vertical_series, limits, 'canvas_vertical_stratification'
-  );
-  // Horizontal stratification
   horizontal_series = [
     {id: 22, color: '#ff0000', label: 'Back farm'},
     {id: 21, color: '#3399ff', label: 'Front farm'},
   ];
   time_series_charts(
-    stratification, horizontal_series, limits,
-    'canvas_horizontal_stratification'
+    stratification, vertical_series, temperature_limits,
+    'temperature', 'Temperature (°C)', 'vertical_temp_stratification'
   );
-
+  time_series_charts(
+    stratification, horizontal_series, temperature_limits,
+    'temperature', 'Temperature (°C)', 'horizontal_temp_stratification'
+  );
+  time_series_charts(
+    stratification, vertical_series, humidity_limits,
+    'humidity', 'Humidity (%)', 'vertical_humidity_stratification'
+  );
+  time_series_charts(
+    stratification, horizontal_series, humidity_limits,
+    'humidity', 'Humidity (%)', 'horizontal_humidity_stratification'
+  );
 
   // Propagation
   let zone3_name = temperature_data[3]['zone'];
