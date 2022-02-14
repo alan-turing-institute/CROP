@@ -194,25 +194,19 @@ def grp_per_hr_zone(temp_df):
     return df_grp_zone_hr
 
 
-def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id):
+def stratification(temp_df, sensor_ids):
     """
-    Function to do the vertical stratification for the middle of the farm
-    sensors: 16B1 and 16B4, and returned Json.
+    Extract the Zensie data from `temp_df` for different sensors, write as
+    JSON. Used for comparing e.g. front vs back or top vs bottom of the farm.
+
     Arguments:
-        temp_df: data
-        dt_from: date range from
-        dt_to: date range to
-        bot_sensor_id: sensor Id installed at the bottom of the farm
-        top_sensor_id: sensor id installed at the top part of the farm
+        temp_df: Zensie data as a DataFrame
+        sensor_ids: Iterable of sensor IDs for each to include data
     Returns:
-        json_VS: A json file containing (bot and top) hourly values for the
-        time series plot in front end
+        json_strat: A json string containing hourly values for the time series
+            plot in front end for selected sensors.
     """
     df = copy.deepcopy(temp_df)
-
-    # mask per selected date
-    # mask = (df["timestamp"] >= dt_from) & (df["timestamp"] <= dt_to)
-    # filtered_df = df.loc[mask]
 
     # extracting date from datetime
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
@@ -220,15 +214,12 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id):
     # Reseting index
     df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
-    df_ = df.loc[
-        (df["sensor_id"] == bot_sensor_id) | (df["sensor_id"] == top_sensor_id)
-    ]
-
+    df_ = df.loc[df["sensor_id"].isin(sensor_ids)]
     df_grp_hr = (
         df_.groupby(
             by=[
                 df_.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d"
+                    lambda x: "%04d-%02d-%02dT%02d"
                     % (x.year, x.month, x.day, x.hour)
                 ),
                 "date",
@@ -239,19 +230,17 @@ def vertical_stratification(temp_df, bot_sensor_id, top_sensor_id):
         .reset_index()
     )
 
-    json_vertstrat = (
+    json_strat = (
         df_grp_hr.groupby(["sensor_id"], as_index=True)
         .apply(
             lambda x: x[["temperature", "humidity", "timestamp"]].to_dict(
                 orient="records"
             )
         )
-        .reset_index()
-        .rename(columns={0: "Values"})
-        .to_json(orient="records")
+        .to_json(orient="index")
     )
 
-    return json_vertstrat
+    return json_strat
 
 
 def temperature_analysis(df_temp, bins):
@@ -267,11 +256,6 @@ def temperature_analysis(df_temp, bins):
     Returns:
         temp_df_merged: A merged df with sampled values per bin
     """
-    # print("hello", df_temp)
-
-    # df_unique_zones = df_temp[["zone"]].drop_duplicates(["zone"])
-    # location_zones = df_unique_zones["zone"].tolist()
-
     temp_df_merged = []
 
     temp_list = []
@@ -433,7 +417,6 @@ def current_values_json(df_hourly):
     for i in range(len(LOCATION_ZONES)):
 
         if not df_test["zone"].str.contains(LOCATION_ZONES[i]).any():
-            print(df_test["zone"])
             df2 = pd.DataFrame({"zone": [LOCATION_ZONES[i]]})
             df_test = df_test.append(df2)
 
@@ -464,9 +447,9 @@ def index():
         df_hum_weekly = humidity_analysis(df_mean_hr_weekly, HUM_BINS)
         weekly_temp_json = json_temp(df_temp_weekly)
         weekly_hum_json = json_temp(df_hum_weekly)
-        json_vertstrat = vertical_stratification(
-            df, 23, 18
-        )  # sensorids in positions (16B1 and 16B4)
+        # Sensor id locations:
+        # 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
+        json_strat = stratification(df, (18, 21, 22, 23))
     else:
         weekly_temp_json = {}
         weekly_hum_json = {}
@@ -496,7 +479,7 @@ def index():
         humidity_data=weekly_hum_json,
         temperature_data_daily=daily_temp_json,
         humidity_data_daily=daily_hum_json,
-        vertical_stratification=json_vertstrat,
+        stratification=json_strat,
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
     )

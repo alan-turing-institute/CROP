@@ -85,9 +85,9 @@
                                 
                                 <table style="table-layout: fixed;width:100%; overflow:visible">
                                     <tr>
-                                        <th bgcolor="#e7e7e7">Main Farm</th>
-                                        <th bgcolor="#f3f3f3">Main Farm</th>
-                                        <th bgcolor="#e7e7e7">Main Farm</th>
+                                        <th bgcolor="#e7e7e7">Main farm</th>
+                                        <th bgcolor="#f3f3f3">Main farm</th>
+                                        <th bgcolor="#e7e7e7">Main farm</th>
                                         <th bgcolor="#f3f3f3"><span id="zone3_name"></span></th>
                                         <th bgcolor="#e7e7e7"><span id="zone4_name"></span></th>
                                     </tr>
@@ -256,7 +256,7 @@
         <div class="col-md-6 col-sm-6 col-xs-12">
             <div class="x_panel tile fixed_height_640 overflow_hidden">
                 <div class="x_title">
-                    <h2>Vertical Stratification  <small></small></h2>
+                    <h2>Vertical stratification</h2>
                     <ul class="nav navbar-right panel_toolbox">
                         <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                         </li>
@@ -275,9 +275,35 @@
                 </div>
 
                 <div class="x_content">
-                    <!--<span id="zensie_sensor_names"></span>-->
-                    <!-- <p> Vertical Stratification </p> -->
-                    <canvas id="stackedbarchart20"></canvas>
+                    <canvas id="canvas_vertical_stratification"></canvas>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-md-6 col-sm-6 col-xs-12">
+            <div class="x_panel tile fixed_height_640 overflow_hidden">
+                <div class="x_title">
+                    <h2>Horizontal stratification</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">Settings 1</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+
+                <div class="x_content">
+                    <canvas id="canvas_horizontal_stratification"></canvas>
                 </div>
 
             </div>
@@ -338,7 +364,7 @@
                                 <div class="block">
                                     <div class="block_content">
                                         <h2 class="title">
-                                            <a>High Temperature in MidFarm</a>
+                                            <a>High Temperature in Mid Farm</a>
                                         </h2>
                                         <div class="byline">
                                             <span>13 hours ago</span> by <a>Zenzie</a>
@@ -400,6 +426,8 @@
     var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", { onProgress: UnityProgress });
 </script>
 
+<!-- Utility functions -->
+<script src="{{ url_for('static', filename='javascript/utility.js') }}"></script>
 
 <link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
 
@@ -427,23 +455,6 @@
 
 
 <script>
-
-
-    //Imports from backend
-    var temperature_json = JSON.parse('{{temperature_data | safe}}');
-    var humidity_json = JSON.parse('{{humidity_data | safe}}');
-    var temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
-    var humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
-    var vertical_stratification_json = JSON.parse('{{vertical_stratification | safe}}');
-    var hourly_data_json = JSON.parse('{{hourly_data | safe}}');
-    console.log (hourly_data_json)
-    
-    //get hourly values
-
-
-    //var json_obj = JSON.parse('{{json_values | safe}}');
-
-    //console.warn(temperature_data[0]["Values"][0]["bin"]);
     function check_data(data) {
         if (Object.keys(data).length === 0 && data.constructor === Object) {
             console.warn("dataset is empty")
@@ -475,56 +486,47 @@
         document.getElementById("humRD").innerHTML = humRD;
     }
 
-    function time_series_charts(json_data, canvasname) {
-        values_top = []
-        values_bot = []
-        dates = []
-        for (j = 0; j < json_data[0]["Values"].length; j++) {
-            values_top.push(parseFloat(json_data[0]["Values"][j]["temperature"]))
-            values_bot.push(parseFloat(json_data[1]["Values"][j]["temperature"]))
-            dates.push(json_data[0]["Values"][j]["timestamp"])
-        }
-
-        const data = {
-            labels: dates,
-            datasets: [
-                {
-                    label: 'Top',
-                    data: values_top,
-                    borderColor: "#ff0000",
-                    pointRadius:1,
-                    borderWidth: 1
-                },
-                {
-                    label: 'Bottom',
-                    data: values_bot,
-                    borderColor: "#3399ff",
-                    pointRadius:1,
-                    borderWidth:1
-                }
-            ]
+  function time_series_charts(json_data, series, canvasname) {
+      const data = {
+          datasets: series.map((item) => {
+              const temps = json_data[item.id].map((row) => row["temperature"]);
+              const dates = json_data[item.id].map((row) => row["timestamp"]);
+              return {
+                  label: item.label,
+                  data: dictionary_scatter(dates, temps),
+                  borderColor: item.color,
+                  pointRadius: 1,
+                  borderWidth: 1,
+                };
+            }) ,
         };
-        const config = {
-            type: 'line',
-            data: data,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
+      const config = {
+          type: "line",
+          data: data,
+          options: {
+              responsive: true,
+              plugins: {
+                  legend: {
+                      position: "top",
                     },
-                    title: {
-                        display: true,
-                        text: 'Vertical Stratification'
-                    }
-                }
+                },
+              scales: {
+                  yAxes: [{
+                      scaleLabel: {
+                          display: true,
+                          labelString:  "Temperature (°C)",
+                          fontSize: 18,
+                        },
+                    }],
+                  xAxes: [{
+                      type: 'time'
+                    }]
+                },
             },
         };
-        var ctx = document.getElementById(canvasname);
-        var myChart = new Chart(ctx, config);
+      var ctx = document.getElementById(canvasname);
+      var myChart = new Chart(ctx, config);
     }
-
-
 
     function roundcharts (json_data, zoneid, canvasname, colouramp) 
     {
@@ -629,7 +631,8 @@
 
     }
 
-    function create_charts(temperature_data, temperature_data_daily, humidity_data, humidity_data_daily, vertical_stratification) {
+    function create_charts(temperature_data, temperature_data_daily, humidity_data,
+        humidity_data_daily, stratification) {
         
         set_hourly_values (hourly_data_json)
 
@@ -666,8 +669,22 @@
         roundcharts(humidity_data_daily, 2, "roundchart17",colouramp_blue)
 
 
-        //vertical stratification
-        time_series_charts(vertical_stratification, "stackedbarchart20");
+        // Sensor id locations:
+        // 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
+        // Vertical stratification
+        vertical_series = [
+            {id: 23, color:  "#ff0000", label: "Top"},
+            {id: 18, color: "#3399ff", label: "Bottom"},
+          ]
+        time_series_charts(stratification, vertical_series,
+            "canvas_vertical_stratification");
+        // Horizontal stratification
+        horizontal_series = [
+            {id: 22, color: "#ff0000", label: "Back farm"},
+            {id: 21, color: "#3399ff", label: "Front farm"},
+          ]
+        time_series_charts(stratification, horizontal_series,
+            "canvas_horizontal_stratification");
 
 
         //Propagation
@@ -691,127 +708,23 @@
 
     }
 
+    // Imports from backend
+    const temperature_json = JSON.parse('{{temperature_data | safe}}');
+    const humidity_json = JSON.parse('{{humidity_data | safe}}');
+    const temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
+    const humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
+    const stratification_json = JSON.parse('{{stratification | safe}}');
+    const hourly_data_json = JSON.parse('{{hourly_data | safe}}');
+
     check_data(temperature_json);
     check_data(temperature_json_daily);
     check_data(humidity_json);
-    check_data(vertical_stratification_json);
+    check_data(stratification_json);
 
-    create_charts(temperature_json, temperature_json_daily, humidity_json, humidity_json_daily, vertical_stratification_json);
-
-
-
-
-
-    // iterate locations
-    // for (i = 0; i < zensie_temp_data.length; i++) {
-
-    //     sensor_temp_data = zensie_temp_data[i];
-    //     temp_cnts = [];
-
-    //     // // iterate temperature bins
-    //     for (j = 0; j < sensor_temp_data.length; j++) {
-
-    //         //console.warn(sensor_temp_data[j])
-
-    //         temp_range_data = sensor_temp_data[j][1];
-
-    //         temp_cnts.push(temp_range_data[0].temp_cnt);
-    //     }
-    //     cnts.push(temp_cnts)
-    // }
-
-    // const transpose = (cnts) => {
-    //     let [row] = cnts
-    //     return row.map((value, column) => cnts.map(row => row[column]))
-    // }
-
-    // const dataset_matrix = transpose(cnts);
-
-    // TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
-
-    // const datasets_ = [];
-    // for (i = 0; i < dataset_matrix.length; i++) {
-    //     datasets_.push({
-    //         label: TEMP_BINS[i],
-    //         data: dataset_matrix[i],
-    //         backgroundColor: colouramp[i],
-    //     })
-    // }
-
-
-    // const data = {
-    //     labels: sensor_locations,
-    //     datasets: datasets_
-    // };
-
-    // console.warn(data)
-    // const config = {
-    //     type: 'horizontalBar',
-    //     data: data,
-    //     //options: barOptions_stacked,
-    //     options:
-    //     {
-    //         scales: {
-    //             xAxes: [{ stacked: true }],
-    //             yAxes: [{ stacked: true }]
-    //         }
-    //     }
-    // };
-    // var myChart = new Chart(ctx, config);
-
+    create_charts(
+        temperature_json, temperature_json_daily, humidity_json,
+        humidity_json_daily, stratification_json,
+      );
 </script>
-
-
-<!--
-
-<script>
-
-    //var zensie_sensor_names = '{{ zensie_sensors }}';
-    // <block:setup:1>
-    var ctx = document.getElementById('stackedbarchart');
-
-    const labels = ["2014", "2013", "2012", "2011", "2010"];
-    const data = {
-        labels: labels,
-        datasets: [
-            {
-                label: 'Low',
-                data: [227, 589, 537, 543, 574],
-                backgroundColor: "rgba(63,103,126,1)",
-                //backgroundColor: '#D6E9C6' // green
-            },
-            {
-                label: 'Moderate',
-                data: [1238, 553, 746, 884, 903],
-                backgroundColor: "rgba(63,203,226,1)",
-                //backgroundColor: '#FAEBCC' // yellow
-            },
-            {
-                label: 'High',
-                data: [238, 553, 746, 884, 903],
-                backgroundColor: "rgba(180,60,60,1)",
-                //backgroundColor: '#EBCCD1' // red
-            }
-        ]
-    };
-    // </block:setup>
-
-    // <block:config:0>
-    const config = {
-        type: 'horizontalBar',
-        data: data,
-        //options: barOptions_stacked,
-        options:
-        {
-            scales: {
-                xAxes: [{ stacked: true }],
-                yAxes: [{ stacked: true }]
-            }
-        }
-    };
-
-    var myChart = new Chart(ctx, config);
-</script> -->
-
 
 {% endblock javascripts %}
