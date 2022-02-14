@@ -381,14 +381,14 @@
 <script>
     var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", { onProgress: UnityProgress });
 </script>
-
 <!-- Utility functions -->
 <script src="{{ url_for('static', filename='javascript/utility.js') }}"></script>
+<script src="{{ url_for('static', filename='javascript/home.js') }}"></script>
 
 <link href="{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}" rel="stylesheet">
 
 <script type="module">
-    const colors = {
+  const colors = {
         darkblue: "rgba(63,103,126,1)", 
         blue_l: "rgba(27,196,121,1)", 
         tirquaze: "rgba(137,214,11,1)", 
@@ -411,276 +411,23 @@
 
 
 <script>
-    function check_data(data) {
-        if (Object.keys(data).length === 0 && data.constructor === Object) {
-            console.warn("dataset is empty")
-        }
-        else console.log("its good data", data)
-    }
+  // Imports from backend
+  const temperature_json = JSON.parse('{{temperature_data | safe}}');
+  const humidity_json = JSON.parse('{{humidity_data | safe}}');
+  const temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
+  const humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
+  const stratification_json = JSON.parse('{{stratification | safe}}');
+  const hourly_data_json = JSON.parse('{{hourly_data | safe}}');
 
-    function set_hourly_values (hourly_data_json) {
-        var tempFF = hourly_data_json[1]["temperature"]
-        document.getElementById("tempFF").innerHTML = tempFF;
-        var tempFM = hourly_data_json[2]["temperature"]
-        document.getElementById("tempFM").innerHTML = tempFM;
-        var tempFB = hourly_data_json[0]["temperature"]
-        document.getElementById("tempFB").innerHTML = tempFB;
-        var tempPR = hourly_data_json[3]["temperature"]
-        document.getElementById("tempPR").innerHTML = tempPR;
-        var tempRD = hourly_data_json[4]["temperature"]
-        document.getElementById("tempRD").innerHTML = tempRD;
+  check_data(temperature_json);
+  check_data(temperature_json_daily);
+  check_data(humidity_json);
+  check_data(stratification_json);
 
-        var humFF = hourly_data_json[1]["humidity"]
-        document.getElementById("humFF").innerHTML = humFF;
-        var humFM = hourly_data_json[2]["humidity"]
-        document.getElementById("humFM").innerHTML = humFM;
-        var humFB = hourly_data_json[0]["humidity"]
-        document.getElementById("humFB").innerHTML = humFB;
-        var humPR = hourly_data_json[3]["humidity"]
-        document.getElementById("humPR").innerHTML = humPR;
-        var humRD = hourly_data_json[4]["humidity"]
-        document.getElementById("humRD").innerHTML = humRD;
-    }
-
-  function time_series_charts(json_data, series, canvasname) {
-      const data = {
-          datasets: series.map((item) => {
-              const temps = json_data[item.id].map((row) => row["temperature"]);
-              const dates = json_data[item.id].map((row) => row["timestamp"]);
-              return {
-                  label: item.label,
-                  data: dictionary_scatter(dates, temps),
-                  borderColor: item.color,
-                  pointRadius: 1,
-                  borderWidth: 1,
-                };
-            }) ,
-        };
-      const config = {
-          type: "line",
-          data: data,
-          options: {
-              responsive: true,
-              plugins: {
-                  legend: {
-                      position: "top",
-                    },
-                },
-              scales: {
-                  yAxes: [{
-                      scaleLabel: {
-                          display: true,
-                          labelString:  "Temperature (°C)",
-                          fontSize: 18,
-                        },
-                    }],
-                  xAxes: [{
-                      type: 'time'
-                    }]
-                },
-            },
-        };
-      var ctx = document.getElementById(canvasname);
-      var myChart = new Chart(ctx, config);
-    }
-
-    function roundcharts (json_data, zoneid, canvasname, colouramp) 
-    {
-        console.log (json_data[zoneid])
-
-        bin_ = []
-        cnt_ = []
-        for (j = 0; j < json_data[zoneid]["Values"].length; j++) {
-            bin_.push(json_data[zoneid]["Values"][j]["bin"])
-            cnt_.push(parseFloat(json_data[zoneid]["Values"][j]["cnt"]))
-        }
-
-        const data_ = [];
-        data_.push({
-            label:  [json_data[zoneid]["zone"]],
-            data: cnt_, 
-            backgroundColor: colouramp
-        })
-        //title: [json_data[zoneid]["zone"]],
-
-        const data = {
-            labels: bin_,
-            datasets: data_
-        };
-
-        const config = {
-            type: 'doughnut',
-            data: data,
-            options:
-            {
-                legend: {
-                    display: false
-                },
-                aspectRatio: 1.5,
-            }
-        };
-        //roundchart0
-        var ctx = document.getElementById(canvasname);
-        var myChart = new Chart(ctx, config);
-    }
-
-    function horizontal_charts(json_data, zoneid, canvasname, colouramp) {
-        
-        //iterates through zones (5)
-        bin_ = []
-        cnt_ = []
-        for (j = 0; j < json_data[zoneid]["Values"].length; j++) {
-            bin_.push(json_data[zoneid]["Values"][j]["bin"])
-            cnt_.push(parseFloat(json_data[zoneid]["Values"][j]["cnt"]))
-        }
-
-        const datasets_ = [];
-        for (i = 0; i < bin_.length; i++) {
-            datasets_.push({
-                label: bin_[i],
-                data: [cnt_[i]],
-                backgroundColor: colouramp[i],
-            })
-        }
-
-        const data = {
-            labels: [json_data[zoneid]["zone"]],
-            datasets: datasets_
-        };
-
-        const config = {
-            type: 'horizontalBar',
-            data: data,
-            options:
-            {
-
-                legend: {
-                    display: false
-                },
-                scales: {
-                    xAxes: [{
-                        stacked: true,
-                        display: false, //this will remove all the x-axis grid lines
-                    }],
-                    yAxes: [{
-                        stacked: true,
-                        //display: true,
-                        position: 'right',
-                    }]
-                },
-                aspectRatio: 6.5,
-                tooltips: {
-                    
-                    callbacks: {
-                        position: 'average',
-                        title: function (tooltipItems, data) {
-                            return '';
-                        },
-                    }
-                }
-            }
-        };
-
-        //var ctx = document.getElementById('stackedbarchart'.concat(0));
-        var ctx = document.getElementById(canvasname);
-        var myChart = new Chart(ctx, config);
-
-    }
-
-    function create_charts(temperature_data, temperature_data_daily, humidity_data,
-        humidity_data_daily, stratification) {
-        
-        set_hourly_values (hourly_data_json)
-
-        var colouramp_redblue = ["rgba(63,103,126,1)", "rgba(27,196,121,1)", "rgba(137,214,11,1)", "rgba(207,19,10,1)"]; //blue to red
-        var colouramp_blue = ["rgba(27,55,74,1)", "rgba(0,96,196,1)", "rgba(0,129,196,1)", "rgba(141,245,252,1)"];
-
-        
-        //main farm
-        //round charts ("roundchart0")
-        var zone0_name = temperature_data[0]["zone"]
-        document.getElementById("zone0_name").innerHTML = zone0_name;
-        roundcharts (temperature_data, 0, "roundchart0", colouramp_redblue) 
-        
-        var zone1_name = temperature_data[1]["zone"]
-        document.getElementById("zone1_name").innerHTML = zone1_name;
-        roundcharts (temperature_data, 1, "roundchart1", colouramp_redblue) 
-        
-        var zone2_name = temperature_data[2]["zone"]
-        document.getElementById("zone2_name").innerHTML = zone2_name;
-        roundcharts (temperature_data, 2, "roundchart2", colouramp_redblue)
-        //roundcharts (temperature_data, 3, "roundchart3", colouramp_redblue)
-
-
-        roundcharts (temperature_data_daily, 0, "roundchart10",colouramp_redblue)
-        roundcharts (temperature_data_daily, 1, "roundchart11",colouramp_redblue)
-        roundcharts (temperature_data_daily, 2, "roundchart12",colouramp_redblue)
-
-        roundcharts(humidity_data, 0, "roundchart5",colouramp_blue);
-        roundcharts(humidity_data, 1, "roundchart6",colouramp_blue);
-        roundcharts(humidity_data, 2, "roundchart7",colouramp_blue);
-
-        roundcharts(humidity_data_daily, 0, "roundchart15",colouramp_blue)
-        roundcharts(humidity_data_daily, 1, "roundchart16",colouramp_blue)
-        roundcharts(humidity_data_daily, 2, "roundchart17",colouramp_blue)
-
-
-        // Sensor id locations:
-        // 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
-        // Vertical stratification
-        vertical_series = [
-            {id: 23, color:  "#ff0000", label: "Top"},
-            {id: 18, color: "#3399ff", label: "Bottom"},
-          ]
-        time_series_charts(stratification, vertical_series,
-            "canvas_vertical_stratification");
-        // Horizontal stratification
-        horizontal_series = [
-            {id: 22, color: "#ff0000", label: "Back farm"},
-            {id: 21, color: "#3399ff", label: "Front farm"},
-          ]
-        time_series_charts(stratification, horizontal_series,
-            "canvas_horizontal_stratification");
-
-
-        //Propagation
-        var zone3_name = temperature_data[3]["zone"]
-        document.getElementById("zone3_name").innerHTML = zone3_name;
-        roundcharts (temperature_data, 3, "roundchart3", colouramp_redblue) 
-        roundcharts (temperature_data_daily, 3, "roundchart13",colouramp_redblue)
-
-        roundcharts(humidity_data, 3, "roundchart8",colouramp_blue);
-        roundcharts(humidity_data_daily, 3, "roundchart18",colouramp_blue)
-
-        //R&D
-        var zone4_name = temperature_data[4]["zone"]
-        document.getElementById("zone4_name").innerHTML = zone4_name;
-        roundcharts (temperature_data, 4, "roundchart4", colouramp_redblue) 
-        roundcharts (temperature_data_daily, 4, "roundchart14",colouramp_redblue)
-
-        roundcharts(humidity_data, 4, "roundchart9",colouramp_blue);
-        roundcharts(humidity_data_daily, 4, "roundchart19",colouramp_blue)
-
-
-    }
-
-    // Imports from backend
-    const temperature_json = JSON.parse('{{temperature_data | safe}}');
-    const humidity_json = JSON.parse('{{humidity_data | safe}}');
-    const temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
-    const humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
-    const stratification_json = JSON.parse('{{stratification | safe}}');
-    const hourly_data_json = JSON.parse('{{hourly_data | safe}}');
-
-    check_data(temperature_json);
-    check_data(temperature_json_daily);
-    check_data(humidity_json);
-    check_data(stratification_json);
-
-    create_charts(
-        temperature_json, temperature_json_daily, humidity_json,
-        humidity_json_daily, stratification_json,
-      );
+  create_charts(
+      temperature_json, temperature_json_daily, humidity_json,
+      humidity_json_daily, stratification_json,
+    );
 </script>
 
 {% endblock javascripts %}
