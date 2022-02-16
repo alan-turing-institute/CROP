@@ -22,20 +22,20 @@ from __app__.crop.structure import (
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
 
 TEMP_BINS = {
-    "Propagation": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
-    "FrontFarm": [0.0, 18.0, 21.0, 25.0, 35.0],  # optimal 21
-    "Fridge": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
-    "MidFarm": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
-    "BackFarm": [0.0, 20.0, 25.0, 28.0, 35.0],  # optimal 25
-    "R&D": [0.0, 20.0, 23.0, 25.0, 35.0],  # optimal 23
+    "Propagation": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
+    "FrontFarm": [0.0, 18.0, 21.0, 25.0, 144.0],  # optimal 21
+    "Fridge": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
+    "MidFarm": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
+    "BackFarm": [0.0, 20.0, 25.0, 28.0, 144.0],  # optimal 25
+    "R&D": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
 }
 HUM_BINS = {
-    "Propagation": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "FrontFarm": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "Fridge": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "MidFarm": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70
-    "BackFarm": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70,
-    "R&D": [0.0, 50.0, 65.0, 75.0, 85.0],  # optimal 70,
+    "Propagation": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70
+    "FrontFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70
+    "Fridge": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70
+    "MidFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70
+    "BackFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
+    "R&D": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
 }
 LOCATION_ZONES = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
 
