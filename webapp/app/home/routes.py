@@ -51,9 +51,9 @@ def resample(df_, bins):
         temp_df: the df with grouped bins
     """
 
-    bins_list = []
-    for i in range(len(bins) - 1):
-        bins_list.append("(%.1f, %.1f]" % (bins[i], bins[i + 1]))
+    bins_list = [
+        "(%.1f, %.1f]" % (bins[i], bins[i + 1]) for i in range(len(bins) - 1)
+    ]
 
     # resamples with 0 if there are no data in a bin
     for temp_range in bins_list:
@@ -243,155 +243,61 @@ def stratification(temp_df, sensor_ids):
     return json_strat
 
 
-def temperature_analysis(df_temp, bins):
+def bin_zensie_data(df, bins, zensie_measure):
     """
-    Function to perform temerature analysis per location of the farm.
-    Counts the number of instances that occur per temp. bin.
+    Return a dataframe with counts of how many measurements of zensie_measure
+    were in each of the bins, by zone.
     Arguments:
         df: data
-        dt_from: date range from
-        dt_to: date range to
         bins: a list of bins to perform the analysis
+        zensie_measure: Either "temperature" or "humidity".
 
     Returns:
-        temp_df_merged: A merged df with sampled values per bin
+        output: A merged df with counts per bin
     """
-    temp_df_merged = []
-
-    temp_list = []
-
+    output_list = []
     for zone in LOCATION_ZONES:
         # check if zone exists in current bins dictionary:
-        if zone in bins:
-            df_each_zone = df_temp.loc[df_temp.zone == zone, :].copy()
-            # breaks df in temperature bins
-            df_each_zone["bin"] = pd.cut(
-                df_each_zone["temperature"], bins[zone]
-            )
-
-            # converting bins to str
-            df_each_zone["bin"] = df_each_zone["bin"].astype(str)
-
-            # groups df per each bin
-            bin_grp = df_each_zone.groupby(by=["zone", "bin"])
-
-            # get temperature counts per bin
-            bin_cnt = bin_grp["temperature"].count().reset_index()
-
-            # renames column with counts
-            bin_cnt.rename(columns={"temperature": "cnt"}, inplace=True)
-
-            df_ = resample(bin_cnt, bins[zone])
-
-            # renames the values of all the zones
-            df_["zone"] = zone
-
-            # fixes the labels of the bins by removing uncessesary characters((0.0, 25.0]) )
-            for j in range(len(df_["bin"])):
-                fixed_label = (
-                    df_["bin"][j]
-                    .replace("(", "")
-                    .replace("]", "")
-                    .replace(", ", "-")
-                    .replace(".0", "")
-                )
-                df_.loc["bin", j] = fixed_label
-
-            temp_list.append(df_)
-
-        else:
+        if zone not in bins:
             logging.info(
-                "WARNING: %s doesn't exist in current temp bin dictionary"
-                % zone
+                "WARNING: %s doesn't exist in current bin dictionary" % zone
             )
+            continue
 
-        # merges all df in one.
-        temp_df_merged = pd.concat(temp_list)
+        df_each_zone = df.loc[df.zone == zone, :].copy()
+        # breaks df in
+        df_each_zone["bin"] = pd.cut(df_each_zone[zensie_measure], bins[zone])
+        # converting bins to str
+        df_each_zone["bin"] = df_each_zone["bin"].astype(str)
+        # groups df per each bin
+        bin_grp = df_each_zone.groupby(by=["zone", "bin"])
+        # get measure counts per bin
+        bin_cnt = bin_grp[zensie_measure].count().reset_index()
+        # renames column with counts
+        bin_cnt.rename(columns={zensie_measure: "cnt"}, inplace=True)
+        df_ = resample(bin_cnt, bins[zone])
+        # renames the values of all the zones
+        df_["zone"] = zone
+        output_list.append(df_)
 
-    return temp_df_merged
+    # Merge all df in one.
+    output = pd.concat(output_list, ignore_index=True)
+    return output
 
 
-def humidity_analysis(df_hum, bins):
+def json_bin_counts(df):
     """
-    Function to perform humidity analysis per location of the farm.
-    Counts the number of instances that occur per temp. bin.
-    Arguments:
-        df: data
-        dt_from: date range from
-        dt_to: date range to
-        bins: a list of bins to perform the analysis
-
-    Returns:
-        temp_df_merged: A merged df with sampled values per bin
-
+    Function to return the Json for the bin count pie charts in the main
+    dashboard.
     """
-    # df_unique_zones = df_hum[["zone"]].drop_duplicates(["zone"])
-    # location_zones = df_unique_zones["zone"].tolist()
-
-    hum_list = []
-    for zone in LOCATION_ZONES:
-        # check if zone exists in current bins dictionary:
-        if zone in bins:
-
-            df_each_zone = df_hum.loc[df_hum.zone == zone, :].copy()
-            # breaks df in temperature bins
-            df_each_zone["bin"] = pd.cut(df_each_zone["humidity"], bins[zone])
-
-            # converting bins to str
-            df_each_zone["bin"] = df_each_zone["bin"].astype(str)
-
-            # groups df per each bin
-            bin_grp = df_each_zone.groupby(by=["zone", "bin"])
-
-            # get temperature counts per bin
-            bin_cnt = bin_grp["humidity"].count().reset_index()
-
-            # renames column with counts
-            bin_cnt.rename(columns={"humidity": "cnt"}, inplace=True)
-
-            df_ = resample(bin_cnt, bins[zone])
-
-            # renames the values of all the zones
-            df_["zone"] = zone
-
-            # formats the labels of the bins by removing uncessesary characters((0.0, 25.0]) )
-            for j in range(len(df_["bin"])):
-                fixed_label = (
-                    df_["bin"][j]
-                    .replace("(", "")
-                    .replace("]", "")
-                    .replace(", ", "-")
-                    .replace(".0", "")
-                )
-                df_.loc["bin", j] = fixed_label
-
-            hum_list.append(df_)
-
-        else:
-            logging.info(
-                "WARNING: %s doesn't exist in current hum bin dictionary"
-                % zone
-            )
-
-    # merges all df in one.
-    hum_df_merged = pd.concat(hum_list)  # merges all df in one.
-
-    return hum_df_merged
-
-
-def json_temp(df_temp):
-    """
-    Function to return the Json for the temperature related
-    charts in the main dashboard
-
-    """
-    return (
-        df_temp.groupby(["zone"], as_index=True)
+    output = (
+        df.groupby(["zone"], as_index=True)
         .apply(lambda x: x[["bin", "cnt"]].to_dict(orient="records"))
         .reset_index()
         .rename(columns={0: "Values"})
         .to_json(orient="records")
     )
+    return output
 
 
 def json_hum(df_hum):
@@ -443,10 +349,14 @@ def index():
     df = zensie_query(dt_from_weekly, dt_to)
     if not df.empty:
         df_mean_hr_weekly = grp_per_hr_zone(df)
-        df_temp_weekly = temperature_analysis(df_mean_hr_weekly, TEMP_BINS)
-        df_hum_weekly = humidity_analysis(df_mean_hr_weekly, HUM_BINS)
-        weekly_temp_json = json_temp(df_temp_weekly)
-        weekly_hum_json = json_temp(df_hum_weekly)
+        df_temp_weekly = bin_zensie_data(
+            df_mean_hr_weekly, TEMP_BINS, "temperature"
+        )
+        df_hum_weekly = bin_zensie_data(
+            df_mean_hr_weekly, HUM_BINS, "humidity"
+        )
+        weekly_temp_json = json_bin_counts(df_temp_weekly)
+        weekly_hum_json = json_bin_counts(df_hum_weekly)
         # Sensor id locations:
         # 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
         json_strat = stratification(df, (18, 21, 22, 23))
@@ -458,10 +368,12 @@ def index():
     df_daily = zensie_query(dt_from_daily, dt_to)
     if not df_daily.empty:
         df_mean_hr_daily = grp_per_hr_zone(df_daily)
-        df_temp_daily = temperature_analysis(df_mean_hr_daily, TEMP_BINS)
-        df_hum_daily = humidity_analysis(df_mean_hr_daily, HUM_BINS)
-        daily_temp_json = json_temp(df_temp_daily)
-        daily_hum_json = json_temp(df_hum_daily)
+        df_temp_daily = bin_zensie_data(
+            df_mean_hr_daily, TEMP_BINS, "temperature"
+        )
+        df_hum_daily = bin_zensie_data(df_mean_hr_daily, HUM_BINS, "humidity")
+        daily_temp_json = json_bin_counts(df_temp_daily)
+        daily_hum_json = json_bin_counts(df_hum_daily)
     else:
         daily_temp_json = {}
         daily_hum_json = {}
