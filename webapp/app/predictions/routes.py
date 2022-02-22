@@ -207,7 +207,9 @@ def json_temp_arima(df_arima):
     charts in the model run
 
     """
-    df_arima = add_time_columns(df_arima)
+    # The shift_hours=1 accounts for df_arima starting its indexing from 1
+    # instead of 0.
+    df_arima = add_time_columns(df_arima, shift_hours=1)
     json_str = (
         df_arima.groupby(
             ["sensor_id", "measure_name", "run_id"], as_index=True
