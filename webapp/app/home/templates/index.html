@@ -37,11 +37,19 @@
           </div> -->
 
           <div class="webgl-content">
-            <div id="unityContainer" style= "height: 48vh"></div>
-            <div class="footer">
-              <div class="webgl-logo"></div>
-              <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
+            <div id="unityContainer">
+              <a href=./model>
+                <img
+                    style=" width: 100%"
+                    src="{{ url_for('static', filename='images/unity_model_banner.png') }}",
+                    alt="Banner image for the 3D model of the farm."
+                    >
+              </a>
             </div>
+              <div class="footer">
+                <div class="webgl-logo"></div>
+                <div class="fullscreen"></div>
+              </div>
           </div>
 
       </div>
@@ -381,12 +389,6 @@
 <script src="{{ url_for('static', filename='vendors/jqvmap/dist/maps/jquery.vmap.world.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/jqvmap/examples/js/jquery.vmap.sampledata.js') }}"></script>
 
-<!-- 3D models -->
-<script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
-<script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
-<script>
-  var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", { onProgress: UnityProgress });
-</script>
 <!-- Utility functions -->
 <script src="{{ url_for('static', filename='javascript/utility.js') }}"></script>
 <script src="{{ url_for('static', filename='javascript/home.js') }}"></script>

@@ -99,7 +99,6 @@ function roundcharts(json_data, zoneid, canvasname, colouramp) {
     data: cnt_,
     backgroundColor: colouramp,
   });
-  // title: [json_data[zoneid]["zone"]],
 
   const data = {
     labels: bin_,
@@ -116,7 +115,6 @@ function roundcharts(json_data, zoneid, canvasname, colouramp) {
       aspectRatio: 1.5,
     },
   };
-  // roundchart0
   const ctx = document.getElementById(canvasname);
   new Chart(ctx, config);
 }
@@ -222,7 +220,6 @@ function create_charts(
   ];
 
   // main farm
-  // round charts ("roundchart0")
   let zone0_name = temperature_data[0]["zone"];
   document.getElementById("zone0_name").innerHTML = zone0_name;
   roundcharts(temperature_data, 0, "roundchart0", colouramp_redblue);

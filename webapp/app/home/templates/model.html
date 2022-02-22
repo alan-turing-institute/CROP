@@ -1,0 +1,43 @@
+{% extends "base_site.html" %}
+
+{% block title %} 3D MODEL {% endblock title %}
+
+{% block stylesheets %}
+{{ super() }}
+{% endblock stylesheets %}
+
+
+{% block content %}
+<div class="right_col" role="main">
+  <!--3D Unity container-->
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+          <div class="x_title">
+            <h2>3D model</h2>
+            <div class="clearfix"></div>
+          </div>
+        <div class="webgl-content">
+          <div id="unityContainer" style="height: 75vh"></div>
+          <div class="footer">
+            <div class="webgl-logo"></div>
+            <div class="fullscreen" onclick="unityInstance.SetFullscreen(1)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/3D Unity container-->
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+{{ super()}}
+<script src="{{ url_for('static', filename='structures/CROP_unity_js/TemplateData/UnityProgress.js') }}"></script>
+<script src="{{ url_for('static', filename='structures/CROP_unity_js/Build/UnityLoader.js') }}"></script>
+<script>
+  var unityInstance = UnityLoader.instantiate("unityContainer", "{{ url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.json') }}", { onProgress: UnityProgress });
+</script>
+
+{% endblock javascripts %}

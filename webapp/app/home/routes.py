@@ -395,3 +395,10 @@ def index():
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
     )
+
+
+@blueprint.route("/model")
+@login_required
+def model():
+    """Unity model page."""
+    return render_template("model.html",)
