@@ -10,6 +10,9 @@ flask_login==0.5.0
 flask-cors == 3.0.8
 flask_migrate==2.5.3
 
+# This needed fixing because 2.10 introduced breaking changes that Flask
+# wasn't ready to handle. If we upgrade Flask, the direct requirement of
+# itsdangerous can be dropped, we only need it as a Flask dependency.
 itsdangerous==2.0.1
 
 psycopg2-binary==2.9.3
