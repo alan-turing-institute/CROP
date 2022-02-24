@@ -243,7 +243,7 @@ def stratification(temp_df, sensor_ids):
     return json_strat
 
 
-def bin_zensie_data(df, bins, zensie_measure):
+def bin_zensie_data(df, bins, zensie_measure, expected_total=None):
     """
     Return a dataframe with counts of how many measurements of zensie_measure
     were in each of the bins, by zone.
@@ -276,6 +276,13 @@ def bin_zensie_data(df, bins, zensie_measure):
         # renames column with counts
         bin_cnt.rename(columns={zensie_measure: "cnt"}, inplace=True)
         df_ = resample(bin_cnt, bins[zone])
+        if expected_total:
+            total = df_["cnt"].sum()
+            df_.loc[df.index.max() + 1] = [
+                zone,
+                "missing",
+                expected_total - total,
+            ]
         # renames the values of all the zones
         df_["zone"] = zone
         output_list.append(df_)
@@ -350,10 +357,10 @@ def index():
     if not df.empty:
         df_mean_hr_weekly = grp_per_hr_zone(df)
         df_temp_weekly = bin_zensie_data(
-            df_mean_hr_weekly, TEMP_BINS, "temperature"
+            df_mean_hr_weekly, TEMP_BINS, "temperature", expected_total=24 * 7
         )
         df_hum_weekly = bin_zensie_data(
-            df_mean_hr_weekly, HUM_BINS, "humidity"
+            df_mean_hr_weekly, HUM_BINS, "humidity", expected_total=24 * 7
         )
         weekly_temp_json = json_bin_counts(df_temp_weekly)
         weekly_hum_json = json_bin_counts(df_hum_weekly)
@@ -369,9 +376,11 @@ def index():
     if not df_daily.empty:
         df_mean_hr_daily = grp_per_hr_zone(df_daily)
         df_temp_daily = bin_zensie_data(
-            df_mean_hr_daily, TEMP_BINS, "temperature"
+            df_mean_hr_daily, TEMP_BINS, "temperature", expected_total=24
         )
-        df_hum_daily = bin_zensie_data(df_mean_hr_daily, HUM_BINS, "humidity")
+        df_hum_daily = bin_zensie_data(
+            df_mean_hr_daily, HUM_BINS, "humidity", expected_total=24
+        )
         daily_temp_json = json_bin_counts(df_temp_daily)
         daily_hum_json = json_bin_counts(df_hum_daily)
     else:
