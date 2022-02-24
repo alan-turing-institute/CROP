@@ -108,6 +108,13 @@
 </script>
 
 <script>
+  // TODO Make this and the same in home.js be read from a common source.
+  const colouramp_redblue = [
+    "rgba(63,103,126,1)",
+    "rgba(27,196,121,1)",
+    "rgba(137,214,11,1)",
+    "rgba(207,19,10,1)",
+  ];
   const zensie_temp_data = JSON.parse('{{temperature_bins_json | safe}}');
   for (const sensor_id in zensie_temp_data) {
       const data = zensie_temp_data[sensor_id]
@@ -118,6 +125,9 @@
               x: data["data"][j]["date"],
               y: data["data"][j]["count"],
               type: 'bar',
+              marker: {
+                  color: colouramp_redblue[j],
+                },
             })
         }
 
