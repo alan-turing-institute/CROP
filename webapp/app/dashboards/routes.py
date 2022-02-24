@@ -4,11 +4,11 @@ Analysis dashboards module.
 
 import copy
 from datetime import timedelta
+import json
+import logging
 
 import numpy as np
 import pandas as pd
-
-import logging
 
 from flask_login import login_required
 from flask import render_template, request
@@ -29,7 +29,28 @@ from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
 
 # Temperature constants
-TEMP_BINS = [0.0, 17.0, 21.0, 24.0, 30.0]
+TEMP_BINS = {
+    "Propagation": [0.0, 20.0, 23.0, 25.0, 144.0],
+    "FrontFarm": [0.0, 18.0, 21.0, 25.0, 144.0],
+    "Fridge": [0.0, 20.0, 23.0, 25.0, 144.0],
+    "MidFarm": [0.0, 20.0, 23.0, 25.0, 144.0],
+    "BackFarm": [0.0, 20.0, 25.0, 28.0, 144.0],
+    "Tunnel": [0.0, 20.0, 25.0, 28.0, 144.0],
+    "R&D": [0.0, 20.0, 23.0, 25.0, 144.0],
+}
+# TODO Read these from the database.
+SENSOR_CATEORIES = {
+    18: "MidFarm",
+    19: "Tunnel",
+    20: "Propagation",
+    21: "FrontFarm",
+    22: "BackFarm",
+    23: "MidFarm",
+    24: "R&D",
+    25: "R&D",
+    26: "Fridge",
+    27: "MidFarm",
+}
 
 # Ventilation constants
 CONST_SFP = 2.39  # specific fan power
@@ -365,17 +386,7 @@ def zensie_analysis(dt_from, dt_to):
     df = pd.read_sql(query.statement, query.session.bind)
 
     logging.info("Total number of records found: %d" % (len(df.index)))
-
-    if not df.empty:
-        sensor_names, sensor_temp_ranges = temperature_range_analysis(
-            df, dt_from, dt_to
-        )
-
-    else:
-        sensor_names = []
-        sensor_temp_ranges = {}
-
-    return sensor_names, sensor_temp_ranges
+    return temperature_range_analysis(df, dt_from, dt_to)
 
 
 def temperature_range_analysis(temp_df, dt_from, dt_to):
@@ -390,7 +401,6 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         sensor_names: a list of sensor names
         sensor_temp_ranges: json data with temperate ranges
     """
-
     sensor_temp_ranges = {}
 
     df = copy.deepcopy(temp_df)
@@ -408,229 +418,207 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
     # Reseting index
     df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
-    # grouping data by date-hour and sensor id
-    sensor_grp = df.groupby(
-        by=[
-            df.timestamp.map(
-                lambda x: "%04d-%02d-%02d-%02d"
-                % (x.year, x.month, x.day, x.hour)
-            ),
-            "sensor_id",
-            "date",
-        ]
-    )
+    data_by_sensor_id = {}
+    for sensor_name, sensor_id in zip(sensor_names, sensor_ids):
+        df_sensor = df[df["sensor_id"] == sensor_id]
+        # grouping data by date-hour and sensor id
+        sensor_grp = df_sensor.groupby(
+            by=[
+                df_sensor.timestamp.map(
+                    lambda x: "%04d-%02d-%02d-%02d"
+                    % (x.year, x.month, x.day, x.hour)
+                ),
+                "date",
+            ]
+        )
 
-    # estimating hourly temperature mean values
-    sensor_grp_temp = sensor_grp["temperature"].mean().reset_index()
+        # estimating hourly temperature mean values
+        sensor_grp_temp = sensor_grp["temperature"].mean().reset_index()
 
-    # binning temperature values
-    sensor_grp_temp["temp_bin"] = pd.cut(
-        sensor_grp_temp["temperature"], TEMP_BINS
-    )
+        bins = TEMP_BINS[SENSOR_CATEORIES[sensor_id]]
+        # binning temperature values
+        sensor_grp_temp["temp_bin"] = pd.cut(
+            sensor_grp_temp["temperature"], bins
+        )
 
-    # converting bins to str
-    sensor_grp_temp["temp_bin"] = sensor_grp_temp["temp_bin"].astype(str)
+        # converting bins to str
+        sensor_grp_temp["temp_bin"] = sensor_grp_temp["temp_bin"].astype(str)
 
-    # get bin counts for each sensor-day combination
-    sensor_grp_date = sensor_grp_temp.groupby(
-        by=["sensor_id", "date", "temp_bin"]
-    )
+        # get bin counts for each sensor-day combination
+        sensor_grp_date = sensor_grp_temp.groupby(by=["date", "temp_bin"])
 
-    sensor_cnt = sensor_grp_date["temperature"].count().reset_index()
-    sensor_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
-
-    json_data = []
-    for sensor_id in sensor_ids:
-
-        cnt_sensor = sensor_cnt[sensor_cnt["sensor_id"] == sensor_id]
-
-        del cnt_sensor["sensor_id"]
+        sensor_cnt = sensor_grp_date["temperature"].count().reset_index()
+        sensor_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
 
         # Adding missing date/temp_bin combos
-        bins_list, df_list = resample(cnt_sensor, TEMP_BINS, dt_from, dt_to)
+        bins_list, df_list = resample(sensor_cnt, bins, dt_from, dt_to)
 
-        bins_json = []
-
-        for i, bin_range in enumerate(bins_list):
-            temp_bin_df = df_list[i]
-            temp_bin_df["date"] = pd.to_datetime(
-                temp_bin_df["date"], format="%Y-%m-%d"
-            ).dt.strftime("%Y-%m-%d")
-
-            bins_json.append(
-                '["'
-                + bin_range
-                + '",'
-                + temp_bin_df.to_json(orient="records")
-                + "]"
-            )
-
-        json_data.append("[" + ",".join(bins_json) + "]")
-
-    sensor_temp_ranges["data"] = "[" + ",".join(json_data) + "]"
-
-    return sensor_names, sensor_temp_ranges
+        data_by_sensor_id[sensor_id] = {
+            "name": sensor_name,
+            "bins": bins_list,
+            "data": [
+                {
+                    "date": df["date"].dt.strftime("%Y-%m-%d").to_list(),
+                    "count": df["temp_cnt"].to_list(),
+                }
+                for df in df_list
+            ],
+        }
+    return len(data_by_sensor_id.keys()), json.dumps(data_by_sensor_id)
 
 
-@blueprint.route("/<template>")
+@blueprint.route("/advanticsys_dashboard")
 @login_required
-def route_template(template):
-
-    """
-    Renders templates
-
-    """
-
+def advanticsys_dashboard():
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    adv_sensors_temp = {}
 
-    if template == "advanticsys_dashboard":
+    # advanticsys
+    query = db.session.query(
+        ReadingsAdvanticsysClass.timestamp,
+        ReadingsAdvanticsysClass.sensor_id,
+        SensorClass.id,
+        ReadingsAdvanticsysClass.temperature,
+        ReadingsAdvanticsysClass.humidity,
+        ReadingsAdvanticsysClass.co2,
+    ).filter(
+        and_(
+            ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
+            ReadingsAdvanticsysClass.timestamp >= dt_from,
+            ReadingsAdvanticsysClass.timestamp <= dt_to,
+        )
+    )
 
-        adv_sensors_temp = {}
+    df = pd.read_sql(query.statement, query.session.bind)
 
-        # advanticsys
-        query = db.session.query(
-            ReadingsAdvanticsysClass.timestamp,
-            ReadingsAdvanticsysClass.sensor_id,
-            SensorClass.id,
-            ReadingsAdvanticsysClass.temperature,
-            ReadingsAdvanticsysClass.humidity,
-            ReadingsAdvanticsysClass.co2,
-        ).filter(
-            and_(
-                ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
-                ReadingsAdvanticsysClass.timestamp >= dt_from,
-                ReadingsAdvanticsysClass.timestamp <= dt_to,
-            )
+    if not df.empty:
+
+        # unique sensors
+        adv_sensors = df.sensor_id.unique()
+        print("advant", adv_sensors)
+        adv_sensors_modbus_ids = df.id.unique()
+
+        # extracting date from datetime
+        df["date"] = pd.to_datetime(df["timestamp"].dt.date)
+
+        # Reseting index
+        df.sort_values(by=["timestamp"], ascending=True).reset_index(
+            inplace=True
         )
 
-        df = pd.read_sql(query.statement, query.session.bind)
+        # grouping data by date-hour and sensor id
+        adv_grp = df.groupby(
+            by=[
+                df.timestamp.map(
+                    lambda x: "%04d-%02d-%02d-%02d"
+                    % (x.year, x.month, x.day, x.hour)
+                ),
+                "sensor_id",
+                "date",
+            ]
+        )
 
-        if not df.empty:
+        # estimating hourly temperature mean values
+        adv_grp_temp = adv_grp["temperature"].mean().reset_index()
 
-            # unique sensors
-            adv_sensors = df.sensor_id.unique()
-            print("advant", adv_sensors)
-            adv_sensors_modbus_ids = df.id.unique()
+        # binning temperature values
+        adv_grp_temp["temp_bin"] = pd.cut(
+            adv_grp_temp["temperature"], TEMP_BINS
+        )
 
-            # extracting date from datetime
-            df["date"] = pd.to_datetime(df["timestamp"].dt.date)
+        # converting bins to str
+        adv_grp_temp["temp_bin"] = adv_grp_temp["temp_bin"].astype(str)
 
-            # Reseting index
-            df.sort_values(by=["timestamp"], ascending=True).reset_index(
-                inplace=True
+        # get bin counts for each sensor-day combination
+        adv_grp_date = adv_grp_temp.groupby(
+            by=["sensor_id", "date", "temp_bin"]
+        )
+        adv_cnt = adv_grp_date["temperature"].count().reset_index()
+        adv_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
+
+        json_data = []
+        for adv_sensor_id in adv_sensors:
+
+            adv_cnt_sensor = adv_cnt[adv_cnt["sensor_id"] == adv_sensor_id]
+
+            del adv_cnt_sensor["sensor_id"]
+
+            # Adding missing date/temp_bin combos
+            bins_list, df_list = resample(
+                adv_cnt_sensor, TEMP_BINS, dt_from, dt_to
             )
 
-            # grouping data by date-hour and sensor id
-            adv_grp = df.groupby(
-                by=[
-                    df.timestamp.map(
-                        lambda x: "%04d-%02d-%02d-%02d"
-                        % (x.year, x.month, x.day, x.hour)
-                    ),
-                    "sensor_id",
-                    "date",
-                ]
-            )
+            bins_json = []
 
-            # estimating hourly temperature mean values
-            adv_grp_temp = adv_grp["temperature"].mean().reset_index()
+            for i, bin_range in enumerate(bins_list):
+                temp_bin_df = df_list[i]
+                temp_bin_df["date"] = pd.to_datetime(
+                    temp_bin_df["date"], format="%Y-%m-%d"
+                ).dt.strftime("%Y-%m-%d")
 
-            # binning temperature values
-            adv_grp_temp["temp_bin"] = pd.cut(
-                adv_grp_temp["temperature"], TEMP_BINS
-            )
-
-            # converting bins to str
-            adv_grp_temp["temp_bin"] = adv_grp_temp["temp_bin"].astype(str)
-
-            # get bin counts for each sensor-day combination
-            adv_grp_date = adv_grp_temp.groupby(
-                by=["sensor_id", "date", "temp_bin"]
-            )
-            adv_cnt = adv_grp_date["temperature"].count().reset_index()
-            adv_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
-
-            json_data = []
-            for adv_sensor_id in adv_sensors:
-
-                adv_cnt_sensor = adv_cnt[adv_cnt["sensor_id"] == adv_sensor_id]
-
-                del adv_cnt_sensor["sensor_id"]
-
-                # Adding missing date/temp_bin combos
-                bins_list, df_list = resample(
-                    adv_cnt_sensor, TEMP_BINS, dt_from, dt_to
+                bins_json.append(
+                    '["'
+                    + bin_range
+                    + '",'
+                    + temp_bin_df.to_json(orient="records")
+                    + "]"
                 )
 
-                bins_json = []
+            json_data.append("[" + ",".join(bins_json) + "]")
 
-                for i, bin_range in enumerate(bins_list):
-                    temp_bin_df = df_list[i]
-                    temp_bin_df["date"] = pd.to_datetime(
-                        temp_bin_df["date"], format="%Y-%m-%d"
-                    ).dt.strftime("%Y-%m-%d")
+        adv_sensors_temp["data"] = "[" + ",".join(json_data) + "]"
 
-                    bins_json.append(
-                        '["'
-                        + bin_range
-                        + '",'
-                        + temp_bin_df.to_json(orient="records")
-                        + "]"
-                    )
+    else:
+        adv_sensors_modbus_ids = []
 
-                json_data.append("[" + ",".join(bins_json) + "]")
+    return render_template(
+        "advanticsys_dashboard.html",
+        num_adv_sensors=len(adv_sensors_modbus_ids),
+        adv_sensors=adv_sensors_modbus_ids,
+        adv_sensors_temp=adv_sensors_temp,
+        dt_from=dt_from.strftime("%B %d, %Y"),
+        dt_to=dt_to.strftime("%B %d, %Y"),
+    )
 
-            adv_sensors_temp["data"] = "[" + ",".join(json_data) + "]"
 
-        else:
-            adv_sensors_modbus_ids = []
+@blueprint.route("/zensie_dashboard")
+@login_required
+def zensie_dashboard():
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    num_zensie_sensors, temperature_bins_json = zensie_analysis(dt_from, dt_to)
+    return render_template(
+        "zensie_dashboard.html",
+        num_zensie_sensors=num_zensie_sensors,
+        temperature_bins_json=temperature_bins_json,
+        dt_from=dt_from.strftime("%B %d, %Y"),
+        dt_to=dt_to.strftime("%B %d, %Y"),
+    )
 
-        return render_template(
-            template + ".html",
-            num_adv_sensors=len(adv_sensors_modbus_ids),
-            adv_sensors=adv_sensors_modbus_ids,
-            adv_sensors_temp=adv_sensors_temp,
-            dt_from=dt_from.strftime("%B %d, %Y"),
-            dt_to=dt_to.strftime("%B %d, %Y"),
-        )
 
-    elif template == "zensie_dashboard":
+@blueprint.route("/energy_dashboard")
+@login_required
+def energy_dashboard():
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    energy_data = {}
 
-        sensor_names, sensor_temp_ranges = zensie_analysis(dt_from, dt_to)
+    # lights-on analysis
+    lights_results_df = lights_energy_use(dt_from, dt_to)
 
-        return render_template(
-            template + ".html",
-            num_zensie_sensors=len(sensor_names),
-            zensie_sensors=sensor_names,
-            zensie_temp_ranges=sensor_temp_ranges,
-            dt_from=dt_from.strftime("%B %d, %Y"),
-            dt_to=dt_to.strftime("%B %d, %Y"),
-        )
+    # ventilation analysis
+    ventilation_results_df = ventilation_energy_use(dt_from, dt_to)
 
-    elif template == "energy_dashboard":
+    # jsonify
+    energy_data["data"] = (
+        "["
+        + lights_results_df.to_json(orient="records")
+        + ","
+        + ventilation_results_df.to_json(orient="records")
+        + "]"
+    )
 
-        energy_data = {}
-
-        # lights-on analysis
-        lights_results_df = lights_energy_use(dt_from, dt_to)
-
-        # ventilation analysis
-        ventilation_results_df = ventilation_energy_use(dt_from, dt_to)
-
-        # jsonify
-        energy_data["data"] = (
-            "["
-            + lights_results_df.to_json(orient="records")
-            + ","
-            + ventilation_results_df.to_json(orient="records")
-            + "]"
-        )
-
-        return render_template(
-            template + ".html",
-            energy_data=energy_data,
-            dt_from=dt_from.strftime("%B %d, %Y"),
-            dt_to=dt_to.strftime("%B %d, %Y"),
-        )
-
-    return render_template(template + ".html")
+    return render_template(
+        "energy_dashboard.html",
+        energy_data=energy_data,
+        dt_from=dt_from.strftime("%B %d, %Y"),
+        dt_to=dt_to.strftime("%B %d, %Y"),
+    )
