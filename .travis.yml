@@ -5,6 +5,7 @@ jobs:
     - stage: test
       name: "Unit Tests"
       language: python
+      python: 3.8
       services:
         - postgresql
       install:

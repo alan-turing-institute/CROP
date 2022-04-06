@@ -1,61 +1,55 @@
 from logging import CRITICAL, disable
+
 disable(CRITICAL)
 
 urls = {
-    '': (
-        '/fixed_sidebar',
-        '/fixed_footer',
-        '/plain_page',
-        '/page_403',
-        '/page_404',
-        '/page_500'
+    "": (
+        "/fixed_sidebar",
+        "/fixed_footer",
+        "/plain_page",
+        "/page_403",
+        "/page_404",
+        "/page_500",
     ),
-    '/home': (
-        '/index',
-        '/index2',
-        '/index3'
+    "/home": ("/index", "/index2", "/index3"),
+    "/forms": (
+        "/form",
+        "/form_advanced",
+        "/form_validation",
+        "/form_wizards",
+        "/form_upload",
+        "/form_buttons",
     ),
-    '/forms': (
-        '/form',
-        '/form_advanced',
-        '/form_validation',
-        '/form_wizards',
-        '/form_upload',
-        '/form_buttons'
+    "/ui": (
+        "/general_elements",
+        "/media_gallery",
+        "/typography",
+        "/icons",
+        "/glyphicons",
+        "/widgets",
+        "/invoice",
+        "/inbox",
+        "/calendar",
     ),
-    '/ui': (
-        '/general_elements',
-        '/media_gallery',
-        '/typography',
-        '/icons',
-        '/glyphicons',
-        '/widgets',
-        '/invoice',
-        '/inbox',
-        '/calendar'
+    "/tables": ("/tables", "/tables_dynamic"),
+    "/data": (
+        "/chartjs",
+        "/chartjs2",
+        "/morisjs",
+        "/echarts",
+        "/other_charts",
     ),
-    '/tables': (
-        '/tables',
-        '/tables_dynamic'
+    "/additional": (
+        "/ecommerce",
+        "/projects",
+        "/project_detail",
+        "/contacts",
+        "/profile",
+        "/pricing",
     ),
-    '/data': (
-        '/chartjs',
-        '/chartjs2',
-        '/morisjs',
-        '/echarts',
-        '/other_charts'
-    ),
-    '/additional': (
-        '/ecommerce',
-        '/projects',
-        '/project_detail',
-        '/contacts',
-        '/profile',
-        '/pricing'
-    )
 }
 
-free_access = {'/', '/login', '/page_403', '/page_404', '/page_500'}
+free_access = {"/", "/login", "/page_403", "/page_404", "/page_500"}
 
 
 def check_pages(*pages):
@@ -65,7 +59,9 @@ def check_pages(*pages):
             for page in pages:
                 r = user_client.get(page, follow_redirects=True)
                 assert r.status_code == 200
+
         return wrapper
+
     return decorator
 
 
@@ -75,10 +71,15 @@ def check_blueprints(*blueprints):
             function(user_client)
             for blueprint in blueprints:
                 for page in urls[blueprint]:
-                    r = user_client.get(blueprint + page, follow_redirects=True)
+                    r = user_client.get(
+                        blueprint + page, follow_redirects=True
+                    )
                     assert r.status_code == 200
+
         return wrapper
+
     return decorator
+
 
 ## Base test
 # test the login system: login, user creation, logout
@@ -101,5 +102,5 @@ def test_urls(user_client):
             r = user_client.get(page_url, follow_redirects=True)
             assert r.status_code == 200
     # logout and test that we cannot access anything anymore
-    r = user_client.get('/logout', follow_redirects=True)
+    r = user_client.get("/logout", follow_redirects=True)
     test_authentication(user_client)

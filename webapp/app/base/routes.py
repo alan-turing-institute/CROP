@@ -57,17 +57,20 @@ def login():
             "login/login.html",
             login_form=login_form,
             create_account_form=create_account_form,
-            disable_register=(environ.get("CROP_DISABLE_REGISTER", "True") == "True"),
+            disable_register=(
+                environ.get("CROP_DISABLE_REGISTER", "True") == "True"
+            ),
         )
     return redirect(url_for("home_blueprint.index"))
 
 
-@blueprint.route("/create_user", methods=["POST"])
-def create_user():
-    user = UserClass(**request.form)
-    db.session.add(user)
-    db.session.commit()
-    return jsonify("success")
+# TODO Fix this end point.
+# @blueprint.route("/create_user", methods=["POST"])
+# def create_user():
+#    user = UserClass(**request.form)
+#    db.session.add(user)
+#    db.session.commit()
+#    return jsonify("success")
 
 
 @blueprint.route("/logout")

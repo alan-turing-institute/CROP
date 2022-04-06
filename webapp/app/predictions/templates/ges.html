@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Daily Harvest Data {% endblock title %}
+{% block title %} GES PREDICTIONS {% endblock title %}
 
 {% block stylesheets %}
 {{ super() }}
@@ -14,6 +14,7 @@
   rel="stylesheet">
 <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
   rel="stylesheet">
+<link href="{{ url_for('static', filename='css/predictions.css') }}" rel="stylesheet">
 {% endblock stylesheets %}
 
 {% block content %}
@@ -23,63 +24,32 @@
     <div class="row">
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
+          <div class="x_title">
+            <h2>GES: Temperature and humidity predictions</h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
 
           <div class="x_content">
-
-            <div class="row x_title">
-              <div class="col-md-6">
-                <h3>Daily Harvest Data <small>(showing max 500 records)</small></h3>
-              </div>
-
-              <div class="col-md-6">
-                <div id="reportrange" class="pull-right"
-                  style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
-                  <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                  <span></span>
-                  <b class="caret"></b>
+            <div class="" role="tabpanel" data-example-id="togglable-tabs">
+              <div id="myTabContent" class="tab-content">
+                <div role="tabpanel" class="tab-pane fade active in" id="tab_content1">
+                  <div class="x_content">
+                    <h4> <p id="ges_model_title"></h4></p>
+                    <div class="canvas_wrapper">
+                      <canvas id="ges_model_temperature"></canvas>
+                    </div>
+                    <div class="canvas_wrapper">
+                      <canvas id="ges_model_humidity"></canvas>
+                    </div>
+                    <p class="text-muted font-13 m-b-30"></p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap"
-              cellspacing="0" width="100%">
-              <thead>
-                <tr>
-                  <th>Crop</th>
-                  <th>Propagation Date</th>
-                  <th>Location ID</th>
-                  <th>Stack</th>
-                  <th>Total Yield Weight</th>
-                  <th>Disease Trays</th>
-                  <th>Defect Trays</th>
-                  <th>Notes</th>
-                  <th>User</th>
-                  <th>Upload Time</th>
-                </tr>
-              </thead>
-              <tbody>
-
-                {%
-                for t_reading in readings:
-                %}
-                <tr>
-                  <td>{{ t_reading.daily_harvest_data_crop }}</td>
-                  <td>{{ t_reading.daily_harvest_data_propagation_date }}</td>
-                  <td>{{ t_reading.daily_harvest_data_location_id}}</td>
-                  <td>{{ t_reading.daily_harvest_data_stack}}</td>
-                  <td>{{ t_reading.daily_harvest_data_total_yield_weight}}</td>
-                  <td>{{ t_reading.daily_harvest_data_disease_trays}}</td>
-                  <td>{{ t_reading.daily_harvest_data_defect_trays}}</td>
-                  <td>{{ t_reading.daily_harvest_data_notes}}</td>
-                  <td>{{ t_reading.daily_harvest_data_user}}</td>
-                  <td>{{ t_reading.daily_harvest_data_time_created }}</td>
-                </tr>
-                {%
-                endfor
-                %}
-
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
@@ -88,10 +58,13 @@
 </div>
 {% endblock content %}
 
-
 {% block javascripts %}
 {{ super() }}
 <!-- Datatables -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<script src="{{ url_for('static', filename='javascript/predictions.js') }}"></script>
+<script src="{{ url_for('static', filename='javascript/utility.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
@@ -115,24 +88,16 @@
 <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
 
 <script>
-
-  $(document).ready(function () {
-    $('#datatable-responsive').DataTable({
-      "order": [[0, "desc"]]
-    });
-  });
-
-  $(window).load(function () {
-
-    $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
-
-  });
-
-  $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
-    var request_url = "/readings/dailyharvest?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
-
-    location.replace(request_url)
-  });
-
+  const ges_json = JSON.parse('{{json_ges_f | safe}}');
+  const zensie_json = JSON.parse('{{json_zensie_f | safe}}');
+  const canvasname = "ges_model";
+  const scenario_name = "1 ACH, 1 DH, -3 hours";
+  document.getElementById(canvasname+"_title").innerHTML = "sensor id: "+ ges_json[0]["sensor_id"] + "     |   " + "run id: " + ges_json[0]["Values"][0]["run_id"];
+  // See static/javascript/predictions.js for the plot function.
+  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], zensie_json, "temperature", canvasname + "_temperature", "Temperature (°C)", true, scenario_name);
+  plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], zensie_json, "humidity", canvasname + "_humidity", "Relative humidity (%)", false, scenario_name);
 </script>
+
+
+
 {% endblock javascripts %}

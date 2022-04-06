@@ -1,4 +1,4 @@
-pip==19.3.1
+pip==21.3.1
 pytest==5.4.1
 
 sqlalchemy==1.3.12
@@ -10,9 +10,22 @@ flask_login==0.5.0
 flask-cors == 3.0.8
 flask_migrate==2.5.3
 
-psycopg2-binary==2.8.5
-pandas==0.25.3
-numpy==1.19.5
+# This needed fixing because 2.10 introduced breaking changes that Flask
+# wasn't ready to handle. If we upgrade Flask, the direct requirement of
+# itsdangerous can be dropped, we only need it as a Flask dependency.
+itsdangerous==2.0.1
+
+# jinja > 3.0.3 and werkzeug > 2.0.3 break flask, see
+# https://github.com/pallets/jinja/issues/1626
+# This version fix can be removed if/when we upgrade flask.
+jinja2==3.0.3
+werkzeug==2.0.3
+
+psycopg2-binary==2.9.3
+pandas==1.3.5
+
+numpy==1.21.5
+
 bcrypt==3.1.7
 black==19.10b0
 pylint==2.4.4
@@ -23,7 +36,7 @@ flask_wtf==0.14.3
 azure-storage-blob==12.3.0
 
 selenium==3.141.0
-
+WTForms==2.3.3
 requests==2.23.0
 python-dateutil==2.8.1
 
