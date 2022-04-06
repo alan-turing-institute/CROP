@@ -10,11 +10,20 @@ CREATE TABLE model (
   author VARCHAR(100)
 );
 
+CREATE TABLE test_model (
+  id SERIAL PRIMARY KEY,
+  model_name VARCHAR(100) NOT NULL,
+  author VARCHAR(100)
+);
+
 -- INSERT INTO model(model_name, author)
 -- VALUES('arima', 'Melanie Singh');
 
 -- INSERT INTO model(model_name, author)                            
 -- values ('Bayesian Structural Time Series (BSTS)', 'Melanie Singh')
+
+-- INSERT INTO model(model_name, author)                            
+-- values ('Greenhouse Energy Simulation (GES)', 'Rebecca Ward')
 
 -- -- Measure:
 CREATE TABLE model_measure (
@@ -35,6 +44,28 @@ CREATE TABLE model_measure (
 -- insert into model_measure (measure_name) 
 -- values ('Median Temperature (Degree Celcius)');
 
+insert into model_measure (measure_name)
+values ('Scenario Temperature (Degree Celcius)')
+
+insert into model_measure (measure_name)
+values ('Mean Relative Humidity (Percent)')
+
+insert into model_measure (measure_name)
+values ('Scenario Relative Humidity (Percent)')
+
+insert into model_measure (measure_name)
+values ('Lower Bound Relative Humidity (Percent)')
+
+insert into model_measure (measure_name)
+values ('Upper Bound Relative Humidity (Percent)')
+
+
+
+
+
+
+
+
 -- Record run:
 CREATE TABLE model_run (
   id SERIAL PRIMARY KEY,
@@ -44,11 +75,19 @@ CREATE TABLE model_run (
   time_created timestamp default current_timestamp NOT NULL
 );
 
+CREATE TABLE test_model_run (
+  id SERIAL PRIMARY KEY,
+  sensor_id INTEGER REFERENCES sensors(id),
+  model_id INTEGER REFERENCES model(id),
+  time_forecast timestamp NOT NULL,
+  time_created timestamp default current_timestamp NOT NULL
+);
+
 -- insert into model
 
-CREATE TABLE model_product (
+CREATE TABLE test_model_product (
   id SERIAL PRIMARY KEY,
-  run_id INTEGER REFERENCES model_run(id),
+  run_id INTEGER REFERENCES test_model_run(id),
   measure_id INTEGER REFERENCES model_measure(id)
 );
 
@@ -57,14 +96,14 @@ CREATE TABLE model_product (
 -- VALUES(18, 1, 1);
 
 -- Prdiction value:
-CREATE TABLE model_value (
+CREATE TABLE test_model_value (
   id SERIAL PRIMARY KEY,
-  product_id INTEGER REFERENCES model_product(id),
+  product_id INTEGER REFERENCES test_model_product(id),
   prediction_value FLOAT NOT NULL,
   prediction_index INTEGER NOT NULL
 );
 
--- INSERT INTO model_prediction(run_id,prediction_value, prediction_index)
+-- INSERT INTO test_model_value(run_id,prediction_value, prediction_index)
 -- VALUES(1, 11, 1),
 -- (1, 12, 2),
 -- (1, 13, 3),
@@ -103,3 +142,25 @@ VALUES (2, 0, 0.4594613726254301),
 (2, 2, 0.7340651592924317), 
 (2, 3, 0.7047730309779485), 
 (2, 4, 0.4595117250921914)
+
+
+SELECT model.id as m_id, 
+  model.model_name as m_name, 
+  model_run.id as run, 
+  model_run.sensor_id as sensor, 
+  model_run.time_forecast as forecast,
+  model_product.id as product,
+  model_value.product_id as value_product,
+  model_value.prediction_value as p_value,
+  model_value.prediction_index as p_index,
+  model_value.id as p_id,
+  model_measure.measure_name
+FROM model, model_run, model_product, model_value, model_measure
+WHERE model.id = 1 
+  AND model_run.model_id = model.id 
+  AND model_run.id=133
+  AND model_product.run_id = model_run.id
+  AND model_product.measure_id = 1
+  AND model_value.product_id = model_product.id
+  AND model_measure.id = model_product.measure_id
+ORDER BY model_value.prediction_index asc
