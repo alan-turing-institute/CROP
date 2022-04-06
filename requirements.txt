@@ -15,6 +15,10 @@ flask_migrate==2.5.3
 # itsdangerous can be dropped, we only need it as a Flask dependency.
 itsdangerous==2.0.1
 
+# jinja > 3.0.3 breaks flask, see https://github.com/pallets/jinja/issues/1626
+# This version fix can be removed if/when we upgrade flask.
+jinja2==3.0.3
+
 psycopg2-binary==2.9.3
 pandas==1.3.5
 
