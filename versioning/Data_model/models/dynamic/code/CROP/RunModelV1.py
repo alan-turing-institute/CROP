@@ -5,19 +5,19 @@ Created on Mon Dec  6 11:43:14 2021
 @author: rmw61
 """
 
-from functions_RunModel import derivatives, sat_conc
+from functions_RunModelV1 import derivatives, sat_conc
 from parameters import ACH, ias
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY
 import numpy as np
 import pandas as pd
 
-filepath_Weather = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Weather.csv'
-filepath_Monitored = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Monitored.csv'
-filepath_LastDataPoint = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/LastDataPoint.csv'
-filepath_ACH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_out.csv'
-filepath_IAS = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_out.csv'
-filepath_Length = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_out.csv'
+filepath_Weather = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/WeatherV1.csv'
+filepath_Monitored = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/MonitoredV1.csv'
+filepath_LastDataPoint = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/LastDataPointV1.csv'
+filepath_ACH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_outV1.csv'
+filepath_IAS = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_outV1.csv'
+filepath_Length = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_outV1.csv'
 
 # Import Weather Data
 header_list = ["DateTime", "T_e", "RH_e"]
@@ -129,7 +129,7 @@ plt.scatter(tt_d,DataPoint.RH_i, marker='+', color='b')
 plt.ylabel('RH')
 plt.xticks(rotation=45)
 
-fig.savefig('myimage.png', format='png', dpi=1200, bbox_inches='tight')
+fig.savefig('ModelRun.png', format='png', dpi=1200, bbox_inches='tight')
 
 # Plot ACH, IAS 
 fig = plt.figure()
@@ -151,3 +151,5 @@ plt.plot(tt_d,Lengthmean, color='r')
 ax3.fill_between(tt_d,Lengthuq,Lengthlq, color='r', alpha = 0.2)
 plt.xticks(rotation=90)
 plt.ylabel("Length")
+
+fig.savefig('ParameterValues.png', format='png', dpi=1200, bbox_inches='tight')

@@ -126,7 +126,8 @@ cleanEnvData = function() {
   
   all_sensors_df2 <- reshape2::dcast(all_sensors_df, FarmTimestamp ~ variable + .id, value.var = c("value"))
   
-  saveRDS(all_sensors_df2,"trh_API.RDS")
+  #saveRDS(all_sensors_df2,"trh_API.RDS")
+  saveRDS(all_sensors_df2,"~/CROP/versioning/Data_model/models/static/code/trh_API.RDS")
   
   list(my_time = my_time, all_sensors_df2 = all_sensors_df2)
 }
@@ -157,7 +158,8 @@ cleanEnergyData = function() {
   
   # Assume ECP is in UTC, but time needs to be shifted back an hour
   ecp_ph$FarmTimestamp <- as.POSIXct(ecp_ph$Timestamp)
-  saveRDS(ecp_ph,"ecp_API.RDS")
+  #saveRDS(ecp_ph,"ecp_API.RDS")
+  saveRDS(ecp_ph,"~/CROP/versioning/Data_model/models/static/code/ecp_API.RDS")
   ecp_ph
 }
 

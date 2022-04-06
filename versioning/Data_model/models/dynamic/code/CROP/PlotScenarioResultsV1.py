@@ -4,9 +4,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-filepath_data = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Monitored.csv'
-filepath_resultsRH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRH.csv'
-filepath_resultsT = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsT.csv'
+filepath_data = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/MonitoredV1.csv'
+filepath_resultsRH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRHV1.csv'
+filepath_resultsT = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsTV1.csv'
 
 # Scenario
 
@@ -21,7 +21,7 @@ ExternalWeather = pd.read_csv(FILEPATH_WEATHER, delimiter=',', names=header_list
 h2 = 240
 h1 = h2-240
 ind = h2-h1+1
-ndp =int( (h2-h1)/12)
+ndp =int( (h2-h1)/3)
 
 TWeather= ExternalWeather.T_e[-ind:].astype(np.float64) # +1 to ensure correct end point
 RHWeather = ExternalWeather.RH_e[-ind:].astype(np.float64)
@@ -32,7 +32,7 @@ TData= MonitoredData[-ind:][1].astype(np.float64) # +1 to ensure correct end poi
 RHData = MonitoredData[-ind:][2].astype(np.float64)
 
 p1 = int(h1) # start hour 
-delta_h = 12 # hours between data points
+delta_h = 3 # hours between data points
 p2 = int(ndp*delta_h+p1) # end data point 
 
 sq = np.linspace(p1,p2,ndp+1,endpoint='true')
@@ -40,7 +40,7 @@ seq = sq.astype(np.int64)
 
 t = np.linspace(h1-h2,3*24,1+240+3*24)
 t1 = np.linspace(0,3*24,1+3*24)
-td = np.linspace(h1-h2,0,21)
+td = np.linspace(h1-h2,0,81)
 
 dpRH = RHData.iloc[seq]
 dpT = TData.iloc[seq]+273.15
@@ -135,6 +135,8 @@ y4 = {'RH<RHmin': np.sum(testRHSE_low), 'RH OK': 73-np.sum(testRHSE)-np.sum(test
 names4 = [key for key,value in y4.items()]
 values4 = [value for value in y4.values()]
 
+fig.savefig('ScenarioTHV1.png', format='png', dpi=1200, bbox_inches='tight')
+
 fig2 = plt.figure()
 
   #Tlabels = ['T>Tset', 'T<Tset']
@@ -159,3 +161,5 @@ ax32 = fig2.add_subplot(2,2,4)
   
 plt.pie(values4, colors = ['blue','green','red'], startangle = 90, labels = names4, textprops={'fontsize': 8})
 ax32.set_title('RH - Scenario', fontsize = 8) 
+
+fig2.savefig('ScenarioPieV1.png', format='png', dpi=1200, bbox_inches='tight')

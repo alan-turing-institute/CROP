@@ -24,10 +24,10 @@ import sys,os
 DIR_CROP = os.path.join(os.path.dirname(__file__),os.pardir)
 DIR_DATA = os.path.join(os.path.dirname(__file__),os.path.pardir, os.pardir,"data")
 DIR_INVERSION = os.path.join(DIR_CROP,"Inversion")
-FILEPATH_WEATHER = os.path.join(DIR_DATA,'Weather.csv')
-FILEPATH_ACH = os.path.join(DIR_DATA,"ACH_out.csv")
-FILEPATH_IAS = os.path.join(DIR_DATA,"IAS_out.csv")
-FILEPATH_LEN = os.path.join(DIR_DATA,"Length_out.csv")  
+FILEPATH_WEATHER = os.path.join(DIR_DATA,'WeatherV1.csv')
+FILEPATH_ACH = os.path.join(DIR_DATA,"ACH_outV1.csv")
+FILEPATH_IAS = os.path.join(DIR_DATA,"IAS_outV1.csv")
+FILEPATH_LEN = os.path.join(DIR_DATA,"Length_outV1.csv")  
 
 sys.path.append(DIR_INVERSION)
 
@@ -204,7 +204,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec
     
     ## Set ACH,ias
     hour = np.floor(t/3600) + 1
-    seq = range(h1+12, h2+24, 12)
+    seq = range(h1+3, h2+24, 3)
     
     if hour >= seq[count[-1]]:
         count_new = count[-1]+1
@@ -217,7 +217,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndhvec, lshiftvec
     
     ## Lights
     day_hour=((hour+LatestTimeHourValue)/24-np.floor((hour+LatestTimeHourValue)/24))*24
-    L_on = (day_hour>-0.01 and day_hour<(09.01 + lshift)) or day_hour > (15.01 + lshift)
+    L_on = (day_hour>-0.01 and day_hour<(08.01 + lshift)) or day_hour > (15.01 + lshift)
     AL_on = day_hour>08.01 and day_hour<16.01
     
     T_l = L_on*T_al + (1-L_on)*T_i;
