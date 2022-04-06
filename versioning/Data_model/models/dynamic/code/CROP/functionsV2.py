@@ -179,7 +179,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, h1, h2, LatestTimeHourValue):
     
     ## Lights
     day_hour=((hour+LatestTimeHourValue)/24-np.floor((hour+LatestTimeHourValue)/24))*24
-    L_on = (day_hour>-0.01 and day_hour<09.01) or day_hour > 15.01
+    L_on = (day_hour>-0.01 and day_hour<08.01) or day_hour > 15.01
     AL_on = day_hour>08.01 and day_hour<16.01
     
     T_l = L_on*T_al + (1-L_on)*T_i;

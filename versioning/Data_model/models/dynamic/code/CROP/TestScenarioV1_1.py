@@ -1,4 +1,4 @@
-#
+# Updates TestScenario_V1 by repeating last 8 values of calibrated ACH/IAS 4 times instead of fixing at final value
 
 from typing import Dict
 from functions_scenarioV1 import (
@@ -7,7 +7,7 @@ from functions_scenarioV1 import (
   FILEPATH_ACH, FILEPATH_IAS)
 import numpy as np
 import pandas as pd
-import os
+#import os
 USE_LIVE = False
 
 # Import Weather Data
@@ -101,15 +101,34 @@ def setScenario(ventilation_rate:int=1,
 
   # # Scenario 1 - vary ACH
   ScenEval:np.ndarray = np.zeros((32,4,4))
-  ScenEval[:,0,0] = ach_parameters['ACHmean'][-1]
+  #ScenEval[:,0,0] = ach_parameters['ACHmean'][-1]
+  ach_8 = ach_parameters['ACHmean'][-8:]
+  ScenEval[:,0,0] = np.tile(ach_8,4)
+    
   ScenEval[:,0,1] = ventilation_rate
-  ScenEval[:,0,2] = ach_parameters['ACHuq'][-1]
-  ScenEval[:,0,3] = ach_parameters['ACHlq'][-1]
 
-  ScenEval[:,1,0] = ias_parameters['IASmean'][-1]
-  ScenEval[:,1,1] = ias_parameters['IASmean'][-1]
-  ScenEval[:,1,2] = ias_parameters['IASlq'][-1]
-  ScenEval[:,1,3] = ias_parameters['IASuq'][-1]
+  #ScenEval[:,0,2] = ach_parameters['ACHuq'][-1]
+  achuq_8 = ach_parameters['ACHuq'][-8:]
+  ScenEval[:,0,2] = np.tile(achuq_8,4)
+  
+  #ScenEval[:,0,3] = ach_parameters['ACHlq'][-1]
+  achlq_8 = ach_parameters['ACHlq'][-8:]
+  ScenEval[:,0,3] = np.tile(achlq_8,4)
+  
+  #ScenEval[:,1,0] = ias_parameters['IASmean'][-1]
+  ias_8 = ias_parameters['IASmean'][-8:]
+  ScenEval[:,1,0] = np.tile(ias_8,4)
+  
+  #ScenEval[:,1,1] = ias_parameters['IASmean'][-1]
+  ScenEval[:,1,1] = np.tile(ias_8,4)
+  
+  #ScenEval[:,1,2] = ias_parameters['IASlq'][-1]
+  iaslq_8 = ias_parameters['IASlq'][-8:]
+  ScenEval[:,1,2] = np.tile(iaslq_8,4)
+  
+  #ScenEval[:,1,3] = ias_parameters['IASuq'][-1]
+  iasuq_8 = ias_parameters['IASuq'][-8:]
+  ScenEval[:,1,3] = np.tile(iasuq_8,4)
 
   # # Scenario 2 - vary number of dehumidifiers 
   ScenEval[:,2,0] = 1

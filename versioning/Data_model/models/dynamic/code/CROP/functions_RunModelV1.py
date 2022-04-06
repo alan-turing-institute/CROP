@@ -194,7 +194,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh, lshift, Late
     #if hour == 480:
     #    print('debug here')
         
-    seq = range(h1+240, h2+12, 12)
+    seq = range(h1+240, h2+3, 3)
     
     if hour >= seq[count[-1]]:
         count_new = count[-1]+1
@@ -213,7 +213,7 @@ def model(t,z, climate, ACHvec, iasvec, daynum, count, h1, h2, ndh, lshift, Late
     
     ## Lights
     day_hour=((hour+LatestTimeHourValue)/24-np.floor((hour+LatestTimeHourValue)/24))*24
-    L_on = (day_hour>-0.01 and day_hour<(09.01 + lshift)) or day_hour > (15.01 + lshift)
+    L_on = (day_hour>-0.01 and day_hour<(08.01 + lshift)) or day_hour > (15.01 + lshift)
     AL_on = day_hour>08.01 and day_hour<16.01
     
     T_l = L_on*T_al + (1-L_on)*T_i;

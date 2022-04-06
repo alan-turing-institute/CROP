@@ -1,4 +1,4 @@
-from TestScenarioV2 import testScenario, FILEPATH_WEATHER
+from TestScenarioV1_1 import testScenario, FILEPATH_WEATHER
 #from CalibrationV2 import runCalibration
 import pandas as pd
 from dataAccess import (deleteResults, 
@@ -6,8 +6,8 @@ from dataAccess import (deleteResults,
   insertModelProduct, 
   insertModelPrediction)
 
-filepath_resultsRH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRH.csv'
-filepath_resultsT = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsT.csv'
+filepath_resultsRH = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRHV1.csv'
+filepath_resultsT = 'C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsTV1.csv'
 
 MODEL_GES_DATABASE_ID = 3
 SENSOR_RH_16B2_DATABASE_ID = 27
