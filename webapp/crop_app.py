@@ -5,12 +5,12 @@ from sys import exit
 from config import config_dict
 from app import create_app, db
 
-get_config_mode = environ.get('CROP_CONFIG_MODE', 'Production')
+get_config_mode = environ.get("CROP_CONFIG_MODE", "Production")
 
 try:
     config_mode = config_dict[get_config_mode.capitalize()]
 except KeyError:
-    exit('Error: Invalid CROP_CONFIG_MODE environment variable entry.')
+    exit("Error: Invalid CROP_CONFIG_MODE environment variable entry.")
 
 app = create_app(config_mode)
 Migrate(app, db)

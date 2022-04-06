@@ -26,6 +26,7 @@ The overall aim of the CROP project is to prototype a digital twin of the [Growi
 - **2** CROP web application is the main interface for the digital twin. Users can explore collected heterogeneous IoT sensor data, analyse farm conditions at various points in time, use the developed 3D visualisation tools.
 - **3** CROP database is constantly updated from multiple streams of data: Zensie API, Stark energy usage platform, custom made (Raspberry Pi) sensors, and others.
 - **4** CROP machine learning services integrate automated prediction and calibration models into the platform.
+- **5** Unity 3D model is found in : \CROP\webapp\app\base\static\structures
 
 <br/>
 <p align="center">
@@ -34,7 +35,7 @@ The overall aim of the CROP project is to prototype a digital twin of the [Growi
 
 ## Disclaimer
 
-CROP is a **development** code and we recommend that you do not deploy this **prototype** application in a production setting. The implementation is only for demonstration purposes only and we make no warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the web app, backend infrastructure or the information.
+CROP is a **development** code and we recommend that you do not deploy this **prototype** application in a production setting. The implementation is only for demonstration purposes only and we make no warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the web app, backend infrastructure or the information. 
 
 ## Implementation
 

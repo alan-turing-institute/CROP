@@ -194,6 +194,11 @@ MODEL_MEASURE_TABLE_NAME = "model_measure"
 MODEL_RUN_TABLE_NAME = "model_run"
 MODEL_PRODUCT_TABLE_NAME = "model_product"
 MODEL_VALUE_TABLE_NAME = "model_value"
+TEST_MODEL_TABLE_NAME = "test_model"
+TEST_MODEL_MEASURE_TABLE_NAME = "test_model_measure"
+TEST_MODEL_RUN_TABLE_NAME = "test_model_run"
+TEST_MODEL_PRODUCT_TABLE_NAME = "test_model_product"
+TEST_MODEL_VALUE_TABLE_NAME = "test_model_value"
 
 WARNINGS_TABLE_NAME = "warnings"
 

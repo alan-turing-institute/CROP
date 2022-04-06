@@ -44,12 +44,12 @@ def db_query_tmpr_day_zenzie(session, location_zone, date_range):
     query = session.query(
         ReadingsZensieTRHClass.temperature,
         ReadingsZensieTRHClass.humidity,
-        # ReadingsZensieTRHClass.sensor_id,
+        ReadingsZensieTRHClass.sensor_id,
     ).filter(
         and_(
             LocationClass.zone == location_zone,
             SensorLocationClass.location_id == LocationClass.id,  # propagation location
-            # SensorLocationClass.location_id == location_id,
+            #SensorLocationClass.location_id == location_id,
             ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
             ReadingsZensieTRHClass.time_created >= date_range,
         )
