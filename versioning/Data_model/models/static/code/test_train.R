@@ -8,16 +8,11 @@ MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
 SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
-#SENSOR_ID = list(Temperature_Farm_16B4=23)
 MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3, Temperature_Median = 4)
 MODEL_ID = list(ARIMA = 1, BSTS = 2)
 
-if (exists("WRITE_TO_DATABASE")==FALSE)
-  WRITE_TO_DATABASE = FALSE
-if (exists("RUN_ARIMA")==FALSE)
-  RUN_ARIMA = FALSE
-if (exists("RUN_BSTS")==FALSE)
-  RUN_BSTS = FALSE
+source(paste0(".","/may_live_functions.R"), echo=FALSE)
+source(paste0(".","/pushData.R"), echo=FALSE)
 
 standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
   # Identify time to forecast based on latest day
@@ -31,12 +26,9 @@ standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
 }
 
 getForecastTimestamp = function(latestTimeStamp = ? Date) {
-  oneDaysIntoPast = 1*SECONDS.PERDAY
   twoDaysIntoPast = 2*SECONDS.PERDAY
-  threeDaysIntoPast = 3*SECONDS.PERDAY
   fourDaysIntoPast = 4*SECONDS.PERDAY
-  #list_f_timestamps = seq(from=latestTimeStamp-fourDaysIntoPast, to= latestTimeStamp-twoDaysIntoPast, by="2 days")
-  list_f_timestamps = seq(from=latestTimeStamp-twoDaysIntoPast, to= latestTimeStamp, by="2 days")
+  list_f_timestamps = seq(from=latestTimeStamp-fourDaysIntoPast, to= latestTimeStamp-twoDaysIntoPast, by="2 days")
   list_f_timestamps[length(list_f_timestamps)]
 }
 
@@ -44,7 +36,7 @@ getOneYearDataUptoDate = function(observations, forecast_timestamp = ? Date) {
   # select one year
   oneYear = 365*SECONDS.PERDAY
   
-  tobj0 = observations[t_ee$FarmTimestamp>=(forecast_timestamp-oneYear) & t_ee$FarmTimestamp <= (forecast_timestamp),]
+  tobj0 = observations[t_ee$FarmTimestamp>=(forecast_timestamp-oneYear),]
   tobj0$FarmTime = tobj0$FarmTimestamp
   tobj0$DateFarm = as.Date(tobj0$FarmTimestamp) 
   
@@ -59,13 +51,13 @@ standardiseObservations = function(observations, sensor =? string) {
   observationsForThisSensor = observations
   names(observationsForThisSensor)[tolower(names(observationsForThisSensor))==tolower(sensor)] = "Sensor_temp"
   observationsForThisSensor = observationsForThisSensor[,c("EnergyCP", "FarmTime", "Sensor_temp", "DateFarm")]
-  observationsForThisSensor = fill_data(observationsForThisSensor)
+  observationsForThisSensor = fill_data_mean(observationsForThisSensor)
   observationsForThisSensor
 }
 
 splitTrainingTestData = function (tobj, historicalDataStart, forecastDataStart) {
-  #daysIntoFuture = 2
-  tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart))
+  daysIntoFuture = 1
+  tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(daysIntoFuture*SECONDS.PERDAY)))
   
   #fullcov <- constructCov(tsel$Lights, tsel$FarmTime)
   # indices for training
@@ -83,6 +75,7 @@ overrideTee = function(cleanedDataPath) {
 getCurrentData = function(t_ee) {
   latest_timestamp = standardiseLatestTimestamp(max(t_ee$FarmTimestamp))
   forecast_timestamp = getForecastTimestamp(latest_timestamp)
+  #forecast_timestamp = latest_timestamp
   tobj0 = getOneYearDataUptoDate(observations = t_ee, forecast_timestamp = forecast_timestamp)
   
   tobj_list = list()
@@ -102,18 +95,15 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     
     #print("Training the Static model")
     MINIMIZE_CONDITIONAL_SUM_OF_SQUARES = "CSS"
-    #model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
-    model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg = NULL,
+    model = (forecast::Arima(available.Data$Sensor_temp[trainIndex], xreg =  available.Data$Lights[trainIndex],
                              order = c(p,d,q),
-                             seasonal = list(order=c(1,1,0),period=24),
-                             method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES))
+                             seasonal = list(order=c(1,1,0),period=24),method = MINIMIZE_CONDITIONAL_SUM_OF_SQUARES))
   }
   
   forecastArima = function(available.Data, forecastIndex, arima.Model) {
     #print("Forecasting the Static model")
-    numberOfHours=48
-    #results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
-    results = forecast::forecast(arima.Model, xreg = NULL, h=numberOfHours)
+    numberOfHours=16
+    results = forecast::forecast(arima.Model, xreg = available.Data$Lights[forecastIndex], h=numberOfHours)
     list(upper=results$upper, lower=results$lower, mean=results$mean)
   }
   
@@ -129,8 +119,10 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     records.arima = list(records.mean.arima, records.upper.arima, records.lower.arima)
     
     run.arima = list(sensor_id=sensorID, model_id=MODEL_ID$ARIMA, records=records.arima)
-    if (WRITE_TO_DATABASE==TRUE)
-      writeRun(run.arima, time_forecast)
+    
+    return(run.arima)
+    #writeRun(run.arima, time_forecast)
+  
   }
   
   trainBSTS = function(available.Data, trainIndex) {
@@ -139,18 +131,17 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     mc = list()
     mc = bsts::AddLocalLevel(mc, y=available.Data$Sensor_temp[trainIndex])
     mc_withRegression = try({
-      bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(45)]) #remove the hour that usually happens before the lights are on
+      bsts::AddDynamicRegression(mc, available.Data$Sensor_temp[trainIndex]~fullcov[trainIndex,-c(26)]) #remove the hour that usually happens before the lights are on
     })
     model=NULL
-    model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc_withRegression, niter=numIterations)
-    #if (inherits(mc_withRegression, "try-error")){
-    #  model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
-    #  print("Ran with error")
-    #}
-    #else {
-    #  model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc_withRegression, niter=numIterations) #iter 1000
-    #  print("Ran with No errors")
-    #}
+    if (inherits(mc_withRegression, "try-error")){
+      model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc, niter=numIterations) #iter 1000
+      print("Ran with error")
+    }
+    else {
+      model = bsts::bsts(available.Data$Sensor_temp[trainIndex], mc_withRegression, niter=numIterations) #iter 1000
+      print("Ran with No errors")
+    }
     model
   }
   
@@ -158,13 +149,13 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     newcovtyp = constructCovTyp(available.Data$FarmTime[forecastIndex])
     periodToForecast = 48 # default 48
     burnRate=200 # default 200
-    predict(model, burn=burnRate, newdata=newcovtyp[,-c(45)],periodToForecast) #burn 200
+    predict(model, burn=burnRate, newdata=newcovtyp[,-c(26)],periodToForecast) #burn 200
   }
   
   runbstsPipeline = function(split.Data, sensorID){
     model.bsts = trainBSTS(available.Data=split.Data$tsel, trainIndex = split.Data$trainSelIndex)
     results.bsts = forecastBSTS(available.Data=split.Data$tsel, forecastIndex = split.Data$testSelIndex, model.bsts)
-    #print(results.bsts)
+    print(results.bsts)
     stats.bsts = sim_stats_bsts(results.bsts)
     
     records.mean.bsts = list(measure_id = MEASURE_ID$Temperature_Mean, measure_values = results.bsts$mean)
@@ -172,15 +163,12 @@ setupModels = function(split.Data, sensorID, time_forecast) {
     records.bsts = list(records.mean.bsts, records.median.bsts)
     
     run.bsts = list(sensor_id=sensorID, model_id=MODEL_ID$BSTS, records=records.bsts)
-    if (WRITE_TO_DATABASE==TRUE)
-      writeRun(run.bsts, time_forecast)
+    #writeRun(run.bsts)
   }
   
-  if (RUN_ARIMA == TRUE)
-    runArimaPipeline(split.Data, sensorID=sensorID)
-  
-  if (RUN_BSTS == TRUE)
-    runbstsPipeline(split.Data, sensorID=sensorID)
+  test = runArimaPipeline(split.Data, sensorID=sensorID)
+  #test = runbstsPipeline(split.Data, sensorID=sensorID)
+
 }
 
 reportStats = function(a_t_ee, label="Source") {
@@ -217,7 +205,7 @@ reportStats = function(a_t_ee, label="Source") {
   cat(stats.energy.numNA.a_t_ee)
 }
   
-#cleanedDataPath = "../data/t_ee_398.RDS"
+#cleanedDataPath = "../data/t_ee.RDS"
 #t_ee = overrideTee(cleanedDataPath)
 #reportStats(t_ee, "Mel")
 
@@ -227,23 +215,34 @@ reportStats = function(a_t_ee, label="Source") {
 #t_ee = readRDS(cleanedDataPath) 
 #reportStats(t_ee, "Today")
 
+currentData = getCurrentData(t_ee)
+reportStats(t_ee, "Today")
 
+tobj_list = currentData$tobj_list
+forecast_timestamp = currentData$forecast_timestamp
+
+daysOfHistoryForTraining = 200
+historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
+forecastDataStart = forecast_timestamp
 
 runModelsForSensors = function(historicalDataStart, forecastDataStart) {
+  arima_results = vector("list", length(tobj_list))
+  names(arima_results) = names(tobj_list)
   for (tobj_name in names(tobj_list)){
     updateString = sprintf("Generating predictions for: %s on Date %s",tobj_name,forecastDataStart)
     print(updateString)
     tobj_mm <- tobj_list[[tobj_name]]
     split.Data = splitTrainingTestData(tobj_mm, historicalDataStart, forecastDataStart)
     #print(sprintf("SENSOR %s=%i", tobj_name, SENSOR_ID[[tobj_name]]))
-    setupModels(split.Data, sensorID=SENSOR_ID[[tobj_name]],forecastDataStart)
+    arima_results[[tobj_name]] = setupModels(split.Data, sensorID=SENSOR_ID[[tobj_name]],forecastDataStart)
   }
+  return(arima_results)
 }
 
-#get_date_days_ago = function(numDays, today) {
-#  today = as.POSIXct(today)
-#  today - (numDays*SECONDS.PERDAY)
-#} 
+get_date_days_ago = function(numDays, today) {
+  today = as.POSIXct(today)
+  today - (numDays*SECONDS.PERDAY)
+} 
 
 getDaysPrediction = function(daysOfPredictions, forecast_timestamp) {
   get_date_days_ago = function(numDaysAgo, today) {
@@ -261,23 +260,49 @@ getDaysPrediction = function(daysOfPredictions, forecast_timestamp) {
   
 }
 
-currentData = getCurrentData(t_ee)
-reportStats(t_ee, "Today")
-
-tobj_list = currentData$tobj_list
-forecast_timestamp = currentData$forecast_timestamp
-
-daysOfHistoryForTraining = 200
-historicalDataStart = forecast_timestamp - daysOfHistoryForTraining*SECONDS.PERDAY
-forecastDataStart = forecast_timestamp
-
-runModelsForSensors(historicalDataStart, forecastDataStart)
-
 #daysOfPredictions = 7
 #getDaysPrediction(daysOfPredictions, forecast_timestamp-(0*SECONDS.PERDAY))
 
+ar = runModelsForSensors(historicalDataStart, forecastDataStart)
 
+# Plot forecast and monitored data
+tobj <- tobj_list[["Temperature_FARM_16B1"]]
+daysIntoFuture = 1
+tsel = dplyr::filter(tobj, FarmTime >= (historicalDataStart) & FarmTime <= (forecastDataStart+(daysIntoFuture*SECONDS.PERDAY)))
+t1 = (which(tsel$FarmTime==(forecastDataStart))):(which(tsel$FarmTime==(forecastDataStart))+47)
+t3 = t_ee$FarmTimestamp[t1]
 
+t2m = ar$Temperature_FARM_16B1$records[[1]]$measure_values
+t2u = ar$Temperature_FARM_16B1$records[[2]]$measure_values
+t2l = ar$Temperature_FARM_16B1$records[[3]]$measure_values
 
+plot(t_ee$FarmTimestamp[4704:4752],t_ee$Temperature_FARM_16B1[4704:4752], type = "l", col = "blue", main = "Temperature_FARM_16B1")
+lines(t3,t2m,col = "red", lty = 2)
+lines(t3,t2u,col = "red", lty = 3)
+lines(t3,t2l,col = "red", lty = 3)
 
+legend("bottomright",c("Monitored","Forecast"), col=c("blue","red"), lty=1:2, cex=0.8)
+
+#
+t2m = ar$Temperature_Farm_16B2$records[[1]]$measure_values
+t2u = ar$Temperature_Farm_16B2$records[[2]]$measure_values
+t2l = ar$Temperature_Farm_16B2$records[[3]]$measure_values
+
+plot(t_ee$FarmTimestamp[4704:4752],t_ee$Temperature_Farm_16B2[4704:4752], type = "l", col = "blue", main = "Temperature_FARM_16B2")
+lines(t3,t2m,col = "red", lty = 2)
+lines(t3,t2u,col = "red", lty = 3)
+lines(t3,t2l,col = "red", lty = 3)
+
+legend("bottomright",c("Monitored","Forecast"), col=c("blue","red"), lty=1:2, cex=0.8)
+
+t2m = ar$Temperature_Farm_16B4$records[[1]]$measure_values
+t2u = ar$Temperature_Farm_16B4$records[[2]]$measure_values
+t2l = ar$Temperature_Farm_16B4$records[[3]]$measure_values
+
+plot(t_ee$FarmTimestamp[4704:4752],t_ee$Temperature_Farm_16B4[4704:4752], type = "l", col = "blue", main = "Temperature_FARM_16B4")
+lines(t3,t2m,col = "red", lty = 2)
+lines(t3,t2u,col = "red", lty = 3)
+lines(t3,t2l,col = "red", lty = 3)
+
+legend("bottomright",c("Monitored","Forecast"), col=c("blue","red"), lty=1:2, cex=0.8)
 

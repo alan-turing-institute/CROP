@@ -1,10 +1,10 @@
 from configparser import ConfigParser
 
-def config(filename='/Users/myong/Documents/workspace/CROP/versioning/Data_model/models/dynamic/code/CROP/database.ini', section='postgresql'):
+def config(filename='/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/CROP/database.ini', section='postgresql'):
     # create a parser
     parser = ConfigParser()
     # read config file
-    parser.read(filename)
+    parser.read(filename, encoding='utf-8-sig')
 
     # get section, default to postgresql
     db = {}

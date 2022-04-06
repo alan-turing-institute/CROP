@@ -43,7 +43,7 @@ l_m = 0.01
 c_v = 3500.
 msd_v = 1.212
 #LAI = 2.
-LAI = 0.5 # to test
+LAI = 1 # to test
 
 # Critical dimensions
 d_c = 2.0
@@ -111,6 +111,7 @@ T_ss = 14. + T_k
 P_al = 7680.*2.
 f_heat = 0.5
 f_light = 1-f_heat
+#f_light = 1
 P_ambient_al = 500.
 T_al = 25.+T_k
 
