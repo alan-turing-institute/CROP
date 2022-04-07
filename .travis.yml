@@ -43,7 +43,7 @@ jobs:
         - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
             docker build -f Dockerfile -t turingcropapp/webapp:cropapptest . ;
           fi
-        - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+        - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
             docker build -f Dockerfile -t turingcropapp/webapp:cropapp . ;
           fi
   
@@ -52,11 +52,11 @@ jobs:
             docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
             docker push turingcropapp/webapp:cropapptest ;
           fi
-        - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+        - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
             docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
             docker push turingcropapp/webapp:cropapp ;
           fi
 
 stages:
   - name: publish
-    if: ((type = pull_request OR type = push) AND branch = develop) OR (type = pull_request AND branch = master)
+    if: type = push AND branch = main
