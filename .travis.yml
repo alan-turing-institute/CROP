@@ -59,4 +59,4 @@ jobs:
 
 stages:
   - name: publish
-    if: type = push AND branch = main
+    if: (type = push) AND (branch = develop OR branch = main)
