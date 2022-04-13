@@ -148,6 +148,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# Javascript packages
+node_modules
+
 # mypy
 .mypy_cache/
 .fake
