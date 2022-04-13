@@ -101,6 +101,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+*.db
 local_settings.py
 db.sqlite3
 
@@ -155,3 +156,6 @@ node_modules
 .mypy_cache/
 .fake
 .ionide
+
+# macOS folder metadata
+.DS_Store
