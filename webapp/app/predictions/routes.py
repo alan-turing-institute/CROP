@@ -190,9 +190,7 @@ def add_time_columns(df, shift_hours=0):
     timestamp_ = []
     for i in range(len(df)):
         pred_id = int(df["prediction_index"][i])
-        pred_time = df["time_forecast"][i] + dt.timedelta(
-            hours=pred_id - shift_hours
-        )
+        pred_time = df["time_forecast"][i] + dt.timedelta(hours=pred_id - shift_hours)
         format_time = pred_time.strftime("%d-%m-%Y %H:%M:%S")
         time_.append(format_time)
         timestamp_.append(pred_time)
@@ -251,9 +249,9 @@ def json_temp_zensie(dt_from_daily, dt_to):
         return (
             df_grp_hr.groupby(["sensor_id"], as_index=True)  # "measure_name"
             .apply(
-                lambda x: x[
-                    ["temperature", "humidity", "time", "timestamp"]
-                ].to_dict(orient="records")
+                lambda x: x[["temperature", "humidity", "time", "timestamp"]].to_dict(
+                    orient="records"
+                )
             )
             .reset_index()
             .rename(columns={0: "Values"})
@@ -359,7 +357,9 @@ def ges_template():
     # Get Zensie data within that window.
     json_zensie = json_temp_zensie(start_time, end_time)
     return render_template(
-        "ges.html", json_ges_f=json_ges, json_zensie_f=json_zensie,
+        "ges.html",
+        json_ges_f=json_ges,
+        json_zensie_f=json_zensie,
     )
 
 

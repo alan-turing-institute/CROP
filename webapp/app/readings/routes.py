@@ -53,8 +53,7 @@ def route_template(template):
                     )
                     .filter(
                         and_(
-                            ReadingsAdvanticsysClass.sensor_id
-                            == SensorClass.id,
+                            ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
                             ReadingsAdvanticsysClass.timestamp >= dt_from,
                             ReadingsAdvanticsysClass.timestamp <= dt_to,
                         )
