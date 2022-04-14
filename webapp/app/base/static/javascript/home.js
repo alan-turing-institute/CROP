@@ -203,8 +203,6 @@ function create_charts(
   humidity_data_daily,
   stratification
 ) {
-  set_hourly_values(hourly_data_json);
-
   // blue to red
   const colouramp_redblue = [
     "rgba(63,103,126,1)",
