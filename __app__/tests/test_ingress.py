@@ -16,8 +16,9 @@ from __app__.crop.constants import (
     CONST_ADVANTICSYS,
     CONST_ADVANTICSYS_DIR,
     CONST_ADVANTICSYS_TEST_1,
-    SQL_TEST_DBNAME
+    SQL_TEST_DBNAME,
 )
+
 
 def test_import_data():
     """
@@ -39,8 +40,8 @@ def test_import_data():
         SQL_PASSWORD,
         SQL_HOST,
         SQL_PORT,
-        SQL_TEST_DBNAME
+        SQL_TEST_DBNAME,
     )
 
-    assert success is True, log 
+    assert success is True, log
     assert log == "New: 0 (uploaded); Duplicates: 75 (ignored)"

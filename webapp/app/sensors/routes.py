@@ -35,7 +35,11 @@ def route_template(template):
             SensorClass.last_updated,
             TypeClass.sensor_type,
         )
-        .filter(and_(SensorClass.type_id == TypeClass.id,))
+        .filter(
+            and_(
+                SensorClass.type_id == TypeClass.id,
+            )
+        )
         .order_by(asc(SensorClass.id))
         .limit(CONST_MAX_RECORDS)
     )

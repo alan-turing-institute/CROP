@@ -82,14 +82,7 @@ def resample(df, bins, dt_from, dt_to):
         day = date_min + timedelta(n)
 
         for temp_range in bins_list:
-            if (
-                len(
-                    df[
-                        (df["date"] == day) & (df["temp_bin"] == temp_range)
-                    ].index
-                )
-                == 0
-            ):
+            if len(df[(df["date"] == day) & (df["temp_bin"] == temp_range)].index) == 0:
 
                 df2 = pd.DataFrame(
                     {"date": [day], "temp_bin": [temp_range], "temp_cnt": [0]}
@@ -164,8 +157,7 @@ def lights_energy_use(dt_from_, dt_to_):
             by=[
                 df["timestamp"].map(
                     lambda x: pd.to_datetime(
-                        "%04d-%02d-%02d-%02d"
-                        % (x.year, x.month, x.day, x.hour),
+                        "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour),
                         format="%Y-%m-%d-%H",
                     )
                 ),
@@ -176,9 +168,7 @@ def lights_energy_use(dt_from_, dt_to_):
     )
 
     # Sorting and reseting index
-    energy_hour.sort_values(by=["timestamp"], ascending=True).reset_index(
-        inplace=True
-    )
+    energy_hour.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
     # energy dates. Energy date starts from 4pm each day and lasts for 24 hours
     energy_hour.loc[
@@ -218,12 +208,8 @@ def lights_energy_use(dt_from_, dt_to_):
     energy_hour["dE"] = energy_hour["dE"].fillna(0.0)
 
     # finding max increase and min decrease
-    energy_hour["dE_min"] = energy_hour.groupby("energy_date")["dE"].transform(
-        "min"
-    )
-    energy_hour["dE_max"] = energy_hour.groupby("energy_date")["dE"].transform(
-        "max"
-    )
+    energy_hour["dE_min"] = energy_hour.groupby("energy_date")["dE"].transform("min")
+    energy_hour["dE_max"] = energy_hour.groupby("energy_date")["dE"].transform("max")
 
     energy_hour.loc[
         np.isclose(energy_hour["dE_max"], energy_hour["dE"]), "lights_on_4"
@@ -236,9 +222,9 @@ def lights_energy_use(dt_from_, dt_to_):
     prev_row_value = None
     for df_index in energy_hour.index:
         if df_index > 0:
-            if np.isnan(
-                energy_hour.loc[df_index, "lights_on_4"]
-            ) and not np.isnan(prev_row_value):
+            if np.isnan(energy_hour.loc[df_index, "lights_on_4"]) and not np.isnan(
+                prev_row_value
+            ):
 
                 energy_hour.loc[df_index, "lights_on_4"] = prev_row_value
         prev_row_value = energy_hour.loc[df_index, "lights_on_4"]
@@ -263,20 +249,15 @@ def lights_energy_use(dt_from_, dt_to_):
 
     # getting the mean value of lights on per day
     energy_date_df = energy_hour.loc[
-        (energy_hour["energy_date"] >= d_from)
-        & (energy_hour["energy_date"] <= d_to)
+        (energy_hour["energy_date"] >= d_from) & (energy_hour["energy_date"] <= d_to)
     ]
     energy_date_df = (
-        energy_date_df.groupby(by=["energy_date"])[lights_on_cols]
-        .sum()
-        .reset_index()
+        energy_date_df.groupby(by=["energy_date"])[lights_on_cols].sum().reset_index()
     )
-    energy_date_df["mean_lights_on"] = energy_date_df[lights_on_cols].sum(
-        axis=1
-    ) / len(lights_on_cols)
-    energy_date_df["date"] = energy_date_df["energy_date"].dt.strftime(
-        "%Y-%m-%d"
+    energy_date_df["mean_lights_on"] = energy_date_df[lights_on_cols].sum(axis=1) / len(
+        lights_on_cols
     )
+    energy_date_df["date"] = energy_date_df["energy_date"].dt.strftime("%Y-%m-%d")
 
     lights_results_df = energy_date_df[["date", "mean_lights_on"]]
 
@@ -332,16 +313,11 @@ def ventilation_energy_use(dt_from, dt_to):
     )
 
     # Sorting and reseting index
-    energy_hour.sort_values(by=["timestamp"], ascending=True).reset_index(
-        inplace=True
-    )
+    energy_hour.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
     # Calculating air exchange per hour
     energy_hour["ach"] = (
-        energy_hour["electricity_consumption"]
-        / CONST_SFP
-        * 3600.0
-        / (CONST_VTOT / 2.0)
+        energy_hour["electricity_consumption"] / CONST_SFP * 3600.0 / (CONST_VTOT / 2.0)
     )
 
     ventilation_results_df = energy_hour[["timestamp", "ach"]]
@@ -405,9 +381,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
 
     df = copy.deepcopy(temp_df)
 
-    df_unique_sensors = df[["sensor_id", "name"]].drop_duplicates(
-        ["sensor_id", "name"]
-    )
+    df_unique_sensors = df[["sensor_id", "name"]].drop_duplicates(["sensor_id", "name"])
 
     sensor_ids = df_unique_sensors["sensor_id"].tolist()
     sensor_names = df_unique_sensors["name"].tolist()
@@ -425,8 +399,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         sensor_grp = df_sensor.groupby(
             by=[
                 df_sensor.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d"
-                    % (x.year, x.month, x.day, x.hour)
+                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
                 ),
                 "date",
             ]
@@ -437,9 +410,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
 
         bins = TEMP_BINS[SENSOR_CATEORIES[sensor_id]]
         # binning temperature values
-        sensor_grp_temp["temp_bin"] = pd.cut(
-            sensor_grp_temp["temperature"], bins
-        )
+        sensor_grp_temp["temp_bin"] = pd.cut(sensor_grp_temp["temperature"], bins)
 
         # converting bins to str
         sensor_grp_temp["temp_bin"] = sensor_grp_temp["temp_bin"].astype(str)
@@ -502,16 +473,13 @@ def advanticsys_dashboard():
         df["date"] = pd.to_datetime(df["timestamp"].dt.date)
 
         # Reseting index
-        df.sort_values(by=["timestamp"], ascending=True).reset_index(
-            inplace=True
-        )
+        df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
         # grouping data by date-hour and sensor id
         adv_grp = df.groupby(
             by=[
                 df.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d"
-                    % (x.year, x.month, x.day, x.hour)
+                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
                 ),
                 "sensor_id",
                 "date",
@@ -522,17 +490,13 @@ def advanticsys_dashboard():
         adv_grp_temp = adv_grp["temperature"].mean().reset_index()
 
         # binning temperature values
-        adv_grp_temp["temp_bin"] = pd.cut(
-            adv_grp_temp["temperature"], TEMP_BINS
-        )
+        adv_grp_temp["temp_bin"] = pd.cut(adv_grp_temp["temperature"], TEMP_BINS)
 
         # converting bins to str
         adv_grp_temp["temp_bin"] = adv_grp_temp["temp_bin"].astype(str)
 
         # get bin counts for each sensor-day combination
-        adv_grp_date = adv_grp_temp.groupby(
-            by=["sensor_id", "date", "temp_bin"]
-        )
+        adv_grp_date = adv_grp_temp.groupby(by=["sensor_id", "date", "temp_bin"])
         adv_cnt = adv_grp_date["temperature"].count().reset_index()
         adv_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
 
@@ -544,9 +508,7 @@ def advanticsys_dashboard():
             del adv_cnt_sensor["sensor_id"]
 
             # Adding missing date/temp_bin combos
-            bins_list, df_list = resample(
-                adv_cnt_sensor, TEMP_BINS, dt_from, dt_to
-            )
+            bins_list, df_list = resample(adv_cnt_sensor, TEMP_BINS, dt_from, dt_to)
 
             bins_json = []
 

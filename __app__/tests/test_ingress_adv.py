@@ -22,7 +22,7 @@ from __app__.crop.constants import (
     CONST_ADVANTICSYS_TEST_10,
     ERR_IMPORT_ERROR_3,
     SQL_TEST_DBNAME,
-    SQL_CONNECTION_STRING
+    SQL_CONNECTION_STRING,
 )
 
 from __app__.crop.ingress_adv import (
@@ -31,14 +31,11 @@ from __app__.crop.ingress_adv import (
     advanticsys_import,
     advanticsys_convert,
     advanticsys_df_validity,
-    insert_advanticsys_data
+    insert_advanticsys_data,
 )
 
-from __app__.crop.db import (
-    connect_db,
-    session_open,
-    session_close
-)
+from __app__.crop.db import connect_db, session_open, session_close
+
 
 def test_advanticsys_read_csv():
 

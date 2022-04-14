@@ -91,9 +91,7 @@ def apply_themes(app):
                 "DEFAULT_THEME", None
             )
             if themename:
-                theme_file = "{}/{}".format(
-                    themename, values.get("filename", "")
-                )
+                theme_file = "{}/{}".format(themename, values.get("filename", ""))
                 if path.isfile(path.join(app.static_folder, theme_file)):
                     values["filename"] = theme_file
         return url_for(endpoint, **values)
