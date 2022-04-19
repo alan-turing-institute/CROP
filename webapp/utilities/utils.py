@@ -57,9 +57,7 @@ def jasonify_query_result(query_result):
 
     results_arr = query_result_to_array(query_result)
 
-    result = json.dumps(
-        results_arr, ensure_ascii=True, indent=4, sort_keys=True
-    )
+    result = json.dumps(results_arr, ensure_ascii=True, indent=4, sort_keys=True)
 
     return result
 
@@ -107,9 +105,9 @@ def parse_date_range_argument(request_args):
             + timedelta(milliseconds=-1)
         )
 
-        dt_from = datetime.strptime(
-            request_args.split("-")[0], "%Y%m%d"
-        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        dt_from = datetime.strptime(request_args.split("-")[0], "%Y%m%d").replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         return dt_from, dt_to
 

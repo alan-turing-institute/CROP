@@ -11,6 +11,7 @@ from __app__.crop.structure import (
     ReadingsZensieWeatherClass,
 )
 
+
 def find_sensor_type_id(session, sensor_type):
     """
     Function to find sensor type id by name.
@@ -55,9 +56,7 @@ def get_zensie_trh_sensor_data(session, sensor_id, date_from, date_to):
         data_df: data frame containing sensor data for specific period of time
     """
 
-    query = session.query(
-        ReadingsZensieTRHClass.timestamp,
-    ).filter(
+    query = session.query(ReadingsZensieTRHClass.timestamp,).filter(
         and_(
             ReadingsZensieTRHClass.sensor_id == sensor_id,
             ReadingsZensieTRHClass.timestamp >= date_from,
@@ -69,10 +68,11 @@ def get_zensie_trh_sensor_data(session, sensor_id, date_from, date_to):
 
     if len(result_df.index) > 0:
         result_df.rename(columns={0: "Timestamp"}, inplace=True)
-        
-        result_df.set_index('Timestamp', inplace=True)
+
+        result_df.set_index("Timestamp", inplace=True)
 
     return result_df
+
 
 def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
     """
@@ -87,13 +87,11 @@ def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
         data_df: data frame containing sensor data for specific period of time
     """
 
-    query = session.query(
-        ReadingsZensieWeatherClass.timestamp,
-    ).filter(
+    query = session.query(ReadingsZensieWeatherClass.timestamp,).filter(
         and_(
-          ReadingsZensieWeatherClass.sensor_id == sensor_id,
-          ReadingsZensieWeatherClass.timestamp >= date_from,
-          ReadingsZensieWeatherClass.timestamp <= date_to,
+            ReadingsZensieWeatherClass.sensor_id == sensor_id,
+            ReadingsZensieWeatherClass.timestamp >= date_from,
+            ReadingsZensieWeatherClass.timestamp <= date_to,
         )
     )
 
@@ -101,6 +99,6 @@ def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
 
     if len(result_df.index) > 0:
         result_df.rename(columns={0: "Timestamp"}, inplace=True)
-        result_df.set_index('Timestamp', inplace=True)
+        result_df.set_index("Timestamp", inplace=True)
 
     return result_df

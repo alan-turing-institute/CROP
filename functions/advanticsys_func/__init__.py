@@ -11,7 +11,8 @@ import pandas as pd
 import azure.functions as func
 
 from __app__.crop.constants import (
-    CONST_ADVANTICSYS, SQL_ENGINE,
+    CONST_ADVANTICSYS,
+    SQL_ENGINE,
 )
 from __app__.crop.utils import make_conn_string
 from __app__.crop.ingress import import_data, log_upload_event
@@ -49,7 +50,9 @@ def advanticsys_import(blobin: func.InputStream):
     # Logging the advanticsys sensor data upload event
     conn_string = make_conn_string(SQL_ENGINE, user, password, host, port)
 
-    log_status, log_err = log_upload_event(CONST_ADVANTICSYS, blobin.name, status, log, conn_string)
+    log_status, log_err = log_upload_event(
+        CONST_ADVANTICSYS, blobin.name, status, log, conn_string
+    )
 
     if status:
 
