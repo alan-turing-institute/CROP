@@ -17,10 +17,7 @@ from __app__.crop.structure import (
     ReadingsZensieTRHClass,
 )
 from __app__.crop.utils import query_result_to_array
-from __app__.crop.constants import (
-    CONST_CROP_30MHZ_APIKEY,
-    CONST_ZENSIE_TRH_SENSOR_TYPE
-)
+from __app__.crop.constants import CONST_CROP_30MHZ_APIKEY, CONST_ZENSIE_TRH_SENSOR_TYPE
 
 from __app__.crop.ingress import log_upload_event
 from __app__.crop.sensors import get_zensie_trh_sensor_data
@@ -92,6 +89,7 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
 
     return success, error, data_df
 
+
 def get_zensie_sensors_list(session, sensor_type):
     """
     Makes a list of zensie rth sensors with their check_id and ids.
@@ -104,9 +102,14 @@ def get_zensie_sensors_list(session, sensor_type):
     """
 
     query = session.query(
-        SensorClass.type_id, SensorClass.id, SensorClass.device_id,
+        SensorClass.type_id,
+        SensorClass.id,
+        SensorClass.device_id,
     ).filter(
-        and_(TypeClass.sensor_type == sensor_type, SensorClass.type_id == TypeClass.id,)
+        and_(
+            TypeClass.sensor_type == sensor_type,
+            SensorClass.type_id == TypeClass.id,
+        )
     )
 
     readings = session.execute(query).fetchall()
@@ -232,10 +235,10 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                         )
 
                         session.add(data)
-                    
-                    session.query(SensorClass).\
-                        filter(SensorClass.id == sensor_id).\
-                        update({"last_updated": datetime.now()})
+
+                    session.query(SensorClass).filter(
+                        SensorClass.id == sensor_id
+                    ).update({"last_updated": datetime.now()})
 
                     session_close(session)
 
@@ -267,6 +270,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
 
     return True, None
 
+
 def import_zensie_data():
     """
     Imports all zensie data
@@ -286,8 +290,9 @@ def import_zensie_data():
 
     dt_to = datetime.now()
     dt_from = dt_to + timedelta(days=-10)
-    
+
     import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
+
 
 if __name__ == "__main__":
     import_zensie_data()

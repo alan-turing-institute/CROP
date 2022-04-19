@@ -309,17 +309,13 @@ class SensorClass(BASE):
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
-    advanticsys_readings_relationship = relationship(
-        "ReadingsAdvanticsysClass")
+    advanticsys_readings_relationship = relationship("ReadingsAdvanticsysClass")
     tinytag_readings_relationship = relationship("ReadingsTinyTagClass")
-    airvelocity_readings_relationship = relationship(
-        "ReadingsAirVelocityClass")
-    environmental_readings_relationship = relationship(
-        "ReadingsEnvironmentalClass")
+    airvelocity_readings_relationship = relationship("ReadingsAirVelocityClass")
+    environmental_readings_relationship = relationship("ReadingsEnvironmentalClass")
 
     # arguments
-    __table_args__ = (UniqueConstraint(
-        "type_id", "device_id", name="_type_device_uc"),)
+    __table_args__ = (UniqueConstraint("type_id", "device_id", name="_type_device_uc"),)
 
 
 class LocationClass(BASE):
