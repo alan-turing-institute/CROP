@@ -143,7 +143,6 @@ def zensie_query(dt_from, dt_to):
 
     if df.empty:
         logging.debug("WARNING: Query returned empty")
-
     return df
 
 
@@ -341,7 +340,7 @@ def index():
     """
     Index page
     """
-    dt_to = dt.datetime.now()
+    dt_to = dt.datetime.now(dt.timezone.utc)
     dt_from_weekly = dt_to - dt.timedelta(days=7)
     dt_from_daily = dt_to - dt.timedelta(days=1)
     dt_from_hourly = dt_to - dt.timedelta(hours=2)
