@@ -201,8 +201,10 @@ function create_charts(
   temperature_data_daily,
   humidity_data,
   humidity_data_daily,
-  stratification
+  stratification,
+  hourly_data
 ) {
+  set_hourly_values(hourly_data);
   // blue to red
   const colouramp_redblue = [
     "rgba(63,103,126,1)",
