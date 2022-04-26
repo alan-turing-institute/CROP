@@ -91,8 +91,8 @@ def shutdown():
 
 
 @login_manager.unauthorized_handler
-def unauthorized_handler():
-    return render_template("errors/page_403.html"), 403
+def unauthorized_callback():
+    return redirect(url_for('base_blueprint.login'))
 
 
 @blueprint.errorhandler(403)
