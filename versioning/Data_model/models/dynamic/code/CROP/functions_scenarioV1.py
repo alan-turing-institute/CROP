@@ -34,6 +34,8 @@ FILEPATH_ACH = DATA_DIR / path_conf["filename_ach"]
 FILEPATH_IAS = DATA_DIR / path_conf["filename_ias"]
 FILEPATH_LEN = DATA_DIR / path_conf["filename_length"]
 
+CAL_CONF = config(section="calibration")
+
 
 def climterp_linear(h1, h2, numDays, filepath_weather=None):
     temp_in = None
@@ -205,8 +207,7 @@ def model(
     lshiftvec,
     LatestTimeHourValue,
 ):
-    # TODO This needs to be coordinated with the choice in GESCalibrationV1.
-    hours_per_step = 3
+    delta_h = int(CAL_CONF["delta_h"])
 
     T_c = z[0]
     T_i = z[1]
@@ -237,7 +238,8 @@ def model(
 
     # Set ACH,ias
     hour = np.floor(t / 3600) + 1
-    seq = range(h1 + hours_per_step, h2 + 24, hours_per_step)
+    # TODO What are these bounds? Should they depend on delta_h in this way?
+    seq = range(h1 + delta_h, h2 + 24, delta_h)
 
     if hour >= seq[count[-1]]:
         count_new = count[-1] + 1

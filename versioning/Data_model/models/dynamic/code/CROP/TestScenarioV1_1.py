@@ -1,5 +1,3 @@
-# Updates TestScenario_V1 by repeating last 8 values of calibrated ACH/IAS 4 times instead of fixing at final value
-
 from typing import Dict
 from functions_scenarioV1 import (
     derivatives,
@@ -10,8 +8,10 @@ from functions_scenarioV1 import (
 )
 import numpy as np
 import pandas as pd
+from config import config
 
-# import os
+CAL_CONF = config(section="calibration")
+
 USE_LIVE = False
 
 # Import Weather Data
@@ -26,18 +26,14 @@ LatestTime = Weather_hour[-1:]
 LatestTimeHourValue = pd.DatetimeIndex(LatestTime.index).hour.astype(float)[0]
 
 
-def setTimeParameters(
-    h2: int = 240, numDays: int = 10, hours_per_point: int = 3
-) -> Dict:
+def setTimeParameters(h2: int = 240, numDays: int = 10, delta_h: int = 3) -> Dict:
     # Start hour h2 is for test only - in live version will be current time
     # h2 = 240
     h1: int = h2 - 240  # select previous 10 days
-    ndp: int = int(
-        (h2 - h1) / hours_per_point
-    )  # number of data points used for calibration
+    ndp: int = int((h2 - h1) / delta_h)  # number of data points used for calibration
     timeParameters: Dict = {
         "h2": h2,
-        "h1": h1,  # select previous 10 days
+        "h1": h1,
         "ndp": ndp,  # number of data points used for calibration
         "numDays": numDays,
     }
@@ -114,9 +110,9 @@ def setScenario(
     shift_lighting: int = -3,
     ach_parameters: Dict = {},
     ias_parameters: Dict = {},
-    hours_per_point: int = 3,
+    delta_h: int = 3,
 ) -> np.ndarray:
-    number_of_points_in_a_day = int(np.round(24 / hours_per_point))
+    number_of_points_in_a_day = int(np.round(24 / delta_h))
 
     # # Scenario 1 - vary ACH
     ScenEval: np.ndarray = np.zeros((4 * number_of_points_in_a_day, 4, 4))
@@ -194,13 +190,11 @@ def runModel(
 def testScenario():
     # Get calibrated parameters output from calibration model
     # Stored in database? Currently output to csv file
-    h2: int = 240
-    numDays: int = 10
-    hours_per_point = 3  # TODO This needs to match the one used in GESCalibrationV1
+    numDays: int = int(CAL_CONF["calibration_window_days"])
+    h2: int = numDays * 24
+    delta_h = int(CAL_CONF["delta_h"])
 
-    time_parameters: Dict = setTimeParameters(
-        h2=h2, numDays=numDays, hours_per_point=hours_per_point
-    )
+    time_parameters: Dict = setTimeParameters(h2=h2, numDays=numDays, delta_h=delta_h)
     ach_parameters = setACHParameters(
         ACH_OUT_PATH=FILEPATH_ACH, ndp=time_parameters["ndp"]
     )
@@ -224,7 +218,7 @@ def testScenario():
         shift_lighting=shift_lighting,
         ach_parameters=ach_parameters,
         ias_parameters=ias_parameters,
-        hours_per_point=hours_per_point,
+        delta_h=delta_h,
     )
 
     params: np.ndarray = np.concatenate(

@@ -17,8 +17,9 @@ data_dir = Path(path_conf["data_dir"])
 filepath_resultsRH = data_dir / path_conf["filename_resultsrh"]
 filepath_resultsT = data_dir / path_conf["filename_resultst"]
 
+cal_conf = config(section="calibration")
 MODEL_GES_DATABASE_ID = 3
-SENSOR_RH_16B2_DATABASE_ID = 27
+SENSOR_RH_16B2_DATABASE_ID = int(cal_conf["sensor_id"])
 
 MEASURE_MEAN_TEMPERATURE = {
     "measure_database_id": 1,

@@ -57,6 +57,8 @@ DataPoint = 0.7  # Dummy value in case of nan at first point
 
 ##
 
+cal_conf = config(section="calibration")
+
 # Get weather data and monitored data from database.  This code pulls in the latest
 # data, identifies the most recent common timestamp and then selects 10 days prior
 # to that for both the weather data and the monitored data.
@@ -64,17 +66,19 @@ DataPoint = 0.7  # Dummy value in case of nan at first point
 # the data are complete.
 
 # Weather
-numDays = 25
-numRows = numDays * 24 * 6
-sensorID = 27
+num_weather_days = int(cal_conf["num_weather_days"])
+num_weather_rows = num_weather_days * 24 * 6
+sensorID = int(cal_conf["sensor_id"])
 
-Weather_data = getDaysWeather(numDays, numRows)
+Weather_data = getDaysWeather(num_weather_days, num_weather_rows)
 Weather_hour = pd.DataFrame(
     Weather_data, columns=["DateTime", "T_e", "RH_e"]
 ).set_index("DateTime")
 
 # Monitored Data
-Monitored_data = getDaysHumidityTemp(numDays, numRows, sensorID)
+Monitored_data = getDaysHumidityTemp(
+    num_weather_days, num_weather_rows, cal_conf["sensor_id"]
+)
 Monitored_10_minutes = pd.DataFrame(
     Monitored_data, columns=["DateTime", "T_i", "RH_i"]
 ).set_index("DateTime")
@@ -100,7 +104,7 @@ LatestTimeHour = LatestTime.hour.astype(float)
 LatestTimeHourValue = LatestTimeHour[0]
 
 # Select data for 20 days prior to selected timestamp
-deltaDays = 20
+deltaDays = int(cal_conf["delta_days"])
 delta = datetime.timedelta(days=deltaDays)
 StartTime = LatestTime - delta
 
@@ -123,32 +127,33 @@ df_Monitored.to_csv(filepath_Monitored, index=None, header=False)
 ##
 
 # initialize calibration class
-sigmaY = 0.5  # std measurement error GASP lambda_e
-nugget = 1e-9  # same as mean GASP parameter 1/lambda_en
+sigmaY = float(cal_conf["sigma_y"])  # std measurement error GASP lambda_e
+nugget = float(cal_conf["nugget"])  # same as mean GASP parameter 1/lambda_en
 cal = calibration.calibrate(priorPPF, sigmaY, nugget)
 
 ### Time period for calibration
 # To be run every 12 hours ideally 3am, 3pm but for now every 12 hours from
 # start of the data
 
-p1 = 240  # start hour (11th day 240 )
-ndp = 81  # number of data points 21
-delta_h = 3  # hours between data points 12
+calibration_window_days = int(cal_conf["calibration_window_days"])
+p1 = 24 * calibration_window_days  # start hour
+ndp = int(cal_conf["num_data_points"])  # number of data points
+delta_h = int(cal_conf["delta_h"])  # hours between data points
 p2 = (ndp - 1) * delta_h + p1  # end data point
 
 seq = np.linspace(p1, p2, ndp)
-sz = np.size(seq)
 
 # Step through each data point
 
 LastDataPoint = pd.DataFrame()
 
-for ii in range(sz):
+for ii in range(ndp):
 
     ### Calibration runs
 
     h2 = int(seq[ii])
-    h1 = int(seq[ii] - 239)  # to take previous 10 days data 239
+    # TODO Why the -1?
+    h1 = int(seq[ii] - (calibration_window_days * 24 - 1))
 
     Parameters = np.genfromtxt(filepath_X, delimiter=",")  # ACH,IAS pairs
     NP = np.shape(Parameters)[0]
@@ -184,6 +189,7 @@ for ii in range(sz):
     # print(DataPoint)
 
     if testdp == False:
+        # TODO What does the / 100 do?
         DataPoint = DataPoint / 100
     else:
         # takes previous value if nan recorded
@@ -200,9 +206,9 @@ for ii in range(sz):
     # ### Run calibration
 
     # ## Standardise RH_air
-
-    ym = 0.6456  # values chosen to ensure comparability against MATLAB model
-    ystd = 0.0675
+    # values chosen to ensure comparability against MATLAB model
+    ym = float(cal_conf["ym"])
+    ystd = float(cal_conf["ystd"])
 
     RH_s = (RH_air - ym) / ystd
     print("Standardised RH_air (RH_s):{0}".format(RH_s))
@@ -236,9 +242,7 @@ for ii in range(sz):
 
     yModel = np.zeros((n, len(xModel), len(ts)))
     for i in range(n):
-        yModel[i, 0, :] = RH_s[
-            i,
-        ]
+        yModel[i, 0, :] = RH_s[i]
 
     yData = np.zeros((m, len(xData)))
     for i in range(m):
@@ -256,11 +260,11 @@ for ii in range(sz):
 
     ## initialise priorSamples/posteriors
     if ii == 0:
-        posteriors = np.zeros((sz, nparticles, 3))
-        priorSamples = np.zeros((sz, nparticles, 3))
-        mlSamples = np.zeros((sz, nparticles))
-        wSamples = np.zeros((sz, nparticles))
-        indsSamples = np.zeros((sz, nparticles))
+        posteriors = np.zeros((ndp, nparticles, 3))
+        priorSamples = np.zeros((ndp, nparticles, 3))
+        mlSamples = np.zeros((ndp, nparticles))
+        wSamples = np.zeros((ndp, nparticles))
+        indsSamples = np.zeros((ndp, nparticles))
 
     cal.updateTrainingData(tModel, yModel[:, :, 0], np.reshape(yData[0, :], ((1, 3))))
     cal.sequentialUpdate(nparticles, beta_r, logConstraint=np.array([0, 0, 1]))
