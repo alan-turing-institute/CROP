@@ -2,7 +2,7 @@ from configparser import ConfigParser
 
 
 def config(
-    filename="/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/CROP/database.ini",
+    filename="./config.ini",
     section="postgresql",
 ):
     # create a parser
@@ -11,14 +11,14 @@ def config(
     parser.read(filename, encoding="utf-8-sig")
 
     # get section, default to postgresql
-    db = {}
+    conf_dict = {}
     if parser.has_section(section):
         params = parser.items(section)
         for param in params:
-            db[param[0]] = param[1]
+            conf_dict[param[0]] = param[1]
     else:
         raise Exception(
             "Section {0} not found in the {1} file".format(section, filename)
         )
 
-    return db
+    return conf_dict

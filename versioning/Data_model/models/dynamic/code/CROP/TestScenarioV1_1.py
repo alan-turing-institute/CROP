@@ -26,11 +26,15 @@ LatestTime = Weather_hour[-1:]
 LatestTimeHourValue = pd.DatetimeIndex(LatestTime.index).hour.astype(float)[0]
 
 
-def setTimeParameters(h2: int = 240, numDays: int = 10) -> Dict:
+def setTimeParameters(
+    h2: int = 240, numDays: int = 10, hours_per_point: int = 3
+) -> Dict:
     # Start hour h2 is for test only - in live version will be current time
     # h2 = 240
     h1: int = h2 - 240  # select previous 10 days
-    ndp: int = int((h2 - h1) / 3)  # number of data points used for calibration
+    ndp: int = int(
+        (h2 - h1) / hours_per_point
+    )  # number of data points used for calibration
     timeParameters: Dict = {
         "h2": h2,
         "h1": h1,  # select previous 10 days
@@ -110,38 +114,40 @@ def setScenario(
     shift_lighting: int = -3,
     ach_parameters: Dict = {},
     ias_parameters: Dict = {},
+    hours_per_point: int = 3,
 ) -> np.ndarray:
+    number_of_points_in_a_day = int(np.round(24 / hours_per_point))
 
     # # Scenario 1 - vary ACH
-    ScenEval: np.ndarray = np.zeros((32, 4, 4))
+    ScenEval: np.ndarray = np.zeros((4 * number_of_points_in_a_day, 4, 4))
     # ScenEval[:,0,0] = ach_parameters['ACHmean'][-1]
-    ach_8 = ach_parameters["ACHmean"][-8:]
-    ScenEval[:, 0, 0] = np.tile(ach_8, 4)
+    ach_day = ach_parameters["ACHmean"][-number_of_points_in_a_day:]
+    ScenEval[:, 0, 0] = np.tile(ach_day, 4)
 
     ScenEval[:, 0, 1] = ventilation_rate
 
     # ScenEval[:,0,2] = ach_parameters['ACHuq'][-1]
-    achuq_8 = ach_parameters["ACHuq"][-8:]
-    ScenEval[:, 0, 2] = np.tile(achuq_8, 4)
+    achuq_day = ach_parameters["ACHuq"][-number_of_points_in_a_day:]
+    ScenEval[:, 0, 2] = np.tile(achuq_day, 4)
 
     # ScenEval[:,0,3] = ach_parameters['ACHlq'][-1]
-    achlq_8 = ach_parameters["ACHlq"][-8:]
-    ScenEval[:, 0, 3] = np.tile(achlq_8, 4)
+    achlq_day = ach_parameters["ACHlq"][-number_of_points_in_a_day:]
+    ScenEval[:, 0, 3] = np.tile(achlq_day, 4)
 
     # ScenEval[:,1,0] = ias_parameters['IASmean'][-1]
-    ias_8 = ias_parameters["IASmean"][-8:]
-    ScenEval[:, 1, 0] = np.tile(ias_8, 4)
+    ias_day = ias_parameters["IASmean"][-number_of_points_in_a_day:]
+    ScenEval[:, 1, 0] = np.tile(ias_day, 4)
 
     # ScenEval[:,1,1] = ias_parameters['IASmean'][-1]
-    ScenEval[:, 1, 1] = np.tile(ias_8, 4)
+    ScenEval[:, 1, 1] = np.tile(ias_day, 4)
 
     # ScenEval[:,1,2] = ias_parameters['IASlq'][-1]
-    iaslq_8 = ias_parameters["IASlq"][-8:]
-    ScenEval[:, 1, 2] = np.tile(iaslq_8, 4)
+    iaslq_day = ias_parameters["IASlq"][-number_of_points_in_a_day:]
+    ScenEval[:, 1, 2] = np.tile(iaslq_day, 4)
 
     # ScenEval[:,1,3] = ias_parameters['IASuq'][-1]
-    iasuq_8 = ias_parameters["IASuq"][-8:]
-    ScenEval[:, 1, 3] = np.tile(iasuq_8, 4)
+    iasuq_day = ias_parameters["IASuq"][-number_of_points_in_a_day:]
+    ScenEval[:, 1, 3] = np.tile(iasuq_day, 4)
 
     # # Scenario 2 - vary number of dehumidifiers
     ScenEval[:, 2, 0] = 1
@@ -190,8 +196,11 @@ def testScenario():
     # Stored in database? Currently output to csv file
     h2: int = 240
     numDays: int = 10
+    hours_per_point = 3  # TODO This needs to match the one used in GESCalibrationV1
 
-    time_parameters: Dict = setTimeParameters(h2=h2, numDays=numDays)
+    time_parameters: Dict = setTimeParameters(
+        h2=h2, numDays=numDays, hours_per_point=hours_per_point
+    )
     ach_parameters = setACHParameters(
         ACH_OUT_PATH=FILEPATH_ACH, ndp=time_parameters["ndp"]
     )
@@ -215,6 +224,7 @@ def testScenario():
         shift_lighting=shift_lighting,
         ach_parameters=ach_parameters,
         ias_parameters=ias_parameters,
+        hours_per_point=hours_per_point,
     )
 
     params: np.ndarray = np.concatenate(

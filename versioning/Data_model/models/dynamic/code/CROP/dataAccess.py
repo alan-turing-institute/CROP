@@ -1,3 +1,4 @@
+from pathlib import Path
 from jinjasql.core import bind
 from config import config
 import psycopg2
@@ -8,6 +9,10 @@ from six import string_types
 from copy import deepcopy
 import numpy as np
 import pandas as pd
+from config import config
+
+path_conf = config(section="paths")
+data_dir = Path(path_conf["data_dir"])
 
 
 def openConnection():
