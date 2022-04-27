@@ -21,13 +21,13 @@ from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from parameters import ndh
 from scipy.integrate import solve_ivp
-import sys
+from pathlib import Path
 
-sys.path.append(
-    "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/Inversion"
-)
 from inversion import *
 from dataAccess import getDaysWeather
+from config import config
+
+path_conf = config(section="paths")
 
 
 def climterp_linear(h1, h2, ExternalWeather):
@@ -398,63 +398,52 @@ def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
 
     results = np.zeros((12, NOut, NP))
 
+    # Initial conditions
+    T_i_0 = 295
+    T_c_0 = 293
+    T_f_0 = 293
+    T_v_0 = 297
+    T_m_0 = 297
+    T_p_0 = 297
+    T_c1_0 = 295
+    T_c2_0 = 292
+    T_c3_0 = 291
+    T_c4_0 = 289
+    T_c5_0 = 287
+    C_w_0 = 0.012
+
+    z = [
+        T_c_0,
+        T_i_0,
+        T_v_0,
+        T_m_0,
+        T_p_0,
+        T_f_0,
+        T_c1_0,
+        T_c2_0,
+        T_c3_0,
+        T_c4_0,
+        T_c5_0,
+        C_w_0,
+    ]
+
+    daynum = [0]
+    # count = [0]
+
+    t = [h1 * 3600, h2 * 3600]
+    tval = np.linspace(h1 * 3600, h2 * 3600, NOut)
+
     for i in range(NP):
-        # tic = time.time()
-
         print(i + 1)
-
-        AirChangeHour = paramsinput[i, 0]  # *np.ones(ndp)
-        IntAirSpeed = paramsinput[i, 1]  # *np.ones(ndp)
-
-        # Initial conditions
-        T_i_0 = 295
-        T_c_0 = 293
-        T_f_0 = 293
-        T_v_0 = 297
-        T_m_0 = 297
-        T_p_0 = 297
-        T_c1_0 = 295
-        T_c2_0 = 292
-        T_c3_0 = 291
-        T_c4_0 = 289
-        T_c5_0 = 287
-        C_w_0 = 0.012
-
-        z = [
-            T_c_0,
-            T_i_0,
-            T_v_0,
-            T_m_0,
-            T_p_0,
-            T_f_0,
-            T_c1_0,
-            T_c2_0,
-            T_c3_0,
-            T_c4_0,
-            T_c5_0,
-            C_w_0,
-        ]
-
-        daynum = [0]
-        # count = [0]
-
+        AirChangeHour = paramsinput[i, 0]
+        IntAirSpeed = paramsinput[i, 1]
         ACH = AirChangeHour / 3600
         ias = IntAirSpeed
-
-        t = [h1 * 3600, h2 * 3600]
-        tval = np.linspace(h1 * 3600, h2 * 3600, NOut)
-
         params = [climate, ACH, ias, daynum, h1, h2, LatestTimeHourValue]
-
         output = solve_ivp(
             model, t, z, method="BDF", t_eval=tval, rtol=1e-5, args=params
         )
-
         results[:, :, i] = output.y
-
-        # toc = time.time()
-        # print(toc-tic)
-
     return results
 
 
@@ -464,13 +453,23 @@ def loadDistributions():
     #     df_IAS = pd.read_csv(filePath_IAS)
     #     df_Length = pd.read_csv(filePath_Length)
     # else:
-    filepath_ACH = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_out.csv"
-    filepath_IAS = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_out.csv"
-    filepath_Length = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_out.csv"
+    data_dir = Path(path_conf["data_dir"])
+    filepath_ACH = data_dir / path_conf["filename_ach"]
+    filepath_IAS = data_dir / path_conf["filename_ias"]
+    filepath_Length = data_dir / path_conf["filename_length"]
 
-    df_ACH = pd.read_csv(filepath_ACH)
-    df_IAS = pd.read_csv(filepath_IAS)
-    df_Length = pd.read_csv(filepath_Length)
+    try:
+        df_ACH = pd.read_csv(filepath_ACH)
+    except FileNotFoundError:
+        df_ACH = pd.DataFrame()
+    try:
+        df_IAS = pd.read_csv(filepath_IAS)
+    except FileNotFoundError:
+        df_IAS = pd.DataFrame()
+    try:
+        df_Length = pd.read_csv(filepath_Length)
+    except FileNotFoundError:
+        df_Length = pd.DataFrame()
     return df_ACH, df_IAS, df_Length
 
 

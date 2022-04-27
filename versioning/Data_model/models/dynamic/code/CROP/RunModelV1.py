@@ -5,19 +5,23 @@ Created on Mon Dec  6 11:43:14 2021
 @author: rmw61
 """
 
+from pathlib import Path
 from functions_RunModelV1 import derivatives, sat_conc
 from parameters import ACH, ias
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY
 import numpy as np
 import pandas as pd
+from config import config
 
-filepath_Weather = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/WeatherV1.csv"
-filepath_Monitored = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/MonitoredV1.csv"
-filepath_LastDataPoint = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/LastDataPointV1.csv"
-filepath_ACH = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_outV1.csv"
-filepath_IAS = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_outV1.csv"
-filepath_Length = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_outV1.csv"
+path_conf = config(section="paths")
+data_dir = Path(path_conf["data_dir"])
+filepath_Weather = data_dir / path_conf["filename_weather"]
+filepath_Monitored = data_dir / path_conf["filename_monitored"]
+filepath_LastDataPoint = data_dir / path_conf["filename_lastdatapoint"]
+filepath_ACH = data_dir / path_conf["filename_ach"]
+filepath_IAS = data_dir / path_conf["filename_ias"]
+filepath_Length = data_dir / path_conf["filename_length"]
 
 # Import Weather Data
 header_list = ["DateTime", "T_e", "RH_e"]

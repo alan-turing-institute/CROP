@@ -4,6 +4,7 @@ Created on Tue Feb 16 09:18:07 2021
 
 @author: rmw61
 """
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from parameters import T_k, deltaT
@@ -20,20 +21,18 @@ from parameters import T_ss, T_al
 from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from scipy.integrate import solve_ivp
-import sys, os
-
-DIR_CROP = os.path.join(os.path.dirname(__file__), os.pardir)
-DIR_DATA = os.path.join(os.path.dirname(__file__), os.path.pardir, os.pardir, "data")
-DIR_INVERSION = os.path.join(DIR_CROP, "Inversion")
-FILEPATH_WEATHER = os.path.join(DIR_DATA, "WeatherV1.csv")
-FILEPATH_ACH = os.path.join(DIR_DATA, "ACH_outV1.csv")
-FILEPATH_IAS = os.path.join(DIR_DATA, "IAS_outV1.csv")
-FILEPATH_LEN = os.path.join(DIR_DATA, "Length_outV1.csv")
-
-sys.path.append(DIR_INVERSION)
+from config import config
 
 from inversion import *
 from dataAccess import getDaysWeather
+
+path_conf = config(section="paths")
+
+DATA_DIR = Path(path_conf["data_dir"])
+FILEPATH_WEATHER = DATA_DIR / path_conf["filename_weather"]
+FILEPATH_ACH = DATA_DIR / path_conf["filename_ach"]
+FILEPATH_IAS = DATA_DIR / path_conf["filename_ias"]
+FILEPATH_LEN = DATA_DIR / path_conf["filename_length"]
 
 
 def climterp_linear(h1, h2, numDays, filepath_weather=None):
@@ -206,6 +205,8 @@ def model(
     lshiftvec,
     LatestTimeHourValue,
 ):
+    # TODO This needs to be coordinated with the choice in GESCalibrationV1.
+    hours_per_step = 3
 
     T_c = z[0]
     T_i = z[1]
@@ -234,9 +235,9 @@ def model(
     # if daynum[(len(daynum)-1)] > daynum[(len(daynum)-2)]:
     #    print(daynum[len(daynum)-1])
 
-    ## Set ACH,ias
+    # Set ACH,ias
     hour = np.floor(t / 3600) + 1
-    seq = range(h1 + 3, h2 + 24, 3)
+    seq = range(h1 + hours_per_step, h2 + 24, hours_per_step)
 
     if hour >= seq[count[-1]]:
         count_new = count[-1] + 1

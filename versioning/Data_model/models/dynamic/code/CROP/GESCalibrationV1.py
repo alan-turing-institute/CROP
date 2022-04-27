@@ -10,15 +10,13 @@ from dataAccess import getDaysWeather, getDaysHumidityTemp, getDataPointHumidity
 import pandas as pd
 from pandas import DataFrame
 import numpy as np
-import sys
+from pathlib import Path
 
-sys.path.append(
-    "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/code/Inversion"
-)
 from inversion import *
 import time
 import csv
 import datetime
+from config import config
 
 np.random.seed(1000)
 
@@ -39,18 +37,18 @@ np.random.seed(1000)
 # This version (may_v2) downloads data from the data base and runs the model
 # calibration over the previous 20 days.
 
-filepath_X = (
-    "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/X.csv"
-)
-filepath_Weather = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/WeatherV1.csv"
-filepath_Monitored = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/MonitoredV1.csv"
-filepath_LastDataPoint = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/LastDataPointV1.csv"
-filepath_ACH = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_outV1.csv"
-filepath_IAS = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_outV1.csv"
-filepath_Length = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_outV1.csv"
-filepath_ACHprior = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/ACH_priorV1.csv"
-filepath_IASprior = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/IAS_priorV1.csv"
-filepath_Lengthprior = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/Length_priorV1.csv"
+path_conf = config(section="paths")
+data_dir = Path(path_conf["data_dir"])
+filepath_X = data_dir / path_conf["filename_x"]
+filepath_Weather = data_dir / path_conf["filename_weather"]
+filepath_Monitored = data_dir / path_conf["filename_monitored"]
+filepath_LastDataPoint = data_dir / path_conf["filename_lastdatapoint"]
+filepath_ACH = data_dir / path_conf["filename_ach"]
+filepath_IAS = data_dir / path_conf["filename_ias"]
+filepath_Length = data_dir / path_conf["filename_length"]
+filepath_ACHprior = data_dir / path_conf["filename_achprior"]
+filepath_IASprior = data_dir / path_conf["filename_iasprior"]
+filepath_Lengthprior = data_dir / path_conf["filename_lengthprior"]
 
 tic = time.time()
 
@@ -106,8 +104,8 @@ deltaDays = 20
 delta = datetime.timedelta(days=deltaDays)
 StartTime = LatestTime - delta
 
-t1 = StartTime.strftime("%y-%m-%d %h:%m:%s")
-t2 = LatestTime.strftime("%y-%m-%d %h:%m:%s")
+t1 = StartTime.strftime("%y-%m-%d %H:%M:%S")
+t2 = LatestTime.strftime("%y-%m-%d %H:%M:%S")
 
 Monitored = Monitored_hour.loc[t1[0] : t2[0]]
 Weather = Weather_hour.loc[t1[0] : t2[0]]
@@ -139,9 +137,7 @@ delta_h = 3  # hours between data points 12
 p2 = (ndp - 1) * delta_h + p1  # end data point
 
 seq = np.linspace(p1, p2, ndp)
-sz = np.size(
-    seq,
-)
+sz = np.size(seq)
 
 # Step through each data point
 
@@ -190,9 +186,8 @@ for ii in range(sz):
     if testdp == False:
         DataPoint = DataPoint / 100
     else:
-        DataPoint = (LastDataPoint[-1:]).DataPoint[
-            0
-        ]  # takes previous value if nan recorded
+        # takes previous value if nan recorded
+        DataPoint = (LastDataPoint[-1:]).DataPoint[0]
 
     print("DataPoint:{0}".format(DataPoint))
 
@@ -280,15 +275,24 @@ for ii in range(sz):
     posterior_IAS = posteriors[ii, :, 1]
     posterior_length = posteriors[ii, :, 2]
 
-    df = pd.read_csv(filepath_ACH)
+    try:
+        df = pd.read_csv(filepath_ACH)
+    except FileNotFoundError:
+        df = pd.DataFrame()
     df[str(ii)] = posteriors[ii, :, 0]
     df.to_csv(filepath_ACH, index=False)
 
-    df = pd.read_csv(filepath_IAS)
+    try:
+        df = pd.read_csv(filepath_IAS)
+    except FileNotFoundError:
+        df = pd.DataFrame()
     df[str(ii)] = posteriors[ii, :, 1]
     df.to_csv(filepath_IAS, index=False)
 
-    df = pd.read_csv(filepath_Length)
+    try:
+        df = pd.read_csv(filepath_Length)
+    except FileNotFoundError:
+        df = pd.DataFrame()
     df[str(ii)] = posteriors[ii, :, 2]
     df.to_csv(filepath_Length, index=False)
 

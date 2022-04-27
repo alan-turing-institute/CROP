@@ -2,15 +2,20 @@ from TestScenarioV1_1 import testScenario, FILEPATH_WEATHER
 
 # from CalibrationV2 import runCalibration
 import pandas as pd
+from pathlib import Path
 from dataAccess import (
     deleteResults,
     insertModelRun,
     insertModelProduct,
     insertModelPrediction,
 )
+from config import config
 
-filepath_resultsRH = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRHV1.csv"
-filepath_resultsT = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsTV1.csv"
+path_conf = config(section="paths")
+
+data_dir = Path(path_conf["data_dir"])
+filepath_resultsRH = data_dir / path_conf["filename_resultsrh"]
+filepath_resultsT = data_dir / path_conf["filename_resultst"]
 
 MODEL_GES_DATABASE_ID = 3
 SENSOR_RH_16B2_DATABASE_ID = 27
