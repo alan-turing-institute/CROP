@@ -14,7 +14,6 @@ jobs:
       CROP_SQL_PASS: "postgres"
       CROP_SQL_DBNAME: "cropdb"
       CROP_SQL_PORT: "5432"
-      PYTHONPATH: $PYTHONPATH:$(pwd)
       CROP_STARK_USERNAME: "testname"
       CROP_STARK_PASS: "testpass"
     steps:
@@ -31,5 +30,7 @@ jobs:
           postgresql password: postgres
       - run: pip install -r requirements.txt
       - run: git submodule update --init --recursive
-      - working-directory: __app__
-        run: pytest -vv
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          cd __app__
+          pytest -vv
