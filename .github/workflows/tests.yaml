@@ -30,7 +30,7 @@ jobs:
           postgresql password: postgres
       - run: pip install -r requirements.txt
       - run: git submodule update --init --recursive
-        run: |
+      - run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
           cd __app__
           pytest -vv
