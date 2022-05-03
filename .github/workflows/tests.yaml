@@ -28,7 +28,7 @@ jobs:
           postgresql version: '11'
           postgresql db: cropdb
           postgresql user: postgres
-          postgres password: postgres
+          postgresql password: postgres
       - run: pip install -r requirements.txt
       - run: git submodule update --init --recursive
       - working-directory: __app__
