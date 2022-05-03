@@ -14,7 +14,7 @@
 {% block content %}
   <div class="right_col" role="main">
     <div class="">
-      
+
       <div class="row">
         <div class="col-md-12 col-sm-12 col-xs-12">
           <div class="x_panel">
@@ -29,7 +29,7 @@
                     <div class="col-md-6">
                         <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                            <span></span> 
+                            <span></span>
                             <b class="caret"></b>
                         </div>
                     </div>
@@ -62,9 +62,12 @@
                 {%
                     endfor
                 %}
-                  
+
                 </tbody>
               </table>
+	      <form method="post">
+		<input type="submit" value="Download" name="download"/>
+	      </form>
             </div>
           </div>
         </div>
