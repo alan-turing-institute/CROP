@@ -16,6 +16,8 @@ jobs:
       CROP_SQL_PORT: "5432"
       CROP_STARK_USERNAME: "testname"
       CROP_STARK_PASS: "testpass"
+      CROP_30MHZ_TEST_T_RH_CHECKID: "testid"
+      CROP_30MHZ_APIKEY: "testkey"
     steps:
       - uses: actions/setup-python@v2
         with:
