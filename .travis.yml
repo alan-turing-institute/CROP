@@ -31,7 +31,7 @@ jobs:
         - pytest -vv
 
     - stage: publish
-      name: "Deploy to DockerHub"
+      name: "Build and push webapp to DockerHub"
       git:
         submodules: false
       services:
@@ -46,7 +46,7 @@ jobs:
         - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
             docker build -f Dockerfile -t turingcropapp/webapp:cropapp . ;
           fi
-  
+
       after_success:
         - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
             docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
@@ -55,6 +55,29 @@ jobs:
         - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
             docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
             docker push turingcropapp/webapp:cropapp ;
+          fi
+
+    - stage: publish
+      name: "Build and push functions to DockerHub"
+      services:
+        - docker
+      script:
+        - cd __app__
+        - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
+            docker build -f Dockerfile -t turingcropapp/functions:dev . ;
+          fi
+        - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
+            docker build -f Dockerfile -t turingcropapp/functions:prod . ;
+          fi
+  
+      after_success:
+        - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
+            docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
+            docker push turingcropapp/functions:dev ;
+          fi
+        - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
+            docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
+            docker push turingcropapp/functions:prod ;
           fi
 
 stages:
