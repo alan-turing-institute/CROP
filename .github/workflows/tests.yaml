@@ -1,0 +1,37 @@
+name: "Unit tests"
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+  steps:
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+        architecture: x64
+    - uses: actions/checkout@v3
+    - uses: harmon758/postgresql-action@v1
+      with:
+        - postgresql version: '11'
+        - postgresql db: cropdb
+        - postgresql user: postgres
+        - postgres password: postgres
+    - env:
+      - CROP_SQL_HOST: "localhost"
+      - CROP_SQL_USER: "postgres"
+      - CROP_SQL_PASS: "postgres"
+      - CROP_SQL_DBNAME: "cropdb"
+      - CROP_SQL_PORT: "5432"
+      - PYTHONPATH: $PYTHONPATH:$(pwd)
+      - CROP_STARK_USERNAME: "testname"
+      - CROP_STARK_PASS: "testpass"
+    - run: pip install -r requirements.txt
+    - run: git submodule update --init --recursive
+    - working-directory: __app__
+      run: pytest -vv
+
+
