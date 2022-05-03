@@ -8,6 +8,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      - CROP_SQL_HOST: "localhost"
+      - CROP_SQL_USER: "postgres"
+      - CROP_SQL_PASS: "postgres"
+      - CROP_SQL_DBNAME: "cropdb"
+      - CROP_SQL_PORT: "5432"
+      - PYTHONPATH: $PYTHONPATH:$(pwd)
+      - CROP_STARK_USERNAME: "testname"
+      - CROP_STARK_PASS: "testpass"
     steps:
       - uses: actions/setup-python@v2
         with:
@@ -20,15 +29,6 @@ jobs:
           - postgresql db: cropdb
           - postgresql user: postgres
           - postgres password: postgres
-      - env:
-        - CROP_SQL_HOST: "localhost"
-        - CROP_SQL_USER: "postgres"
-        - CROP_SQL_PASS: "postgres"
-        - CROP_SQL_DBNAME: "cropdb"
-        - CROP_SQL_PORT: "5432"
-        - PYTHONPATH: $PYTHONPATH:$(pwd)
-        - CROP_STARK_USERNAME: "testname"
-        - CROP_STARK_PASS: "testpass"
       - run: pip install -r requirements.txt
       - run: git submodule update --init --recursive
       - working-directory: __app__
