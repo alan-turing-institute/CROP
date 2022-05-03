@@ -41,20 +41,20 @@ jobs:
         - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
         - git submodule update --init --recursive
         - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
-            docker build -f Dockerfile -t turingcropapp/webapp:cropapptest . ;
+            docker build -f Dockerfile -t turingcropapp/webapp:dev . ;
           fi
         - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
-            docker build -f Dockerfile -t turingcropapp/webapp:cropapp . ;
+            docker build -f Dockerfile -t turingcropapp/webapp:prod . ;
           fi
 
       after_success:
         - if [[ "$TRAVIS_BRANCH" == "develop" ]]; then
             docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
-            docker push turingcropapp/webapp:cropapptest ;
+            docker push turingcropapp/webapp:dev ;
           fi
         - if [[ "$TRAVIS_BRANCH" == "main" ]]; then
             docker login -u $CROP_DOCKER_USER -p $CROP_DOCKER_PASS ;
-            docker push turingcropapp/webapp:cropapp ;
+            docker push turingcropapp/webapp:prod ;
           fi
 
     - stage: publish
