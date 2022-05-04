@@ -151,10 +151,12 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
             success = False
             log = "No sensors with sensor type {} were found.".format(sensor_type)
 
-    except:
+    except Exception as e:
         session_close(session)
         success = False
         log = "No sensors with sensor type {} were found.".format(sensor_type)
+        error_msg = "Caught exception: {}".format(e)
+        logging.error(error_msg)
 
     if not success:
         logging.info(log)
