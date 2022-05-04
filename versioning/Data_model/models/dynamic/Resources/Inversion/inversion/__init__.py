@@ -11,4 +11,5 @@ import inversion.calibration as calibration
 import warnings
 import inversion.kernels as kernels
 from sklearn.exceptions import ConvergenceWarning
-warnings.filterwarnings(action='ignore', category=ConvergenceWarning)
+
+warnings.filterwarnings(action="ignore", category=ConvergenceWarning)

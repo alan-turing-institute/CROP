@@ -19,6 +19,7 @@ CROP_USERNAME = os.environ["CROP_SQL_USERNAME"]
 CROP_READER_USER = os.environ["CROP_SQL_READER_USER"]
 CROP_READER_PASS = os.environ["CROP_SQL_READER_PASS"]
 
+
 def delete_reader(conn, cur):
     """
     Deletes data reader user
@@ -34,11 +35,16 @@ def delete_reader(conn, cur):
     cur.execute("DROP USER %s" % CROP_READER_USER)
     conn.commit()
 
+
 if __name__ == "__main__":
-    
+
     conn = psycopg2.connect(
-        host=CROP_HOST, port=CROP_PORT, dbname=CROP_DBNAME, 
-        user=CROP_USER, password=CROP_PASSWORD)
+        host=CROP_HOST,
+        port=CROP_PORT,
+        dbname=CROP_DBNAME,
+        user=CROP_USER,
+        password=CROP_PASSWORD,
+    )
 
     cur = conn.cursor()
 
@@ -46,12 +52,22 @@ if __name__ == "__main__":
 
     try:
         user = AsIs(CROP_READER_USER)
-        
-        cur.execute("CREATE USER %s WITH ENCRYPTED PASSWORD %s", (user, CROP_READER_PASS, ))
+
+        cur.execute(
+            "CREATE USER %s WITH ENCRYPTED PASSWORD %s",
+            (
+                user,
+                CROP_READER_PASS,
+            ),
+        )
         conn.commit()
 
-        cur.execute("GRANT CONNECT ON DATABASE %s TO %s" % (CROP_DBNAME, CROP_READER_USER))
-        cur.execute("GRANT SELECT ON ALL TABLES IN SCHEMA public TO %s" % (CROP_READER_USER))
+        cur.execute(
+            "GRANT CONNECT ON DATABASE %s TO %s" % (CROP_DBNAME, CROP_READER_USER)
+        )
+        cur.execute(
+            "GRANT SELECT ON ALL TABLES IN SCHEMA public TO %s" % (CROP_READER_USER)
+        )
         conn.commit()
 
     except:

@@ -6,14 +6,14 @@
 
 ## Summary
 
-The overall aim of the CROP project is to prototype a digital twin of the Growing Underground's underground farm.
+The overall aim of the CROP project is to prototype a digital twin of the [Growing Underground](http://growing-underground.com/) underground farm.
 
 CROP is an on cloud-based application which utilizes the flexibility, customization and evolution that a cloud-native system provides, to better refine, simplify and improve the processes and architecture of the system with regards to our research needs.
 
-The overall aim of the CROP project is to prototype a digital twin of the [Growing Underground](http://growing-underground.com/)'s underground farm which:
-* collects heterogeneous IoT sensor data,
-* provides 3D visualisation of the underground farm and sensor locations,
-* helps to analyse farm conditions at various points in time.
+The digital twin will:
+* collect heterogeneous IoT sensor data,
+* provide 3D visualisation of the underground farm and sensor locations,
+* help to analyse farm conditions at various points in time.
 
 <br/>
 <p align="center">
@@ -23,11 +23,10 @@ The overall aim of the CROP project is to prototype a digital twin of the [Growi
 ## Key Functionalities
 
 - **1** Users can access the CROP platform and database using multiple ways.
-- **2** CROP web application is the main interface for the digital twin. Users can explore collected heterogeneous IoT sensor data, analyse farm conditions at various points in time, use the developed 3D visualisation tools.
-- **3** CROP database is constantly updated from multiple streams of data: Zensie API, Stark energy usage platform, custom made (Raspberry Pi) sensors, and others.
+- **2** The CROP web application is the main interface for the digital twin. Users can explore collected heterogeneous IoT sensor data, analyse farm conditions at various points in time, use the developed 3D visualisation tools.
+- **3** The CROP database is constantly updated from multiple streams of data: Zensie API, Stark energy usage platform, custom made (Raspberry Pi) sensors, and others.
 - **4** CROP machine learning services integrate automated prediction and calibration models into the platform.
-- **5** Unity 3D model is found in : \CROP\webapp\app\base\static\structures
-
+- **5** The Unity 3D model is found in [this repo](http://github.com/alan-turing-institute/CROP_unity): 
 <br/>
 <p align="center">
   <img src="media/infrastructure.png" width="600">
@@ -35,7 +34,7 @@ The overall aim of the CROP project is to prototype a digital twin of the [Growi
 
 ## Disclaimer
 
-CROP is a **development** code and we recommend that you do not deploy this **prototype** application in a production setting. The implementation is only for demonstration purposes only and we make no warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the web app, backend infrastructure or the information. 
+CROP is **development** code and we recommend that you do not deploy this **prototype** application in a production setting. The implementation is only for demonstration purposes only and we make no warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the web app, backend infrastructure or the information. 
 
 ## Implementation
 

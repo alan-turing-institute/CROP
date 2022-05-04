@@ -5,8 +5,7 @@ drop database, and check its structure.
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy_utils import database_exists, drop_database
-from sqlalchemy.orm import RelationshipProperty, sessionmaker
-from sqlalchemy.ext.declarative.clsregistry import _ModuleMarker
+from sqlalchemy.orm import registry, RelationshipProperty, sessionmaker
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from __app__.crop.constants import SQL_DEFAULT_DBNAME
@@ -29,8 +28,7 @@ def create_database(conn_string, db_name):
         # try:
         # On postgres, the postgres database is normally present by default.
         # Connecting as a superuser (eg, postgres), allows to connect and create a new db.
-        def_engine = create_engine(
-            "{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
+        def_engine = create_engine("{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
 
         # You cannot use engine.execute() directly, because postgres does not allow to create
         # databases inside transactions, inside which sqlalchemy always tries to run queries.
@@ -98,8 +96,7 @@ def drop_db(conn_string, db_name):
         # Disconnects all users from the db we want to drop
         try:
             connection = engine.connect()
-            connection.connection.set_isolation_level(
-                ISOLATION_LEVEL_AUTOCOMMIT)
+            connection.connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
             version = connection.dialect.server_version_info
             pid_column = "pid" if (version >= (9, 2)) else "procpid"
@@ -142,14 +139,14 @@ def check_database_structure(engine):
     sql_tables = iengine.get_table_names()
 
     if sql_tables:
-
         # goes through the sqlalchemy classes
-        for _, sql_class in BASE._decl_class_registry.items():
-
-            # filter out objecs that are not classes (e.g.base)
-            if isinstance(sql_class, _ModuleMarker):
+        for _, sql_class in BASE.registry._class_registry.items():
+            try:
+                tablename = sql_class.__tablename__
+            except AttributeError:
+                # This mostly catches the case of _ModuleMarker, which isn't an actual
+                # class we are interested in.
                 continue
-            tablename = sql_class.__tablename__
 
             # checks if all tablenames in class exist in sql
             if tablename in sql_tables:
@@ -161,8 +158,6 @@ def check_database_structure(engine):
                 mapper = inspect(sql_class)
 
                 for obj in mapper.attrs:
-                    print(obj)
-
                     # checks if the object is a relationship
                     if isinstance(obj, RelationshipProperty):
                         # To do add checks for relations

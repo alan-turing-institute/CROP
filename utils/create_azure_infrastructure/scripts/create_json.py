@@ -33,5 +33,5 @@ if __name__ == "__main__":
         "CROP_30MHZ_TEST_T_RH_CHECKID": os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"],
     }
 
-    with open(rel_file_path, 'w') as outfile:
+    with open(rel_file_path, "w") as outfile:
         json.dump(data, outfile)
