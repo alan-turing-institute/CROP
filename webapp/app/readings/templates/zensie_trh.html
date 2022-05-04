@@ -14,7 +14,7 @@
 {% block content %}
   <div class="right_col" role="main">
     <div class="">
-      
+
       <div class="row">
         <div class="col-md-12 col-sm-12 col-xs-12">
           <div class="x_panel">
@@ -29,7 +29,7 @@
                     <div class="col-md-6">
                         <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
                             <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                            <span></span> 
+                            <span></span>
                             <b class="caret"></b>
                         </div>
                     </div>
@@ -52,19 +52,22 @@
                     for t_reading in readings:
                 %}
                 <tr>
-                    <td>{{ t_reading.zensie_trh_data_timestamp }}</td>
-                    <td>{{ t_reading.zensie_trh_data_sensor_id }}</td>
-                    <td>{{ t_reading.sensors_name }}</td>
-                    <td>{{ t_reading.zensie_trh_data_temperature }}</td>
-                    <td>{{ t_reading.zensie_trh_data_humidity }}</td>
-                    <td>{{ t_reading.zensie_trh_data_time_created }}</td>
+                    <td>{{ t_reading.timestamp }}</td>
+                    <td>{{ t_reading.sensor_id }}</td>
+                    <td>{{ t_reading.name }}</td>
+                    <td>{{ t_reading.temperature }}</td>
+                    <td>{{ t_reading.humidity }}</td>
+                    <td>{{ t_reading.time_created }}</td>
                 </tr>
                 {%
                     endfor
                 %}
-                  
+
                 </tbody>
               </table>
+	      <form method="post">
+		<input type="submit" value="Download" name="download"/>
+	      </form>
             </div>
           </div>
         </div>

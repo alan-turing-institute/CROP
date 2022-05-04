@@ -111,9 +111,7 @@ def route_template(template):
                     LocationClass.query.filter_by(id=loc_id).delete()
                     db.session.commit()
 
-                    loc_message = "Location (ID = {}) has been deleted.".format(
-                        loc_id
-                    )
+                    loc_message = "Location (ID = {}) has been deleted.".format(loc_id)
                 else:
                     loc_message = "Unknown location cannnot be deleted."
 

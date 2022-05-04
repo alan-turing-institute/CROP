@@ -4,6 +4,7 @@ Utilities module
 
 import json
 from datetime import datetime, timedelta
+import pandas as pd
 
 
 def query_result_to_array(query_result, date_iso=True):
@@ -57,9 +58,7 @@ def jasonify_query_result(query_result):
 
     results_arr = query_result_to_array(query_result)
 
-    result = json.dumps(
-        results_arr, ensure_ascii=True, indent=4, sort_keys=True
-    )
+    result = json.dumps(results_arr, ensure_ascii=True, indent=4, sort_keys=True)
 
     return result
 
@@ -107,11 +106,28 @@ def parse_date_range_argument(request_args):
             + timedelta(milliseconds=-1)
         )
 
-        dt_from = datetime.strptime(
-            request_args.split("-")[0], "%Y%m%d"
-        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        dt_from = datetime.strptime(request_args.split("-")[0], "%Y%m%d").replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         return dt_from, dt_to
 
     except ValueError:
         return get_default_datetime_range()
+
+
+def download_csv(readings, filename="results.csv"):
+    """
+    Use Pandas to convert array of readings into a csv
+    Args:
+       readings: a list of records to be written out as csv
+       filename (optional): str, name of downloaded file
+    Returns:
+        send_file: function call to flask send_file, will send csv file to client.
+    """
+    df = pd.DataFrame(readings)
+    output_buffer = io.BytesIO()
+    df.to_csv(output_buffer)
+    output_buffer.seek(0)
+    print("Downloading", file=sys.stderr)
+    return send_file(output_buffer, download_name=filename, mimetype="text/csv")
