@@ -3,6 +3,7 @@ A module for constants
 """
 import os
 import pandas as pd
+from urllib import parse
 
 import logging
 
@@ -154,7 +155,7 @@ SQL_TEST_DBNAME = "test_db"
 SQL_CONNECTION_STRING = make_conn_string(
     SQL_ENGINE,
     SQL_USER,
-    SQL_PASSWORD,
+    parse.quote(SQL_PASSWORD),
     SQL_HOST,
     SQL_PORT,
 )
@@ -163,14 +164,13 @@ SQL_CONNECTION_STRING = make_conn_string(
 SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_ENGINE,
     SQL_USER,
-    SQL_PASSWORD,
+    parse.quote(SQL_PASSWORD),
     SQL_HOST,
     SQL_PORT,
 )
 
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
-print(SQL_CONNECTION_STRING)
 # SQL Table names
 SENSOR_TABLE_NAME = "sensors"
 SENSOR_TYPE_TABLE_NAME = "sensor_types"

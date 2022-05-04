@@ -1,6 +1,6 @@
 # CROP <img src="media/logo.png" width="180" align="right">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[![Build Status](https://travis-ci.com/alan-turing-institute/CROP.svg?branch=master)](https://travis-ci.org/alan-turing-institute/CROP)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[![Build Status](https://app.travis-ci.com/alan-turing-institute/CROP.svg?branch=main)](https://app.travis-ci.com/alan-turing-institute/CROP)
 
 **C**rop is a **R**esearch **O**bservations **P**latform designed and created by [Dr Tomas Lazauskas](https://github.com/tomaslaz) and [Dr Flora Roumpani](https://github.com/entopia) in collaboration with [Dr Ruchi Choudhary's](https://www.turing.ac.uk/people/researchers/ruchi-choudhary) research group and [Growing Underground](http://growing-underground.com/).
 

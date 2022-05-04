@@ -2,6 +2,7 @@
 Utilities (miscellaneous routines) module
 
 """
+from urllib import parse
 from datetime import datetime
 
 
@@ -22,7 +23,7 @@ def make_conn_string(sql_engine, sql_user, sql_password, sql_host, sql_port):
     return "%s://%s:%s@%s:%s" % (
         sql_engine,
         sql_user,
-        sql_password,
+        parse.quote(sql_password),
         sql_host,
         sql_port,
     )
