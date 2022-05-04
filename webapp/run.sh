@@ -6,6 +6,8 @@ export LANG=C.UTF-8
 export FLASK_APP=crop_app.py
 export FLASK_ENV=development
 
+export PYTHONPATH=`pwd`"/..:${PYTHONPATH}"
+
 if test -f "../.secrets/crop.sh"; then
     source ../.secrets/crop.sh
 fi
