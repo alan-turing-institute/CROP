@@ -2,9 +2,12 @@
 Module for sensor data.
 """
 
-from flask import render_template, request
+import sys
+from flask import render_template, request, send_file
 from flask_login import login_required
 from sqlalchemy import and_, desc
+import pandas as pd
+import io
 
 from app.readings import blueprint
 from utilities.utils import (
@@ -23,7 +26,6 @@ from __app__.crop.structure import (
     DailyHarvestClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
-import sys
 
 
 @blueprint.route("/<template>", methods=["GET","POST"])
@@ -52,8 +54,7 @@ def route_template(template):
                 )
                 .filter(
                     and_(
-                        ReadingsAdvanticsysClass.sensor_id
-                        == SensorClass.id,
+                        ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
                         ReadingsAdvanticsysClass.timestamp >= dt_from,
                         ReadingsAdvanticsysClass.timestamp <= dt_to,
                     )
@@ -123,7 +124,6 @@ def route_template(template):
             ).limit(CONST_MAX_RECORDS)
 
         readings = db.session.execute(query).fetchall()
-        # print(readings, file=sys.stderr)
 
         results_arr = query_result_to_array(readings, date_iso=False)
     if request.method == "POST":

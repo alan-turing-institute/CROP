@@ -9,6 +9,7 @@ import sys
 from crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 from crop.db import create_database
 
+
 def confirm(question):
     """
     Ask user to enter Y or N (case-insensitive).
@@ -19,8 +20,9 @@ def confirm(question):
 
     while answer not in ["y", "n"]:
         answer = input("{0} [Y/N]? ".format(question)).lower()
-        
+
     return answer == "y"
+
 
 if __name__ == "__main__":
 

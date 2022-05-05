@@ -57,9 +57,7 @@ def login():
             "login/login.html",
             login_form=login_form,
             create_account_form=create_account_form,
-            disable_register=(
-                environ.get("CROP_DISABLE_REGISTER", "True") == "True"
-            ),
+            disable_register=(environ.get("CROP_DISABLE_REGISTER", "True") == "True"),
         )
     return redirect(url_for("home_blueprint.index"))
 
@@ -93,8 +91,8 @@ def shutdown():
 
 
 @login_manager.unauthorized_handler
-def unauthorized_handler():
-    return render_template("errors/page_403.html"), 403
+def unauthorized_callback():
+    return redirect(url_for('base_blueprint.login'))
 
 
 @blueprint.errorhandler(403)

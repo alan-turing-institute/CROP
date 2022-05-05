@@ -39,9 +39,6 @@ CROP.pyproj.user
 # PyTest
 __pycache__
 
-#Other files
-oldscripts/
-
 # VSCODE
 .vscode/
 .vs
@@ -101,6 +98,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+*.db
 local_settings.py
 db.sqlite3
 
@@ -148,7 +146,13 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# Javascript packages
+node_modules
+
 # mypy
 .mypy_cache/
 .fake
 .ionide
+
+# macOS folder metadata
+.DS_Store

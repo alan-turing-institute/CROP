@@ -34,8 +34,25 @@ def route_template(template):
             SensorClass.name,
             SensorClass.last_updated,
             TypeClass.sensor_type,
+            SensorLocationClass.sensor_id,
+            SensorLocationClass.location_id,
+            LocationClass.id.label("location_id"),
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf,
         )
-        .filter(and_(SensorClass.type_id == TypeClass.id,))
+        .filter(SensorClass.type_id == TypeClass.id)
+        .join(
+            SensorLocationClass,
+            SensorClass.id == SensorLocationClass.sensor_id,
+            isouter=True,
+        )
+        .join(
+            LocationClass,
+            LocationClass.id == SensorLocationClass.location_id,
+            isouter=True,
+        )
         .order_by(asc(SensorClass.id))
         .limit(CONST_MAX_RECORDS)
     )

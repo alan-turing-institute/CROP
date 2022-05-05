@@ -158,6 +158,7 @@ def insert_adv_data(engine):
     session_close(session)
     assert success, log
 
+
 def import_sensor_location(engine):
     """
     Bulk inserts sensor location data
