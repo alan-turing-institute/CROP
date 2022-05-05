@@ -1,0 +1,29 @@
+jobs:
+  include:
+    - stage: test
+      name: "Unit Tests"
+      language: python
+      python: 3.8
+      services:
+        - postgresql
+      install:
+        - pip install -r requirements.txt
+      env:
+        -CROP_SQL_HOST="localhost"
+        -CROP_SQL_USER="postgres"
+        -CROP_SQL_PASS="postgres"
+        -CROP_SQL_DBNAME="cropdb"
+        -CROP_SQL_PORT="5432"
+        -PYTHONPATH=$PYTHONPATH:$(pwd)
+        -CROP_STARK_USERNAME="testname"
+        -CROP_STARK_PASS="testpass"
+      git:
+        submodules: false
+      before_install:
+        - echo -e "machine github.com\n  login $CI_USER_TOKEN" > ~/.netrc
+        - git submodule update --init --recursive
+      before_script:
+        - psql -c "CREATE DATABASE cropdb;" -U postgres
+      script:
+        - cd __app__
+        - pytest -vv
