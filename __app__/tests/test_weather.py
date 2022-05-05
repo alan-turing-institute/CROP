@@ -9,9 +9,7 @@ from __app__.crop.constants import (
     CONST_ZENSIE_WEATHER_SENSOR_TYPE,
 )
 
-from __app__.crop.ingress_weather import (
-    get_api_weather_data
-)
+from __app__.crop.ingress_weather import get_api_weather_data
 
 # def test_get_sensor_data():
 

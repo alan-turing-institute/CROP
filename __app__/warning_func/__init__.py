@@ -13,10 +13,8 @@ from __app__.crop.ingress_energy import scrape_data, import_energy_data
 from __app__.crop.constants import CONST_STARK, SQL_CONNECTION_STRING, SQL_DBNAME
 
 
-
-
-def warnings_temp ():
-    
+def warnings_temp():
+    pass
 
 
 def stark_import(mytimer: func.TimerRequest):

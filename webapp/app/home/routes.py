@@ -51,9 +51,7 @@ def resample(df_, bins):
         temp_df: the df with grouped bins
     """
 
-    bins_list = [
-        "(%.1f, %.1f]" % (bins[i], bins[i + 1]) for i in range(len(bins) - 1)
-    ]
+    bins_list = ["(%.1f, %.1f]" % (bins[i], bins[i + 1]) for i in range(len(bins) - 1)]
 
     # resamples with 0 if there are no data in a bin
     for temp_range in bins_list:
@@ -145,7 +143,6 @@ def zensie_query(dt_from, dt_to):
 
     if df.empty:
         logging.debug("WARNING: Query returned empty")
-
     return df
 
 
@@ -180,8 +177,7 @@ def grp_per_hr_zone(temp_df):
         df.groupby(
             by=[
                 df.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d"
-                    % (x.year, x.month, x.day, x.hour)
+                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
                 ),
                 "zone",
                 "date",
@@ -219,8 +215,7 @@ def stratification(temp_df, sensor_ids):
         df_.groupby(
             by=[
                 df_.timestamp.map(
-                    lambda x: "%04d-%02d-%02dT%02d"
-                    % (x.year, x.month, x.day, x.hour)
+                    lambda x: "%04d-%02d-%02dT%02d" % (x.year, x.month, x.day, x.hour)
                 ),
                 "date",
                 "sensor_id",
@@ -259,9 +254,7 @@ def bin_zensie_data(df, bins, zensie_measure, expected_total=None):
     for zone in LOCATION_ZONES:
         # check if zone exists in current bins dictionary:
         if zone not in bins:
-            logging.info(
-                "WARNING: %s doesn't exist in current bin dictionary" % zone
-            )
+            logging.info("WARNING: %s doesn't exist in current bin dictionary" % zone)
             continue
 
         df_each_zone = df.loc[df.zone == zone, :].copy()
@@ -347,7 +340,7 @@ def index():
     """
     Index page
     """
-    dt_to = dt.datetime.now()
+    dt_to = dt.datetime.now(dt.timezone.utc)
     dt_from_weekly = dt_to - dt.timedelta(days=7)
     dt_from_daily = dt_to - dt.timedelta(days=1)
     dt_from_hourly = dt_to - dt.timedelta(hours=2)
@@ -410,4 +403,6 @@ def index():
 @login_required
 def model():
     """Unity model page."""
-    return render_template("model.html",)
+    return render_template(
+        "model.html",
+    )

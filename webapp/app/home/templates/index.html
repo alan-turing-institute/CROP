@@ -38,7 +38,7 @@
 
           <div class="webgl-content">
             <div id="unityContainer">
-              <a href=./model>
+              <a href="./model">
                 <img
                     style=" width: 100%"
                     src="{{ url_for('static', filename='images/unity_model_banner.png') }}",
@@ -406,10 +406,11 @@
   check_data(temperature_json_daily);
   check_data(humidity_json);
   check_data(stratification_json);
+  check_data(hourly_data_json)
 
   create_charts(
       temperature_json, temperature_json_daily, humidity_json,
-      humidity_json_daily, stratification_json,
+      humidity_json_daily, stratification_json, hourly_data_json,
     );
 </script>
 

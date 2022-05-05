@@ -24,23 +24,29 @@ from __app__.crop.constants import CONST_STARK, STARK_USERNAME, STARK_PASS
 
 SLEEP_TIME = 5.3
 
+
 def setupDriver():
     from webdriver_manager.chrome import ChromeDriverManager
+
     driver = webdriver.Chrome(ChromeDriverManager(version="87.0.4280.88").install())
     driver.get("https://www.google.com")
+
 
 def import_stark_data():
     """
     Imports stark electricity consumption data
     """
     from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+
     import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME)
-    
+
+
 def import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME):
     status, error, energy_df = scrape_data()
     # energy_df.to_csv('energy_df.csv')
     # energy_df = pd.read_csv("./energy_df.csv")
     export_energy_data(energy_df, SQL_CONNECTION_STRING, SQL_DBNAME)
+
 
 def read_table_data(client, ds_name, electricity_df):
     """
@@ -92,7 +98,9 @@ def scrape_data(hide=True):
         energy_df: pandas dataframe with the electricity usage data
     """
 
-    energy_df = pd.DataFrame(columns=["timestamp", "electricity", "data_source"], dtype=object)
+    energy_df = pd.DataFrame(
+        columns=["timestamp", "electricity", "data_source"], dtype=object
+    )
 
     status = True
     error = ""
@@ -133,20 +141,22 @@ def scrape_data(hide=True):
             '//*[@class="datepicker-days"]'
         ).find_element_by_class_name("today").click()
         sleep(SLEEP_TIME)
-        
+
         client.find_element_by_id("StartDate").click()
         client.find_element_by_xpath(
             '//*[@class="datepicker-days"]'
         ).find_element_by_xpath("//table/tbody/tr/td").click()
-        
+
         sleep(SLEEP_TIME)
-        
-        start_date = client.find_element_by_id("StartDate").get_attribute("value").strip()
+
+        start_date = (
+            client.find_element_by_id("StartDate").get_attribute("value").strip()
+        )
         return start_date
         # except:
         #     error = "Error occured while getting data from stark.co.uk"
         #     print(error)
-    
+
     def pickEndDate(client):
         # Picking end date
         client.find_element_by_id("EndDate").click()
@@ -161,7 +171,7 @@ def scrape_data(hide=True):
     def openDataTreePage(client):
         client.find_element_by_id("btnOpenGroupTreeSearch").click()
         sleep(SLEEP_TIME)
-        
+
     def openTree(client):
         client.find_element_by_id("groupTree").find_element_by_class_name(
             "treeToggleWrapper"
@@ -175,7 +185,7 @@ def scrape_data(hide=True):
             "treeItemElementsWrapper"
         )
         return elements_list
-    
+
     def selectTreeBranch(element):
         element.find_element_by_class_name("treeTooltipWrapper").click()
         sleep(SLEEP_TIME)
@@ -192,18 +202,14 @@ def scrape_data(hide=True):
         sleep(SLEEP_TIME)
 
     def openReportPage(client, ds_name):
-        client.find_element_by_id("buttonRunReport").click()        
+        client.find_element_by_id("buttonRunReport").click()
         # Wait until the report is finished
         logging.info("=========> Awaiting Report for: {}".format(ds_name))
         value = ""
         iter_cnt = 0
         while len(value) == 0 and iter_cnt < 100:
             sleep(SLEEP_TIME)
-            value = (
-                client.find_element_by_id("reqId")
-                .get_attribute("value")
-                .strip()
-            )
+            value = client.find_element_by_id("reqId").get_attribute("value").strip()
             iter_cnt += 1
         sleep(SLEEP_TIME * 10)
         # Download the report data
@@ -212,7 +218,7 @@ def scrape_data(hide=True):
         # Open table
         client.find_element_by_id("btnOpenReportTable").click()
         sleep(SLEEP_TIME)
-    
+
     def incrementReportPage(client):
         # Go page by page
         next_page = client.find_element_by_id("rtPageControls")
@@ -243,18 +249,25 @@ def scrape_data(hide=True):
 
     def getDaysDelta(start_date, end_date):
         # Count number of days
-        return (datetime.strptime(end_date, "%d/%m/%Y").date() - datetime.strptime(start_date, "%d/%m/%Y").date()).days
-    
+        return (
+            datetime.strptime(end_date, "%d/%m/%Y").date()
+            - datetime.strptime(start_date, "%d/%m/%Y").date()
+        ).days
+
     openDataTreePage(client)
     openTree(client)
     avail_data_sources = filterDataSources(getTreeBranches(client))
     visit_data_sources = []
-    
+
     for i_a in range(len(avail_data_sources)):
-        logging.info("=========> [i_a = {}] Available Report for: {}".format(i_a, avail_data_sources[i_a]))
+        logging.info(
+            "=========> [i_a = {}] Available Report for: {}".format(
+                i_a, avail_data_sources[i_a]
+            )
+        )
         if i_a > 0:
             openDataTreePage(client)
-             
+
         elements_list = getTreeBranches(client)
         for element in elements_list:
             ds_name = (element.text).strip()
@@ -264,13 +277,13 @@ def scrape_data(hide=True):
 
                 logging.info("=========> Generating Report for: {}".format(ds_name))
                 selectTreeBranch(element)
-                
+
                 setTimeZone(client)
                 start_date = pickStartDate(client)
                 end_date = pickEndDate(client)
                 days_delta = getDaysDelta(start_date, end_date)
                 # days_delta = 1
-                
+
                 openReportPage(client, ds_name)
                 energy_df = read_table_data(client, ds_name, energy_df)
 
@@ -280,13 +293,15 @@ def scrape_data(hide=True):
 
                 closeReportPage(client)
 
-    #            # Removing duplicates
+                #            # Removing duplicates
                 energy_df.drop_duplicates(keep=False, inplace=True)
 
                 logging.info("=========> Got Report for: {}".format(ds_name))
                 logging.info("=========> Report Starts: {}".format(start_date))
                 logging.info("=========> Report Ends: {}".format(end_date))
-                logging.info("=========> Report Length: {}".format(len(energy_df.index)))
+                logging.info(
+                    "=========> Report Length: {}".format(len(energy_df.index))
+                )
                 logging.info("=========> Report Head: {}".format(energy_df.head()))
 
                 break
@@ -344,7 +359,11 @@ def export_energy_data(electricity_df, conn_string, database):
                 .first()
                 .id
             )
-            logging.info("=========> Stark [Sensor, ID]: [{}, {}] ".format(data_source, stark_sensor_id))
+            logging.info(
+                "=========> Stark [Sensor, ID]: [{}, {}] ".format(
+                    data_source, stark_sensor_id
+                )
+            )
         except:
             status = False
             log = "{} sensor with {} = '{}' was not found.".format(
@@ -392,14 +411,18 @@ def export_energy_data(electricity_df, conn_string, database):
             add_cnt += 1
             # logging.info("=========> New Data: {}: {}".format(data.timestamp, data.electricity_consumption))
 
-        session.query(SensorClass).\
-            filter(SensorClass.id == sensor_id).\
-            update({"last_updated": datetime.now()})
-    
+        session.query(SensorClass).filter(SensorClass.id == sensor_id).update(
+            {"last_updated": datetime.now()}
+        )
+
     session_close(session)
     status = True
     log = "New: {} (uploaded); Duplicates: {} (ignored)".format(add_cnt, dulp_cnt)
-    logging.info("=========> New: {} (uploaded); Duplicates: {} (ignored)".format(add_cnt, dulp_cnt))
+    logging.info(
+        "=========> New: {} (uploaded); Duplicates: {} (ignored)".format(
+            add_cnt, dulp_cnt
+        )
+    )
     return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
 
     # except:
@@ -409,6 +432,7 @@ def export_energy_data(electricity_df, conn_string, database):
     #     log = "Cannot insert new data to database"
 
     #     return log_upload_event(CONST_STARK, "stark.co.uk", status, log, conn_string)
+
 
 if __name__ == "__main__":
     import_stark_data()

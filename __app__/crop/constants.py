@@ -29,8 +29,7 @@ CONST_ENV_FOLDER = "Environmental"
 CONST_SENSOR_LOCATION_TESTS = "sensor_location_tests"
 
 CONST_TEST_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                 "..", CONST_TEST_FOLDER)
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", CONST_TEST_FOLDER)
 )
 CONST_TEST_DIR_DATA = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER)
 CONST_COREDATA_DIR = os.path.join(
@@ -39,8 +38,7 @@ CONST_COREDATA_DIR = os.path.join(
 CONST_ADVANTICSYS_DIR = os.path.join(
     CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ADVANTICSYS_FOLDER
 )
-CONST_ENV_DIR = os.path.join(
-    CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER)
+CONST_ENV_DIR = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER)
 
 # Core data
 SENSOR_CSV = "Sensors.csv"  # List of sensors
@@ -140,8 +138,7 @@ STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
 
 # 30MHz (Zensie)
 CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
-CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip(
-)
+CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
 
 # Create connection string
 SQL_ENGINE = "postgresql"
@@ -172,8 +169,7 @@ SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_PORT,
 )
 
-SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (
-    SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
+SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
 # SQL Table names
 SENSOR_TABLE_NAME = "sensors"

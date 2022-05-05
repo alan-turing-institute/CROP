@@ -39,9 +39,7 @@ def get_all_sensors():
     sensor_temp = (
         db.session.query(
             SensorLocationClass.sensor_id,
-            func.max(SensorLocationClass.installation_date).label(
-                "installation_date"
-            ),
+            func.max(SensorLocationClass.installation_date).label("installation_date"),
         )
         .group_by(SensorLocationClass.sensor_id)
         .subquery()
@@ -59,8 +57,7 @@ def get_all_sensors():
     ).filter(
         and_(
             sensor_temp.c.sensor_id == SensorLocationClass.sensor_id,
-            sensor_temp.c.installation_date
-            == SensorLocationClass.installation_date,
+            sensor_temp.c.installation_date == SensorLocationClass.installation_date,
             sensor_temp.c.sensor_id == SensorClass.id,
             SensorClass.type_id == TypeClass.id,
             SensorLocationClass.location_id == LocationClass.id,
