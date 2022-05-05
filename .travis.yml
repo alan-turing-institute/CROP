@@ -27,7 +27,3 @@ jobs:
       script:
         - cd __app__
         - pytest -vv
-
-stages:
-  - name: publish
-    if: (type = push) AND (branch = develop OR branch = main OR branch = travis-test)
