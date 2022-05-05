@@ -134,4 +134,5 @@ def route_template(template):
             readings=results_arr,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
+            num_records = CONST_MAX_RECORDS
         )
