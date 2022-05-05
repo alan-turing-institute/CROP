@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+import os
 
 
 def config(
@@ -21,4 +22,10 @@ def config(
             "Section {0} not found in the {1} file".format(section, filename)
         )
 
+    # If the same variable is defined also as an environment variable, have that
+    # override the value in the file.
+    for key in conf_dict.keys():
+        env_var = "CROP_{}".format(key).upper()
+        if env_var in os.environ:
+            conf_dict[key] = os.environ[env_var]
     return conf_dict
