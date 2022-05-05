@@ -95,24 +95,18 @@ print(Monitored_hour[-1:].index == Weather_hour[-1:].index)
 # Select oldest of the two final timestamps (or most recent 3am/3pm time
 # which occurs in both)
 
-LatestTime = min((Monitored_hour[-1:].index), (Weather_hour[-1:].index))
-
-print(LatestTime)
+LatestTime = min((Monitored_hour.index[-1]), (Weather_hour.index[-1]))
 
 # Identify start hour to feed into light setting
-LatestTimeHour = LatestTime.hour.astype(float)
-LatestTimeHourValue = LatestTimeHour[0]
+LatestTimeHourValue = float(LatestTime.hour)
 
 # Select data for 20 days prior to selected timestamp
 deltaDays = int(cal_conf["delta_days"])
 delta = datetime.timedelta(days=deltaDays)
 StartTime = LatestTime - delta
 
-t1 = StartTime.strftime("%y-%m-%d %H:%M:%S")
-t2 = LatestTime.strftime("%y-%m-%d %H:%M:%S")
-
-Monitored = Monitored_hour.loc[t1[0] : t2[0]]
-Weather = Weather_hour.loc[t1[0] : t2[0]]
+Monitored = Monitored_hour.loc[StartTime:LatestTime]
+Weather = Weather_hour.loc[StartTime:LatestTime]
 
 # Change the index so we can step through by integer and not datetime
 Monitored = Monitored.reset_index()
