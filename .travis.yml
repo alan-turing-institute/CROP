@@ -27,3 +27,4 @@ jobs:
       script:
         - cd __app__
         - pytest -vv
+
