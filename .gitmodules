@@ -1,9 +1,3 @@
-[submodule "webapp/app/base/static/structures/CROP3js2"]
-	path = webapp/app/base/static/structures/CROP3js2
-	url = https://github.com/alan-turing-institute/CROP3js2.git
-    branch = webapp
-
-
 [submodule "webapp/app/base/static/structures/CROP_unity_js"]
 	path = webapp/app/base/static/structures/CROP_unity_js
 	url = https://github.com/alan-turing-institute/CROP_unity_js.git
