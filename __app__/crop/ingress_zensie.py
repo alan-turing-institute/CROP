@@ -186,6 +186,11 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                     sensor_id, sensor_success, sensor_error
                 )
             )
+            logging.info(
+                "sensor_id: {} | len(api_data_df): {}".format(
+                    sensor_id, len(api_data_df)
+                )
+            )
 
             if sensor_success:
                 # Sensor data from database
@@ -230,7 +235,13 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                             humidity=row["Humidity"],
                         )
 
-                        session.add(data)
+                        try:
+                            session.add(data)
+                        except Exception as e:
+                            logging.error(
+                                "When trying to write the row {}, {}".format(idx, row)
+                            )
+                            raise e
 
                     session.query(SensorClass).filter(
                         SensorClass.id == sensor_id
