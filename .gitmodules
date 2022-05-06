@@ -1,4 +1,4 @@
 [submodule "webapp/app/base/static/structures/CROP_unity_js"]
 	path = webapp/app/base/static/structures/CROP_unity_js
 	url = https://github.com/alan-turing-institute/CROP_unity_js.git
-    branch = test_branch
+    	branch = feature/new_unity_version
