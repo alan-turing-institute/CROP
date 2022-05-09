@@ -31,7 +31,7 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
     Makes a request to download sensor data for a specified period of time.
 
     Arguments:
-        api_key: api key for authetication
+        api_key: api key for authentication
         check_id: sensor identifier
         dt_from: date range from
         dt_to: date range to
@@ -86,6 +86,8 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
                 data_df.rename(columns={col_name: "Humidity"}, inplace=True)
 
         data_df.set_index("Timestamp", inplace=True)
+        if data_df.index.tz is None:
+            data_df.index = data_df.index.tz_localize("UTC")
 
     return success, error, data_df
 
