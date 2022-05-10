@@ -1,5 +1,6 @@
+import logging
 from typing import Dict
-from functions_scenarioV1 import (
+from ges.functions_scenarioV1 import (
     derivatives,
     sat_conc,
     FILEPATH_WEATHER,
@@ -8,7 +9,9 @@ from functions_scenarioV1 import (
 )
 import numpy as np
 import pandas as pd
-from config import config
+from ges.config import config
+
+logging.basicConfig(level=logging.INFO)
 
 CAL_CONF = config(section="calibration")
 
@@ -37,7 +40,7 @@ def setTimeParameters(h2: int = 240, numDays: int = 10, delta_h: int = 3) -> Dic
         "ndp": ndp,  # number of data points used for calibration
         "numDays": numDays,
     }
-    print(timeParameters)
+    logging.info(timeParameters)
     return timeParameters
 
 

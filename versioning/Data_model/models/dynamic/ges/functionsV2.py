@@ -4,28 +4,29 @@ Created on Tue Feb 16 09:18:07 2021
 
 @author: rmw61
 """
+import logging
 import numpy as np
 import pandas as pd
-from parameters import T_k, deltaT
-from parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
-from parameters import V, A_c, A_f, A_v, A_m, A_p, A_l
-from parameters import d_c, d_f, d_m, d_p, cd_c, c_i, c_f, c_m, c_p
-from parameters import F_c_f, F_f_c, F_c_v, F_c_m, F_l_c, F_l_v, F_l_m, F_l_p
-from parameters import F_m_l, F_f_p, F_c_l, F_m_v, F_v_l, F_p_l
-from parameters import F_p_f, F_p_v, F_p_m, F_v_c, F_v_p, F_v_m, F_m_c, F_m_p
-from parameters import eps_c, eps_f, eps_v, eps_m, eps_p, eps_l
-from parameters import rho_c, rho_f, rho_v, rho_m, rho_p, rho_l
-from parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
-from parameters import T_ss, T_al
-from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
-from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
-from parameters import ndh
+from .parameters import T_k, deltaT
+from .parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
+from .parameters import V, A_c, A_f, A_v, A_m, A_p, A_l
+from .parameters import d_c, d_f, d_m, d_p, cd_c, c_i, c_f, c_m, c_p
+from .parameters import F_c_f, F_f_c, F_c_v, F_c_m, F_l_c, F_l_v, F_l_m, F_l_p
+from .parameters import F_m_l, F_f_p, F_c_l, F_m_v, F_v_l, F_p_l
+from .parameters import F_p_f, F_p_v, F_p_m, F_v_c, F_v_p, F_v_m, F_m_c, F_m_p
+from .parameters import eps_c, eps_f, eps_v, eps_m, eps_p, eps_l
+from .parameters import rho_c, rho_f, rho_v, rho_m, rho_p, rho_l
+from .parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
+from .parameters import T_ss, T_al
+from .parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
+from .parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
+from .parameters import ndh
 from scipy.integrate import solve_ivp
 from pathlib import Path
 
 from inversion import *
-from dataAccess import getDaysWeather
-from config import config
+from .dataAccess import getDaysWeather
+from .config import config
 
 path_conf = config(section="paths")
 
@@ -59,7 +60,7 @@ def climterp_linear(h1, h2, ExternalWeather):
     t = np.linspace(0, 864000 - 3600, (h2 - h1 + 1))  # 864000 = 240 hours i.e. 10 days
     deltaT = 600  # 10 minutes
     mult = np.linspace(0, 864000, int(1 + 864000 / deltaT))
-    # print("t: {0}, mult:{1}, input:{2}".format(t.shape,mult.shape,temp_in.shape))
+    # logging.info("t: {0}, mult:{1}, input:{2}".format(t.shape,mult.shape,temp_in.shape))
 
     # ind = h2-h1+1
 
@@ -336,7 +337,7 @@ def model(t, z, climate, ACHvec, iasvec, daynum, h1, h2, LatestTimeHourValue):
 
     MW_cc_i = -1 * dehumidify / 3600
 
-    # print(MW_i_e)
+    # logging.info(MW_i_e)
 
     # ODE equations
 
@@ -434,7 +435,7 @@ def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
     tval = np.linspace(h1 * 3600, h2 * 3600, NOut)
 
     for i in range(NP):
-        print(i + 1)
+        logging.info(i + 1)
         AirChangeHour = paramsinput[i, 0]
         IntAirSpeed = paramsinput[i, 1]
         ACH = AirChangeHour / 3600

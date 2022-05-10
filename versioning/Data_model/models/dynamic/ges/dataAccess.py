@@ -1,6 +1,6 @@
+import logging
 from pathlib import Path
 from jinjasql.core import bind
-from config import config
 import psycopg2
 from psycopg2.extras import execute_values
 import datetime
@@ -9,7 +9,7 @@ from six import string_types
 from copy import deepcopy
 import numpy as np
 import pandas as pd
-from config import config
+from .config import config
 
 path_conf = config(section="paths")
 data_dir = Path(path_conf["data_dir"])
@@ -23,11 +23,11 @@ def openConnection():
         params = config()
 
         # connect to the PostgreSQL server
-        print("Connecting to the PostgreSQL database...")
+        logging.info("Connecting to the PostgreSQL database...")
         conn = psycopg2.connect(**params)
 
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        logging.info(error)
     finally:
         return conn
 
@@ -35,7 +35,7 @@ def openConnection():
 def closeConnection(conn):
     if conn is not None:
         conn.close()
-        print("Database connection closed.")
+        logging.info("Database connection closed.")
 
 
 def connect():
@@ -50,24 +50,24 @@ def connect():
             db_version = cur.fetchone()
 
             # execute a statement
-            print("PostgreSQL database version:{0}".format(db_version))
+            logging.info("PostgreSQL database version:{0}".format(db_version))
 
             # close the communication with the PostgreSQL
             cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        logging.info(error)
     finally:
         closeConnection(conn=conn)
 
 
 def printRowsHead(rows, numrows=0):
-    print("Printing:{0} of {1}".format(numrows, len(rows)))
+    logging.info("Printing:{0} of {1}".format(numrows, len(rows)))
     if numrows == 0:
         for row in rows[: len(rows)]:
-            print(row)
+            logging.info(row)
     else:
         for row in rows[:numrows]:
-            print(row)
+            logging.info(row)
 
 
 def deleteData(query):
@@ -82,7 +82,7 @@ def deleteData(query):
             result = cur.fetchall()
             cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        logging.info(error)
     finally:
         closeConnection(conn=conn)
         return len(result)
@@ -102,10 +102,10 @@ def getData(query):
             # close the communication with the PostgreSQL
             cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        logging.info(error)
     finally:
         closeConnection(conn=conn)
-        return rows
+    return rows
 
 
 def quote_sql_string(value):
@@ -150,7 +150,7 @@ def getDaysWeather(numDays=2, numRows=5):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(weather_transaction_template, params)
-    # print(get_sql_from_template(query=query, bind_params=bind_params))
+    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
@@ -177,7 +177,7 @@ def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(humidity_transaction_template, params)
-    # print(get_sql_from_template(query=query, bind_params=bind_params))
+    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
@@ -204,7 +204,7 @@ def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(humidity_transaction_template, params)
-    # print(get_sql_from_template(query=query, bind_params=bind_params))
+    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
@@ -219,7 +219,7 @@ def insert_particles(particles_array):
             conn.commit()
             cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        logging.info(error)
     finally:
         closeConnection(conn=conn)
 
@@ -240,7 +240,7 @@ def getDataPointHumidity(sensorID=27, numRows=1):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(humidity_transaction_template, params)
-    # print(get_sql_from_template(query=query, bind_params=bind_params))
+    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
@@ -277,7 +277,7 @@ def insertRow(query, parameters):
             # close the communication with the PostgreSQL
             cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        logging.info(error)
     finally:
         closeConnection(conn=conn)
         return new_row_id
@@ -295,7 +295,7 @@ def insertRows(query, parameters):
             new_row_ids = cur.fetchall()
             cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        logging.info(error)
     finally:
         closeConnection(conn=conn)
         return len(new_row_ids)
@@ -305,7 +305,7 @@ def insertRows(query, parameters):
 #   sql = """INSERT INTO test_model(model_name, author)
 #   VALUES (%s,%s) RETURNING id;"""
 #   parameters = ("amodel","anauthor")
-#   print(insertRow(sql,parameters=parameters))
+#   logging.info(insertRow(sql,parameters=parameters))
 
 
 def insertModelRun(sensor_id=None, model_id=None, time_forecast=None):
@@ -325,7 +325,7 @@ def insertModelProduct(run_id=None, measure_id=None):
             sql = """INSERT INTO test_model_product(run_id, measure_id)
             VALUES (%s,%s) RETURNING id;"""
             product_id = insertRow(sql, (run_id, measure_id))
-            print("Product inserted, logged as ID: {0}".format(product_id))
+            logging.info("Product inserted, logged as ID: {0}".format(product_id))
             return product_id
     return None
 
@@ -343,11 +343,11 @@ def insertModelPrediction(parameters=None):
 
 def deleteResults():
     num_delete_id = deleteData("delete from test_model_value returning id;")
-    print("Delete from test_model_value: {0}".format(num_delete_id))
+    logging.info("Delete from test_model_value: {0}".format(num_delete_id))
     num_delete_id = deleteData("delete from test_model_product returning id;")
-    print("Delete from test_model_product: {0}".format(num_delete_id))
+    logging.info("Delete from test_model_product: {0}".format(num_delete_id))
     num_delete_id = deleteData("delete from test_model_run returning id;")
-    print("Delete from test_model_run: {0}".format(num_delete_id))
+    logging.info("Delete from test_model_run: {0}".format(num_delete_id))
 
 
 # if __name__ == '__main__':
@@ -359,19 +359,19 @@ def deleteResults():
 # getDaysWeather(numDays=7, numRows=10)
 # humidityDataList = getDaysHumidity(deltaDays=1, numRows=1000)
 # # for row in humidityList:
-#   # print(row)
+#   # logging.info(row)
 # dp = getDataPointHumidity()
 # humidityList = []
 # # temperature = []
 # for row in humidityDataList:
 #     humidityList.append(row[1])
-#     print(row[1])
-#     print(row[0])
+#     logging.info(row[1])
+#     logging.info(row[0])
 
 # humidity = pd.Series(humidityList)
 # # take average and turn to hourly data
 # DT = humidityDataList[len(humidityDataList)-1][0]
-# print(DT)
+# logging.info(DT)
 
 # energy = testEnergy()
-# print(energy[0])
+# logging.info(energy[0])

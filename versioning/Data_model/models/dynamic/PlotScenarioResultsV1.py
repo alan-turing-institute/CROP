@@ -1,10 +1,10 @@
 from pathlib import Path
-from TestScenarioV2 import FILEPATH_WEATHER
-import functions_scenarioV1 as functions_scenario
+from ges.TestScenarioV2 import FILEPATH_WEATHER
+import ges.functions_scenarioV1 as functions_scenario
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from config import config
+from ges.config import config
 
 path_conf = config(section="paths")
 
@@ -12,6 +12,8 @@ data_dir = Path(path_conf["data_dir"])
 filepath_resultsRH = data_dir / path_conf["filename_resultsrh"]
 filepath_resultsT = data_dir / path_conf["filename_resultst"]
 filepath_data = data_dir / path_conf["filename_monitored"]
+
+cal_conf = config(section="calibration")
 
 # Scenario
 

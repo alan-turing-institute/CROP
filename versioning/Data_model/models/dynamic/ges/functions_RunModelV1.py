@@ -4,22 +4,27 @@ Created on Tue Feb 16 09:18:07 2021
 
 @author: rmw61
 """
+import logging
 import numpy as np
-from parameters import T_k, deltaT
-from parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
-from parameters import V, A_c, A_f, A_v, A_m, A_p, A_l
-from parameters import d_c, d_f, d_m, d_p, cd_c, c_i, c_f, c_m, c_p
-from parameters import F_c_f, F_f_c, F_c_v, F_c_m, F_l_c, F_l_v, F_l_m, F_l_p
-from parameters import F_m_l, F_f_p, F_c_l, F_m_v, F_v_l, F_p_l
-from parameters import F_p_f, F_p_v, F_p_m, F_v_c, F_v_p, F_v_m, F_m_c, F_m_p
-from parameters import eps_c, eps_f, eps_v, eps_m, eps_p, eps_l
-from parameters import rho_c, rho_f, rho_v, rho_m, rho_p, rho_l
-from parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
-from parameters import T_ss, T_al
-from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
-from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat, ndh
+from .parameters import T_k, deltaT
+from .parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
+from .parameters import V, A_c, A_f, A_v, A_m, A_p, A_l
+from .parameters import d_c, d_f, d_m, d_p, cd_c, c_i, c_f, c_m, c_p
+from .parameters import F_c_f, F_f_c, F_c_v, F_c_m, F_l_c, F_l_v, F_l_m, F_l_p
+from .parameters import F_m_l, F_f_p, F_c_l, F_m_v, F_v_l, F_p_l
+from .parameters import F_p_f, F_p_v, F_p_m, F_v_c, F_v_p, F_v_m, F_m_c, F_m_p
+from .parameters import eps_c, eps_f, eps_v, eps_m, eps_p, eps_l
+from .parameters import rho_c, rho_f, rho_v, rho_m, rho_p, rho_l
+from .parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
+from .parameters import T_ss, T_al
+from .parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
+from .parameters import c_v, msd_v, d_v, AF_g, LAI, dsat, ndh
 from scipy.integrate import solve_ivp
-import sys, os
+import sys
+import os
+from .config import config
+
+cal_conf = config(section="calibration")
 
 INVERSION_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "Inversion")
 sys.path.append(INVERSION_DIR)
@@ -202,7 +207,7 @@ def model(
     n = int(np.ceil((t - t_init) / deltaT))
 
     # if n >= 2880:
-    #    print('debug here')
+    #    logging.info('debug here')
 
     T_ext = climate[n, 0] + T_k
     RH_e = climate[n, 1] / 100
@@ -210,26 +215,28 @@ def model(
 
     daynum.append(day(t))
     # if daynum[(len(daynum)-1)] > daynum[(len(daynum)-2)]:
-    #    print(daynum[len(daynum)-1])
+    #    logging.info(daynum[len(daynum)-1])
 
     ## Set ACH,ias
     hour = np.floor(t / 3600)
-    # print(hour)
-    # print(n)
+    # logging.info(hour)
+    # logging.info(n)
     # if hour == 480:
-    #    print('debug here')
+    #    logging.info('debug here')
 
-    seq = range(h1 + 240, h2 + 3, 3)
+    delta_h = int(cal_conf["delta_h"])
+    calibration_hours = int(cal_conf["num_data_points"]) * delta_h
+    seq = range(h1 + calibration_hours, h2 + delta_h, delta_h)
 
     if hour >= seq[count[-1]]:
         count_new = count[-1] + 1
         count.append(count_new)
-        # print(n)
-        # print(hour)
-        # print(count[-1])
-        # print(n)
+        # logging.info(n)
+        # logging.info(hour)
+        # logging.info(count[-1])
+        # logging.info(n)
         # if count[-1] == 61:
-        #    print('debug')
+        #    logging.info('debug')
 
     ACH = ACHvec[count[-1]]
     ias = iasvec[count[-1]]
@@ -383,7 +390,7 @@ def model(
 
     MW_cc_i = -1 * dehumidify / 3600
 
-    # print(MW_i_e)
+    # logging.info(MW_i_e)
 
     # ODE equations
 
@@ -457,7 +464,7 @@ def derivatives(h1, h2, paramsinput, ndp, Weather, LatestTimeHourValue):
     for i in range(NP):
         # tic = time.time()
 
-        print(i + 1)
+        logging.info(i + 1)
 
         AirChangeHour = paramsinput[:, 0, i]
         IntAirSpeed = paramsinput[:, 1, i]
