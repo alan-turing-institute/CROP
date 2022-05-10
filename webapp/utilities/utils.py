@@ -1,10 +1,12 @@
 """
 Utilities module
 """
-
+import sys
+import io
 import json
 from datetime import datetime, timedelta
 import pandas as pd
+from flask import send_file
 
 
 def query_result_to_array(query_result, date_iso=True):
@@ -40,7 +42,6 @@ def query_result_to_array(query_result, date_iso=True):
                     }
             else:
                 dict_entry = {**dict_entry, **{column: value}}
-        # dict_entry["ID"]=21
         results_arr.append(dict_entry)
 
     return results_arr
@@ -116,7 +117,7 @@ def parse_date_range_argument(request_args):
         return get_default_datetime_range()
 
 
-def download_csv(readings, filename="results.csv"):
+def download_csv(readings, filename_base="results"):
     """
     Use Pandas to convert array of readings into a csv
     Args:
@@ -129,5 +130,7 @@ def download_csv(readings, filename="results.csv"):
     output_buffer = io.BytesIO()
     df.to_csv(output_buffer)
     output_buffer.seek(0)
-    print("Downloading", file=sys.stderr)
+    filename = filename_base + "_" +\
+        datetime.now().strftime("%d-%m-%Y_%H-%M-%S") +\
+        ".csv"
     return send_file(output_buffer, download_name=filename, mimetype="text/csv")
