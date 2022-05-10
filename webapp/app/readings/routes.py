@@ -106,8 +106,7 @@ def route_template(template):
                     )
                 )
                 .order_by(desc(ReadingsZensieTRHClass.timestamp))
-                .limit(10000)
-#                .limit(CONST_MAX_RECORDS)
+                .limit(CONST_MAX_RECORDS)
             )
 
         elif template == "dailyharvest":
@@ -127,18 +126,13 @@ def route_template(template):
         readings = db.session.execute(query).fetchall()
 
         results_arr = query_result_to_array(readings, date_iso=False)
-        print(results_arr, file=sys.stderr)
-
     if request.method == "POST":
-        print("BUTTON WAS PRESSED!", file=sys.stderr)
-        return download_csv(results_arr)
-
-    return render_template(
+        return download_csv(readings, template)
+    else:
+        return render_template(
             template + ".html",
             readings=results_arr,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
-    )
-
-
-    return None
+            num_records = CONST_MAX_RECORDS
+        )
