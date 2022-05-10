@@ -6,13 +6,13 @@ Created on Mon Dec  6 11:43:14 2021
 """
 
 from pathlib import Path
-from functions_RunModelV1 import derivatives, sat_conc
-from parameters import ACH, ias
+from ges.functions_RunModelV1 import derivatives, sat_conc
+from ges.parameters import ACH, ias
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY
 import numpy as np
 import pandas as pd
-from config import config
+from ges.config import config
 
 path_conf = config(section="paths")
 data_dir = Path(path_conf["data_dir"])
