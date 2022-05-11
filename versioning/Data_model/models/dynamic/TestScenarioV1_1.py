@@ -29,15 +29,17 @@ LatestTime = Weather_hour[-1:]
 LatestTimeHourValue = pd.DatetimeIndex(LatestTime.index).hour.astype(float)[0]
 
 
-def setTimeParameters(h2: int = 240, numDays: int = 10, delta_h: int = 3) -> Dict:
-    # Start hour h2 is for test only - in live version will be current time
-    # h2 = 240
-    h1: int = h2 - 240  # select previous 10 days
-    ndp: int = int((h2 - h1) / delta_h)  # number of data points used for calibration
+def getTimeParameters() -> Dict:
+    delta_h = int(CAL_CONF["delta_h"])
+    ndp = int(CAL_CONF["num_data_points"])
+    numDays = int(CAL_CONF["num_weather_days"])
+    h1 = 0
+    h2 = h1 + ndp * delta_h
     timeParameters: Dict = {
         "h2": h2,
         "h1": h1,
         "ndp": ndp,  # number of data points used for calibration
+        "delta_h": delta_h,
         "numDays": numDays,
     }
     logging.info(timeParameters)
@@ -193,11 +195,7 @@ def runModel(
 def testScenario():
     # Get calibrated parameters output from calibration model
     # Stored in database? Currently output to csv file
-    numDays: int = int(CAL_CONF["calibration_window_days"])
-    h2: int = numDays * 24
-    delta_h = int(CAL_CONF["delta_h"])
-
-    time_parameters: Dict = setTimeParameters(h2=h2, numDays=numDays, delta_h=delta_h)
+    time_parameters: Dict = getTimeParameters()
     ach_parameters = setACHParameters(
         ACH_OUT_PATH=FILEPATH_ACH, ndp=time_parameters["ndp"]
     )
@@ -221,7 +219,7 @@ def testScenario():
         shift_lighting=shift_lighting,
         ach_parameters=ach_parameters,
         ias_parameters=ias_parameters,
-        delta_h=delta_h,
+        delta_h=time_parameters["delta_h"],
     )
 
     params: np.ndarray = np.concatenate(
