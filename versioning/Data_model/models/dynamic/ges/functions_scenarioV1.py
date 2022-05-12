@@ -62,8 +62,6 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
             np.float64
         )  # +1 to ensure correct end point
 
-    deltaT = 600
-
     # remove nans
     # nans, x= nan_helper(temp_in)
     # temp_in[nans]= np.interp(x(nans), x(~nans), temp_in[~nans])
@@ -71,17 +69,17 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
     # nans, x= nan_helper(rh_in)
     # rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
 
-    t = np.linspace(0, 864000, h2 + 1 - h1)
-
-    mult = np.linspace(0, 864000, int(1 + 864000 / deltaT))
-
     ind = h2 - h1 + 1
-
+    # seconds_in_10_days = 10 * 24 * 60 * 60
+    # t = np.linspace(0, seconds_in_10_days, ind)
+    # mult = np.linspace(0, seconds_in_10_days, int(1 + seconds_in_10_days / deltaT))
+    # TODO Are these next three lines correct? Above is the old version.
+    seconds_in_hspan = (h2 - h1) * 3600
+    t = np.linspace(0, ind - 1, ind)  # TODO This is really just a range.
+    mult = np.linspace(0, seconds_in_hspan, int(1 + seconds_in_hspan / deltaT))
     clim_t = np.interp(mult, t, temp_in[-ind:])
     clim_rh = np.interp(mult, t, rh_in[-ind:])
-
     climate = np.vstack((clim_t, clim_rh))
-
     return climate
 
 
@@ -462,8 +460,9 @@ def derivatives(
     ]
 
     ## Create extended weather file
-    ExtendClimate = np.concatenate((clim, LastDayData, LastDayData, LastDayData))
-    h2 = h2 + 3 * 24
+    extend_by_days = 3
+    ExtendClimate = np.concatenate((clim,) + (LastDayData,) * extend_by_days)
+    h2 = h2 + extend_by_days * 24
 
     climate = ExtendClimate
 
