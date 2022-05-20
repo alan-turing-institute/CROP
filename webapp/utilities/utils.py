@@ -133,4 +133,7 @@ def download_csv(readings, filename_base="results"):
     filename = filename_base + "_" +\
         datetime.now().strftime("%d-%m-%Y_%H-%M-%S") +\
         ".csv"
-    return send_file(output_buffer, download_name=filename, mimetype="text/csv")
+    return send_file(output_buffer,
+                     download_name=filename,
+                     mimetype="text/csv",
+                     as_attachment=True)

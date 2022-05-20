@@ -31,7 +31,7 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
     Makes a request to download sensor data for a specified period of time.
 
     Arguments:
-        api_key: api key for authetication
+        api_key: api key for authentication
         check_id: sensor identifier
         dt_from: date range from
         dt_to: date range to
@@ -86,6 +86,8 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
                 data_df.rename(columns={col_name: "Humidity"}, inplace=True)
 
         data_df.set_index("Timestamp", inplace=True)
+        if data_df.index.tz is None:
+            data_df.index = data_df.index.tz_localize("UTC")
 
     return success, error, data_df
 
@@ -145,14 +147,10 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
     try:
         session = session_open(engine)
         zensie_sensor_list = get_zensie_sensors_list(session, sensor_type)
+    finally:
         session_close(session)
 
-        if zensie_sensor_list is None or len(zensie_sensor_list) == 0:
-            success = False
-            log = "No sensors with sensor type {} were found.".format(sensor_type)
-
-    except:
-        session_close(session)
+    if zensie_sensor_list is None or len(zensie_sensor_list) == 0:
         success = False
         log = "No sensors with sensor type {} were found.".format(sensor_type)
 
@@ -165,8 +163,8 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
 
     for _, zensie_sensor in enumerate(zensie_sensor_list):
 
-        sensor_id = zensie_sensor["sensors_id"]
-        sensor_check_id = zensie_sensor["sensors_device_id"]
+        sensor_id = zensie_sensor["id"]
+        sensor_check_id = zensie_sensor["device_id"]
 
         logging.info(
             "sensor_id: {} | sensor_check_id: {}".format(sensor_id, sensor_check_id)
@@ -188,6 +186,11 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
             logging.info(
                 "sensor_id: {} | sensor_success: {}, sensor_error: {}".format(
                     sensor_id, sensor_success, sensor_error
+                )
+            )
+            logging.info(
+                "sensor_id: {} | len(api_data_df): {}".format(
+                    sensor_id, len(api_data_df)
                 )
             )
 
@@ -234,7 +237,13 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
                             humidity=row["Humidity"],
                         )
 
-                        session.add(data)
+                        try:
+                            session.add(data)
+                        except Exception as e:
+                            logging.error(
+                                "When trying to write the row {}, {}".format(idx, row)
+                            )
+                            raise e
 
                     session.query(SensorClass).filter(
                         SensorClass.id == sensor_id

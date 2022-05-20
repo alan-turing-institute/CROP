@@ -40,10 +40,10 @@ def query_result_to_array(query_result, date_iso=True):
     """
 
     dict_entry, results_arr = {}, []
-    for rowproxy in query_result:
+    for row in query_result:
 
-        # rowproxy.items() returns an array like [(key0, value0), (key1, value1)]
-        for column, value in rowproxy.items():
+        # row._mapping.items() returns an array like [(key0, value0), (key1, value1)]
+        for column, value in row._mapping.items():
 
             if isinstance(value, datetime):
                 if date_iso:
