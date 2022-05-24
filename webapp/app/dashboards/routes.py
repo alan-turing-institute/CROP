@@ -3,9 +3,10 @@ Analysis dashboards module.
 """
 
 import copy
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -543,6 +544,26 @@ def advanticsys_dashboard():
     )
 
 
+def fetch_zensie_data(dt_from, dt_to, sensor_ids):
+    query = db.session.query(
+        ReadingsZensieTRHClass.timestamp,
+        ReadingsZensieTRHClass.sensor_id,
+        SensorClass.name,
+        ReadingsZensieTRHClass.temperature,
+        ReadingsZensieTRHClass.humidity,
+    ).filter(
+        and_(
+            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
+            ReadingsZensieTRHClass.timestamp >= dt_from,
+            ReadingsZensieTRHClass.timestamp <= dt_to,
+            ReadingsZensieTRHClass.sensor_id.in_(sensor_ids),
+        )
+    )
+
+    df = pd.read_sql(query.statement, query.session.bind)
+    return df
+
+
 @blueprint.route("/zensie_dashboard")
 @login_required
 def zensie_dashboard():
@@ -583,4 +604,54 @@ def energy_dashboard():
         energy_data=energy_data,
         dt_from=dt_from.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
+    )
+
+
+def format_sensor_ids_str(sensor_ids):
+    if sensor_ids:
+        return str(sensor_ids).replace("(", "").replace(")", "").strip()
+    else:
+        return ""
+
+
+@blueprint.route("/timeseries_dashboard")
+@login_required
+def timeseries_dashboard():
+    # Read query string
+    dt_from = request.args.get("startDate")
+    dt_to = request.args.get("endDate")
+    sensor_ids = request.args.get("sensorIds")
+    if dt_from is None or dt_to is None or sensor_ids is None:
+        today = datetime.today()
+        return render_template(
+            "timeseries_dashboard.html",
+            sensor_ids=format_sensor_ids_str(sensor_ids),
+            dt_from=today - timedelta(days=1),
+            dt_to=today,
+            data="",
+        )
+
+    # Convert strings to objects
+    dt_from = datetime.strptime(dt_from, "%Y%m%d")
+    dt_to = datetime.strptime(dt_to, "%Y%m%d")
+    sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids)))
+
+    df = fetch_zensie_data(dt_from, dt_to, sensor_ids)
+    data_dict = dict()
+    for sensor_id in sensor_ids:
+        # You may wonder, why do we first to_json, and then json.loads. That's just to
+        # have the data in a nice nested dictionary that a final json.dumps can deal
+        # with.
+        data_dict[sensor_id] = json.loads(
+            df[df["sensor_id"] == sensor_id]
+            .drop(columns=["sensor_id", "name"])
+            .sort_values("timestamp")
+            .to_json(orient="records")
+        )
+    return render_template(
+        "timeseries_dashboard.html",
+        sensor_ids=format_sensor_ids_str(sensor_ids),
+        dt_from=dt_from,
+        dt_to=dt_to,
+        data=json.dumps(data_dict),
     )
