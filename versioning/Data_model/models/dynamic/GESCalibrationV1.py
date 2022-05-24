@@ -71,6 +71,7 @@ def main():
 
     # Weather
     num_weather_days = int(cal_conf["num_weather_days"])
+    # The 6 is because weather data is read for every 10 minutes.
     num_weather_rows = num_weather_days * 24 * 6
     sensorID = int(cal_conf["sensor_id"])
 
@@ -189,7 +190,7 @@ def main():
         # logging.info(DataPoint)
 
         if testdp == False:
-            # TODO What does the / 100 do?
+            # Divide by 100 to convert percentages to ratios
             DataPoint = DataPoint / 100
         else:
             # takes previous value if nan recorded

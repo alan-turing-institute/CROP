@@ -70,10 +70,6 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
     # rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
 
     ind = h2 - h1 + 1
-    # seconds_in_10_days = 10 * 24 * 60 * 60
-    # t = np.linspace(0, seconds_in_10_days, ind)
-    # mult = np.linspace(0, seconds_in_10_days, int(1 + seconds_in_10_days / deltaT))
-    # TODO Are these next three lines correct? Above is the old version.
     seconds_in_hspan = (h2 - h1) * 3600
     t = np.linspace(0, ind - 1, ind)  # TODO This is really just a range.
     mult = np.linspace(0, seconds_in_hspan, int(1 + seconds_in_hspan / deltaT))
@@ -472,6 +468,7 @@ def derivatives(
 
     results = np.zeros((12, NOut, NP))
 
+    # Loop over mean, upper quantile, lower quantile, and scenario.
     for i in range(NP):
         # tic = time.time()
 
