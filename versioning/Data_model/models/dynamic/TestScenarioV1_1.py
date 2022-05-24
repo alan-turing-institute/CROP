@@ -119,6 +119,9 @@ def setScenario(
 ) -> np.ndarray:
     number_of_points_in_a_day = int(np.round(24 / delta_h))
 
+    # ScenEval has dimensions of days_by_which_we_extend_the_scenario_into_the_future *
+    # number_of_points_in_a_day, 4 for (ACH, IAS, something-about-dehumidifiers,
+    # something-about-lighting), 4 for (mean, upper quantile, lower quantile, scenario).
     # # Scenario 1 - vary ACH
     ScenEval: np.ndarray = np.zeros((4 * number_of_points_in_a_day, 4, 4))
     # ScenEval[:,0,0] = ach_parameters['ACHmean'][-1]
