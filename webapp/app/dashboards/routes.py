@@ -17,7 +17,7 @@ from sqlalchemy import and_
 
 from app.dashboards import blueprint
 
-from utilities.utils import parse_date_range_argument
+from utilities.utils import download_csv, parse_date_range_argument
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
@@ -609,12 +609,12 @@ def energy_dashboard():
 
 def format_sensor_ids_str(sensor_ids):
     if sensor_ids:
-        return str(sensor_ids).replace("(", "").replace(")", "").strip()
+        return str(sensor_ids).replace("(", "").rstrip(" ,)")
     else:
         return ""
 
 
-@blueprint.route("/timeseries_dashboard")
+@blueprint.route("/timeseries_dashboard", methods=["GET", "POST"])
 @login_required
 def timeseries_dashboard():
     # Read query string
@@ -623,20 +623,25 @@ def timeseries_dashboard():
     sensor_ids = request.args.get("sensorIds")
     if dt_from is None or dt_to is None or sensor_ids is None:
         today = datetime.today()
+        dt_from = today - timedelta(days=1)
+        dt_to = today
         return render_template(
             "timeseries_dashboard.html",
             sensor_ids=format_sensor_ids_str(sensor_ids),
-            dt_from=today - timedelta(days=1),
-            dt_to=today,
-            data="",
+            dt_from=dt_from,
+            dt_to=dt_to,
+            data=dict(),
         )
 
     # Convert strings to objects
     dt_from = datetime.strptime(dt_from, "%Y%m%d")
     dt_to = datetime.strptime(dt_to, "%Y%m%d")
-    sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids)))
+    sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids.rstrip(" ,;"))))
 
     df = fetch_zensie_data(dt_from, dt_to, sensor_ids)
+    if request.method == "POST":
+        return download_csv(df, "timeseries")
+
     data_dict = dict()
     for sensor_id in sensor_ids:
         # You may wonder, why do we first to_json, and then json.loads. That's just to
@@ -646,12 +651,12 @@ def timeseries_dashboard():
             df[df["sensor_id"] == sensor_id]
             .drop(columns=["sensor_id", "name"])
             .sort_values("timestamp")
-            .to_json(orient="records")
+            .to_json(orient="records", date_format="iso")
         )
     return render_template(
         "timeseries_dashboard.html",
         sensor_ids=format_sensor_ids_str(sensor_ids),
         dt_from=dt_from,
         dt_to=dt_to,
-        data=json.dumps(data_dict),
+        data=data_dict,
     )
