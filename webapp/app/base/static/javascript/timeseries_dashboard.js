@@ -12,13 +12,16 @@ $("#reportrange").on("apply.daterangepicker", function (ev, picker) {
 
 function submitTimeSeries() {
   const sensorIds = document.getElementById("sensorIdInput").value;
-  if (
-    startDate === undefined ||
-    endDate === undefined ||
-    sensorIds === undefined
-  ) {
-    console.log("One of startDate, endDate, sensorIds is undefined:");
-    console.log(startDate, endDate, sensorIds);
+  if (sensorIds === undefined) {
+    alert("Please give a list of sensor IDs.");
+    return null;
+  }
+  if (startDate === undefined || endDate === undefined) {
+    alert("Please set start and end date.");
+    return null;
+  }
+  if (!/^\d[\d;, ]*$/.test(sensorIds)) {
+    alert("Invalid list of sensor IDs.");
     return null;
   }
   const startStr = encodeURIComponent(startDate.format("YYYYMMDD"));

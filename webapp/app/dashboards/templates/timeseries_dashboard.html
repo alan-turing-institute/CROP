@@ -28,20 +28,26 @@
         <div class="x_panel">
           <div class="x_content">
             <div class="row x_title">
-              <div class="col-md-6">
+              <div class="col-sm-12">
                 <h3>Sensor IDs and time range</h2>
-                <div>
-                  <input id="sensorIdInput" type="text" value="{{ sensor_ids }}"/>
-                  <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
-                    <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                    <span></span> 
-                    <b class="caret"></b>
+                <form>
+                  <div>
+                    <div>
+                      <input id="sensorIdInput" type="text" value="{{ sensor_ids }}"/>
+                      <span>Comma-separated list of sensor ID numbers</span>
+                    </div>
+                    <div id="reportrange" style="width: fit-content; background: #fff; cursor: pointer; margin-top: 5px; padding: 5px 10px; border: 1px solid #ccc">
+                      <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                      <span></span>
+                      <b class="caret"></b>
+                    </div>
                   </div>
-                </div>
-                <button type="button" onclick="submitTimeSeries()">Submit</button>
+                <button style="margin-top: 5px" type="button" onclick="submitTimeSeries()">Submit</button>
+                </form>
               </div>
             </div>
           </div>
+          {% if data %}
           <div class="row">
             <div class="col-lg-6 col-md-9 col-sm-15">
               <div class="x_panel tile fixed_height_640 overflow_hidden">
@@ -58,6 +64,43 @@
               </div>
             </div>
           </div>
+          <form method="post">
+            <input type="submit" value="Download" name="download"/>
+          </form>
+          {% endif %}
+          {%
+            for sensorId in data:
+          %}
+          <h4>Data for sensor #{{sensorId}}</h4>
+          <div class="table-responsive">
+          <table id="datatable-responsive-{{sensorId}}" class="table table-sm table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Temperature</th>
+                <th>Humidity</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              {%
+                for row in data[sensorId]:
+              %}
+              <tr>
+                <td>{{ row.timestamp }}</td>
+                <td>{{ row.temperature }}</td>
+                <td>{{ row.humidity }}</td>
+              </tr>
+              {%
+                endfor
+              %}
+
+            </tbody>
+          </table>
+          </div>
+          {%
+            endfor
+          %}
         </div>
       </div>
     </div>
@@ -99,8 +142,16 @@
           $("#reportrange span").html(dtFrom.format(dateFormatOut) + " - " + dtTo.format(dateFormatOut));
         });
     setDateRange(dtFrom, dtTo)
-    const data = JSON.parse('{{data | safe}}');
-    makePlots(data);
+
+    const data = {{data | safe}};
+    Object.keys(data).forEach((sensorId) => {
+          $(`#datatable-responsive-${sensorId}`).DataTable( {
+                responsive: true
+              });
+        });
+    if (Object.keys(data).length > 0) {
+          makePlots(data);
+        }
 
   </script>
 
