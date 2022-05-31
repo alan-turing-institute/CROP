@@ -1586,7 +1586,7 @@ if (typeof NProgress != 'undefined') {
 			  minDate: '01/01/2010',
 			  maxDate: '12/31/2030',
 			  dateLimit: {
-				days: 60
+          days: 730  // Max time range is two years
 			  },
 			  showDropdowns: true,
 			  showWeekNumbers: true,
