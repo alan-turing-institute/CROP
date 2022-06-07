@@ -655,7 +655,12 @@ def timeseries_dashboard():
 
     # Convert strings to objects
     dt_from = datetime.strptime(dt_from, "%Y%m%d")
-    dt_to = datetime.strptime(dt_to, "%Y%m%d")
+    # Make dt_to run to the end of the day in question.
+    dt_to = (
+        datetime.strptime(dt_to, "%Y%m%d")
+        + timedelta(days=1)
+        + timedelta(milliseconds=-1)
+    )
     sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids.rstrip(" ,;"))))
 
     df = fetch_zensie_data(dt_from, dt_to, sensor_ids)
