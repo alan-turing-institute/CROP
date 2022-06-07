@@ -71,6 +71,7 @@
           {%
             for sensorId in data:
           %}
+          {% if sensorId != "mean" %}
           <h4>Data for sensor #{{sensorId}}</h4>
           <div class="table-responsive">
           <table id="datatable-responsive-{{sensorId}}" class="table table-sm table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
@@ -98,6 +99,7 @@
             </tbody>
           </table>
           </div>
+          {% endif %}
           {%
             endfor
           %}
@@ -145,6 +147,8 @@
 
     const data = {{data | safe}};
     Object.keys(data).forEach((sensorId) => {
+          // Skip the case that isn't an actual sensor, but the mean of sensors.
+          if (sensorId === "mean") return null;
           $(`#datatable-responsive-${sensorId}`).DataTable( {
                 responsive: true
               });

@@ -83,15 +83,23 @@ function makePlot(data, yDataName, yLabel, canvasName) {
   const sensorIds = Object.keys(data);
   const numSensors = sensorIds.length;
   for (let i = 0; i < numSensors; i++) {
-    const colour = colouramp_redblue[Math.min(i, numSensors - 1)];
     const sensorId = sensorIds[i];
+    let colour = colouramp_redblue[Math.min(i, numSensors - 1)];
+    let pointRadius = 1;
+    let borderWidth = 1;
+    // Make the line for mean look a bit different
+    if (sensorId === "mean") {
+      pointRadius *= 2;
+      borderWidth *= 2;
+      colour = "#111111";
+    }
     datasets.push({
       label: sensorId,
       data: data[sensorId].map((row) => {
         return { x: row["timestamp"], y: row[yDataName] };
       }),
-      pointRadius: 1,
-      borderWidth: 1,
+      pointRadius: pointRadius,
+      borderWidth: borderWidth,
       borderColor: colour,
     });
   }

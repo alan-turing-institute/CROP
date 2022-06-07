@@ -614,6 +614,18 @@ def format_sensor_ids_str(sensor_ids):
         return ""
 
 
+def add_mean_over_sensors(sensor_ids, df):
+    """Take the dataframe for timeseries, and add data for a new "sensor" that's the
+    mean of all the ones in the data
+    """
+    df_mean = df.groupby("timestamp").mean()
+    df_mean.loc[:, "sensor_id"] = "mean"
+    df_mean.loc[:, "name"] = "mean"
+    df_mean = df_mean.reset_index()
+    df = pd.concat((df, df_mean), axis=0)
+    return df
+
+
 @blueprint.route("/timeseries_dashboard", methods=["GET", "POST"])
 @login_required
 def timeseries_dashboard():
@@ -642,13 +654,18 @@ def timeseries_dashboard():
     if request.method == "POST":
         return download_csv(df, "timeseries")
 
+    data_keys = list(sensor_ids)
+    if len(sensor_ids) > 1:
+        df = add_mean_over_sensors(sensor_ids, df)
+        data_keys.append("mean")
+
     data_dict = dict()
-    for sensor_id in sensor_ids:
+    for key in data_keys:
         # You may wonder, why do we first to_json, and then json.loads. That's just to
         # have the data in a nice nested dictionary that a final json.dumps can deal
         # with.
-        data_dict[sensor_id] = json.loads(
-            df[df["sensor_id"] == sensor_id]
+        data_dict[key] = json.loads(
+            df[df["sensor_id"] == key]
             .drop(columns=["sensor_id", "name"])
             .sort_values("timestamp")
             .to_json(orient="records", date_format="iso")
