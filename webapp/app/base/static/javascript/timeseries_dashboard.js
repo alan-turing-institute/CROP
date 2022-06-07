@@ -89,8 +89,8 @@ function makePlot(data, yDataName, yLabel, canvasName) {
     let borderWidth = 1;
     // Make the line for mean look a bit different
     if (sensorId === "mean") {
-      pointRadius *= 2;
-      borderWidth *= 2;
+      pointRadius = 0;
+      borderWidth *= 4;
       colour = "#111111";
     }
     datasets.push({

@@ -621,8 +621,15 @@ def add_mean_over_sensors(sensor_ids, df):
     df_mean = df.groupby("timestamp").mean()
     df_mean.loc[:, "sensor_id"] = "mean"
     df_mean.loc[:, "name"] = "mean"
+    # The sensor data comes with a 10 minute frequency. However, the sensors may be
+    # "phase shifted" with respect to each other, e.g. one may have data for 00 and 10,
+    # while another may have 05 and 15. A 10 minute rolling mean smooths out these
+    # differences.
+    roll_window = timedelta(minutes=10)
+    for column_name in ("temperature", "humidity"):
+        df_mean[column_name] = df_mean[column_name].rolling(roll_window).mean()
     df_mean = df_mean.reset_index()
-    df = pd.concat((df, df_mean), axis=0)
+    df = pd.concat((df_mean, df), axis=0)
     return df
 
 
@@ -658,7 +665,8 @@ def timeseries_dashboard():
     data_keys = list(sensor_ids)
     if len(sensor_ids) > 1:
         df = add_mean_over_sensors(sensor_ids, df)
-        data_keys.append("mean")
+        # Insert at start, to make "mean" be the first one displayed on the page.
+        data_keys.insert(0, "mean")
 
     data_dict = dict()
     summary_dict = dict()
