@@ -643,6 +643,7 @@ def timeseries_dashboard():
             dt_from=dt_from,
             dt_to=dt_to,
             data=dict(),
+            summaries=dict(),
         )
 
     # Convert strings to objects
@@ -660,20 +661,22 @@ def timeseries_dashboard():
         data_keys.append("mean")
 
     data_dict = dict()
+    summary_dict = dict()
     for key in data_keys:
-        # You may wonder, why do we first to_json, and then json.loads. That's just to
-        # have the data in a nice nested dictionary that a final json.dumps can deal
-        # with.
-        data_dict[key] = json.loads(
+        df_key = (
             df[df["sensor_id"] == key]
             .drop(columns=["sensor_id", "name"])
             .sort_values("timestamp")
-            .to_json(orient="records", date_format="iso")
         )
+        # You may wonder, why we first to_json, and then json.loads. That's just to have
+        # the data in a nice nested dictionary that a final json.dumps can deal with.
+        data_dict[key] = json.loads(df_key.to_json(orient="records", date_format="iso"))
+        summary_dict[key] = json.loads(df_key.describe().to_json())
     return render_template(
         "timeseries_dashboard.html",
         sensor_ids=format_sensor_ids_str(sensor_ids),
         dt_from=dt_from,
         dt_to=dt_to,
         data=data_dict,
+        summaries=summary_dict,
     )
