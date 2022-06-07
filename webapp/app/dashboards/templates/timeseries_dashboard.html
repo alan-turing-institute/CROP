@@ -30,6 +30,8 @@
             <div class="row x_title">
               <div class="col-sm-12">
                 <h3>Sensor IDs and time range</h2>
+                <p>Choose sensors and time range to either download or display data
+                for.</p>
                 <form>
                   <div>
                     <div>
@@ -42,7 +44,8 @@
                       <b class="caret"></b>
                     </div>
                   </div>
-                <button style="margin-top: 5px" type="button" onclick="submitTimeSeries()">Submit</button>
+                <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(false)">Plot</button>
+                <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(true)">Download</button>
                 </form>
               </div>
             </div>
@@ -64,9 +67,6 @@
               </div>
             </div>
           </div>
-          <form method="post">
-            <input type="submit" value="Download" name="download"/>
-          </form>
           {% endif %}
           {%
             for sensorId in data:
