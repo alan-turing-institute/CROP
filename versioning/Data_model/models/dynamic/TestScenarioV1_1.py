@@ -32,6 +32,10 @@ LatestTimeHourValue = pd.DatetimeIndex(LatestTime.index).hour.astype(float)[0]
 def getTimeParameters() -> Dict:
     delta_h = int(CAL_CONF["delta_h"])
     ndp = int(CAL_CONF["num_data_points"])
+    # The parameter num_data_points is inclusive of the moment of modelling, but for
+    # running the scenario evaluation we want to exclude that, so subtract one.
+    # TODO This is quite a hacky, ugly solution, figure out something better.
+    ndp -= 1
     numDays = int(CAL_CONF["num_weather_days"])
     h1 = 0
     h2 = h1 + ndp * delta_h
