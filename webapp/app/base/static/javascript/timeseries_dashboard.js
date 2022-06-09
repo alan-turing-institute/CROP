@@ -10,7 +10,7 @@ $("#reportrange").on("apply.daterangepicker", function (ev, picker) {
   setDateRange(picker.startDate, picker.endDate);
 });
 
-function submitTimeSeries() {
+function requestTimeSeries(download) {
   const sensorIds = document.getElementById("sensorIdInput").value;
   if (sensorIds === undefined) {
     alert("Please give a list of sensor IDs.");
@@ -27,14 +27,19 @@ function submitTimeSeries() {
   const startStr = encodeURIComponent(startDate.format("YYYYMMDD"));
   const endStr = encodeURIComponent(endDate.format("YYYYMMDD"));
   const idsStr = encodeURIComponent(sensorIds);
-  const request_url =
-    "/dashboards/timeseries_dashboard?startDate=" +
-    startStr +
-    "&endDate=" +
-    endStr +
-    "&sensorIds=" +
-    idsStr;
-  location.replace(request_url);
+  const url = "/dashboards/timeseries_dashboard";
+  const params =
+    "startDate=" + startStr + "&endDate=" + endStr + "&sensorIds=" + idsStr;
+  if (download) {
+    // A clunky way to trigger a download: Make a form that generates a POST request.
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = url + "?" + params;
+    document.body.appendChild(form);
+    form.submit();
+  } else {
+    location.replace(url + "?" + params);
+  }
 }
 
 const plotConfigTemplate = {
@@ -83,15 +88,23 @@ function makePlot(data, yDataName, yLabel, canvasName) {
   const sensorIds = Object.keys(data);
   const numSensors = sensorIds.length;
   for (let i = 0; i < numSensors; i++) {
-    const colour = colouramp_redblue[Math.min(i, numSensors - 1)];
     const sensorId = sensorIds[i];
+    let colour = colouramp_redblue[Math.min(i, numSensors - 1)];
+    let pointRadius = 1;
+    let borderWidth = 1;
+    // Make the line for mean look a bit different
+    if (sensorId === "mean") {
+      pointRadius = 0;
+      borderWidth *= 4;
+      colour = "#111111";
+    }
     datasets.push({
       label: sensorId,
       data: data[sensorId].map((row) => {
         return { x: row["timestamp"], y: row[yDataName] };
       }),
-      pointRadius: 1,
-      borderWidth: 1,
+      pointRadius: pointRadius,
+      borderWidth: borderWidth,
       borderColor: colour,
     });
   }

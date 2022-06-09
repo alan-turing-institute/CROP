@@ -614,6 +614,25 @@ def format_sensor_ids_str(sensor_ids):
         return ""
 
 
+def add_mean_over_sensors(sensor_ids, df):
+    """Take the dataframe for timeseries, and add data for a new "sensor" that's the
+    mean of all the ones in the data
+    """
+    df_mean = df.groupby("timestamp").mean()
+    df_mean.loc[:, "sensor_id"] = "mean"
+    df_mean.loc[:, "name"] = "mean"
+    # The sensor data comes with a 10 minute frequency. However, the sensors may be
+    # "phase shifted" with respect to each other, e.g. one may have data for 00 and 10,
+    # while another may have 05 and 15. A 10 minute rolling mean smooths out these
+    # differences.
+    roll_window = timedelta(minutes=10)
+    for column_name in ("temperature", "humidity"):
+        df_mean[column_name] = df_mean[column_name].rolling(roll_window).mean()
+    df_mean = df_mean.reset_index()
+    df = pd.concat((df_mean, df), axis=0)
+    return df
+
+
 @blueprint.route("/timeseries_dashboard", methods=["GET", "POST"])
 @login_required
 def timeseries_dashboard():
@@ -631,32 +650,46 @@ def timeseries_dashboard():
             dt_from=dt_from,
             dt_to=dt_to,
             data=dict(),
+            summaries=dict(),
         )
 
     # Convert strings to objects
     dt_from = datetime.strptime(dt_from, "%Y%m%d")
-    dt_to = datetime.strptime(dt_to, "%Y%m%d")
+    # Make dt_to run to the end of the day in question.
+    dt_to = (
+        datetime.strptime(dt_to, "%Y%m%d")
+        + timedelta(days=1)
+        + timedelta(milliseconds=-1)
+    )
     sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids.rstrip(" ,;"))))
 
     df = fetch_zensie_data(dt_from, dt_to, sensor_ids)
     if request.method == "POST":
         return download_csv(df, "timeseries")
 
+    data_keys = list(sensor_ids)
+    if len(sensor_ids) > 1:
+        df = add_mean_over_sensors(sensor_ids, df)
+        # Insert at start, to make "mean" be the first one displayed on the page.
+        data_keys.insert(0, "mean")
+
     data_dict = dict()
-    for sensor_id in sensor_ids:
-        # You may wonder, why do we first to_json, and then json.loads. That's just to
-        # have the data in a nice nested dictionary that a final json.dumps can deal
-        # with.
-        data_dict[sensor_id] = json.loads(
-            df[df["sensor_id"] == sensor_id]
+    summary_dict = dict()
+    for key in data_keys:
+        df_key = (
+            df[df["sensor_id"] == key]
             .drop(columns=["sensor_id", "name"])
             .sort_values("timestamp")
-            .to_json(orient="records", date_format="iso")
         )
+        # You may wonder, why we first to_json, and then json.loads. That's just to have
+        # the data in a nice nested dictionary that a final json.dumps can deal with.
+        data_dict[key] = json.loads(df_key.to_json(orient="records", date_format="iso"))
+        summary_dict[key] = json.loads(df_key.describe().to_json())
     return render_template(
         "timeseries_dashboard.html",
         sensor_ids=format_sensor_ids_str(sensor_ids),
         dt_from=dt_from,
         dt_to=dt_to,
         data=data_dict,
+        summaries=summary_dict,
     )
