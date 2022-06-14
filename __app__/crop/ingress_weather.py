@@ -102,8 +102,8 @@ def import_zensie_weather_data(
         )
 
     for _, zensie_sensor in enumerate(zensie_sensor_list):
-        sensor_id = zensie_sensor["sensors_id"]
-        sensor_check_id = zensie_sensor["sensors_device_id"]
+        sensor_id = zensie_sensor["id"]
+        sensor_check_id = zensie_sensor["device_id"]
         logging.info(
             "sensor_id: {} | sensor_check_id: {}".format(sensor_id, sensor_check_id)
         )
