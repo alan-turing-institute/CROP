@@ -1,4 +1,4 @@
-name: Python CI
+name: Publish cropapptestmodelfunctions
 
 on:
   push:
@@ -8,25 +8,33 @@ on:
 env:
   AZURE_WEBAPP_NAME: cropapptestmodelfunctions
   AZURE_WEBAPP_PACKAGE_PATH: './versioning/Data_model/models/dynamic'
+  PYTHON_VERSION: '3.8'
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment: dev
+    runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@master
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
+      uses: actions/setup-python@v1
       with:
-        python-version: 3.8
-    - name: Install dependencies
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 'Resolve Project Dependencies Using Pip'
+      shell: bash
       run: |
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Building web app
-      uses: azure/appservice-build@v2
-    - name: Deploy web App using GH Action azure/webapps-deploy
-      uses: azure/webapps-deploy@v2
+        pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+        popd
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
       with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
