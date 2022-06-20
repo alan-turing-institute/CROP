@@ -30,6 +30,8 @@
             <div class="row x_title">
               <div class="col-sm-12">
                 <h3>Sensor IDs and time range</h2>
+                <p>Choose sensors and time range to either download or display data
+                for.</p>
                 <form>
                   <div>
                     <div>
@@ -42,7 +44,8 @@
                       <b class="caret"></b>
                     </div>
                   </div>
-                <button style="margin-top: 5px" type="button" onclick="submitTimeSeries()">Submit</button>
+                <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(false)">Plot</button>
+                <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(true)">Download</button>
                 </form>
               </div>
             </div>
@@ -64,39 +67,84 @@
               </div>
             </div>
           </div>
-          <form method="post">
-            <input type="submit" value="Download" name="download"/>
-          </form>
           {% endif %}
           {%
             for sensorId in data:
           %}
-          <h4>Data for sensor #{{sensorId}}</h4>
-          <div class="table-responsive">
-          <table id="datatable-responsive-{{sensorId}}" class="table table-sm table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Temperature</th>
-                <th>Humidity</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div style="margin-top: 3em" class="row x_content">
+            <div class="col-lg-12">
+              <h4>Data for sensor {{sensorId}}</h4>
+              <h5>Summary statistics</h5>
+              <div id="humidity-summary-{{sensorId}}" class="data-summary"></div>
+                <table id="summary-table-{{sensorId}}" class="table table-sm nowrap" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Number of values</th>
+                      <th>Average</th>
+                      <th>Standard deviation</th>
+                      <th>Min</th>
+                      <th>25th percentile</th>
+                      <th>50th percentile</th>
+                      <th>75th percentile</th>
+                      <th>Max</th>
+                    </tr>
+                  </thead>
+                  <tbody>
 
-              {%
-                for row in data[sensorId]:
-              %}
-              <tr>
-                <td>{{ row.timestamp }}</td>
-                <td>{{ row.temperature }}</td>
-                <td>{{ row.humidity }}</td>
-              </tr>
-              {%
-                endfor
-              %}
+                  <tr>
+                    <td>Temperature</td>
+                    <td>{{ summaries[sensorId].temperature.count }}</td>
+                    <td>{{ summaries[sensorId].temperature.mean }}</td>
+                    <td>{{ summaries[sensorId].temperature.std }}</td>
+                    <td>{{ summaries[sensorId].temperature.min }}</td>
+                    <td>{{ summaries[sensorId].temperature["25%"] }}</td>
+                    <td>{{ summaries[sensorId].temperature["50%"] }}</td>
+                    <td>{{ summaries[sensorId].temperature["75%"] }}</td>
+                    <td>{{ summaries[sensorId].temperature.max }}</td>
+                  </tr>
+                  <tr>
+                    <td>Humidity</td>
+                    <td>{{ summaries[sensorId].humidity.count }}</td>
+                    <td>{{ summaries[sensorId].humidity.mean }}</td>
+                    <td>{{ summaries[sensorId].humidity.std }}</td>
+                    <td>{{ summaries[sensorId].humidity.min }}</td>
+                    <td>{{ summaries[sensorId].humidity["25%"] }}</td>
+                    <td>{{ summaries[sensorId].humidity["50%"] }}</td>
+                    <td>{{ summaries[sensorId].humidity["75%"] }}</td>
+                    <td>{{ summaries[sensorId].humidity.max }}</td>
+                  </tr>
 
-            </tbody>
-          </table>
+                  </tbody>
+                </table>
+              <h5>Raw data</h5>
+              <div class="table-responsive">
+                <table id="datatable-responsive-{{sensorId}}" class="table table-sm table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Temperature</th>
+                      <th>Humidity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    {%
+                    for row in data[sensorId]:
+                    %}
+                    <tr>
+                      <td>{{ row.timestamp }}</td>
+                      <td>{{ row.temperature }}</td>
+                      <td>{{ row.humidity }}</td>
+                    </tr>
+                    {%
+                    endfor
+                    %}
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
           {%
             endfor
@@ -145,6 +193,7 @@
 
     const data = {{data | safe}};
     Object.keys(data).forEach((sensorId) => {
+          // Skip the case that isn't an actual sensor, but the mean of sensors.
           $(`#datatable-responsive-${sensorId}`).DataTable( {
                 responsive: true
               });
