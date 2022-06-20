@@ -4,61 +4,40 @@ Created on Tue Feb 16 09:18:07 2021
 
 @author: rmw61
 """
+import logging
 import numpy as np
-import pandas as pd
-from parameters import T_k, deltaT
-from parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
-from parameters import V, A_c, A_f, A_v, A_m, A_p, A_l
-from parameters import d_c, d_f, d_m, d_p, cd_c, c_i, c_f, c_m, c_p
-from parameters import F_c_f, F_f_c, F_c_v, F_c_m, F_l_c, F_l_v, F_l_m, F_l_p
-from parameters import F_m_l, F_f_p, F_c_l, F_m_v, F_v_l, F_p_l
-from parameters import F_p_f, F_p_v, F_p_m, F_v_c, F_v_p, F_v_m, F_m_c, F_m_p
-from parameters import eps_c, eps_f, eps_v, eps_m, eps_p, eps_l
-from parameters import rho_c, rho_f, rho_v, rho_m, rho_p, rho_l
-from parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
-from parameters import T_ss, T_al
-from parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
-from parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
+from .parameters import T_k, deltaT
+from .parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
+from .parameters import V, A_c, A_f, A_v, A_m, A_p, A_l
+from .parameters import d_c, d_f, d_m, d_p, cd_c, c_i, c_f, c_m, c_p
+from .parameters import F_c_f, F_f_c, F_c_v, F_c_m, F_l_c, F_l_v, F_l_m, F_l_p
+from .parameters import F_m_l, F_f_p, F_c_l, F_m_v, F_v_l, F_p_l
+from .parameters import F_p_f, F_p_v, F_p_m, F_v_c, F_v_p, F_v_m, F_m_c, F_m_p
+from .parameters import eps_c, eps_f, eps_v, eps_m, eps_p, eps_l
+from .parameters import rho_c, rho_f, rho_v, rho_m, rho_p, rho_l
+from .parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
+from .parameters import T_ss, T_al
+from .parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
+from .parameters import c_v, msd_v, d_v, AF_g, LAI, dsat, ndh
 from scipy.integrate import solve_ivp
-import sys, os
+import sys
+import os
+from .config import config
 
-DIR_CROP = os.path.join(os.path.dirname(__file__), os.pardir)
-DIR_DATA = os.path.join(os.path.dirname(__file__), os.path.pardir, os.pardir, "data")
-DIR_INVERSION = os.path.join(DIR_CROP, "Inversion")
-FILEPATH_WEATHER = os.path.join(DIR_DATA, "WeatherV1.csv")
-FILEPATH_ACH = os.path.join(DIR_DATA, "ACH_outV1.csv")
-FILEPATH_IAS = os.path.join(DIR_DATA, "IAS_outV1.csv")
-FILEPATH_LEN = os.path.join(DIR_DATA, "Length_outV1.csv")
+cal_conf = config(section="calibration")
 
-sys.path.append(DIR_INVERSION)
+INVERSION_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "Inversion")
+sys.path.append(INVERSION_DIR)
 
 from inversion import *
-from dataAccess import getDaysWeather
+
+# from dataAccess import getDaysWeather
 
 
-def climterp_linear(h1, h2, numDays, filepath_weather=None):
-    temp_in = None
-    rh_in = None
-    if filepath_weather:
-        header_list = ["DateTime", "T_e", "RH_e"]
-        ExternalWeather = pd.read_csv(
-            filepath_weather, delimiter=",", names=header_list
-        )
-        # ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
-        # temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
-        # rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
-        temp_in = ExternalWeather.T_e
-        rh_in = ExternalWeather.RH_e
-    else:
-        ExternalWeather = np.asarray(
-            getDaysWeather(numDays + 1, numRows=(numDays + 1) * 24)
-        )
-        temp_in = ExternalWeather[:, 1].astype(
-            np.float64
-        )  # +1 to ensure correct end point
-        rh_in = ExternalWeather[:, 2].astype(
-            np.float64
-        )  # +1 to ensure correct end point
+def climterp_linear(h1, h2, Weather):
+
+    temp_in = Weather.T_e  # +1 to ensure correct end point
+    rh_in = Weather.RH_e  # +1 to ensure correct end point
 
     deltaT = 600
 
@@ -69,14 +48,14 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
     # nans, x= nan_helper(rh_in)
     # rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
 
-    t = np.linspace(0, 864000, h2 + 1 - h1)
+    t = np.linspace(0, 20 * 24 * 3600, h2 - h1)  # 864000
 
-    mult = np.linspace(0, 864000, int(1 + 864000 / deltaT))
+    mult = np.linspace(0, 20 * 24 * 3600, int(1 + 20 * 24 * 3600 / deltaT))
 
-    ind = h2 - h1 + 1
+    # ind = h2-h1+1
 
-    clim_t = np.interp(mult, t, temp_in[-ind:])
-    clim_rh = np.interp(mult, t, rh_in[-ind:])
+    clim_t = np.interp(mult, t, temp_in)
+    clim_rh = np.interp(mult, t, rh_in)
 
     climate = np.vstack((clim_t, clim_rh))
 
@@ -202,8 +181,8 @@ def model(
     count,
     h1,
     h2,
-    ndhvec,
-    lshiftvec,
+    ndh,
+    lshift,
     LatestTimeHourValue,
 ):
 
@@ -226,26 +205,43 @@ def model(
     t_init = h1 * 3600
 
     n = int(np.ceil((t - t_init) / deltaT))
+
+    # if n >= 2880:
+    #    logging.info('debug here')
+
     T_ext = climate[n, 0] + T_k
     RH_e = climate[n, 1] / 100
     Cw_ext = RH_e * sat_conc(T_ext)
 
     daynum.append(day(t))
     # if daynum[(len(daynum)-1)] > daynum[(len(daynum)-2)]:
-    #    print(daynum[len(daynum)-1])
+    #    logging.info(daynum[len(daynum)-1])
 
     ## Set ACH,ias
-    hour = np.floor(t / 3600) + 1
-    seq = range(h1 + 3, h2 + 24, 3)
+    hour = np.floor(t / 3600)
+    # logging.info(hour)
+    # logging.info(n)
+    # if hour == 480:
+    #    logging.info('debug here')
+
+    delta_h = int(cal_conf["delta_h"])
+    calibration_hours = int(cal_conf["num_data_points"]) * delta_h
+    seq = range(h1 + calibration_hours, h2 + delta_h, delta_h)
 
     if hour >= seq[count[-1]]:
         count_new = count[-1] + 1
         count.append(count_new)
+        # logging.info(n)
+        # logging.info(hour)
+        # logging.info(count[-1])
+        # logging.info(n)
+        # if count[-1] == 61:
+        #    logging.info('debug')
 
     ACH = ACHvec[count[-1]]
     ias = iasvec[count[-1]]
-    ndh = ndhvec[count[-1]]
-    lshift = lshiftvec[count[-1]]
+    # ndh = ndhvec[count[-1]]
+    # lshift = 0
 
     ## Lights
     day_hour = (
@@ -394,7 +390,7 @@ def model(
 
     MW_cc_i = -1 * dehumidify / 3600
 
-    # print(MW_i_e)
+    # logging.info(MW_i_e)
 
     # ODE equations
 
@@ -443,41 +439,38 @@ def model(
     )
 
 
-def derivatives(
-    h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHourValue
-):
+def derivatives(h1, h2, paramsinput, ndp, Weather, LatestTimeHourValue):
 
     # Get weather data
-    clim = np.transpose(climterp_linear(h1, h2, numDays, filePathWeather))
+    clim = np.transpose(climterp_linear(h1, h2, Weather))
 
     # Add extra weather if scenario evaluation
 
     # if switch1 == 1: # Testing scenario
-    LastDayData = clim[
-        -24 * 6 :,
-    ]
+    # LastDayData = clim[-24*6:,]
 
     ## Create extended weather file
-    ExtendClimate = np.concatenate((clim, LastDayData, LastDayData, LastDayData))
-    h2 = h2 + 3 * 24
+    # ExtendClimate = np.concatenate((clim,LastDayData,LastDayData,LastDayData))
+    # h2 = h2+3*24
 
-    climate = ExtendClimate
+    # climate = ExtendClimate
 
     NP = np.shape(paramsinput)[2]
 
-    NOut = 1 + h2 - h1
+    NOut = h2 - h1
 
     results = np.zeros((12, NOut, NP))
 
     for i in range(NP):
         # tic = time.time()
 
-        print(i + 1)
+        logging.info(i + 1)
 
         AirChangeHour = paramsinput[:, 0, i]
         IntAirSpeed = paramsinput[:, 1, i]
-        ndh = paramsinput[:, 2, i]
-        lshift = paramsinput[:, 3, i]
+        # ndh = paramsinput[:,2,i]
+        # lshift = paramsinput[:,3,i]
+        lshift = 0
 
         # Initial conditions
         T_i_0 = 295
@@ -514,11 +507,11 @@ def derivatives(
         ACH = AirChangeHour / 3600
         ias = IntAirSpeed
 
-        t = [h1 * 3600, h2 * 3600]
-        tval = np.linspace(h1 * 3600, h2 * 3600, NOut)
+        t = [h1 * 3600, (h2 - 1) * 3600]
+        tval = np.linspace(h1 * 3600, (h2 - 1) * 3600, NOut)
 
         params = [
-            climate,
+            clim,
             ACH,
             ias,
             daynum,

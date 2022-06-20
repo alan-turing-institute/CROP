@@ -1,12 +1,19 @@
-from TestScenarioV2 import FILEPATH_WEATHER
-import functions_scenarioV1 as functions_scenario
+from pathlib import Path
+from ges.TestScenarioV2 import FILEPATH_WEATHER
+import ges.functions_scenarioV1 as functions_scenario
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from ges.config import config
 
-filepath_data = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/MonitoredV1.csv"
-filepath_resultsRH = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRHV1.csv"
-filepath_resultsT = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsTV1.csv"
+path_conf = config(section="paths")
+
+data_dir = Path(path_conf["data_dir"])
+filepath_resultsRH = data_dir / path_conf["filename_resultsrh"]
+filepath_resultsT = data_dir / path_conf["filename_resultst"]
+filepath_data = data_dir / path_conf["filename_monitored"]
+
+cal_conf = config(section="calibration")
 
 # Scenario
 
@@ -23,14 +30,12 @@ h1 = h2 - 240
 ind = h2 - h1 + 1
 ndp = int((h2 - h1) / 3)
 
-TWeather = ExternalWeather.T_e[-ind:].astype(
-    np.float64
-)  # +1 to ensure correct end point
+TWeather = ExternalWeather.T_e[-ind:].astype(np.float64)
 RHWeather = ExternalWeather.RH_e[-ind:].astype(np.float64)
 
 # Internal conditions
 MonitoredData = pd.read_csv(filepath_data, parse_dates=True, header=None)
-TData = MonitoredData[-ind:][1].astype(np.float64)  # +1 to ensure correct end point
+TData = MonitoredData[-ind:][1].astype(np.float64)
 RHData = MonitoredData[-ind:][2].astype(np.float64)
 
 p1 = int(h1)  # start hour
