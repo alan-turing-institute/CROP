@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from jinjasql.core import bind
 import psycopg2
 from psycopg2.extras import execute_values
 import datetime
@@ -325,7 +324,9 @@ def insertModelProduct(run_id=None, measure_id=None):
             sql = """INSERT INTO test_model_product(run_id, measure_id)
             VALUES (%s,%s) RETURNING id;"""
             product_id = insertRow(sql, (run_id, measure_id))
-            logging.info("Product inserted, logged as ID: {0}".format(product_id))
+            logging.info(
+                "Product inserted, logged as ID: {0}".format(product_id)
+            )
             return product_id
     return None
 
