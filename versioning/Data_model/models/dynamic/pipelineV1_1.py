@@ -1,19 +1,26 @@
+import logging
 from TestScenarioV1_1 import testScenario, FILEPATH_WEATHER
 
 # from CalibrationV2 import runCalibration
 import pandas as pd
-from dataAccess import (
+from pathlib import Path
+from ges.dataAccess import (
     deleteResults,
     insertModelRun,
     insertModelProduct,
     insertModelPrediction,
 )
+from ges.config import config
 
-filepath_resultsRH = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsRHV1.csv"
-filepath_resultsT = "C:/Users/rmw61/Documents/CROP/versioning/Data_model/models/dynamic/data/resultsTV1.csv"
+path_conf = config(section="paths")
 
+data_dir = Path(path_conf["data_dir"])
+filepath_resultsRH = data_dir / path_conf["filename_resultsrh"]
+filepath_resultsT = data_dir / path_conf["filename_resultst"]
+
+cal_conf = config(section="calibration")
 MODEL_GES_DATABASE_ID = 3
-SENSOR_RH_16B2_DATABASE_ID = 27
+SENSOR_RH_16B2_DATABASE_ID = int(cal_conf["sensor_id"])
 
 MEASURE_MEAN_TEMPERATURE = {
     "measure_database_id": 1,
@@ -87,7 +94,7 @@ def get_forecast_date():
         FILEPATH_WEATHER, header=None, names=["Timestamp", "Temperature", "Humidity"]
     )
     forecast_date = pd.to_datetime(df_weather.tail(1)["Timestamp"].item())
-    print("Forecast Date: {0}".format(forecast_date))
+    logging.info("Forecast Date: {0}".format(forecast_date))
     return forecast_date
 
 
@@ -113,8 +120,8 @@ def assemble_values(product_id, measure, all_results):
     return prediction_parameters
 
 
-if __name__ == "__main__":
-
+def main():
+    logging.basicConfig(level=logging.INFO)
     forecast_date = get_forecast_date()
     measures = [
         MEASURE_MEAN_TEMPERATURE,
@@ -142,7 +149,7 @@ if __name__ == "__main__":
     )
 
     if run_id is not None:
-        print("Run inserted, logged as ID: {0}".format(run_id))
+        logging.info("Run inserted, logged as ID: {0}".format(run_id))
         for measure in measures:
             product_id = insertModelProduct(
                 run_id=run_id, measure_id=measure["measure_database_id"]
@@ -150,6 +157,10 @@ if __name__ == "__main__":
             value_parameters = assemble_values(
                 product_id=product_id, measure=measure, all_results=result
             )
-            print(value_parameters)
+            logging.info(value_parameters)
             num_rows_inserted = insertModelPrediction(value_parameters)
-            print("{0} rows inserted".format(num_rows_inserted))
+            logging.info("{0} rows inserted".format(num_rows_inserted))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,7 +1,6 @@
-#
-
+import logging
 from typing import Dict
-from functions_scenarioV1 import (
+from ges.functions_scenarioV1 import (
     derivatives,
     sat_conc,
     FILEPATH_WEATHER,
@@ -10,7 +9,11 @@ from functions_scenarioV1 import (
 )
 import numpy as np
 import pandas as pd
-import os
+from ges.config import config
+
+logging.basicConfig(level=logging.INFO)
+
+CAL_CONF = config(section="calibration")
 
 USE_LIVE = False
 
@@ -26,18 +29,24 @@ LatestTime = Weather_hour[-1:]
 LatestTimeHourValue = pd.DatetimeIndex(LatestTime.index).hour.astype(float)[0]
 
 
-def setTimeParameters(h2: int = 240, numDays: int = 10) -> Dict:
-    # Start hour h2 is for test only - in live version will be current time
-    # h2 = 240
-    h1: int = h2 - 240  # select previous 10 days
-    ndp: int = int((h2 - h1) / 3)  # number of data points used for calibration
+def getTimeParameters() -> Dict:
+    delta_h = int(CAL_CONF["delta_h"])
+    ndp = int(CAL_CONF["num_data_points"])
+    # The parameter num_data_points is inclusive of the moment of modelling, but for
+    # running the scenario evaluation we want to exclude that, so subtract one.
+    # TODO This is quite a hacky, ugly solution, figure out something better.
+    ndp -= 1
+    numDays = int(CAL_CONF["num_weather_days"])
+    h1 = 0
+    h2 = h1 + ndp * delta_h
     timeParameters: Dict = {
         "h2": h2,
-        "h1": h1,  # select previous 10 days
+        "h1": h1,
         "ndp": ndp,  # number of data points used for calibration
+        "delta_h": delta_h,
         "numDays": numDays,
     }
-    print(timeParameters)
+    logging.info(timeParameters)
     return timeParameters
 
 
@@ -110,19 +119,43 @@ def setScenario(
     shift_lighting: int = -3,
     ach_parameters: Dict = {},
     ias_parameters: Dict = {},
+    delta_h: int = 3,
 ) -> np.ndarray:
+    number_of_points_in_a_day = int(np.round(24 / delta_h))
 
+    # ScenEval has dimensions of days_by_which_we_extend_the_scenario_into_the_future *
+    # number_of_points_in_a_day, 4 for (ACH, IAS, something-about-dehumidifiers,
+    # something-about-lighting), 4 for (mean, upper quantile, lower quantile, scenario).
     # # Scenario 1 - vary ACH
-    ScenEval: np.ndarray = np.zeros((32, 4, 4))
-    ScenEval[:, 0, 0] = ach_parameters["ACHmean"][-1]
-    ScenEval[:, 0, 1] = ventilation_rate
-    ScenEval[:, 0, 2] = ach_parameters["ACHuq"][-1]
-    ScenEval[:, 0, 3] = ach_parameters["ACHlq"][-1]
+    ScenEval: np.ndarray = np.zeros((4 * number_of_points_in_a_day, 4, 4))
+    # ScenEval[:,0,0] = ach_parameters['ACHmean'][-1]
+    ach_day = ach_parameters["ACHmean"][-number_of_points_in_a_day:]
+    ScenEval[:, 0, 0] = np.tile(ach_day, 4)
 
-    ScenEval[:, 1, 0] = ias_parameters["IASmean"][-1]
-    ScenEval[:, 1, 1] = ias_parameters["IASmean"][-1]
-    ScenEval[:, 1, 2] = ias_parameters["IASlq"][-1]
-    ScenEval[:, 1, 3] = ias_parameters["IASuq"][-1]
+    ScenEval[:, 0, 1] = ventilation_rate
+
+    # ScenEval[:,0,2] = ach_parameters['ACHuq'][-1]
+    achuq_day = ach_parameters["ACHuq"][-number_of_points_in_a_day:]
+    ScenEval[:, 0, 2] = np.tile(achuq_day, 4)
+
+    # ScenEval[:,0,3] = ach_parameters['ACHlq'][-1]
+    achlq_day = ach_parameters["ACHlq"][-number_of_points_in_a_day:]
+    ScenEval[:, 0, 3] = np.tile(achlq_day, 4)
+
+    # ScenEval[:,1,0] = ias_parameters['IASmean'][-1]
+    ias_day = ias_parameters["IASmean"][-number_of_points_in_a_day:]
+    ScenEval[:, 1, 0] = np.tile(ias_day, 4)
+
+    # ScenEval[:,1,1] = ias_parameters['IASmean'][-1]
+    ScenEval[:, 1, 1] = np.tile(ias_day, 4)
+
+    # ScenEval[:,1,2] = ias_parameters['IASlq'][-1]
+    iaslq_day = ias_parameters["IASlq"][-number_of_points_in_a_day:]
+    ScenEval[:, 1, 2] = np.tile(iaslq_day, 4)
+
+    # ScenEval[:,1,3] = ias_parameters['IASuq'][-1]
+    iasuq_day = ias_parameters["IASuq"][-number_of_points_in_a_day:]
+    ScenEval[:, 1, 3] = np.tile(iasuq_day, 4)
 
     # # Scenario 2 - vary number of dehumidifiers
     ScenEval[:, 2, 0] = 1
@@ -169,10 +202,7 @@ def runModel(
 def testScenario():
     # Get calibrated parameters output from calibration model
     # Stored in database? Currently output to csv file
-    h2: int = 240
-    numDays: int = 10
-
-    time_parameters: Dict = setTimeParameters(h2=h2, numDays=numDays)
+    time_parameters: Dict = getTimeParameters()
     ach_parameters = setACHParameters(
         ACH_OUT_PATH=FILEPATH_ACH, ndp=time_parameters["ndp"]
     )
@@ -196,6 +226,7 @@ def testScenario():
         shift_lighting=shift_lighting,
         ach_parameters=ach_parameters,
         ias_parameters=ias_parameters,
+        delta_h=time_parameters["delta_h"],
     )
 
     params: np.ndarray = np.concatenate(
