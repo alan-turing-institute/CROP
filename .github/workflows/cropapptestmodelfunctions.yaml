@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: cropapptestmodelfunctions
-  AZURE_WEBAPP_PACKAGE_PATH: './versioning/Data_model/models/dynamic'
+  AZURE_FUNCTIONAPP_NAME: cropapptestmodelfunctions
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './versioning/Data_model/models/dynamic'
   PYTHON_VERSION: '3.8'
 
 jobs:
