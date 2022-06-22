@@ -28,7 +28,9 @@ from __app__.crop.constants import (
 from __app__.crop.db import connect_db, session_open, session_close
 
 db_name = "app_db"
-CONNECTION_STRING = "postgresql://cropdbadmin@cropapptestsqlserver:QhXZ7qZddDr224Mc2P4k@cropapptestsqlserver.postgres.database.azure.com:5432"
+# TODO The below connection string needs secrets. Read them from environment variables.
+# The current one is a placeholder.
+CONNECTION_STRING = "postgresql://username@hostname:password@serverurl:port"
 
 # Try to connect to a database that exists
 success, log, engine = connect_db(CONNECTION_STRING, SQL_DBNAME)
