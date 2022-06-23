@@ -1,12 +1,11 @@
-name: 'Publish cropapptestmodelfunctions'
+name: 'Deploy model functions on Azure'
 
 on:
   push:
-    branches: [develop]
+    branches: [main, develop]
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_NAME: cropapptestmodelfunctions
   AZURE_FUNCTIONAPP_PACKAGE_PATH: './versioning/Data_model/models/dynamic'
   PYTHON_VERSION: '3.9'
 
@@ -15,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
-    - name: 'Checkout GitHub Action'
+    - name: 'Checkout GitHub action'
       uses: actions/checkout@master
 
     - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
@@ -23,17 +22,26 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: 'Resolve Project Dependencies Using Pip'
+    - name: 'Resolve project dependencies using pip'
       shell: bash
       run: |
         pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
         python -m pip install --upgrade pip
         pip install -r requirements.txt --target=".python_packages/lib/site-packages"
         popd
-    - name: 'Run Azure Functions Action'
+    - name: 'Run Azure Functions action for main'
+      if: ${{ github.ref == 'refs/heads/main' }}
       uses: Azure/functions-action@v1
       id: fa
       with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        app-name: cropmodelfunctions
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        publish-profile: ${{ secrets.CROPMODELFUNCTIONS_PUBLISH_PROFILE }}
+    - name: 'Run Azure Functions action for develop'
+      if: ${{ github.ref == 'refs/heads/develop' }}
+      uses: Azure/functions-action@v1
+      id: fa
+      with:
+        app-name: cropapptestmodelfunctions
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        publish-profile: ${{ secrets.CROPAPPTESTMODELFUNCTIONS_PUBLISH_PROFILE }}
