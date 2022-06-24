@@ -44,7 +44,7 @@ from __app__.crop.constants import (
     ID_COL_NAME,
     SENSOR_UPLOAD_LOG_TABLE_NAME,
     ZENSIE_TRH_TABLE_NAME,
-    ZENSIE_WEATHER_TABLE_NAME,
+    WEATHER_TABLE_NAME,
     WARNINGS_TABLE_NAME,
     MODEL_TABLE_NAME,
     MODEL_MEASURE_TABLE_NAME,
@@ -300,6 +300,8 @@ class SensorClass(BASE):
     )
     device_id = Column(Unicode(100), nullable=False)
 
+    aranet_code = Column(Unicode(100), nullable=True)
+
     name = Column(Unicode(100), nullable=False)
 
     last_updated = Column(DateTime())
@@ -380,12 +382,12 @@ class ReadingsZensieTRHClass(BASE):
     __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
 
 
-class ReadingsZensieWeatherClass(BASE):
+class ReadingsWeatherClass(BASE):
     """
-    Base class for the 30MHz External weather readings
+    Base class for the External weather readings
     """
 
-    __tablename__ = ZENSIE_WEATHER_TABLE_NAME
+    __tablename__ = WEATHER_TABLE_NAME
 
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -404,7 +406,8 @@ class ReadingsZensieWeatherClass(BASE):
     wind_direction = Column(Float, nullable=True)
     air_pressure = Column(Float, nullable=True)
     radiation = Column(Float, nullable=True)
-
+    icon=Column(String(10), nullable=True)
+    source=Column(String(50), nullable=True)
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
