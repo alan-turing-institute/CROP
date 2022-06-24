@@ -299,6 +299,9 @@ class SensorClass(BASE):
         nullable=False,
     )
     device_id = Column(Unicode(100), nullable=False)
+    aranet_code = Column(Unicode(64), nullable=True)
+    aranet_pro_id = Column(Unicode(64), nullable=True)
+    serial_number = Column(Unicode(128), nullable=True)
 
     aranet_code = Column(Unicode(64), nullable=True)
     aranet_pro_id = Column(Unicode(64), nullable=True)

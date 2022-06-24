@@ -30,12 +30,12 @@ def route_template(template):
     query = (
         db.session.query(
             SensorClass.id,
-            SensorClass.device_id,
+            SensorClass.aranet_code,
             SensorClass.name,
-            SensorClass.last_updated,
             TypeClass.sensor_type,
             SensorLocationClass.sensor_id,
             SensorLocationClass.location_id,
+            SensorLocationClass.installation_date,
             LocationClass.id.label("location_id"),
             LocationClass.zone,
             LocationClass.aisle,
