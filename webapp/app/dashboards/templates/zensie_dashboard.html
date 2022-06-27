@@ -48,17 +48,19 @@
 
           <!--
           Sensor IDs:
-          21: 1B1
+          21: 1B2
           18: 16B1
           27: 16B2
           23: 16B4
-          22: 29B1
-          20: Tunnel 5
-          19: Propagation
-          24: R&H 1
-          25: R&H 2
+          22: 29B2
+          20: Propagation #1
+          19: Tunnel 7
+          24: R&D 1
+          25: R&D 2
+          48: Propagation #2
+          49: R&D 4
           --!>
-          {% for row_group in [[21], [18, 27, 23], [22], [20], [19], [24, 25]] %}
+          {% for row_group in [[21], [18, 27, 23], [22], [19], [20, 48], [24, 25, 49]] %}
           <div class="row">
             {% for id in row_group %}
             <div class="col-lg-4 col-md-6 col-sm-12">
