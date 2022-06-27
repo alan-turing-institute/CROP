@@ -39,16 +39,24 @@
                 <label
                     class="control-label col-md-3 col-sm-3 col-xs-12"
                     for="sensor_type">
-                  Sensor Type<span class="required">*</span>
+                  Sensor type<span class="required">*</span>
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input
-                      type="text"
-                      id="sensor_type"
-                      name="sensor_type"
-                      required="required"
-                      class="form-control col-md-7 col-xs-12"
-                      value="{{ sensor.sensor_type }}">
+                  <select
+                       id="sensor_type"
+                       name="sensor_type"
+                       required="required"
+                       class="form-control selectpicker col-md-7 col-xs-12"
+                       value={{ sensor.type_id }}>
+                    {% for type in sensor_types %}
+                    <option
+                        value={{ type.id }}
+                        {% if type.id == sensor.type_id %} selected {% endif %}
+                    >
+                    {{ type.sensor_type }}
+                    </option>
+                    {% endfor %}
+                  </select>
                 </div>
               </div>
 
@@ -177,13 +185,21 @@
                   New location
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                  <input
-                      type="dropdown"
+                  <select
                       id="location_id"
                       name="location_id"
                       required="required"
-                      class="form-control col-md-7 col-xs-12"
-                      value="{{ sensor.location_id }}">
+                      class="form-control selectpicker col-md-7 col-xs-12"
+                      >
+                      {% for loc in locs %}
+                      <option
+                          value={{ loc.id }}
+                          {% if loc.id == sensor_locations[0].location_id  %} selected {% endif %}
+                          >
+                          {{ loc.zone }}, {{ loc.aisle }}-{{ loc.column }}-{{ loc.shelf }}
+                      </option>
+                    {% endfor %}
+                  </select>
                 </div>
               </div>
             </form>
