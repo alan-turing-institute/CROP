@@ -114,9 +114,37 @@ def sensor_form():
         )
         sensors_locs = db.session.execute(query).fetchall()
         sensors_locs_arr = query_result_to_array(sensors_locs, date_iso=False)
+
+        # Getting all possible sensor types
+        query = db.session.query(
+            LocationClass.id,
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf,
+        ).limit(CONST_MAX_RECORDS)
+        locs = db.session.execute(query).fetchall()
+        locs_arr = query_result_to_array(locs, date_iso=False)
+        locs_arr = sorted(
+            locs_arr,
+            key=lambda x: "".join(
+                [str(x[k]) for k in ("zone", "aisle", "column", "shelf")]
+            ),
+        )
+
+        # Getting all possible sensor types
+        query = db.session.query(
+            TypeClass.id,
+            TypeClass.sensor_type,
+        ).limit(CONST_MAX_RECORDS)
+        sensor_types = db.session.execute(query).fetchall()
+        sensor_types_arr = query_result_to_array(sensor_types, date_iso=False)
+
         return render_template(
             "sensor_form.html",
             sensor=sensor,
             sensor_locations=sensors_locs_arr,
             sensor_id=sensor_id,
+            locs=locs_arr,
+            sensor_types=sensor_types_arr,
         )
