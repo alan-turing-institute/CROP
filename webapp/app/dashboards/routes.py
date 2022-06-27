@@ -51,6 +51,8 @@ SENSOR_CATEORIES = {
     25: "R&D",
     26: "Fridge",
     27: "MidFarm",
+    48: "Propagation",
+    49: "R&D",
 }
 
 # Ventilation constants
@@ -409,7 +411,14 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         # estimating hourly temperature mean values
         sensor_grp_temp = sensor_grp["temperature"].mean().reset_index()
 
-        bins = TEMP_BINS[SENSOR_CATEORIES[sensor_id]]
+        try:
+            bins = TEMP_BINS[SENSOR_CATEORIES[sensor_id]]
+        except KeyError:
+            logging.error(
+                f"Don't know how to categorise or bin sensor {sensor_id} "
+                "in the Zensie dashboard."
+            )
+            continue
         # binning temperature values
         sensor_grp_temp["temp_bin"] = pd.cut(sensor_grp_temp["temperature"], bins)
 
