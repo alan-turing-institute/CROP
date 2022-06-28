@@ -18,9 +18,9 @@
         <div class="x_panel">
 
           <div class="x_content">
-            <h3 id="header">Properties</h3>
+            <h3 id="header">Attributes</h3>
             <form
-                id="sensor-form"
+                id="attributes_form"
                 data-parsley-validate
                 class="form-horizontal form-label-left"
                 method="POST">
@@ -29,8 +29,15 @@
               <div class="form-group">
                 <input
                     type="hidden"
-                    id="sensor_id"
-                    name="sensor_id"
+                    id="form_name"
+                    name="form_name"
+                    value="attributes_form">
+              </div>
+              <div class="form-group">
+                <input
+                    type="hidden"
+                    id="id"
+                    name="id"
                     value="{{ sensor_id }}">
               </div>
               <!-- /hidden -->
@@ -38,16 +45,15 @@
               <div class="form-group">
                 <label
                     class="control-label col-md-3 col-sm-3 col-xs-12"
-                    for="sensor_type">
-                  Sensor type<span class="required">*</span>
+                    for="type_id">
+                  Sensor type
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
                   <select
-                       id="sensor_type"
-                       name="sensor_type"
-                       required="required"
+                       id="type_id"
+                       name="type_id"
                        class="form-control selectpicker col-md-7 col-xs-12"
-                       value={{ sensor.type_id }}>
+                       >
                     {% for type in sensor_types %}
                     <option
                         value={{ type.id }}
@@ -63,15 +69,31 @@
               <div class="form-group">
                 <label
                     class="control-label col-md-3 col-sm-3 col-xs-12"
+                    for="name">
+                  Name
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      class="form-control col-md-7 col-xs-12"
+                      value="{{ sensor.name }}">
+                </div>
+              </div>
+
+
+              <div class="form-group">
+                <label
+                    class="control-label col-md-3 col-sm-3 col-xs-12"
                     for="device_id">
-                  Device ID<span class="required">*</span>
+                  Device ID
                 </label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
                   <input
                       type="text"
                       id="device_id"
                       name="device_id"
-                      required="require"
                       class="form-control col-md-7 col-xs-12"
                       value="{{ sensor.device_id }}">
                 </div>
@@ -88,7 +110,6 @@
                       type="text"
                       id="aranet_code"
                       name="aranet_code"
-                      required="require"
                       class="form-control col-md-7 col-xs-12"
                       value="{{ sensor.aranet_code }}">
                 </div>
@@ -105,7 +126,6 @@
                       type="text"
                       id="aranet_pro_id"
                       name="aranet_pro_id"
-                      required="require"
                       class="form-control col-md-7 col-xs-12"
                       value="{{ sensor.aranet_pro_id }}">
                 </div>
@@ -122,10 +142,13 @@
                       type="text"
                       id="serial_number"
                       name="serial_number"
-                      required="require"
                       class="form-control col-md-7 col-xs-12"
                       value="{{ sensor.serial_number }}">
                 </div>
+              </div>
+
+              <div>
+                <input type="submit" value="Submit">
               </div>
             </form>
           </div>
@@ -172,8 +195,15 @@
               <div class="form-group">
                 <input
                     type="hidden"
-                    id="sensor_id"
-                    name="sensor_id"
+                    id="form_name"
+                    name="form_name"
+                    value="add_location_form">
+              </div>
+              <div class="form-group">
+                <input
+                    type="hidden"
+                    id="id"
+                    name="id"
                     value="{{ sensor_id }}">
               </div>
               <!-- /hidden -->
@@ -188,19 +218,37 @@
                   <select
                       id="location_id"
                       name="location_id"
-                      required="required"
                       class="form-control selectpicker col-md-7 col-xs-12"
                       >
                       {% for loc in locs %}
                       <option
                           value={{ loc.id }}
-                          {% if loc.id == sensor_locations[0].location_id  %} selected {% endif %}
+                          {% if sensor_locations and loc.id == sensor_locations[0].location_id  %} selected {% endif %}
                           >
                           {{ loc.zone }}, {{ loc.aisle }}-{{ loc.column }}-{{ loc.shelf }}
                       </option>
                     {% endfor %}
                   </select>
                 </div>
+              </div>
+
+              <div class="form-group">
+                <label
+                    class="control-label col-md-3 col-sm-3 col-xs-12"
+                    for="installation_date">
+                  Installation date
+                </label>
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                  <input
+                      type="text"
+                      name="installation_date"
+                      value="{{latest_installation_date}}"
+                      />
+                </div>
+              </div>
+
+              <div>
+                <input type="submit" value="Add installation">
               </div>
             </form>
 
@@ -217,4 +265,18 @@
 {{ super()}}
 <!-- Parsley -->
 <script src="{{ url_for('static', filename='vendors/parsleyjs/dist/parsley.min.js') }}"></script>
+<!-- Date picker -->
+<script>
+$(function() {
+  $('input[name="installation_date"]').daterangepicker({
+    singleDatePicker: true,
+    showDropdowns: true,
+    minDate: {{ latest_installation_date }},
+    maxYear: parseInt(moment().format('YYYY'), 10),
+    locale: {
+      "format": "YYYY-MM-DD",
+    }
+  });
+});
+</script>
 {% endblock javascripts %}
