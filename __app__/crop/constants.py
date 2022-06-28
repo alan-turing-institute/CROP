@@ -199,7 +199,7 @@ TEST_MODEL_VALUE_TABLE_NAME = "test_model_value"
 WARNINGS_TABLE_NAME = "warnings"
 
 ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
-ZENSIE_WEATHER_TABLE_NAME = "iweather"
+WEATHER_TABLE_NAME = "iweather"
 
 # SQL Column names
 ID_COL_NAME = "id"
