@@ -17,6 +17,7 @@ CONST_AIR_VELOCITY = "Air_Velocity"
 CONST_STARK = "Stark"
 CONST_ZENSIE_TRH_SENSOR_TYPE = "30MHz T&RH"
 CONST_ZENSIE_WEATHER_SENSOR_TYPE = "30MHz Weather"
+CONST_API_WEATHER_TYPE = "openweathermap"
 
 # FILE STRUCTURE
 CONST_DATA_FOLDER = "data"
@@ -139,6 +140,9 @@ STARK_PASS = os.environ["CROP_STARK_PASS"].strip()
 # 30MHz (Zensie)
 CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip()
 CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
+
+# openweatherdata API
+CONST_OPENWEATHERMAP_APIKEY = os.environ["CROP_OPENWEATHERMAP_APIKEY"].strip()
 
 # Create connection string
 SQL_ENGINE = "postgresql"
