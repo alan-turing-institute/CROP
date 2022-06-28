@@ -300,9 +300,9 @@ class SensorClass(BASE):
     )
     device_id = Column(Unicode(100), nullable=False)
 
-    aranet_code = Column(Unicode(100), nullable=True)
-    aranet_pro_id = Column(Integer, nullable=True)
-    serial_number = Column(Integer, nullable=True)
+    aranet_code = Column(Unicode(64), nullable=True)
+    aranet_pro_id = Column(Unicode(64), nullable=True)
+    serial_number = Column(Unicode(128), nullable=True)
 
     name = Column(Unicode(100), nullable=False)
 
@@ -408,8 +408,8 @@ class ReadingsWeatherClass(BASE):
     wind_direction = Column(Float, nullable=True)
     air_pressure = Column(Float, nullable=True)
     radiation = Column(Float, nullable=True)
-    icon=Column(String(10), nullable=True)
-    source=Column(String(50), nullable=True)
+    icon = Column(String(10), nullable=True)
+    source = Column(String(50), nullable=True)
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
 
