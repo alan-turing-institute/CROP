@@ -12,6 +12,11 @@ from sqlalchemy import and_
 
 from __app__.crop.db import connect_db, session_open, session_close
 from __app__.crop.structure import (
+<<<<<<< HEAD
+=======
+    TypeClass,
+    SensorClass,
+>>>>>>> feature/new-sensor-and-weather-columns
     ReadingsWeatherClass,
 )
 from __app__.crop.utils import query_result_to_array
@@ -107,6 +112,7 @@ def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetim
         )
     return True, None
 
+
 def get_openweathermap_data(dt_from, dt_to):
     """
     Retrieve weather data from the openweathermap API.
@@ -168,7 +174,3 @@ def get_openweathermap_data(dt_from, dt_to):
     log = "\nSuccess: Weather dataframe \n{}".format(weather_df)
     logging.info(log)
     return success, error, weather_df
-
-
-if __name__ == "__main__":
-    import_zensie_data()
