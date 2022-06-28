@@ -91,7 +91,7 @@ def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetim
         upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
         log_upload_event(
             CONST_API_WEATHER_TYPE,
-            "Openweathermap API"
+            "Openweathermap API",
             success,
             upload_log,
             conn_string,
