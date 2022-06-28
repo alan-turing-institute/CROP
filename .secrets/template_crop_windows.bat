@@ -36,3 +36,5 @@ setx CROP_DOCKER_PASS "<<<replaceme>>"
 # 30MHz
 setx CROP_30MHZ_ORGANIZATION "<<<replaceme>>"
 setx CROP_30MHZ_APIKEY "<<<replaceme>>"
+
+setx CROP_OPENWEATHERMAP_APIKEY "<<replaceme>>"
