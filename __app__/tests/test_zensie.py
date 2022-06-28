@@ -55,7 +55,7 @@ def get_sensor_data(api_key, check_id, dt_from, dt_to):
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
-        data_df = pd.read_json(response.content).T
+        data_df = pd.DataFrame(response.json()).T
 
         if data_df.empty:
             error = "Request [%s]: no data" % (url)
