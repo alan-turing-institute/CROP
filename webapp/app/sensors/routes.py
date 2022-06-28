@@ -192,11 +192,14 @@ def sensor_form():
     # Find the latest installation date. We shouldn't allow new installations before
     # this.
     if sensors_locs_arr:
-        latest_installation_date = max(
-            [row["installation_date"] for row in sensors_locs_arr]
+        latest_installation = max(
+            sensors_locs_arr, key=lambda x: x["installation_date"]
         )
+        latest_installation_date = latest_installation["installation_date"]
+        latest_location = latest_installation["location_id"]
     else:
         latest_installation_date = datetime(year=2020, month=1, day=1)
+        latest_location = None
     latest_installation_date = latest_installation_date.date()
 
     return render_template(
@@ -207,4 +210,5 @@ def sensor_form():
         locs=locs_arr,
         sensor_types=sensor_types_arr,
         latest_installation_date=latest_installation_date,
+        latest_location=latest_location,
     )

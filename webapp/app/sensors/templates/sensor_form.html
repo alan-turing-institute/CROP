@@ -221,7 +221,7 @@
                       {% for loc in locs %}
                       <option
                           value={{ loc.id }}
-                          {% if sensor_locations and loc.id == sensor_locations[0].location_id  %} selected {% endif %}
+                          {% if loc.id == latest_location %} selected {% endif %}
                           >
                           {{ loc.zone }}, {{ loc.aisle }}-{{ loc.column }}-{{ loc.shelf }}
                       </option>
