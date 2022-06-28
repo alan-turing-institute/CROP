@@ -56,6 +56,8 @@ def get_all_sensors():
         LocationClass.column,
         LocationClass.shelf,
         SensorClass.aranet_code,
+        SensorClass.aranet_pro_id,
+        SensorClass.serial_number
     ).filter(
         and_(
             sensor_temp.c.sensor_id == SensorLocationClass.sensor_id,
