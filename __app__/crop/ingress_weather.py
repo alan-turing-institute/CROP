@@ -67,7 +67,7 @@ def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetim
                 sensor_id=0,
                 timestamp=idx,
                 temperature=row["temperature"],
-                rain_probability=0. # not in openweathermap data
+                rain_probability=0., # not in openweathermap data
                 rain=row["rain"],
                 relative_humidity=row["relative_humidity"],
                 wind_speed=row["wind_speed"],
