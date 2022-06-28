@@ -12,11 +12,6 @@ from sqlalchemy import and_
 
 from __app__.crop.db import connect_db, session_open, session_close
 from __app__.crop.structure import (
-<<<<<<< HEAD
-=======
-    TypeClass,
-    SensorClass,
->>>>>>> feature/new-sensor-and-weather-columns
     ReadingsWeatherClass,
 )
 from __app__.crop.utils import query_result_to_array
