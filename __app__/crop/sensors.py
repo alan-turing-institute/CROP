@@ -8,7 +8,7 @@ from sqlalchemy import and_
 from __app__.crop.structure import (
     TypeClass,
     ReadingsZensieTRHClass,
-    ReadingsZensieWeatherClass,
+    ReadingsWeatherClass,
 )
 
 
@@ -87,11 +87,11 @@ def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
         data_df: data frame containing sensor data for specific period of time
     """
 
-    query = session.query(ReadingsZensieWeatherClass.timestamp,).filter(
+    query = session.query(ReadingsWeatherClass.timestamp,).filter(
         and_(
-            ReadingsZensieWeatherClass.sensor_id == sensor_id,
-            ReadingsZensieWeatherClass.timestamp >= date_from,
-            ReadingsZensieWeatherClass.timestamp <= date_to,
+            ReadingsWeatherClass.sensor_id == sensor_id,
+            ReadingsWeatherClass.timestamp >= date_from,
+            ReadingsWeatherClass.timestamp <= date_to,
         )
     )
 
