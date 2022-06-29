@@ -23,6 +23,7 @@ def sensor_list():
         db.session.query(
             SensorClass.id,
             SensorClass.aranet_code,
+            SensorClass.aranet_pro_id,
             SensorClass.name,
             TypeClass.sensor_type,
             SensorLocationClass.sensor_id,
@@ -54,6 +55,24 @@ def sensor_list():
     sensors_arr = query_result_to_array(sensors, date_iso=False)
 
     return render_template("sensor_list.html", sensors=sensors_arr)
+
+
+def get_existing_sensors():
+    query = (
+        db.session.query(
+            SensorClass.id,
+            SensorClass.aranet_code,
+            SensorClass.aranet_pro_id,
+            SensorClass.name,
+            TypeClass.sensor_type,
+        )
+        .filter(SensorClass.type_id == TypeClass.id)
+        .order_by(asc(SensorClass.id))
+        .limit(CONST_MAX_RECORDS)
+    )
+    sensors = db.session.execute(query).fetchall()
+    sensors_arr = query_result_to_array(sensors, date_iso=False)
+    return sensors_arr
 
 
 def update_sensor_attributes(request):
@@ -107,11 +126,25 @@ def sensor_form():
         elif form_name == "add_location_form":
             add_sensor_location(request)
 
+    sensors_arr = get_existing_sensors()
     sensor_id = request.args.get("query")
+    if sensor_id is None:
+        return render_template(
+            "sensor_form.html",
+            sensors=sensors_arr,
+            sensor=None,
+            sensor_locations=None,
+            sensor_id=None,
+            locs=None,
+            sensor_types=None,
+            latest_installation_date=None,
+            latest_location=None,
+        )
+
     if sensor_id is None:
         raise ValueError("Need a sensor ID to show the edit form for, got None.")
 
-    # Getting sensor
+    # Getting selected sensor
     query = (
         db.session.query(
             SensorClass.id,
@@ -164,7 +197,7 @@ def sensor_form():
     sensors_locs = db.session.execute(query).fetchall()
     sensors_locs_arr = query_result_to_array(sensors_locs, date_iso=False)
 
-    # Getting all possible sensor types
+    # Getting all possible sensor locations
     query = db.session.query(
         LocationClass.id,
         LocationClass.zone,
@@ -189,8 +222,7 @@ def sensor_form():
     sensor_types = db.session.execute(query).fetchall()
     sensor_types_arr = query_result_to_array(sensor_types, date_iso=False)
 
-    # Find the latest installation date. We shouldn't allow new installations before
-    # this.
+    # Find the latest installation date.
     if sensors_locs_arr:
         latest_installation = max(
             sensors_locs_arr, key=lambda x: x["installation_date"]
@@ -204,6 +236,7 @@ def sensor_form():
 
     return render_template(
         "sensor_form.html",
+        sensors=sensors_arr,
         sensor=sensor,
         sensor_locations=sensors_locs_arr,
         sensor_id=sensor_id,

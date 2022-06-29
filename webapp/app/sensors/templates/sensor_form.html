@@ -4,24 +4,50 @@
 
 {% block content %}
 <div class="right_col" role="main">
-  <div class="">
-    <div class="page-title">
-      <div class="title_left">
-        <h3>Edit sensor #{{ sensor_id }}</h3>
-      </div>
-    </div>
-
-    <div class="clearfix"></div>
-
+  <div class="container-fluid">
     <div class="row">
       <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
-
           <div class="x_content">
+            <div class="row">
+              <div class="col-md-3 col-sm-4 col-xs-10">
+                <h4>Choose sensor to edit:</h4>
+                <select
+                    id="selected_sensor_id"
+                    class="selectpicker"
+                    style="margin-bottom: 1em;"
+                    name="selected_sensor_id"
+                    >
+                    {% for s in sensors %}
+                    <option
+                        value={{ s.id }}
+                        {% if sensor_id and s.id == sensor.id %} selected {% endif %}
+                        >
+                        Sensor #{{ s.id }} - {{s.sensor_type}} - {{ s.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                  <input
+                      type="submit"
+                      onclick="chooseSensor()"
+                      value="Submit"
+                      >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if sensor_id %}
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_content">
+            <h3>Sensor #{{ sensor_id }}</h3>
             <h3 id="header">Attributes</h3>
             <form
                 id="attributes_form"
-                data-parsley-validate
                 method="POST">
 
               <!-- hidden -->
@@ -49,18 +75,18 @@
                 </label>
                 <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
                   <select
-                       id="type_id"
-                       name="type_id"
-                       class="form-control selectpicker col-md-7 col-xs-12"
-                       >
-                    {% for type in sensor_types %}
-                    <option
-                        value={{ type.id }}
-                        {% if type.id == sensor.type_id %} selected {% endif %}
-                    >
-                    {{ type.sensor_type }}
-                    </option>
-                    {% endfor %}
+                      id="type_id"
+                      name="type_id"
+                      class="form-control selectpicker col-md-7 col-xs-12"
+                      >
+                      {% for type in sensor_types %}
+                      <option
+                          value={{ type.id }}
+                          {% if type.id == sensor.type_id %} selected {% endif %}
+                          >
+                          {{ type.sensor_type }}
+                      </option>
+                      {% endfor %}
                   </select>
                 </div>
               </div>
@@ -186,7 +212,6 @@
 
             <form
                 id="add_location_form"
-                data-parsley-validate
                 method="POST">
 
               <!-- hidden -->
@@ -225,7 +250,7 @@
                           >
                           {{ loc.zone }}, {{ loc.aisle }}-{{ loc.column }}-{{ loc.shelf }}
                       </option>
-                    {% endfor %}
+                      {% endfor %}
                   </select>
                 </div>
               </div>
@@ -254,6 +279,7 @@
         </div>
       </div>
     </div>
+    {% endif %}
 
   </div>
 </div>
@@ -261,20 +287,27 @@
 
 {% block javascripts %}
 {{ super()}}
-<!-- Parsley -->
-<script src="{{ url_for('static', filename='vendors/parsleyjs/dist/parsley.min.js') }}"></script>
 <!-- Date picker -->
 <script>
-$(function() {
-  $('input[name="installation_date"]').daterangepicker({
-    singleDatePicker: true,
-    showDropdowns: true,
-    minDate: {{ latest_installation_date }},
-    maxYear: parseInt(moment().format('YYYY'), 10),
-    locale: {
-      "format": "YYYY-MM-DD",
+  {% if sensor_id %}
+  $(function() {
+      $('input[name="installation_date"]').daterangepicker({
+          singleDatePicker: true,
+          showDropdowns: true,
+          minDate: {{ latest_installation_date }},
+          maxYear: parseInt(moment().format('YYYY'), 10),
+          locale: {
+              "format": "YYYY-MM-DD",
+            }
+        });
+    });
+  {% endif %}
+</script>
+<!-- The choose sensor button -->
+<script>
+  function chooseSensor() {
+      const id = document.getElementById("selected_sensor_id").value;
+      window.location.href = `./sensor_form?query=${id}`
     }
-  });
-});
 </script>
 {% endblock javascripts %}
