@@ -18,6 +18,7 @@ jobs:
       CROP_STARK_PASS: "testpass"
       CROP_30MHZ_TEST_T_RH_CHECKID: "testid"
       CROP_30MHZ_APIKEY: "testkey"
+      CROP_OPENWEATHERMAP_APIKEY: "testkey"
     steps:
       - uses: actions/setup-python@v2
         with:
