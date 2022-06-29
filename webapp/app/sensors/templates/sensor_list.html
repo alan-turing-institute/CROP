@@ -39,13 +39,11 @@
                   <tr>
                     <th>ID</th>
                     <th>Type</th>
-                    <th>Device ID</th>
                     <th>Name</th>
-                    <th>Last updated</th>
-                    <th>Zone</th>
-                    <th>Aisle</th>
-                    <th>Column</th>
-                    <th>Shelf</th>
+                    <th>Aranet code</th>
+                    <th>Aranet Pro ID</th>
+                    <th>Location (zone-aisle-column-shelf)</th>
+                    <th>Installation date</th>
                     <th class="column-title no-link last"><span class="nobr">Action</span>
                   </tr>
                 </thead>
@@ -55,13 +53,11 @@
                     <tr class='clickable-row' method = POST>
                       <td>{{ t_sensor.id }}</td>
                       <td>{{ t_sensor.sensor_type }}</td>
-                      <td>{{ t_sensor.device_id }}</td>
                       <td>{{ t_sensor.name }}</td>
-                      <td>{{ t_sensor.last_updated }}</td>
-                      <td>{{ t_sensor.zone }}</td>
-                      <td>{{ t_sensor.aisle }}</td>
-                      <td>{{ t_sensor.column }}</td>
-                      <td>{{ t_sensor.shelf }}</td>
+                      <td>{{ t_sensor.aranet_code }}</td>
+                      <td>{{ t_sensor.aranet_pro_id }}</td>
+                      <td>{{ t_sensor.zone }}-{{ t_sensor.aisle }}-{{ t_sensor.column }}-{{ t_sensor.shelf }}</td>
+                      <td>{{ t_sensor.installation_date }}</td>
                       <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.id }}">Edit</a>
                     </tr>
                     {% endfor %}
