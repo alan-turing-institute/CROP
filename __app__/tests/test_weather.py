@@ -1,23 +1,43 @@
 """
 Test ingress_weather.py module
 """
+import re
 from datetime import datetime, timedelta
-
-from __app__.crop.constants import (
-    CONST_CROP_30MHZ_APIKEY,
-    CONST_CROP_30MHZ_TEST_T_RH_CHECKID,
-    CONST_ZENSIE_WEATHER_SENSOR_TYPE,
+import requests
+import requests_mock
+from __app__.crop.ingress_weather import (
+    get_openweathermap_data,
+    CONST_OPENWEATHERMAP_URL
 )
 
-from __app__.crop.ingress_weather import get_api_weather_data
 
-# def test_get_sensor_data():
 
-#     check_id = CONST_CROP_30MHZ_TEST_T_RH_CHECKID
+def test_get_weather_data():
 
-#     dt_from = datetime.now() + timedelta(days=-1)
-#     dt_to = datetime.now()
+    dt_from = datetime.now() + timedelta(days=-1)
+    dt_to = datetime.now()
+    timestamp_from = int(dt_from.timestamp())
+    timestamp_to = int(dt_to.timestamp())
+    timestamp_avg = int((timestamp_from + timestamp_to)/2)
+    # mock the API response
 
-#     success, error, _ = get_api_sensor_data(CONST_CROP_30MHZ_APIKEY, check_id, dt_from, dt_to)
-
-#     assert success is True, error
+    mock_response = {
+        "hourly": [
+            {
+                "dt": timestamp_avg,
+                "temp": 291.5,
+                "pressure": 1016,
+                "humidity": 57,
+                "wind_speed": 4.44,
+                "wind_deg": 259,
+                "rain": {"1h": 0.33},
+                "weather":[{"icon": "02d"}]
+            }
+        ]
+    }
+    with requests_mock.Mocker() as m:
+        m.get(requests_mock.ANY, json=mock_response)
+        success, error, df = get_openweathermap_data(dt_from, dt_to)
+        assert success
+        # should have 2 identical rows, from the 2 api calls
+        assert len(df) == 2
