@@ -1,5 +1,5 @@
 """
-Python module to import data using 30 MHz API
+Python module to import data using Openweatherdata API
 """
 
 import logging
@@ -12,51 +12,24 @@ from sqlalchemy import and_
 
 from __app__.crop.db import connect_db, session_open, session_close
 from __app__.crop.structure import (
-    TypeClass,
-    SensorClass,
     ReadingsWeatherClass,
 )
 from __app__.crop.utils import query_result_to_array
 from __app__.crop.constants import (
-    CONST_CROP_30MHZ_APIKEY,
-    CONST_ZENSIE_WEATHER_SENSOR_TYPE,
+    SQL_CONNECTION_STRING,
+    SQL_DBNAME,
+    CONST_API_WEATHER_TYPE,
+    CONST_OPENWEATHERMAP_APIKEY
 )
 from __app__.crop.ingress import log_upload_event
-from __app__.crop.sensors import get_zensie_weather_sensor_data
+from __app__.crop.sensors import get_db_weather_data
 
-CONST_CHECK_URL_PATH = "https://api.30mhz.com/api/stats/check"
-CONST_CHECK_PARAMS = "statisticType=averages&intervalSize=60m"
+CONST_OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=51.45&lon=0.14&appid="
 
 
-def import_zensie_data():
+def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetime, dt_to: datetime):
     """
-    Fix date ranges for pulling data
-    Imports all zensie weather data
-    """
-    from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
-
-    # date_ranges = pd.date_range(start='2020-01-01', end='2020-08-01', periods=20)
-
-    # for date_idx, dt_to in enumerate(date_ranges):
-
-    #     if date_idx != 0:
-    #         import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
-
-    #     dt_from = dt_to
-
-    dt_to: datetime = datetime.now()
-    dt_from: datetime = dt_to + timedelta(days=-1)
-    log: str = "Pull weather from date {} to {}".format(dt_to, dt_from)
-    logging.info(log)
-
-    import_zensie_weather_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
-
-
-def import_zensie_weather_data(
-    conn_string: str, database: str, dt_from: datetime, dt_to: datetime
-):
-    """
-    Uploads zensie weather data to the CROP database.
+    Uploads openweathermap data to the CROP database.
 
     Arguments:
         conn_string: connection string
@@ -66,237 +39,133 @@ def import_zensie_weather_data(
     Returns:
         status, error
     """
-
-    log: str = ""
-    success: bool = False
-    engine: tuple = ()
-    sensor_type: str = CONST_ZENSIE_WEATHER_SENSOR_TYPE
-
+    # connect to the DB to get weather data already there, so we don't duplicate
     success, log, engine = connect_db(conn_string, database)
-
     if not success:
         logging.error(log)
         return success, log
+    session = session_open(engine)
+    df_db = get_db_weather_data(session, dt_from,dt_to)
 
-    # get the list of zensie weather sensors
-    try:
+    # now get the Openweathermap API data
+    success, error, df_api = get_openweathermap_data(dt_from, dt_to)
+
+    # filter out the rows that are already in the db data
+    new_data_df = df_api[~df_api.index.isin(df_db.index)]
+
+    logging.info(
+        "new data with size len(new_data_df): {}\n\n".format(
+                        len(new_data_df)
+        )
+    )
+    if len(new_data_df) > 0:
+        # this is the current time in seconds since epoch
+        start_time: float = time.time()
         session = session_open(engine)
-        zensie_sensor_list: list = get_zensie_sensors_list(session, sensor_type)
+        for idx, row in new_data_df.iterrows():
+            data = ReadingsWeatherClass(
+                sensor_id=0,
+                timestamp=idx,
+                temperature=row["temperature"],
+                rain_probability=None, # not in openweathermap data
+                rain=row["rain"],
+                relative_humidity=row["relative_humidity"],
+                wind_speed=row["wind_speed"],
+                wind_direction=row["wind_direction"],
+                air_pressure=row["air_pressure"],
+                radiation=None, # not in openweathermap data
+                icon=row["icon"],
+                source=row["source"],
+            )
+            session.add(data)
         session_close(session)
-        if zensie_sensor_list is None or len(zensie_sensor_list) == 0:
-            success = False
-            log = "No sensors with sensor type {} were found.".format(sensor_type)
-    except:
-        session_close(session)
-        success = False
-        log = "No sensors with sensor type {} were found.".format(sensor_type)
 
-    if not success:
-        logging.error(log)
-        return log_upload_event(
-            CONST_ZENSIE_WEATHER_SENSOR_TYPE,
-            "Zensie Weather API",
+        elapsed_time = time.time() - start_time
+
+        logging.debug(
+            "openweathermap | elapsed time importing data: {} s.".format(
+                elapsed_time
+            )
+        )
+
+        upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
+        log_upload_event(
+            CONST_API_WEATHER_TYPE,
+            "Openweathermap API",
             success,
-            log,
+            upload_log,
             conn_string,
         )
 
-    for _, zensie_sensor in enumerate(zensie_sensor_list):
-        sensor_id = zensie_sensor["id"]
-        sensor_check_id = zensie_sensor["device_id"]
-        logging.info(
-            "sensor_id: {} | sensor_check_id: {}".format(sensor_id, sensor_check_id)
+    else:
+        log_upload_event(
+            CONST_API_WEATHER_TYPE,
+            "Openweathermap API",
+            success,
+            error,
+            conn_string,
         )
-        if sensor_id > 0 and len(sensor_check_id) > 0:
-            logging.info(
-                "\nUpdate: Getting data for sensor_id: {} | dt_from: {}, dt_to: {}".format(
-                    sensor_id, dt_from, dt_to
-                )
-            )
-
-            # Sensor data from Zensie
-            sensor_success, sensor_error, api_data_df = get_api_weather_data(
-                CONST_CROP_30MHZ_APIKEY, sensor_check_id, dt_from, dt_to
-            )
-
-            logging.info(
-                "\nUpdate: sensor_id: {} | sensor_success: {}, sensor_error: {}".format(
-                    sensor_id, sensor_success, sensor_error
-                )
-            )
-
-            if sensor_success:
-                # Sensor data from database
-                session = session_open(engine)
-                db_data_df = get_zensie_weather_sensor_data(
-                    session,
-                    sensor_id,
-                    dt_from + timedelta(hours=-1),
-                    dt_to + timedelta(hours=1),
-                )
-                session_close(session)
-
-                if len(db_data_df) > 0:
-                    # Filtering only new data
-                    new_data_df = api_data_df[~api_data_df.index.isin(db_data_df.index)]
-                    logging.info(
-                        "sensor_id: {} | len(db_data_df): {}".format(
-                            sensor_id, len(db_data_df)
-                        )
-                    )
-                else:
-                    new_data_df = api_data_df
-
-                logging.info(
-                    "sensor_id: {} | len(new_data_df): {}\n\n".format(
-                        sensor_id, len(new_data_df)
-                    )
-                )
-
-                if len(new_data_df) > 0:
-                    # this is the current time in seconds since epoch
-                    start_time: float = time.time()
-                    session = session_open(engine)
-                    for idx, row in new_data_df.iterrows():
-                        data = ReadingsWeatherClass(
-                            sensor_id=sensor_id,
-                            timestamp=idx,
-                            temperature=row["temperature"],
-                            rain_probability=row["rain_probability"],
-                            rain=row["rain"],
-                            relative_humidity=row["relative_humidity"],
-                            wind_speed=row["wind_speed"],
-                            wind_direction=row["wind_direction"],
-                            air_pressure=row["air_pressure"],
-                            radiation=row["radiation"],
-                        )
-                        session.add(data)
-
-                    session.query(SensorClass).filter(
-                        SensorClass.id == sensor_id
-                    ).update({"last_updated": datetime.now()})
-                    session_close(session)
-
-                    elapsed_time = time.time() - start_time
-
-                    logging.debug(
-                        "sensor_id: {} | elapsed time importing data: {} s.".format(
-                            sensor_id, elapsed_time
-                        )
-                    )
-
-                    upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
-                    log_upload_event(
-                        CONST_ZENSIE_WEATHER_SENSOR_TYPE,
-                        "Zensie Weather API; Sensor ID {}".format(sensor_id),
-                        sensor_success,
-                        upload_log,
-                        conn_string,
-                    )
-
-            else:
-                log_upload_event(
-                    CONST_ZENSIE_WEATHER_SENSOR_TYPE,
-                    "Zensie Weather API; Sensor ID {}".format(sensor_id),
-                    sensor_success,
-                    sensor_error,
-                    conn_string,
-                )
     return True, None
 
 
-def get_zensie_sensors_list(session, sensor_type) -> list:
+def get_openweathermap_data(dt_from, dt_to):
     """
-    Makes a list of ensie rth sensors with their check_id and ids.
+    Retrieve weather data from the openweathermap API.
+    Note that each API call returns the hourly data from 00:00 to 23:59 on
+    the date specified by the 'dt' timestamp, so we need to make 2 calls
+    in order to get the full set of data for the last 24 hours.
 
-    Arguments:
-        session: sql session
-        sensor_type: zensie sensor type
-    Returns:
-        result: a list of zensie rth sensors with their check_id and ids.
+    Parameters
+    ----------
+    dt_from: datetime, earliest time for returned records
+    dt_to: datetime, latest time for returned records
+
+    Returns
+    -------
+    success: bool, True if everything OK
+    error: str, empty string if everything OK
+    df: pd.DataFrame, contains 1 row per hours data.
     """
+    base_url = CONST_OPENWEATHERMAP_URL
+    base_url += CONST_OPENWEATHERMAP_APIKEY
+    # get unix timestamps for start and end times
+    timestamp_from = int(dt_from.timestamp())
+    timestamp_to = int(dt_to.timestamp())
+    hourly_records = []
+    error = ""
+    # do API call and get data in right format for both dates.
+    for ts in [timestamp_from, timestamp_to]:
+        url = base_url + "&dt={}".format(ts)
+        response = requests.get(url)
 
-    query = session.query(
-        SensorClass.type_id,
-        SensorClass.id,
-        SensorClass.device_id,
-    ).filter(
-        and_(
-            TypeClass.sensor_type == sensor_type,
-            SensorClass.type_id == TypeClass.id,
-        )
-    )
-
-    readings = session.execute(query).fetchall()
-
-    result = query_result_to_array(readings, date_iso=False)
-
-    return result
-
-
-def get_api_weather_data(api_key, check_id, dt_from, dt_to):
-    """
-    Makes a request to download weather data for a specified period of time.
-
-    Arguments:
-        api_key: api key for authetication
-        check_id: sensor identifier
-        dt_from: date range from
-        dt_to: date range to
-    Return:
-        success: whether data request was succesful
-        error: error message
-        data_df: sensor data as pandas dataframe
-    """
-
-    success: bool = True
-    error: str = "None"
-    data_df: pd.Dataframe.dtypes = None
-    log: str = ""
-
-    headers: dict = {
-        "Content-Type": "application/json",
-        "Authorization": api_key,
-    }
-
-    dt_from_iso: str = dt_from.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
-    dt_to_iso: str = dt_to.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
-
-    url: str = "{}/{}/from/{}/until/{}?{}".format(
-        CONST_CHECK_URL_PATH, check_id, dt_from_iso, dt_to_iso, CONST_CHECK_PARAMS
-    )
-
-    log = "\nUpdate: GET from {}".format(url)
-    logging.info(log)
-
-    response: requests.Response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        data_df = pd.read_json(response.content).T
-        if data_df.empty:
-            error = "Request [%s]: no data" % (url[: min(70, len(url))])
+        if response.status_code != 200:
+            error = "Request's [%s] status code: %d" % (
+                url[: min(70, len(url))],
+                response.status_code,
+            )
             success = False
-    else:
-        error = "Request's [%s] status code: %d" % (
-            url[: min(70, len(url))],
-            response.status_code,
-        )
-        success = False
+            return success, error, None
+        hourly_data = response.json()["hourly"]
 
-    if success:
-        data_df.reset_index(inplace=True, drop=False)
-        data_df.rename(columns={"index": "timestamp"}, inplace=True)
-        data_df.set_index("timestamp", inplace=True)
-
-        # i_weathers.temperature
-        for col_name in data_df.columns:
-            data_df.rename(columns={col_name: col_name[11:]}, inplace=True)
-
-        log = "\nSuccess: Weather dataframe \n{}".format(data_df)
-        logging.info(log)
-
-    return success, error, data_df
-
-
-if __name__ == "__main__":
-    import_zensie_data()
+        for hour in hourly_data:
+            if hour["dt"] < timestamp_from or hour["dt"] > timestamp_to:
+                continue
+            record = {}
+            record["timestamp"] = datetime.fromtimestamp(hour["dt"])
+            record["temperature"] = hour["temp"] - 273.15 # convert from Kelvin
+            record["air_pressure"] = hour["pressure"]
+            record["relative_humidity"] = hour["humidity"]
+            record["wind_speed"] = hour["wind_speed"]
+            record["wind_direction"] = hour["wind_deg"]
+            record["icon"] = hour["weather"][0]["icon"]
+            record["source"] = "openweatherdata"
+            record["rain"] = 0.
+            if "rain" in hour.keys():
+                record["rain"] += hour["rain"]["1h"]
+            hourly_records.append(record)
+    weather_df = pd.DataFrame(hourly_records)
+    weather_df.set_index("timestamp", inplace=True)
+    success = True
+    log = "\nSuccess: Weather dataframe \n{}".format(weather_df)
+    logging.info(log)
+    return success, error, weather_df
