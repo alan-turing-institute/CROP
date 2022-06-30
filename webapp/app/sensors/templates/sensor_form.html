@@ -10,28 +10,90 @@
         <div class="x_panel">
           <div class="x_content">
             <div class="row">
-              <div class="col-md-3 col-sm-4 col-xs-10">
+              <div class="col-md-8 col-sm-10 col-xs-12">
                 <h4>Choose sensor to edit:</h4>
-                <select
-                    id="selected_sensor_id"
-                    class="selectpicker"
-                    style="margin-bottom: 1em;"
-                    name="selected_sensor_id"
-                    >
-                    {% for s in sensors %}
-                    <option
-                        value={{ s.id }}
-                        {% if sensor_id and s.id == sensor.id %} selected {% endif %}
-                        >
-                        Sensor #{{ s.id }} - {{s.sensor_type}} - {{ s.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-                  <input
-                      type="submit"
-                      onclick="chooseSensor()"
-                      value="Submit"
+                <div class="form-group">
+                  <select
+                      id="selected_sensor_id"
+                      class="selectpicker"
+                      name="selected_sensor_id"
                       >
+                      {% for s in sensors %}
+                      <option
+                          value={{ s.id }}
+                          {% if sensor_id and s.id == sensor.id %} selected {% endif %}
+                          >
+                          Sensor #{{ s.id }} - {{s.sensor_type}} - {{ s.name }}
+                      </option>
+                      {% endfor %}
+                  </select>
+                    <input
+                        type="button"
+                        onclick="chooseSensor()"
+                        value="Go"
+                        />
+                </div>
+
+                <h4>Create a new sensor:</h4>
+                <form
+                    id="create_new_form"
+                    onsubmit="return validateNewSensor()"
+                    method="POST"
+                    >
+                    <!-- hidden -->
+                  <div class="form-group">
+                    <input
+                        type="hidden"
+                        id="form_name"
+                        name="form_name"
+                        value="create_new_form">
+                  </div>
+                  <!-- /hidden -->
+
+                  <div class="form-group row">
+                    <label
+                        class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                        for="new_sensor_type_id">
+                      Sensor type
+                    </label>
+                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                      <select
+                          id="new_sensor_type_id"
+                          name="new_sensor_type_id"
+                          class="form-control selectpicker col-md-7 col-xs-12"
+                          >
+                          {% for type in sensor_types %}
+                          <option value={{ type.id }} >
+                          {{ type.sensor_type }}
+                          </option>
+                          {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group row">
+                    <label
+                        class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                        for="new_sensor_device_id">
+                      Device ID
+                    </label>
+                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                      <input
+                          type="text"
+                          id="new_sensor_device_id"
+                          name="new_sensor_device_id"
+                          class="form-control col-md-7 col-xs-12"
+                          value="">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <input
+                        type="submit"
+                        value="Create"
+                        />
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -48,17 +110,18 @@
             <h3 id="header">Attributes</h3>
             <form
                 id="attributes_form"
+                onsubmit="return validateEditedSensor()"
                 method="POST">
 
               <!-- hidden -->
-              <div class="form-group row">
+              <div class="form-group">
                 <input
                     type="hidden"
                     id="form_name"
                     name="form_name"
                     value="attributes_form">
               </div>
-              <div class="form-group row">
+              <div class="form-group">
                 <input
                     type="hidden"
                     id="id"
@@ -176,6 +239,14 @@
                 <input type="submit" value="Submit">
               </div>
             </form>
+            <div class="form-group">
+              <input
+                  type="button"
+                  style="margin-top: 1em"
+                  onclick="deleteSensorPrompt()"
+                  value="Delete sensor"
+                  />
+            </div>
           </div>
 
           <div class="x_content">
@@ -197,7 +268,7 @@
               </thead>
 
               <tbody>
-                {% for t_sensor_loc in sensor_locations %}
+                {% for t_sensor_loc in location_history %}
                 <tr class='clickable-row' method = POST>
                   <td>{{ t_sensor_loc.installation_date }}</td>
                   <td>{{ t_sensor_loc.location_id }}</td>
@@ -212,17 +283,18 @@
 
             <form
                 id="add_location_form"
+                onsubmit="return validateNewLocation()"
                 method="POST">
 
               <!-- hidden -->
-              <div class="form-group row">
+              <div class="form-group">
                 <input
                     type="hidden"
                     id="form_name"
                     name="form_name"
                     value="add_location_form">
               </div>
-              <div class="form-group row">
+              <div class="form-group">
                 <input
                     type="hidden"
                     id="id"
@@ -264,6 +336,7 @@
                 <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
                   <input
                       type="text"
+                      id="installation_date"
                       name="installation_date"
                       value="{{latest_installation_date}}"
                       />
@@ -287,6 +360,7 @@
 
 {% block javascripts %}
 {{ super()}}
+
 <!-- Date picker -->
 <script>
   {% if sensor_id %}
@@ -303,11 +377,74 @@
     });
   {% endif %}
 </script>
-<!-- The choose sensor button -->
+
+<!-- onsubmit and onclick event handlers -->
 <script>
   function chooseSensor() {
       const id = document.getElementById("selected_sensor_id").value;
       window.location.href = `./sensor_form?query=${id}`
+    }
+
+  function deleteSensorPrompt() {
+      alert("If a sensor has been retired from use, please add a new installation for them with a location 'Retired'.");
+    }
+
+  function sensorExists(type_id, device_id) {
+      {% if sensors %}
+      const old_sensors = JSON.parse('{{sensors | tojson}}')
+      {% endif %}
+      for (old_sensor of old_sensors) {
+          const match = (old_sensor.type_id == type_id && old_sensor.device_id == device_id)
+          if (match) return true;
+        }
+      return false;
+    }
+
+  function validateEditedSensor() {
+      const type_id = document.getElementById("type_id").value;
+      const device_id = document.getElementById("device_id").value;
+      if (device_id == "" || device_id == "None") {
+          alert("Device ID can not be null or empty.");
+          return false;
+        }
+      if (sensorExists(type_id, device_id)) {
+          alert("A sensor of this type with this device ID already exists.");
+          return false;
+        }
+      return true;
+    }
+
+
+  function validateNewSensor() {
+      const new_sensor_type_id = document.getElementById("new_sensor_type_id").value;
+      const new_sensor_device_id = document.getElementById("new_sensor_device_id").value;
+      if (new_sensor_device_id == "" || new_sensor_device_id == "None") {
+          alert("Device ID can not be null or empty.");
+          return false;
+        }
+      if (sensorExists(new_sensor_type_id, new_sensor_device_id)) {
+          alert("A sensor of this type with this device ID already exists.");
+          return false;
+        }
+      return true;
+    }
+
+  function validateNewLocation() {
+      const new_installation_date = Date.parse(
+          document.getElementById("installation_date").value
+        );
+      {% if location_history %}
+      const location_history = JSON.parse('{{location_history | tojson}}');
+      {% endif %}
+      for (loc of location_history) {
+          const installation_date = Date.parse(loc["installation_date"]);
+          const match = (installation_date == new_installation_date)
+          if (match) {
+              alert("Only one installation entry per day is allowed.");
+              return false
+            }
+        }
+      return true;
     }
 </script>
 {% endblock javascripts %}
