@@ -94,7 +94,11 @@ def route_template(template):
                                 shelf=loc_shelf,
                             )
                         )
-                        db.session.commit()
+                        try:
+                            db.session.commit()
+                        except Exception as e:
+                            db.session.rollback()
+                            raise e
 
                         loc_message = "Location (ID = {}) has been updated.".format(
                             loc_id
@@ -109,7 +113,11 @@ def route_template(template):
                 if loc_id is not None:
 
                     LocationClass.query.filter_by(id=loc_id).delete()
-                    db.session.commit()
+                    try:
+                        db.session.commit()
+                    except Exception as e:
+                        db.session.rollback()
+                        raise e
 
                     loc_message = "Location (ID = {}) has been deleted.".format(loc_id)
                 else:
