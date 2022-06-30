@@ -19,6 +19,7 @@ from utilities.utils import query_result_to_array
 @blueprint.route("/sensor_list", methods=["POST", "GET"])
 @login_required
 def sensor_list():
+    """A view for listing all sensors."""
     query = (
         db.session.query(
             SensorClass.id,
@@ -49,15 +50,17 @@ def sensor_list():
         .order_by(asc(SensorClass.id))
         .limit(CONST_MAX_RECORDS)
     )
-
     sensors = db.session.execute(query).fetchall()
-
     sensors_arr = query_result_to_array(sensors, date_iso=False)
-
     return render_template("sensor_list.html", sensors=sensors_arr)
 
 
+# All the functions from here on serve the sensor_form view, which is used for
+# editing and adding sensors.
+
+
 def get_existing_sensors():
+    """Get a list of all current sensors, for the purposes of sensor_form."""
     query = (
         db.session.query(
             SensorClass.id,
@@ -112,6 +115,9 @@ def update_sensor_attributes(request):
 
 
 def add_sensor_location(request):
+    """Add a new location installation to a sensor, based on the data in the form
+    submission in `request`.
+    """
     sensor_location_obj = SensorLocationClass(
         sensor_id=request.values.get("query"),
         location_id=request.values.get("location_id"),
@@ -128,6 +134,9 @@ def add_sensor_location(request):
 
 
 def create_new_sensor(request):
+    """Add a new sensor to the database. type_id and device_id are read from
+    request.values, since there's a uniqueness and non-nullness constraint on them.
+    """
     new_sensor = SensorClass(
         type_id=request.values.get("new_sensor_type_id"),
         device_id=request.values.get("new_sensor_device_id"),
@@ -144,6 +153,7 @@ def create_new_sensor(request):
 
 
 def get_sensor_details(sensor_id):
+    """Get all the data about a single given sensor, for use in sensor_form."""
     query = (
         db.session.query(
             SensorClass.id,
@@ -175,6 +185,7 @@ def get_sensor_details(sensor_id):
 
 
 def get_sensor_location_history(sensor_id):
+    """Get the full location history of a single sensor."""
     query = (
         db.session.query(
             SensorLocationClass.id,
@@ -202,6 +213,7 @@ def get_sensor_location_history(sensor_id):
 
 
 def get_possible_sensor_locations():
+    """Get all possible locations for sensors, that the database has."""
     query = db.session.query(
         LocationClass.id,
         LocationClass.zone,
@@ -221,6 +233,7 @@ def get_possible_sensor_locations():
 
 
 def get_possible_sensor_types():
+    """Get all possible types for sensors, that the database has."""
     query = db.session.query(
         TypeClass.id,
         TypeClass.sensor_type,
@@ -231,6 +244,9 @@ def get_possible_sensor_types():
 
 
 def render_sensor_picker_page(sensors_arr, locs_arr, sensor_types_arr):
+    """Render the sensor_form page with no sensor chosen for editing, i.e. only showing
+    the "Choose sensor" and "Add new sensor" parts.
+    """
     return render_template(
         "sensor_form.html",
         sensors=sensors_arr,
@@ -247,6 +263,7 @@ def render_sensor_picker_page(sensors_arr, locs_arr, sensor_types_arr):
 @blueprint.route("/sensor_form", methods=["POST", "GET"])
 @login_required
 def sensor_form():
+    """The sensor_form view for editing and adding sensors."""
     if request.method == "POST":
         form_name = request.values.get("form_name")
         if form_name == "attributes_form":
@@ -255,6 +272,8 @@ def sensor_form():
             add_sensor_location(request)
         elif form_name == "create_new_form":
             new_sensor_id = create_new_sensor(request)
+            # When a new sensor is created, we navigate to the sensor_form page that
+            # displays the details of that sensor.
             return redirect(f"sensor_form?query={new_sensor_id}")
 
     sensors_arr = get_existing_sensors()
@@ -266,11 +285,12 @@ def sensor_form():
 
     sensor = get_sensor_details(sensor_id)
     if not sensor:
+        # This happens if the given sensor_id doesn't exist in the database.
         return render_sensor_picker_page(sensors_arr, locs_arr, sensor_types_arr)
 
     location_history_arr = get_sensor_location_history(sensor_id)
 
-    # Find the latest installation date.
+    # Find the latest installation date and location.
     if location_history_arr:
         latest_installation = max(
             location_history_arr, key=lambda x: x["installation_date"]
