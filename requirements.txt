@@ -30,3 +30,4 @@ requests==2.27.1
 python-dateutil==2.8.2
 
 PyYAML==6.0
+requests_mock==1.9.3

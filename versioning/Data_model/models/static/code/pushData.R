@@ -4,11 +4,13 @@ require(reshape2)
 library(stringr)
 
 connectToDatabase = function(){
-  crop_host = "cropapptestsqlserver.postgres.database.azure.com"
-  crop_port = "5432"
-  crop_dbname = "app_db"
-  crop_user = "cropdbadmin@cropapptestsqlserver"
-  crop_password = "QhXZ7qZddDr224Mc2P4k"
+  # TODO These variables need to hold secrets. They should be read from
+  # somewhere (envvars?). The below are placeholders.
+  crop_host = ""
+  crop_port = ""
+  crop_dbname = ""
+  crop_user = ""
+  crop_password = ""
   
   # Connect to the MySQL database: con
   con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), 

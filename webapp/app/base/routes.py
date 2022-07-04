@@ -97,7 +97,7 @@ def unauthorized_callback():
 
 @blueprint.errorhandler(403)
 def access_forbidden(error):
-    return render_template("errors/page_403.html"), 403
+    return redirect(url_for('base_blueprint.login'))
 
 
 @blueprint.errorhandler(404)

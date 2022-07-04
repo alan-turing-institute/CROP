@@ -1,0 +1,16 @@
+pip==22.0.4
+Jinja2==3.0.3
+jinjasql==0.1.8
+psycopg2-binary==2.9.3
+
+pandas==1.4.2
+scikit-learn==1.0.2
+scipy==1.8.0
+numpy==1.22.3
+matplotlib==3.5.1
+
+black==22.3.0
+pylint==2.13.5
+
+azure-functions==1.10.1
+azure-storage-blob==12.11.0
