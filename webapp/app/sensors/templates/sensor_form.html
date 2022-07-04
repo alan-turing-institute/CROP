@@ -389,12 +389,18 @@
       alert("If a sensor has been retired from use, please add a new installation for them with a location 'Retired'.");
     }
 
-  function sensorExists(type_id, device_id) {
+  function sensorExists(type_id, device_id, current_sensor_id) {
+      // Return true if a sensor with this type_id and device_id already exists. Except
+      // if current_sensor_id is not null and the only sensor with this
+      // (type_id, device_id) combination is the one with current_sensor_id.
       {% if sensors %}
-      const old_sensors = JSON.parse('{{sensors | tojson}}')
+      const old_sensors = JSON.parse('{{sensors | tojson}}');
       {% endif %}
       for (old_sensor of old_sensors) {
-          const match = (old_sensor.type_id == type_id && old_sensor.device_id == device_id)
+          let match = (old_sensor.type_id == type_id && old_sensor.device_id == device_id);
+          if (current_sensor_id !== null) {
+              match = match && (old_sensor.id != current_sensor_id);
+            }
           if (match) return true;
         }
       return false;
@@ -403,11 +409,16 @@
   function validateEditedSensor() {
       const type_id = document.getElementById("type_id").value;
       const device_id = document.getElementById("device_id").value;
+      {% if sensor_id %}
+      const sensor_id = JSON.parse('{{sensor_id | tojson}}');
+      {% else %}
+      const sensor_id = null;
+      {% endif %}
       if (device_id == "" || device_id == "None") {
           alert("Device ID can not be null or empty.");
           return false;
         }
-      if (sensorExists(type_id, device_id)) {
+      if (sensorExists(type_id, device_id, sensor_id)) {
           alert("A sensor of this type with this device ID already exists.");
           return false;
         }
@@ -422,7 +433,7 @@
           alert("Device ID can not be null or empty.");
           return false;
         }
-      if (sensorExists(new_sensor_type_id, new_sensor_device_id)) {
+      if (sensorExists(new_sensor_type_id, new_sensor_device_id, null)) {
           alert("A sensor of this type with this device ID already exists.");
           return false;
         }
