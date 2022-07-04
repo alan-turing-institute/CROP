@@ -9,6 +9,7 @@ from sqlalchemy import func, and_, desc
 from app.queries import blueprint
 
 from utilities.utils import (
+    filter_latest_sensor_location,
     jasonify_query_result,
     parse_date_range_argument,
 )
@@ -35,17 +36,6 @@ def get_all_sensors():
     Returns:
         result - JSON string
     """
-
-    # Getting the latest locations of all sensors
-    sensor_temp = (
-        db.session.query(
-            SensorLocationClass.sensor_id,
-            func.max(SensorLocationClass.installation_date).label("installation_date"),
-        )
-        .group_by(SensorLocationClass.sensor_id)
-        .subquery()
-    )
-
     # Collecting the general information about the selected sensors
     query = db.session.query(
         SensorLocationClass.sensor_id,
@@ -57,21 +47,19 @@ def get_all_sensors():
         LocationClass.shelf,
         SensorClass.aranet_code,
         SensorClass.aranet_pro_id,
-        SensorClass.serial_number
+        SensorClass.serial_number,
     ).filter(
         and_(
-            sensor_temp.c.sensor_id == SensorLocationClass.sensor_id,
-            sensor_temp.c.installation_date == SensorLocationClass.installation_date,
-            sensor_temp.c.sensor_id == SensorClass.id,
+            filter_latest_sensor_location(db),
             SensorClass.type_id == TypeClass.id,
             SensorLocationClass.location_id == LocationClass.id,
+            SensorLocationClass.sensor_id == SensorClass.id,
         )
     )
 
     execute_result = db.session.execute(query).fetchall()
 
     result = jasonify_query_result(execute_result)
-    # print("ffff", result)
 
     return result
 
@@ -215,7 +203,6 @@ def get_weather():
             ReadingsWeatherClass.air_pressure,
             ReadingsWeatherClass.timestamp,
             ReadingsWeatherClass.icon,
-
         )
         .filter(
             and_(
