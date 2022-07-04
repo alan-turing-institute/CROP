@@ -1,0 +1,461 @@
+{% extends "base_site.html" %}
+
+{% block title %} EDIT SENSOR {% endblock title %}
+
+{% block content %}
+<div class="right_col" role="main">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_content">
+            <div class="row">
+              <div class="col-md-8 col-sm-10 col-xs-12">
+                <h4>Choose sensor to edit:</h4>
+                <div class="form-group">
+                  <select
+                      id="selected_sensor_id"
+                      class="selectpicker"
+                      name="selected_sensor_id"
+                      >
+                      {% for s in sensors %}
+                      <option
+                          value={{ s.id }}
+                          {% if sensor_id and s.id == sensor.id %} selected {% endif %}
+                          >
+                          Sensor #{{ s.id }} - {{s.sensor_type}} - {{ s.name }}
+                      </option>
+                      {% endfor %}
+                  </select>
+                    <input
+                        type="button"
+                        onclick="chooseSensor()"
+                        value="Go"
+                        />
+                </div>
+
+                <h4>Create a new sensor:</h4>
+                <form
+                    id="create_new_form"
+                    onsubmit="return validateNewSensor()"
+                    method="POST"
+                    >
+                    <!-- hidden -->
+                  <div class="form-group">
+                    <input
+                        type="hidden"
+                        id="form_name"
+                        name="form_name"
+                        value="create_new_form">
+                  </div>
+                  <!-- /hidden -->
+
+                  <div class="form-group row">
+                    <label
+                        class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                        for="new_sensor_type_id">
+                      Sensor type
+                    </label>
+                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                      <select
+                          id="new_sensor_type_id"
+                          name="new_sensor_type_id"
+                          class="form-control selectpicker col-md-7 col-xs-12"
+                          >
+                          {% for type in sensor_types %}
+                          <option value={{ type.id }} >
+                          {{ type.sensor_type }}
+                          </option>
+                          {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group row">
+                    <label
+                        class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                        for="new_sensor_device_id">
+                      Device ID
+                    </label>
+                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                      <input
+                          type="text"
+                          id="new_sensor_device_id"
+                          name="new_sensor_device_id"
+                          class="form-control col-md-7 col-xs-12"
+                          value="">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <input
+                        type="submit"
+                        value="Create"
+                        />
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if sensor_id %}
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_content">
+            <h3>Sensor #{{ sensor_id }}</h3>
+            <h3 id="header">Attributes</h3>
+            <form
+                id="attributes_form"
+                onsubmit="return validateEditedSensor()"
+                method="POST">
+
+              <!-- hidden -->
+              <div class="form-group">
+                <input
+                    type="hidden"
+                    id="form_name"
+                    name="form_name"
+                    value="attributes_form">
+              </div>
+              <div class="form-group">
+                <input
+                    type="hidden"
+                    id="id"
+                    name="id"
+                    value="{{ sensor_id }}">
+              </div>
+              <!-- /hidden -->
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="type_id">
+                  Sensor type
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <select
+                      id="type_id"
+                      name="type_id"
+                      class="form-control selectpicker col-md-7 col-xs-12"
+                      >
+                      {% for type in sensor_types %}
+                      <option
+                          value={{ type.id }}
+                          {% if type.id == sensor.type_id %} selected {% endif %}
+                          >
+                          {{ type.sensor_type }}
+                      </option>
+                      {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="name">
+                  Name
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      class="form-control col-md-7 col-xs-12"
+                      value="{{ sensor.name }}">
+                </div>
+              </div>
+
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="device_id">
+                  Device ID
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <input
+                      type="text"
+                      id="device_id"
+                      name="device_id"
+                      class="form-control col-md-7 col-xs-12"
+                      value="{{ sensor.device_id }}">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="aranet_code">
+                  Aranet code
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <input
+                      type="text"
+                      id="aranet_code"
+                      name="aranet_code"
+                      class="form-control col-md-7 col-xs-12"
+                      value="{{ sensor.aranet_code }}">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="aranet_pro_id">
+                  Aranet Pro ID
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <input
+                      type="text"
+                      id="aranet_pro_id"
+                      name="aranet_pro_id"
+                      class="form-control col-md-7 col-xs-12"
+                      value="{{ sensor.aranet_pro_id }}">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="serial_number">
+                  Serial number
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <input
+                      type="text"
+                      id="serial_number"
+                      name="serial_number"
+                      class="form-control col-md-7 col-xs-12"
+                      value="{{ sensor.serial_number }}">
+                </div>
+              </div>
+
+              <div>
+                <input type="submit" value="Submit">
+              </div>
+            </form>
+            <div class="form-group">
+              <input
+                  type="button"
+                  style="margin-top: 1em"
+                  onclick="deleteSensorPrompt()"
+                  value="Delete sensor"
+                  />
+            </div>
+          </div>
+
+          <div class="x_content">
+            <h3 id="header">Locations</h3>
+            <table
+                id="datatable-responsive"
+                class="table table-striped table-bordered dt-responsie nowrap"
+                cellspacing="0"
+                width="100%">
+              <thead>
+                <tr>
+                  <th>Installation Date</th>
+                  <th>Location ID</th>
+                  <th>Zone</th>
+                  <th>Aisle</th>
+                  <th>Column</th>
+                  <th>Shelf</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for t_sensor_loc in location_history %}
+                <tr class='clickable-row' method = POST>
+                  <td>{{ t_sensor_loc.installation_date }}</td>
+                  <td>{{ t_sensor_loc.location_id }}</td>
+                  <td>{{ t_sensor_loc.zone }}</td>
+                  <td>{{ t_sensor_loc.aisle }}</td>
+                  <td>{{ t_sensor_loc.column }}</td>
+                  <td>{{ t_sensor_loc.shelf }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            <form
+                id="add_location_form"
+                onsubmit="return validateNewLocation()"
+                method="POST">
+
+              <!-- hidden -->
+              <div class="form-group">
+                <input
+                    type="hidden"
+                    id="form_name"
+                    name="form_name"
+                    value="add_location_form">
+              </div>
+              <div class="form-group">
+                <input
+                    type="hidden"
+                    id="id"
+                    name="id"
+                    value="{{ sensor_id }}">
+              </div>
+              <!-- /hidden -->
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="location_id">
+                  New location
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <select
+                      id="location_id"
+                      name="location_id"
+                      class="form-control selectpicker col-md-7 col-xs-12"
+                      >
+                      {% for loc in locs %}
+                      <option
+                          value={{ loc.id }}
+                          {% if loc.id == latest_location %} selected {% endif %}
+                          >
+                          {{ loc.zone }}, {{ loc.aisle }}-{{ loc.column }}-{{ loc.shelf }}
+                      </option>
+                      {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label
+                    class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-4"
+                    for="installation_date">
+                  Installation date
+                </label>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-6">
+                  <input
+                      type="text"
+                      id="installation_date"
+                      name="installation_date"
+                      value="{{latest_installation_date}}"
+                      />
+                </div>
+              </div>
+
+              <div>
+                <input type="submit" value="Add installation">
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+{{ super()}}
+
+<!-- Date picker -->
+<script>
+  {% if sensor_id %}
+  $(function() {
+      $('input[name="installation_date"]').daterangepicker({
+          singleDatePicker: true,
+          showDropdowns: true,
+          minDate: {{ latest_installation_date }},
+          maxYear: parseInt(moment().format('YYYY'), 10),
+          locale: {
+              "format": "YYYY-MM-DD",
+            }
+        });
+    });
+  {% endif %}
+</script>
+
+<!-- onsubmit and onclick event handlers -->
+<script>
+  function chooseSensor() {
+      const id = document.getElementById("selected_sensor_id").value;
+      window.location.href = `./sensor_form?query=${id}`
+    }
+
+  function deleteSensorPrompt() {
+      alert("If a sensor has been retired from use, please add a new installation for them with a location 'Retired'.");
+    }
+
+  function sensorExists(type_id, device_id, current_sensor_id) {
+      // Return true if a sensor with this type_id and device_id already exists. Except
+      // if current_sensor_id is not null and the only sensor with this
+      // (type_id, device_id) combination is the one with current_sensor_id.
+      {% if sensors %}
+      const old_sensors = JSON.parse('{{sensors | tojson}}');
+      {% endif %}
+      for (old_sensor of old_sensors) {
+          let match = (old_sensor.type_id == type_id && old_sensor.device_id == device_id);
+          if (current_sensor_id !== null) {
+              match = match && (old_sensor.id != current_sensor_id);
+            }
+          if (match) return true;
+        }
+      return false;
+    }
+
+  function validateEditedSensor() {
+      const type_id = document.getElementById("type_id").value;
+      const device_id = document.getElementById("device_id").value;
+      {% if sensor_id %}
+      const sensor_id = JSON.parse('{{sensor_id | tojson}}');
+      {% else %}
+      const sensor_id = null;
+      {% endif %}
+      if (device_id == "" || device_id == "None") {
+          alert("Device ID can not be null or empty.");
+          return false;
+        }
+      if (sensorExists(type_id, device_id, sensor_id)) {
+          alert("A sensor of this type with this device ID already exists.");
+          return false;
+        }
+      return true;
+    }
+
+
+  function validateNewSensor() {
+      const new_sensor_type_id = document.getElementById("new_sensor_type_id").value;
+      const new_sensor_device_id = document.getElementById("new_sensor_device_id").value;
+      if (new_sensor_device_id == "" || new_sensor_device_id == "None") {
+          alert("Device ID can not be null or empty.");
+          return false;
+        }
+      if (sensorExists(new_sensor_type_id, new_sensor_device_id, null)) {
+          alert("A sensor of this type with this device ID already exists.");
+          return false;
+        }
+      return true;
+    }
+
+  function validateNewLocation() {
+      const new_installation_date = Date.parse(
+          document.getElementById("installation_date").value
+        );
+      {% if location_history %}
+      const location_history = JSON.parse('{{location_history | tojson}}');
+      {% endif %}
+      for (loc of location_history) {
+          const installation_date = Date.parse(loc["installation_date"]);
+          const match = (installation_date == new_installation_date)
+          if (match) {
+              alert("Only one installation entry per day is allowed.");
+              return false
+            }
+        }
+      return true;
+    }
+</script>
+{% endblock javascripts %}

@@ -35,6 +35,8 @@ from __app__.crop.structure import (
 from __app__.crop.structure import SQLA as db
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
 
+from utilities.utils import filter_latest_sensor_location
+
 
 def zensie_query(dt_from, dt_to):
     """
@@ -58,10 +60,8 @@ def zensie_query(dt_from, dt_to):
     query = db.session.query(
         ReadingsZensieTRHClass.timestamp,
         ReadingsZensieTRHClass.sensor_id,
-        # SensorClass.name,
         ReadingsZensieTRHClass.temperature,
         ReadingsZensieTRHClass.humidity,
-        # SensorLocationClass.location_id,
         LocationClass.zone,
     ).filter(
         and_(
@@ -70,6 +70,7 @@ def zensie_query(dt_from, dt_to):
             ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
             ReadingsZensieTRHClass.timestamp >= dt_from,
             ReadingsZensieTRHClass.timestamp <= dt_to,
+            filter_latest_sensor_location(db),
         )
     )
 

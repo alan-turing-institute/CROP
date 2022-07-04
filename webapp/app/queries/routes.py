@@ -9,6 +9,7 @@ from sqlalchemy import func, and_, desc
 from app.queries import blueprint
 
 from utilities.utils import (
+    filter_latest_sensor_location,
     jasonify_query_result,
     parse_date_range_argument,
 )
@@ -22,6 +23,7 @@ from __app__.crop.structure import (
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     ReadingsZensieTRHClass,
+    ReadingsWeatherClass,
 )
 
 
@@ -34,17 +36,6 @@ def get_all_sensors():
     Returns:
         result - JSON string
     """
-
-    # Getting the latest locations of all sensors
-    sensor_temp = (
-        db.session.query(
-            SensorLocationClass.sensor_id,
-            func.max(SensorLocationClass.installation_date).label("installation_date"),
-        )
-        .group_by(SensorLocationClass.sensor_id)
-        .subquery()
-    )
-
     # Collecting the general information about the selected sensors
     query = db.session.query(
         SensorLocationClass.sensor_id,
@@ -54,20 +45,21 @@ def get_all_sensors():
         LocationClass.aisle,
         LocationClass.column,
         LocationClass.shelf,
+        SensorClass.aranet_code,
+        SensorClass.aranet_pro_id,
+        SensorClass.serial_number,
     ).filter(
         and_(
-            sensor_temp.c.sensor_id == SensorLocationClass.sensor_id,
-            sensor_temp.c.installation_date == SensorLocationClass.installation_date,
-            sensor_temp.c.sensor_id == SensorClass.id,
+            filter_latest_sensor_location(db),
             SensorClass.type_id == TypeClass.id,
             SensorLocationClass.location_id == LocationClass.id,
+            SensorLocationClass.sensor_id == SensorClass.id,
         )
     )
 
     execute_result = db.session.execute(query).fetchall()
 
     result = jasonify_query_result(execute_result)
-    # print("ffff", result)
 
     return result
 
@@ -181,6 +173,44 @@ def get_30mhz_rht_data(sensor_id):
             )
         )
         .order_by(desc(ReadingsZensieTRHClass.timestamp))
+    )
+
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+
+    return result
+
+
+@blueprint.route("/getweatherdata", methods=["GET"])
+# @login_required
+def get_weather():
+    """
+    Produces a JSON with weather data.
+
+    Returns:
+        result - JSON string
+    """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
+    query = (
+        db.session.query(
+            ReadingsWeatherClass.temperature,
+            ReadingsWeatherClass.relative_humidity,
+            ReadingsWeatherClass.wind_speed,
+            ReadingsWeatherClass.wind_direction,
+            ReadingsWeatherClass.rain,
+            ReadingsWeatherClass.air_pressure,
+            ReadingsWeatherClass.timestamp,
+            ReadingsWeatherClass.icon,
+        )
+        .filter(
+            and_(
+                ReadingsWeatherClass.timestamp >= dt_from,
+                ReadingsWeatherClass.timestamp <= dt_to,
+            )
+        )
+        .order_by(desc(ReadingsWeatherClass.timestamp))
     )
 
     execute_result = db.session.execute(query).fetchall()

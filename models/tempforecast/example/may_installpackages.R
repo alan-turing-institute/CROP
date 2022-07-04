@@ -1,7 +1,0 @@
-install.packages("plyr")
-install.packages("ggplot2")
-install.packages("lubridate")
-install.packages("bsts")
-install.packages("dplyr")
-install.packages("reshape2")
-install.packages("forecast")
