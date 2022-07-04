@@ -7,6 +7,9 @@ import json
 from datetime import datetime, timedelta
 import pandas as pd
 from flask import send_file
+from sqlalchemy import and_, func
+
+from __app__.crop.structure import SensorLocationClass
 
 
 def query_result_to_array(query_result, date_iso=True):
@@ -130,10 +133,33 @@ def download_csv(readings, filename_base="results"):
     output_buffer = io.BytesIO()
     df.to_csv(output_buffer)
     output_buffer.seek(0)
-    filename = filename_base + "_" +\
-        datetime.now().strftime("%d-%m-%Y_%H-%M-%S") +\
-        ".csv"
-    return send_file(output_buffer,
-                     download_name=filename,
-                     mimetype="text/csv",
-                     as_attachment=True)
+    filename = (
+        filename_base + "_" + datetime.now().strftime("%d-%m-%Y_%H-%M-%S") + ".csv"
+    )
+    return send_file(
+        output_buffer, download_name=filename, mimetype="text/csv", as_attachment=True
+    )
+
+
+def filter_latest_sensor_location(db):
+    """Return a filter object that excludes all but the latest location for each sensor.
+
+    This should be used to filter a query that involves the SensorLocationClass.
+
+    Args:
+        db: A database connection.
+    Returns:
+        An object that can be given as an argument to sqlalchemy.filter.
+    """
+    query = (
+        db.session.query(
+            SensorLocationClass.sensor_id,
+            func.max(SensorLocationClass.installation_date).label("installation_date"),
+        )
+        .group_by(SensorLocationClass.sensor_id)
+        .subquery()
+    )
+    return and_(
+        query.c.sensor_id == SensorLocationClass.sensor_id,
+        query.c.installation_date == SensorLocationClass.installation_date,
+    )

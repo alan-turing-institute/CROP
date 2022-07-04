@@ -13,7 +13,7 @@ from __app__.crop.structure import (
     LocationClass,
 )
 from app.sensors import blueprint
-from utilities.utils import query_result_to_array
+from utilities.utils import filter_latest_sensor_location, query_result_to_array
 
 
 @blueprint.route("/sensor_list", methods=["POST", "GET"])
@@ -47,6 +47,7 @@ def sensor_list():
             LocationClass.id == SensorLocationClass.location_id,
             isouter=True,
         )
+        .filter(and_(filter_latest_sensor_location(db)))
         .order_by(asc(SensorClass.id))
         .limit(CONST_MAX_RECORDS)
     )
