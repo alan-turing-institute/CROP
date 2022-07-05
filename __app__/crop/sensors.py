@@ -103,6 +103,7 @@ def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
 
     return result_df
 
+
 def get_db_weather_data(session, date_from, date_to):
     """
     Returns weather data for specific period of time as pandas data frame.

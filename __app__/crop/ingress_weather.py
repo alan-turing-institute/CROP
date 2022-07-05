@@ -19,7 +19,7 @@ from __app__.crop.constants import (
     SQL_CONNECTION_STRING,
     SQL_DBNAME,
     CONST_API_WEATHER_TYPE,
-    CONST_OPENWEATHERMAP_APIKEY
+    CONST_OPENWEATHERMAP_APIKEY,
 )
 from __app__.crop.ingress import log_upload_event
 from __app__.crop.sensors import get_db_weather_data
@@ -27,7 +27,9 @@ from __app__.crop.sensors import get_db_weather_data
 CONST_OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=51.45&lon=0.14&appid="
 
 
-def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetime, dt_to: datetime):
+def upload_openweathermap_data(
+    conn_string: str, database: str, dt_from: datetime, dt_to: datetime
+):
     """
     Uploads openweathermap data to the CROP database.
 
@@ -45,7 +47,7 @@ def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetim
         logging.error(log)
         return success, log
     session = session_open(engine)
-    df_db = get_db_weather_data(session, dt_from,dt_to)
+    df_db = get_db_weather_data(session, dt_from, dt_to)
 
     # now get the Openweathermap API data
     success, error, df_api = get_openweathermap_data(dt_from, dt_to)
@@ -53,11 +55,7 @@ def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetim
     # filter out the rows that are already in the db data
     new_data_df = df_api[~df_api.index.isin(df_db.index)]
 
-    logging.info(
-        "new data with size len(new_data_df): {}\n\n".format(
-                        len(new_data_df)
-        )
-    )
+    logging.info("new data with size len(new_data_df): {}\n\n".format(len(new_data_df)))
     if len(new_data_df) > 0:
         # this is the current time in seconds since epoch
         start_time: float = time.time()
@@ -67,13 +65,13 @@ def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetim
                 sensor_id=0,
                 timestamp=idx,
                 temperature=row["temperature"],
-                rain_probability=None, # not in openweathermap data
+                rain_probability=None,  # not in openweathermap data
                 rain=row["rain"],
                 relative_humidity=row["relative_humidity"],
                 wind_speed=row["wind_speed"],
                 wind_direction=row["wind_direction"],
                 air_pressure=row["air_pressure"],
-                radiation=None, # not in openweathermap data
+                radiation=None,  # not in openweathermap data
                 icon=row["icon"],
                 source=row["source"],
             )
@@ -83,9 +81,7 @@ def upload_openweathermap_data(conn_string: str, database: str, dt_from: datetim
         elapsed_time = time.time() - start_time
 
         logging.debug(
-            "openweathermap | elapsed time importing data: {} s.".format(
-                elapsed_time
-            )
+            "openweathermap | elapsed time importing data: {} s.".format(elapsed_time)
         )
 
         upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
@@ -152,14 +148,14 @@ def get_openweathermap_data(dt_from, dt_to):
                 continue
             record = {}
             record["timestamp"] = datetime.fromtimestamp(hour["dt"])
-            record["temperature"] = hour["temp"] - 273.15 # convert from Kelvin
+            record["temperature"] = hour["temp"] - 273.15  # convert from Kelvin
             record["air_pressure"] = hour["pressure"]
             record["relative_humidity"] = hour["humidity"]
             record["wind_speed"] = hour["wind_speed"]
             record["wind_direction"] = hour["wind_deg"]
             record["icon"] = hour["weather"][0]["icon"]
             record["source"] = "openweatherdata"
-            record["rain"] = 0.
+            record["rain"] = 0.0
             if "rain" in hour.keys():
                 record["rain"] += hour["rain"]["1h"]
             hourly_records.append(record)

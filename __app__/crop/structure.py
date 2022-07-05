@@ -5,10 +5,12 @@ Module to define the structure of the database. Each Class, defines a table in t
     BASE: the declarative_base() callable returns a new base class from which all mapped classes
     should inherit. When the class definition is completed, a new Table and mapper() is generated.
 """
-
+import enum
 from sqlalchemy import (
+    Boolean,
     ForeignKey,
     Column,
+    Enum,
     Integer,
     Float,
     String,
@@ -56,6 +58,10 @@ from __app__.crop.constants import (
     TEST_MODEL_RUN_TABLE_NAME,
     TEST_MODEL_PRODUCT_TABLE_NAME,
     TEST_MODEL_VALUE_TABLE_NAME,
+    CROP_TYPE_TABLE_NAME,
+    BATCH_TABLE_NAME,
+    BATCH_EVENT_TABLE_NAME,
+    HARVEST_TABLE_NAME,
 )
 
 SQLA = SQLAlchemy()
@@ -816,3 +822,132 @@ class DataUploadLogClass(BASE):
         self.filename = filename
         self.status = status
         self.log = log
+
+
+class CropTypeClass(BASE):
+    """
+    Class for storing types of crop and associated information.
+    """
+
+    __tablename__ = CROP_TYPE_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    growapp_id = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False)
+    seed_density = Column(Float, nullable=True)
+    propagation_period = Column(Integer, nullable=True)
+    grow_period = Column(Integer, nullable=True)
+    is_pre_harvest = Column(Boolean, nullable=True)
+
+    # constructor
+    def __init__(
+        self,
+        growapp_id,
+        name,
+        seed_density,
+        propagation_period,
+        grow_period,
+        is_pre_harvest,
+    ):
+        self.growapp_id = growapp_id
+        self.name = name
+        self.seed_density = seed_density
+        self.propagation_period = propagation_period
+        self.grow_period = grow_period
+        self.is_pre_harvest = is_pre_harvest
+
+
+class BatchClass(BASE):
+    """
+    Holds static information about each batch being grown in the farm.
+    """
+
+    __tablename__ = BATCH_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    growapp_id = Column(String(100), nullable=False)
+    tray_size = Column(Float, nullable=True)
+    number_of_trays = Column(Integer, nullable=False)
+    crop_type_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(CROP_TYPE_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    # constructor
+    def __init__(self, growapp_id, tray_size, number_of_trays, crop_type_id):
+        self.growapp_id = growapp_id
+        self.tray_size = tray_size
+        self.number_of_trays = number_of_trays
+        self.crop_type_id = crop_type_id
+
+
+class EventType(enum.Enum):
+    none = 0
+    weigh = 1
+    propagate = 2
+    transfer = 3
+    harvest = 4
+    dry = 5
+    edit = 99
+
+
+class BatchEventClass(BASE):
+    """
+    New rows are added as a batch moves from one stage to the next
+    """
+
+    __tablename__ = BATCH_EVENT_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    batch_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(BATCH_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    # location that is being moved to, if event is moving (null otherwise)
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=True,
+    )
+    event_type = Column(Enum(EventType), nullable=False)
+    event_time = Column(DateTime, nullable=False)
+    next_action_time = Column(DateTime, nullable=True)
+
+    # constructor
+    def __init__(self, batch_id, location_id, event_type, event_time, next_action_time):
+        self.batch_id = batch_id
+        self.location_id = location_id
+        self.event_type = event_type
+        self.event_time = event_time
+        self.next_action_time = next_action_time
+
+
+class HarvestClass(BASE):
+    """
+    When a batch is harvested, data will go in here.
+    """
+
+    __tablename__ = HARVEST_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    batch_event_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(BATCH_EVENT_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    crop_yield = Column(Float, nullable=False)
+    waste_disease = Column(Float, nullable=False)
+    waste_defect = Column(Float, nullable=False)
+    over_production = Column(Float, nullable=False)
+
+    # constructor
+    def __init__(
+        batch_event_id, crop_yield, waste_disease, waste_defect, over_production
+    ):
+        self.batch_event_id = batch_event_id
+        self.crop_yield = crop_yield
+        self.waste_disease = waste_disease
+        self.waste_defect = waste_defect
+        self.over_production = over_production
