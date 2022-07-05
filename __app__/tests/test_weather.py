@@ -7,9 +7,8 @@ import requests
 import requests_mock
 from __app__.crop.ingress_weather import (
     get_openweathermap_data,
-    CONST_OPENWEATHERMAP_URL
+    CONST_OPENWEATHERMAP_URL,
 )
-
 
 
 def test_get_weather_data():
@@ -18,7 +17,7 @@ def test_get_weather_data():
     dt_to = datetime.now()
     timestamp_from = int(dt_from.timestamp())
     timestamp_to = int(dt_to.timestamp())
-    timestamp_avg = int((timestamp_from + timestamp_to)/2)
+    timestamp_avg = int((timestamp_from + timestamp_to) / 2)
     # mock the API response
 
     mock_response = {
@@ -31,7 +30,7 @@ def test_get_weather_data():
                 "wind_speed": 4.44,
                 "wind_deg": 259,
                 "rain": {"1h": 0.33},
-                "weather":[{"icon": "02d"}]
+                "weather": [{"icon": "02d"}],
             }
         ]
     }
