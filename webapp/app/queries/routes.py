@@ -217,3 +217,60 @@ def get_weather():
     result = jasonify_query_result(execute_result)
 
     return result
+
+@blueprint.route("/croptypes", methods=["GET"])
+def get_crop_types():
+    """
+    Get a list of types of crop, and some of their properties.
+    """
+    query = (
+        db.session.query(
+            CropTypeClass.id,
+            CropTypeClass.growapp_id,
+            CropTypeClass.name,
+            CropTypeClass.seed_density,
+            CropTypeClass.propagation_period,
+            CropTypeClass.grow_period,
+            CropTypeClass.is_pre_harvest
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+    return result
+
+
+@blueprint.route("/batches", methods=["GET"])
+def get_all_batches():
+    """
+    Get the full list of static data on all batches in the database.
+    """
+    query = (
+        db.session.query(
+            BatchClass.id,
+            BatchClass.growapp_id,
+            BatchClass.crop_type_id,
+            BatchClass.tray_size,
+            BatchClass.number_of_trays
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+    return result
+
+
+@blueprint.route("/batches/<batch_id>", methods=["GET"])
+def get_batch_details(batch_id):
+    """
+    Get all information, including 'events', for a given batch.
+    """
+    static_data_query = (
+        db.session.query(
+            BatchClass.id,
+            BatchClass.growapp_id,
+            BatchClass.crop_type_id,
+            BatchClass.tray_size,
+            BatchClass.number_of_trays
+        ).filter(
+            BatchClass.id == batch_id
+        )
+    )

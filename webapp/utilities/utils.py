@@ -12,6 +12,35 @@ from sqlalchemy import and_, func
 from __app__.crop.structure import SensorLocationClass
 
 
+def query_result_to_dict(query_result, date_iso=True):
+    """
+    If we have a single query result, return output as a dict rather than a list
+    Args:
+        query_result: a ResultProxy representing results of the sql alchemy query execution
+    Returns:
+        results_dict: a dict containing the results
+    """
+    if len(query_result) != 1:
+        print("Only call query_result_to_dict if we have a single result.")
+        return {}
+    rowproxy = query_result[0]
+    dict_entry = {}
+    if "_asdict" in dir(rowproxy):
+        rowproxy = rowproxy._asdict()
+    for column, value in rowproxy.items():
+        if isinstance(value, datetime):
+            if date_iso:
+                dict_entry = {**dict_entry, **{column: value.isoformat()}}
+            else:
+                dict_entry = {
+                    **dict_entry,
+                    **{column: value.replace(microsecond=0)},
+                }
+        else:
+            dict_entry = {**dict_entry, **{column: value}}
+    return dict_entry
+
+
 def query_result_to_array(query_result, date_iso=True):
     """
     Forms an array of ResultProxy results.
@@ -31,7 +60,7 @@ def query_result_to_array(query_result, date_iso=True):
             rowproxy = rowproxy._asdict()
             # print ("rowproxy: ", rowproxy)#
         else:
-            None
+            pass
 
         for column, value in rowproxy.items():
 
