@@ -33,7 +33,6 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
 
     Arguments:
         api_key: api key for authentication
-        check_id: sensor identifier
         dt_from: date range from
         dt_to: date range to
     Return:
@@ -57,35 +56,35 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
     url = CONST_CHECK_URL_PATH
 
     params = {
-        'start_time': dt_from_iso,
-        'end_time': dt_to_iso,
-        'metrics': "aranet_temperature,aranet_humidity",
-        'resolution': '10m',
-        'metadata': 'true'
+        "start_time": dt_from_iso,
+        "end_time": dt_to_iso,
+        "metrics": "aranet_temperature,aranet_humidity",
+        "resolution": "10m",
+        "metadata": "true",
     }
     response = requests.get(url, headers=headers, params=params, verify=False)
 
-
     if response.status_code != 200:
-        error = "Request's [%s] status code: %d" % (
-           url[: min(70, len(url))],
-            response.status_code,
-        )
+        error = "Request's [%s] status code: %d" % (url[:70], response.status_code)
         success = False
         return success, error, data_df_dict
     # if we got to here, we have an API response for all T/RH sensors
     data = response.json()
-    # the metadata contains a mapping between the Hyper id (MAC address) and the aranet_pro_id
+    # the metadata contains a mapping between the Hyper id (MAC address) and the
+    # aranet_pro_id
     device_mapping = data["metadata"]["devices"]
+    timestamps = data["labels"]
+    value_dicts = data["series"]
     for k, v in device_mapping.items():
         hyper_id = k
         aranet_pro_id = v["vendor_device_id"]
-        timestamps = data["labels"]
-        temperature_values = data["series"]
         # make a dataframe from data for this sensor
-        sensor_data = {data["series"][i]["metric"]: data["series"][i]["values"] \
-                       for i in range(len(data["series"])) if data["series"][i]["device_id"] == hyper_id}
-        data_dict = {"Timestamp": timestamps}
+        sensor_data = {
+            value_dict["metric"]: value_dict["values"]
+            for value_dict in value_dicts
+            if value_dict["device_id"] == hyper_id
+        }
+        data_dict = {"Timestamp": pd.to_datetime(timestamps)}
         data_dict.update(sensor_data)
         data_df = pd.DataFrame(data_dict)
         for col_name in data_df.columns:
