@@ -59,7 +59,7 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
     params = {
         'start_time': dt_from_iso,
         'end_time': dt_to_iso,
-        'metrics': "ambient_temperature,relative_humidity",
+        'metrics': "aranet_temperature,aranet_humidity",
         'resolution': '10m',
         'metadata': 'true'
     }
