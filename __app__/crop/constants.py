@@ -17,7 +17,7 @@ CONST_AIR_VELOCITY = "Air_Velocity"
 CONST_STARK = "Stark"
 CONST_ZENSIE_TRH_SENSOR_TYPE = "30MHz T&RH"
 CONST_ZENSIE_WEATHER_SENSOR_TYPE = "30MHz Weather"
-CONST_ARANET_TRH_SENSOR_TYPE = "Aranet T&RH"
+CONST_ARANET_TRH_SENSOR_TYPE = CONST_ZENSIE_TRH_SENSOR_TYPE
 CONST_API_WEATHER_TYPE = "openweathermap"
 
 # FILE STRUCTURE
@@ -135,26 +135,60 @@ ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # STARK
-STARK_USERNAME = os.environ["CROP_STARK_USERNAME"].strip() if "CROP_STARK_USERNAME" in os.environ else "DUMMY"
-STARK_PASS = os.environ["CROP_STARK_PASS"].strip() if "CROP_STARK_PASS" in os.environ else "DUMMY"
+STARK_USERNAME = (
+    os.environ["CROP_STARK_USERNAME"].strip()
+    if "CROP_STARK_USERNAME" in os.environ
+    else "DUMMY"
+)
+STARK_PASS = (
+    os.environ["CROP_STARK_PASS"].strip()
+    if "CROP_STARK_PASS" in os.environ
+    else "DUMMY"
+)
 
 # 30MHz (Zensie)
-CONST_CROP_30MHZ_APIKEY = os.environ["CROP_30MHZ_APIKEY"].strip() if "CROP_30MHZ_APIKEY" in os.environ else "DUMMY"
-CONST_CROP_30MHZ_TEST_T_RH_CHECKID = os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip() if "CROP_30MHZ_TEST_T_RH_CHECKID" in os.environ else "DUMMY"
+CONST_CROP_30MHZ_APIKEY = (
+    os.environ["CROP_30MHZ_APIKEY"].strip()
+    if "CROP_30MHZ_APIKEY" in os.environ
+    else "DUMMY"
+)
+CONST_CROP_30MHZ_TEST_T_RH_CHECKID = (
+    os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
+    if "CROP_30MHZ_TEST_T_RH_CHECKID" in os.environ
+    else "DUMMY"
+)
 
 # Hyper.ag
-CONST_CROP_HYPER_APIKEY = os.environ["HYPER_APIKEY"].strip() if "HYPER_APIKEY" in os.environ else "DUMMY"
+CONST_CROP_HYPER_APIKEY = (
+    os.environ["HYPER_APIKEY"].strip() if "HYPER_APIKEY" in os.environ else "DUMMY"
+)
 
 # openweatherdata API
-CONST_OPENWEATHERMAP_APIKEY = os.environ["CROP_OPENWEATHERMAP_APIKEY"].strip() if "CROP_OPENWEATHERMAP_APIKEY" in os.environ else "DUMMY"
+CONST_OPENWEATHERMAP_APIKEY = (
+    os.environ["CROP_OPENWEATHERMAP_APIKEY"].strip()
+    if "CROP_OPENWEATHERMAP_APIKEY" in os.environ
+    else "DUMMY"
+)
 
 # Create connection string
 SQL_ENGINE = "postgresql"
-SQL_USER = os.environ["CROP_SQL_USER"].strip() if "CROP_SQL_USER" in os.environ else "DUMMY"
-SQL_PASSWORD = os.environ["CROP_SQL_PASS"].strip() if "CROP_SQL_PASS" in os.environ else "DUMMY"
-SQL_HOST = os.environ["CROP_SQL_HOST"].strip() if "CROP_SQL_HOST" in os.environ else "DUMMY"
-SQL_PORT = os.environ["CROP_SQL_PORT"].strip() if "CROP_SQL_PORT" in os.environ else "DUMMY"
-SQL_DBNAME = os.environ["CROP_SQL_DBNAME"].strip().lower() if "CROP_SQL_DBNAME" in os.environ else "DUMMY"
+SQL_USER = (
+    os.environ["CROP_SQL_USER"].strip() if "CROP_SQL_USER" in os.environ else "DUMMY"
+)
+SQL_PASSWORD = (
+    os.environ["CROP_SQL_PASS"].strip() if "CROP_SQL_PASS" in os.environ else "DUMMY"
+)
+SQL_HOST = (
+    os.environ["CROP_SQL_HOST"].strip() if "CROP_SQL_HOST" in os.environ else "DUMMY"
+)
+SQL_PORT = (
+    os.environ["CROP_SQL_PORT"].strip() if "CROP_SQL_PORT" in os.environ else "DUMMY"
+)
+SQL_DBNAME = (
+    os.environ["CROP_SQL_DBNAME"].strip().lower()
+    if "CROP_SQL_DBNAME" in os.environ
+    else "DUMMY"
+)
 SQL_DEFAULT_DBNAME = "postgres"
 SQL_SSLMODE = "require"
 

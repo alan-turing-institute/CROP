@@ -2,6 +2,7 @@
 Python module to import data using the Hyper.ag API
 """
 
+from collections.abc import Iterable
 import logging
 import time
 from datetime import datetime, timedelta
@@ -9,6 +10,7 @@ import requests
 import pandas as pd
 
 from sqlalchemy import and_
+from sqlalchemy.exc import ProgrammingError
 
 from __app__.crop.db import connect_db, session_open, session_close
 from __app__.crop.structure import (
@@ -88,9 +90,9 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
         data_dict.update(sensor_data)
         data_df = pd.DataFrame(data_dict)
         for col_name in data_df.columns:
-            if ".temperature" in col_name:
+            if "temperature" in col_name:
                 data_df.rename(columns={col_name: "Temperature"}, inplace=True)
-            elif ".humidity" in col_name:
+            elif "humidity" in col_name:
                 data_df.rename(columns={col_name: "Humidity"}, inplace=True)
         data_df.set_index("Timestamp", inplace=True)
         if data_df.index.tz is None:
@@ -101,38 +103,22 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
     return success, error, data_df_dict
 
 
-def get_zensie_sensors_list(session, sensor_type):
-    """
-    Makes a list of zensie rth sensors with their check_id and ids.
-
-    Arguments:
-        session: sql session
-        sensor_type: zensie sensor type
-    Returns:
-        result: a list of zensie rth sensors with their check_id and ids.
-    """
-
+def _get_sensor_id(aranet_pro_id, engine):
+    session = session_open(engine)
+    # Get the sensor ID as CROP has it
     query = session.query(
-        SensorClass.type_id,
         SensorClass.id,
-        SensorClass.device_id,
-    ).filter(
-        and_(
-            TypeClass.sensor_type == sensor_type,
-            SensorClass.type_id == TypeClass.id,
-        )
-    )
-
-    readings = session.execute(query).fetchall()
-
-    result = query_result_to_array(readings, date_iso=False)
-
-    return result
+    ).filter(SensorClass.aranet_pro_id == aranet_pro_id)
+    sensor_id = session.execute(query).fetchone()
+    if isinstance(sensor_id, Iterable):
+        sensor_id = sensor_id[0]
+    session_close(session)
+    return sensor_id
 
 
-def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
+def import_hyper_data(conn_string, database, dt_from, dt_to):
     """
-    Uploads zensie temperature and relative humidity data to the CROP database.
+    Uploads temperature and relative humidity data to the CROP database.
 
     Arguments:
         conn_string: connection string
@@ -142,175 +128,83 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
     Returns:
         status, error
     """
-
-    log = ""
-    sensor_type = CONST_ZENSIE_TRH_SENSOR_TYPE
-
+    # Create a CROP database connection to use.
     success, log, engine = connect_db(conn_string, database)
-
     if not success:
         logging.info(log)
         return success, log
 
-    # get the list of zensie trh sensors
+    # Create the readings table if it doesn't exist.
     try:
+        ReadingsAranetTRHClass.__table__.create(bind=engine)
+    except ProgrammingError:
+        # The table already exists.
+        pass
+
+    logging.info(f"Requesting data from {dt_from} to {dt_to} from the Hyper API")
+    success, error, hyper_data_dict = get_api_sensor_data(
+        CONST_CROP_HYPER_APIKEY, dt_from, dt_to
+    )
+    if not success:
+        logging.info(error)
+        return success, error
+
+    # Write the data to the CROP database, sensor by sensor.
+    for aranet_pro_id, api_data_df in hyper_data_dict.items():
+        logging.info(f"Writing data for sensor with Aranet Pro ID {aranet_pro_id}")
+        # Find the sensor_id that CROP uses for this sensor, and fetch existing data for
+        # this sensor.
+        sensor_id = _get_sensor_id(aranet_pro_id, engine)
+        if sensor_id is None:
+            logging.info("Sensor {aranet_pro_id} does not exist in the CROP database")
+            continue
+
         session = session_open(engine)
-        zensie_sensor_list = get_zensie_sensors_list(session, sensor_type)
-    finally:
+        db_data_df = get_aranet_trh_sensor_data(
+            session,
+            sensor_id,
+            dt_from + timedelta(hours=-1),
+            dt_to + timedelta(hours=1),
+        )
         session_close(session)
 
-    if zensie_sensor_list is None or len(zensie_sensor_list) == 0:
-        success = False
-        log = "No sensors with sensor type {} were found.".format(sensor_type)
+        # From the data returned by Hyper, filter out all the data we already have.
+        if len(db_data_df) > 0:
+            # Filtering only new data
+            api_index = api_data_df.index
+            db_index = db_data_df.index.tz_localize(api_index.tz)
+            new_data_df = api_data_df[~api_index.isin(db_index)]
+        else:
+            new_data_df = api_data_df
+        if len(new_data_df) == 0:
+            continue
 
-    if not success:
-        logging.info(log)
-
-        return log_upload_event(
-            CONST_ZENSIE_TRH_SENSOR_TYPE, "Zensie API", success, log, conn_string
+        logging.info(f"Writing {len(new_data_df)} new readings")
+        session = session_open(engine)
+        for idx, row in new_data_df.iterrows():
+            data = ReadingsAranetTRHClass(
+                sensor_id=sensor_id,
+                timestamp=idx,
+                temperature=row["Temperature"],
+                humidity=row["Humidity"],
+            )
+            try:
+                session.add(data)
+            except Exception as e:
+                logging.error("When trying to write the row {}, {}".format(idx, row))
+                raise e
+        session.query(SensorClass).filter(SensorClass.id == sensor_id).update(
+            {"last_updated": datetime.now()}
         )
+        session_close(session)
 
-    for _, zensie_sensor in enumerate(zensie_sensor_list):
-
-        sensor_id = zensie_sensor["id"]
-        sensor_check_id = zensie_sensor["device_id"]
-
-        logging.info(
-            "sensor_id: {} | sensor_check_id: {}".format(sensor_id, sensor_check_id)
+        upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
+        log_upload_event(
+            CONST_ARANET_TRH_SENSOR_TYPE,
+            "Hyper API; Sensor ID {}".format(sensor_id),
+            success,
+            upload_log,
+            conn_string,
         )
-
-        if sensor_id > 0 and len(sensor_check_id) > 0:
-
-            logging.info(
-                "sensor_id: {} | dt_from: {}, dt_to: {}".format(
-                    sensor_id, dt_from, dt_to
-                )
-            )
-
-            # Sensor data from Zensie
-            sensor_success, sensor_error, api_data_df = get_api_sensor_data(
-                CONST_CROP_30MHZ_APIKEY, sensor_check_id, dt_from, dt_to
-            )
-
-            logging.info(
-                "sensor_id: {} | sensor_success: {}, sensor_error: {}".format(
-                    sensor_id, sensor_success, sensor_error
-                )
-            )
-            logging.info(
-                "sensor_id: {} | len(api_data_df): {}".format(
-                    sensor_id, len(api_data_df)
-                )
-            )
-
-            if sensor_success:
-                # Sensor data from database
-                session = session_open(engine)
-                db_data_df = get_zensie_trh_sensor_data(
-                    session,
-                    sensor_id,
-                    dt_from + timedelta(hours=-1),
-                    dt_to + timedelta(hours=1),
-                )
-                session_close(session)
-
-                if len(db_data_df) > 0:
-                    # Filtering only new data
-                    new_data_df = api_data_df[~api_data_df.index.isin(db_data_df.index)]
-
-                    logging.info(
-                        "sensor_id: {} | len(db_data_df): {}".format(
-                            sensor_id, len(db_data_df)
-                        )
-                    )
-                else:
-                    new_data_df = api_data_df
-
-                logging.info(
-                    "sensor_id: {} | len(new_data_df): {}".format(
-                        sensor_id, len(new_data_df)
-                    )
-                )
-
-                if len(new_data_df) > 0:
-
-                    start_time = time.time()
-
-                    session = session_open(engine)
-                    for idx, row in new_data_df.iterrows():
-
-                        data = ReadingsZensieTRHClass(
-                            sensor_id=sensor_id,
-                            timestamp=idx,
-                            temperature=row["Temperature"],
-                            humidity=row["Humidity"],
-                        )
-
-                        try:
-                            session.add(data)
-                        except Exception as e:
-                            logging.error(
-                                "When trying to write the row {}, {}".format(idx, row)
-                            )
-                            raise e
-
-                    session.query(SensorClass).filter(
-                        SensorClass.id == sensor_id
-                    ).update({"last_updated": datetime.now()})
-
-                    session_close(session)
-
-                    elapsed_time = time.time() - start_time
-
-                    logging.debug(
-                        "sensor_id: {} | elapsed time importing data: {} s.".format(
-                            sensor_id, elapsed_time
-                        )
-                    )
-
-                    upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
-                    log_upload_event(
-                        CONST_ZENSIE_TRH_SENSOR_TYPE,
-                        "Zensie API; Sensor ID {}".format(sensor_id),
-                        sensor_success,
-                        upload_log,
-                        conn_string,
-                    )
-
-            else:
-                log_upload_event(
-                    CONST_ZENSIE_TRH_SENSOR_TYPE,
-                    "Zensie API; Sensor ID {}".format(sensor_id),
-                    sensor_success,
-                    sensor_error,
-                    conn_string,
-                )
 
     return True, None
-
-
-def import_zensie_data():
-    """
-    Imports all zensie data
-
-    """
-
-    from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
-
-    # date_ranges = pd.date_range(start='2020-01-01', end='2020-08-01', periods=20)
-
-    # for date_idx, dt_to in enumerate(date_ranges):
-
-    #     if date_idx != 0:
-    #         import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
-
-    #     dt_from = dt_to
-
-    dt_to = datetime.now()
-    dt_from = dt_to + timedelta(days=-10)
-
-    import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
-
-
-if __name__ == "__main__":
-    import_zensie_data()

@@ -200,5 +200,10 @@ def session_close(session):
     Closes the current open session
     -session: an open session
     """
-    session.commit()
-    session.close()
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
