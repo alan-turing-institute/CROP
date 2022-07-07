@@ -156,7 +156,7 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
         # this sensor.
         sensor_id = _get_sensor_id(aranet_pro_id, engine)
         if sensor_id is None:
-            logging.info("Sensor {aranet_pro_id} does not exist in the CROP database")
+            logging.info(f"Sensor {aranet_pro_id} does not exist in the CROP database")
             continue
 
         session = session_open(engine)
@@ -176,6 +176,7 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
             new_data_df = api_data_df[~api_index.isin(db_index)]
         else:
             new_data_df = api_data_df
+        new_data_df = new_data_df[~new_data_df.isna().any(axis=1)]
         if len(new_data_df) == 0:
             continue
 
