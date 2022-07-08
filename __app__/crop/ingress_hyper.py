@@ -190,7 +190,7 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
             )
             session.add(data)
         session.query(SensorClass).filter(SensorClass.id == sensor_id).update(
-            {"last_updated": datetime.now()}
+            {"last_updated": datetime.utcnow()}
         )
         session_close(session)
 
