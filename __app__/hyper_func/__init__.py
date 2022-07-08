@@ -19,7 +19,7 @@ def hyper_import(mytimer: func.TimerRequest):
     utc_timestamp = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
     logging.info("Python Hyper timer trigger function started at %s", utc_timestamp)
 
-    dt_to = datetime.now()
+    dt_to = datetime.utcnow()
     dt_from = dt_to + timedelta(days=-1)
     import_hyper_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
 

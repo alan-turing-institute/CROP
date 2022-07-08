@@ -21,7 +21,7 @@ def weather_import(mytimer: func.TimerRequest):
 
     logging.info("Python weather timer trigger function started at %s", utc_timestamp)
 
-    dt_to = datetime.now()
+    dt_to = datetime.utcnow()
     dt_from = dt_to + timedelta(days=-1)
 
     upload_openweathermap_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)

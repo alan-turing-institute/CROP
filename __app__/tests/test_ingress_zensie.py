@@ -17,8 +17,8 @@ from __app__.crop.ingress_zensie import (
 
 #     check_id = CONST_CROP_30MHZ_TEST_T_RH_CHECKID
 
-#     dt_from = datetime.now() + timedelta(days=-1)
-#     dt_to = datetime.now()
+#     dt_from = datetime.utcnow() + timedelta(days=-1)
+#     dt_to = datetime.utcnow()
 
 #     success, error, _ = get_api_sensor_data(CONST_CROP_30MHZ_APIKEY, check_id, dt_from, dt_to)
 
