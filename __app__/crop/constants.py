@@ -160,7 +160,7 @@ CONST_CROP_30MHZ_TEST_T_RH_CHECKID = (
 
 # Hyper.ag
 CONST_CROP_HYPER_APIKEY = (
-    os.environ["HYPER_APIKEY"].strip() if "HYPER_APIKEY" in os.environ else "DUMMY"
+    os.environ["CROP_HYPER_APIKEY"].strip() if "CROP_HYPER_APIKEY" in os.environ else "DUMMY"
 )
 
 # openweatherdata API
