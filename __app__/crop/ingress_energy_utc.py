@@ -412,7 +412,7 @@ def export_energy_data(electricity_df, conn_string, database):
             # logging.info("=========> New Data: {}: {}".format(data.timestamp, data.electricity_consumption))
 
         session.query(SensorClass).filter(SensorClass.id == sensor_id).update(
-            {"last_updated": datetime.now()}
+            {"last_updated": datetime.utcnow()}
         )
 
     session_close(session)

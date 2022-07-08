@@ -247,7 +247,7 @@ def import_zensie_trh_data(conn_string, database, dt_from, dt_to):
 
                     session.query(SensorClass).filter(
                         SensorClass.id == sensor_id
-                    ).update({"last_updated": datetime.now()})
+                    ).update({"last_updated": datetime.utcnow()})
 
                     session_close(session)
 
@@ -297,7 +297,7 @@ def import_zensie_data():
 
     #     dt_from = dt_to
 
-    dt_to = datetime.now()
+    dt_to = datetime.utcnow()
     dt_from = dt_to + timedelta(days=-10)
 
     import_zensie_trh_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
