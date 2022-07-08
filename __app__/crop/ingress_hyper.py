@@ -60,7 +60,7 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
     params = {
         "start_time": dt_from_iso,
         "end_time": dt_to_iso,
-        "metrics": "aranet_temperature,aranet_humidity",
+        "metrics": "aranet_ambient_temperature,aranet_relative_humidity",
         "resolution": "10m",
         "metadata": "true",
     }
@@ -77,26 +77,24 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
     device_mapping = data["metadata"]["devices"]
     timestamps = data["labels"]
     value_dicts = data["series"]
-    for k, v in device_mapping.items():
-        hyper_id = k
-        aranet_pro_id = v["vendor_device_id"]
-        # make a dataframe from data for this sensor
-        sensor_data = {
-            value_dict["metric"]: value_dict["values"]
-            for value_dict in value_dicts
-            if value_dict["device_id"] == hyper_id
-        }
-        data_dict = {"Timestamp": pd.to_datetime(timestamps)}
-        data_dict.update(sensor_data)
-        data_df = pd.DataFrame(data_dict)
-        for col_name in data_df.columns:
-            if "temperature" in col_name:
-                data_df.rename(columns={col_name: "Temperature"}, inplace=True)
-            elif "humidity" in col_name:
-                data_df.rename(columns={col_name: "Humidity"}, inplace=True)
-        data_df.set_index("Timestamp", inplace=True)
-        if data_df.index.tz is None:
-            data_df.index = data_df.index.tz_localize("UTC")
+
+    for value_dict in value_dicts:
+        hyper_id = value_dict["device_id"]
+        aranet_pro_id = device_mapping[hyper_id]["vendor_device_id"]
+
+        metric_name = value_dict["metric"]
+        if metric_name == "aranet_ambient_temperature":
+            metric_name = "Temperature"
+        elif metric_name == "aranet_relative_humidity":
+            metric_name = "Humidity"
+
+        if aranet_pro_id not in data_df_dict:
+            data_df = pd.DataFrame({"Timestamp": pd.to_datetime(timestamps)})
+            data_df.set_index("Timestamp", inplace=True)
+            data_df_dict[aranet_pro_id] = data_df
+        else:
+            data_df = data_df_dict[aranet_pro_id]
+        data_df[metric_name] = value_dict["values"]
         # put this DataFrame into a dict, keyed by the aranet id
         data_df_dict[aranet_pro_id] = data_df
 
