@@ -35,3 +35,6 @@ export CROP_30MHZ_APIKEY=“helloapikey”
 
 # OpenWeatherData API
 export CROP_OPENWEATHERMAP_APIKEY="<<replaceme>>"
+
+# HYPER.AG
+export CROP_HYPER_APIKEY="<<replaceme>>"
