@@ -7,7 +7,7 @@ import logging
 
 import azure.functions as func
 
-from __app__.crop.ingress_weather import import_openweathermap_data
+from __app__.crop.ingress_weather import upload_openweathermap_data
 from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 
