@@ -18,7 +18,7 @@ def find_sensor_type_id(session, sensor_type):
     Function to find sensor type id by name.
 
     Args:
-        session: sqlalchemy active seession object
+        session: sqlalchemy active session object
         sensor_type: sensor type name
 
     Returns:
@@ -49,7 +49,7 @@ def get_zensie_trh_sensor_data(session, sensor_id, date_from, date_to):
     Returns zensie trh sensor data for specific period of time as pandas data frame.
 
     Arguments:
-        session: sqlalchemy active seession object
+        session: sqlalchemy active session object
         sensor_id: sensor id
         date_from: date range from
         date_to: date range to
@@ -80,7 +80,7 @@ def get_aranet_trh_sensor_data(session, sensor_id, date_from, date_to):
     Returns Aranet trh sensor data for specific period of time as pandas data frame.
 
     Arguments:
-        session: sqlalchemy active seession object
+        session: sqlalchemy active session object
         sensor_id: sensor id
         date_from: date range from
         date_to: date range to
@@ -88,7 +88,7 @@ def get_aranet_trh_sensor_data(session, sensor_id, date_from, date_to):
         data_df: data frame containing sensor data for specific period of time
     """
 
-    query = session.query(ReadingsAranetTRHClass.timestamp,).filter(
+    query = session.query(ReadingsAranetTRHClass.timestamp).filter(
         and_(
             ReadingsAranetTRHClass.sensor_id == sensor_id,
             ReadingsAranetTRHClass.timestamp >= date_from,
@@ -111,7 +111,7 @@ def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
     Returns zensie trh sensor data for specific period of time as pandas data frame.
 
     Arguments:
-        session: sqlalchemy active seession object
+        session: sqlalchemy active session object
         sensor_id: sensor id
         date_from: date range from
         date_to: date range to
@@ -141,7 +141,7 @@ def get_db_weather_data(session, date_from, date_to):
     Returns weather data for specific period of time as pandas data frame.
 
     Arguments:
-        session: sqlalchemy active seession object
+        session: sqlalchemy active session object
         date_from: date range from
         date_to: date range to
     Returns:
