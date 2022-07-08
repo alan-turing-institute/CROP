@@ -24,7 +24,7 @@ from __app__.crop.constants import CONST_CROP_HYPER_APIKEY, CONST_ARANET_TRH_SEN
 from __app__.crop.ingress import log_upload_event
 from __app__.crop.sensors import get_aranet_trh_sensor_data
 
-CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/0/analytics/v3/device_metrics"
+CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/1/analytics/v3/device_metrics"
 
 
 def get_api_sensor_data(api_key, dt_from, dt_to):
