@@ -18,6 +18,7 @@ from __app__.crop.structure import (
     LocationClass,
     SensorLocationClass,
     ReadingsZensieTRHClass,
+    ReadingsAranetTRHClass,
 )
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
 from utilities.utils import filter_latest_sensor_location
@@ -133,6 +134,51 @@ def zensie_query(dt_from, dt_to):
             ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
             ReadingsZensieTRHClass.timestamp >= dt_from,
             ReadingsZensieTRHClass.timestamp <= dt_to,
+            filter_latest_sensor_location(db),
+        )
+    )
+
+    df = pd.read_sql(query.statement, query.session.bind)
+
+    logging.info("Total number of records found: %d" % (len(df.index)))
+
+    if df.empty:
+        logging.debug("WARNING: Query returned empty")
+    return df
+
+
+def aranet_query(dt_from, dt_to):
+    """
+    Performs a query for Aranet T/RH sensors.
+
+    Arguments:
+        dt_from_: date range from
+        dt_to_: date range to
+    Returns:
+        df: a df with the queried data
+    """
+
+    logging.info(
+        "Calling zensie_analysis with parameters %s %s"
+        % (
+            dt_from.strftime(CONST_TIMESTAMP_FORMAT),
+            dt_to.strftime(CONST_TIMESTAMP_FORMAT),
+        )
+    )
+
+    query = db.session.query(
+        ReadingsAranetTRHClass.timestamp,
+        ReadingsAranetTRHClass.sensor_id,
+        ReadingsAranetTRHClass.temperature,
+        ReadingsAranetTRHClass.humidity,
+        LocationClass.zone,
+    ).filter(
+        and_(
+            SensorLocationClass.location_id == LocationClass.id,
+            ReadingsAranetTRHClass.sensor_id == SensorClass.id,
+            ReadingsAranetTRHClass.sensor_id == SensorLocationClass.sensor_id,
+            ReadingsAranetTRHClass.timestamp >= dt_from,
+            ReadingsAranetTRHClass.timestamp <= dt_to,
             filter_latest_sensor_location(db),
         )
     )
@@ -346,7 +392,7 @@ def index():
     dt_from_hourly = dt_to - dt.timedelta(hours=2)
 
     # weekly
-    df = zensie_query(dt_from_weekly, dt_to)
+    df = aranet_query(dt_from_weekly, dt_to)
     if not df.empty:
         df_mean_hr_weekly = grp_per_hr_zone(df)
         df_temp_weekly = bin_zensie_data(
@@ -365,7 +411,7 @@ def index():
         weekly_hum_json = {}
         json_vertstrat = {}
 
-    df_daily = zensie_query(dt_from_daily, dt_to)
+    df_daily = aranet_query(dt_from_daily, dt_to)
     if not df_daily.empty:
         df_mean_hr_daily = grp_per_hr_zone(df_daily)
         df_temp_daily = bin_zensie_data(
@@ -380,7 +426,7 @@ def index():
         daily_temp_json = {}
         daily_hum_json = {}
 
-    df_hourly = zensie_query(dt_from_hourly, dt_to)
+    df_hourly = aranet_query(dt_from_hourly, dt_to)
     if not df_hourly.empty:
         hourly_json = current_values_json(df_hourly)
     else:
