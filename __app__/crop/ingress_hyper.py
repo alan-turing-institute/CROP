@@ -104,8 +104,8 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
 
 
 def _get_sensor_id(aranet_pro_id, engine):
+    """Get the CROP sensor ID, from the CROP database, based on the Aranet Pro ID."""
     session = session_open(engine)
-    # Get the sensor ID as CROP has it
     query = session.query(
         SensorClass.id,
     ).filter(SensorClass.aranet_pro_id == aranet_pro_id)
@@ -170,7 +170,6 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
 
         # From the data returned by Hyper, filter out all the data we already have.
         if len(db_data_df) > 0:
-            # Filtering only new data
             api_index = api_data_df.index
             db_index = db_data_df.index.tz_localize(api_index.tz)
             new_data_df = api_data_df[~api_index.isin(db_index)]
@@ -189,11 +188,7 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
                 temperature=row["Temperature"],
                 humidity=row["Humidity"],
             )
-            try:
-                session.add(data)
-            except Exception as e:
-                logging.error("When trying to write the row {}, {}".format(idx, row))
-                raise e
+            session.add(data)
         session.query(SensorClass).filter(SensorClass.id == sensor_id).update(
             {"last_updated": datetime.now()}
         )
