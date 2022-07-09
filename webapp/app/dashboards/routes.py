@@ -25,6 +25,7 @@ from __app__.crop.structure import (
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     ReadingsZensieTRHClass,
+    ReadingsAranetTRHClass
 )
 from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
@@ -368,9 +369,49 @@ def zensie_analysis(dt_from, dt_to):
     return temperature_range_analysis(df, dt_from, dt_to)
 
 
+def aranet_trh_analysis(dt_from, dt_to):
+    """
+    Performs data analysis for Aranet Temperature+Relative Humidity sensors.
+
+    Arguments:
+        dt_from_: date range from
+        dt_to_: date range to
+    Returns:
+        sensor_names: a list of sensor names
+        sensor_temp_ranges: json data with temperate ranges
+    """
+
+    logging.info(
+        "Calling aranet_trh_analysis with parameters %s %s"
+        % (
+            dt_from.strftime(CONST_TIMESTAMP_FORMAT),
+            dt_to.strftime(CONST_TIMESTAMP_FORMAT),
+        )
+    )
+
+    query = db.session.query(
+        ReadingsAranetTRHClass.timestamp,
+        ReadingsAranetTRHClass.sensor_id,
+        SensorClass.name,
+        ReadingsAranetTRHClass.temperature,
+        ReadingsAranetTRHClass.humidity,
+    ).filter(
+        and_(
+            ReadingsAranetTRHClass.sensor_id == SensorClass.id,
+            ReadingsAranetTRHClass.timestamp >= dt_from,
+            ReadingsAranetTRHClass.timestamp <= dt_to,
+        )
+    )
+
+    df = pd.read_sql(query.statement, query.session.bind)
+
+    logging.info("Total number of records found: %d" % (len(df.index)))
+    return temperature_range_analysis(df, dt_from, dt_to)
+
+
 def temperature_range_analysis(temp_df, dt_from, dt_to):
     """
-    Performs temperage range analysis on a given pandas dataframe.
+    Performs temperature range analysis on a given pandas dataframe.
 
     Arguments:
         temp_df:
@@ -416,7 +457,7 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         except KeyError:
             logging.error(
                 f"Don't know how to categorise or bin sensor {sensor_id} "
-                "in the Zensie dashboard."
+                "in the dashboard."
             )
             continue
         # binning temperature values
@@ -587,6 +628,40 @@ def zensie_dashboard():
     )
 
 
+def fetch_aranet_trh_data(dt_from, dt_to, sensor_ids):
+    query = db.session.query(
+        ReadingsAranetTRHClass.timestamp,
+        ReadingsAranetTRHClass.sensor_id,
+        SensorClass.name,
+        ReadingsAranetTRHClass.temperature,
+        ReadingsAranetTRHClass.humidity,
+    ).filter(
+        and_(
+            ReadingsAranetTRHClass.sensor_id == SensorClass.id,
+            ReadingsAranetTRHClass.timestamp >= dt_from,
+            ReadingsAranetTRHClass.timestamp <= dt_to,
+            ReadingsAranetTRHClass.sensor_id.in_(sensor_ids),
+        )
+    )
+
+    df = pd.read_sql(query.statement, query.session.bind)
+    return df
+
+
+@blueprint.route("/aranet_trh_dashboard")
+@login_required
+def aranet_trh_dashboard():
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    num_sensors, temperature_bins_json = aranet_trh_analysis(dt_from, dt_to)
+    return render_template(
+        "aranet_trh_dashboard.html",
+        num_sensors=num_sensors,
+        temperature_bins_json=temperature_bins_json,
+        dt_from=dt_from.strftime("%B %d, %Y"),
+        dt_to=dt_to.strftime("%B %d, %Y"),
+    )
+
+
 @blueprint.route("/energy_dashboard")
 @login_required
 def energy_dashboard():
@@ -672,7 +747,7 @@ def timeseries_dashboard():
     )
     sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids.rstrip(" ,;"))))
 
-    df = fetch_zensie_data(dt_from, dt_to, sensor_ids)
+    df = fetch_aranet_trh_data(dt_from, dt_to, sensor_ids)
     if request.method == "POST":
         return download_csv(df, "timeseries")
 
