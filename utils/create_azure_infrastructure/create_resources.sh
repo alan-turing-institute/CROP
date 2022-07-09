@@ -59,7 +59,7 @@ else
 fi
 
 # Getting the first storage account key
-ACCESS_KEY=$(az storage account keys list --account-name $CROP_STORAGE_ACCOUNT --resource-group $CROP_RG_NAME --output tsv |head -1 | awk '{print $3}')
+ACCESS_KEY=$(az storage account keys list --account-name $CROP_STORAGE_ACCOUNT --resource-group $CROP_RG_NAME --output tsv |head -1 | awk '{print $4}')
 # Creating a connection string
 CONNECTION_STRING="DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=${CROP_STORAGE_ACCOUNT};AccountKey=${ACCESS_KEY}"
 
@@ -124,7 +124,7 @@ if [ ${#exists} = 2 ]; then
     done
 
     echo "CROP BUILD INFO: PostgreSQL DB $CROP_SQL_SERVER firewall rules created."
-      
+
     read -n 1 -s -r -p "CROP BUILD INFO: Reminder: do not forget to allow access to Azure services for the SQL database"
     # allow access to Azure services as YES
 else
@@ -194,4 +194,3 @@ cd ..
 # ###################################################################################
 
 echo "CROP BUILD INFO: Finished."
-
