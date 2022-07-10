@@ -81,7 +81,7 @@ def get_aranet_trh_sensor_data(session, sensor_id, date_from, date_to):
 
     Arguments:
         session: sqlalchemy active session object
-        sensor_id: sensor id
+        sensor_id: sensor id in the crop scheme (i.e. primary key in Sensor table).
         date_from: date range from
         date_to: date range to
     Returns:
@@ -99,7 +99,7 @@ def get_aranet_trh_sensor_data(session, sensor_id, date_from, date_to):
     result_df = DataFrame(session.execute(query).fetchall())
 
     if len(result_df.index) > 0:
-        result_df.rename(columns={0: "Timestamp"}, inplace=True)
+        result_df.rename(columns={"timestamp": "Timestamp"}, inplace=True)
 
         result_df.set_index("Timestamp", inplace=True)
 
