@@ -159,7 +159,7 @@ def aranet_query(dt_from, dt_to):
     """
 
     logging.info(
-        "Calling zensie_analysis with parameters %s %s"
+        "Getting Aranet readings dataframe with parameters %s %s"
         % (
             dt_from.strftime(CONST_TIMESTAMP_FORMAT),
             dt_to.strftime(CONST_TIMESTAMP_FORMAT),
