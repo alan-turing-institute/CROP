@@ -7,7 +7,7 @@ import logging
 
 import azure.functions as func
 
-from __app__.crop.ingress_weather import import_openweathermap_data
+from __app__.crop.ingress_weather import upload_openweathermap_data
 from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 
@@ -21,7 +21,7 @@ def weather_import(mytimer: func.TimerRequest):
 
     logging.info("Python weather timer trigger function started at %s", utc_timestamp)
 
-    dt_to = datetime.now()
+    dt_to = datetime.utcnow()
     dt_from = dt_to + timedelta(days=-1)
 
     upload_openweathermap_data(SQL_CONNECTION_STRING, SQL_DBNAME, dt_from, dt_to)
