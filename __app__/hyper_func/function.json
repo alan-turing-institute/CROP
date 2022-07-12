@@ -1,12 +1,12 @@
 {
   "scriptFile": "__init__.py",
-  "entryPoint": "energy_import",
+  "entryPoint": "hyper_import",
   "bindings": [
     {
         "name": "mytimer",
         "type": "timerTrigger",
         "direction": "in",
-        "schedule": "0 */24 * * *"
+        "schedule": "0 */1 * * *"
     }
   ]
 }

@@ -347,7 +347,7 @@ def import_energy_data(electricity_df, conn_string, database):
                 add_cnt += 1
 
             session.query(SensorClass).filter(SensorClass.id == sensor_id).update(
-                {"last_updated": datetime.now()}
+                {"last_updated": datetime.utcnow()}
             )
 
         session_close(session)

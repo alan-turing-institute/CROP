@@ -23,6 +23,7 @@ from __app__.crop.structure import (
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     ReadingsZensieTRHClass,
+    ReadingsAranetTRHClass,
     ReadingsWeatherClass,
 )
 
@@ -173,6 +174,47 @@ def get_30mhz_rht_data(sensor_id):
             )
         )
         .order_by(desc(ReadingsZensieTRHClass.timestamp))
+    )
+
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+
+    return result
+
+
+
+@blueprint.route("/getaranettrhdata/<sensor_id>", methods=["GET"])
+# @login_required
+def get_aranet_trh_data(sensor_id):
+    """
+    Produces a JSON with the Aranet Temperature and Relative Humidity
+    data for a specified sensor.
+
+    Args:
+        sensor_id - sensor ID as stored in CROP db (int).
+    Returns:
+        result - JSON string
+    """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
+    query = (
+        db.session.query(
+            ReadingsAranetTRHClass.sensor_id,
+            ReadingsAranetTRHClass.timestamp,
+            ReadingsAranetTRHClass.temperature,
+            ReadingsAranetTRHClass.humidity,
+            ReadingsAranetTRHClass.time_created,
+            ReadingsAranetTRHClass.time_updated,
+        )
+        .filter(
+            and_(
+                ReadingsAranetTRHClass.sensor_id == sensor_id,
+                ReadingsAranetTRHClass.timestamp >= dt_from,
+                ReadingsAranetTRHClass.timestamp <= dt_to,
+            )
+        )
+        .order_by(desc(ReadingsAranetTRHClass.timestamp))
     )
 
     execute_result = db.session.execute(query).fetchall()
