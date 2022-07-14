@@ -22,7 +22,8 @@ from __app__.crop.utils import query_result_to_array
 from __app__.crop.constants import CONST_CROP_HYPER_APIKEY, CONST_ARANET_TRH_SENSOR_TYPE
 
 from __app__.crop.ingress import log_upload_event
-from __app__.crop.sensors import get_aranet_trh_sensor_data
+from __app__.crop.sensors import get_sensor_readings_db_timestamps
+
 
 CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/1/analytics/v3/device_metrics"
 
@@ -158,7 +159,7 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
             continue
 
         session = session_open(engine)
-        db_data_df = get_aranet_trh_sensor_data(
+        db_data_df = get_sensor_readings_db_timestamps(
             session,
             sensor_id,
             dt_from + timedelta(hours=-1),
