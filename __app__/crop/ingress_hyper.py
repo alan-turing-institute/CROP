@@ -30,8 +30,8 @@ CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/1/analytics/v3/device_met
 def get_api_sensor_data(api_key, dt_from, dt_to):
     """
     Makes a request to download sensor data for a specified period of time.
-    Note that unlike the equivalent Zensie function, this gets data for _all_ sensors,
-    and returns it as a dict, keyed by Aranet id.
+    Note that this gets data for _all_ sensors, and returns it as a dict, keyed by
+    Aranet id.
 
     Arguments:
         api_key: api key for authentication

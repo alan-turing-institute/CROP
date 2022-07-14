@@ -32,13 +32,13 @@ function time_series_charts(
   json_data,
   series,
   limits,
-  zensie_measure,
+  trh_measure,
   y_label,
   canvasname
 ) {
   const data = {
     datasets: series.map((item) => {
-      const temps = json_data[item.id].map((row) => row[zensie_measure]);
+      const temps = json_data[item.id].map((row) => row[trh_measure]);
       const dates = json_data[item.id].map((row) => row["timestamp"]);
       return {
         label: item.label,
