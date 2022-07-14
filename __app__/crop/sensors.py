@@ -78,69 +78,7 @@ def find_sensor_type_from_id(session, sensor_id):
     else:
         print("Unknown sensor type")
         success = False
-        return success, ""
-
-
-def get_zensie_trh_sensor_data(session, sensor_id, date_from, date_to):
-    """
-    Returns zensie trh sensor data for specific period of time as pandas data frame.
-
-    Arguments:
-        session: sqlalchemy active session object
-        sensor_id: sensor id
-        date_from: date range from
-        date_to: date range to
-    Returns:
-        data_df: data frame containing sensor data for specific period of time
-    """
-
-    query = session.query(ReadingsZensieTRHClass.timestamp,).filter(
-        and_(
-            ReadingsZensieTRHClass.sensor_id == sensor_id,
-            ReadingsZensieTRHClass.timestamp >= date_from,
-            ReadingsZensieTRHClass.timestamp <= date_to,
-        )
-    )
-
-    result_df = DataFrame(session.execute(query).fetchall())
-
-    if len(result_df.index) > 0:
-        result_df.rename(columns={0: "Timestamp"}, inplace=True)
-
-        result_df.set_index("Timestamp", inplace=True)
-
-    return result_df
-
-
-def get_aranet_trh_sensor_data(session, sensor_id, date_from, date_to):
-    """
-    Returns Aranet trh sensor data for specific period of time as pandas data frame.
-
-    Arguments:
-        session: sqlalchemy active session object
-        sensor_id: sensor id in the crop scheme (i.e. primary key in Sensor table).
-        date_from: date range from
-        date_to: date range to
-    Returns:
-        data_df: data frame containing sensor data for specific period of time
-    """
-
-    query = session.query(ReadingsAranetTRHClass.timestamp).filter(
-        and_(
-            ReadingsAranetTRHClass.sensor_id == sensor_id,
-            ReadingsAranetTRHClass.timestamp >= date_from,
-            ReadingsAranetTRHClass.timestamp <= date_to,
-        )
-    )
-
-    result_df = DataFrame(session.execute(query).fetchall())
-
-    if len(result_df.index) > 0:
-        result_df.rename(columns={"timestamp": "Timestamp"}, inplace=True)
-
-        result_df.set_index("Timestamp", inplace=True)
-
-    return result_df
+        return success, "Unknown"
 
 
 def get_sensor_readings_db_timestamps(session, sensor_id, date_from, date_to):
@@ -174,68 +112,6 @@ def get_sensor_readings_db_timestamps(session, sensor_id, date_from, date_to):
             ReadingsClass.sensor_id == sensor_id,
             ReadingsClass.timestamp >= date_from,
             ReadingsClass.timestamp <= date_to,
-        )
-    )
-
-    result_df = DataFrame(session.execute(query).fetchall())
-
-    if len(result_df.index) > 0:
-        result_df.rename(columns={"timestamp": "Timestamp"}, inplace=True)
-
-        result_df.set_index("Timestamp", inplace=True)
-
-    return result_df
-
-
-def get_aranet_co2_sensor_data(session, sensor_id, date_from, date_to):
-    """
-    Returns Aranet CO2 sensor data for specific period of time as pandas data frame.
-
-    Arguments:
-        session: sqlalchemy active session object
-        sensor_id: sensor id in the crop scheme (i.e. primary key in Sensor table).
-        date_from: date range from
-        date_to: date range to
-    Returns:
-        data_df: data frame containing sensor data for specific period of time
-    """
-
-    query = session.query(ReadingsAranetCO2Class.timestamp).filter(
-        and_(
-            ReadingsAranetCO2Class.sensor_id == sensor_id,
-            ReadingsAranetCO2Class.timestamp >= date_from,
-            ReadingsAranetCO2Class.timestamp <= date_to,
-        )
-    )
-
-    result_df = DataFrame(session.execute(query).fetchall())
-
-    if len(result_df.index) > 0:
-        result_df.rename(columns={"timestamp": "Timestamp"}, inplace=True)
-
-        result_df.set_index("Timestamp", inplace=True)
-
-    return result_df
-
-
-def get_zensie_weather_sensor_data(session, sensor_id, date_from, date_to):
-    """
-    Returns zensie trh sensor data for specific period of time as pandas data frame.
-
-    Arguments:
-        session: sqlalchemy active session object
-        sensor_id: sensor id
-        date_from: date range from
-        date_to: date range to
-    Returns:
-        data_df: data frame containing sensor data for specific period of time
-    """
-
-    query = session.query(ReadingsWeatherClass.timestamp,).filter(
-        and_(
-            ReadingsWeatherClass.sensor_id == sensor_id,
-            ReadingsWeatherClass.timestamp >= date_from,
-            ReadingsWeatherClass.timestamp <= date_to,
         )
     )
 
