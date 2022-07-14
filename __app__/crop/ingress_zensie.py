@@ -60,7 +60,7 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
-        data_df = pd.read_json(response.content).T
+        data_df = pd.read_json(response.content.decode("utf-8")).T
 
         if data_df.empty:
             error = "Request [%s]: no data" % (url[: min(70, len(url))])
@@ -88,6 +88,11 @@ def get_api_sensor_data(api_key, check_id, dt_from, dt_to):
         data_df.set_index("Timestamp", inplace=True)
         if data_df.index.tz is None:
             data_df.index = data_df.index.tz_localize("UTC")
+
+
+
+
+
 
     return success, error, data_df
 
