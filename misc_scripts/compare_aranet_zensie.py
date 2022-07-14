@@ -1,3 +1,7 @@
+# This script was used to check consistency when transitioning from using the Zensie
+# 30MHz API to the Hyper API. Once the transition is complete, this script can be
+# removed.
+
 # make plots of temperature or humidity data over a specified date
 # range for a specified sensor
 #

@@ -24,8 +24,7 @@ from __app__.crop.structure import (
     SensorClass,
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
-    ReadingsZensieTRHClass,
-    ReadingsAranetTRHClass
+    ReadingsAranetTRHClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
@@ -329,46 +328,6 @@ def ventilation_energy_use(dt_from, dt_to):
     return ventilation_results_df
 
 
-def zensie_analysis(dt_from, dt_to):
-    """
-    Performs data analysis for Zensie sensors.
-
-    Arguments:
-        dt_from_: date range from
-        dt_to_: date range to
-    Returns:
-        sensor_names: a list of sensor names
-        sensor_temp_ranges: json data with temperate ranges
-    """
-
-    logging.info(
-        "Calling zensie_analysis with parameters %s %s"
-        % (
-            dt_from.strftime(CONST_TIMESTAMP_FORMAT),
-            dt_to.strftime(CONST_TIMESTAMP_FORMAT),
-        )
-    )
-
-    query = db.session.query(
-        ReadingsZensieTRHClass.timestamp,
-        ReadingsZensieTRHClass.sensor_id,
-        SensorClass.name,
-        ReadingsZensieTRHClass.temperature,
-        ReadingsZensieTRHClass.humidity,
-    ).filter(
-        and_(
-            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-            ReadingsZensieTRHClass.timestamp >= dt_from,
-            ReadingsZensieTRHClass.timestamp <= dt_to,
-        )
-    )
-
-    df = pd.read_sql(query.statement, query.session.bind)
-
-    logging.info("Total number of records found: %d" % (len(df.index)))
-    return temperature_range_analysis(df, dt_from, dt_to)
-
-
 def aranet_trh_analysis(dt_from, dt_to):
     """
     Performs data analysis for Aranet Temperature+Relative Humidity sensors.
@@ -589,40 +548,6 @@ def advanticsys_dashboard():
         num_adv_sensors=len(adv_sensors_modbus_ids),
         adv_sensors=adv_sensors_modbus_ids,
         adv_sensors_temp=adv_sensors_temp,
-        dt_from=dt_from.strftime("%B %d, %Y"),
-        dt_to=dt_to.strftime("%B %d, %Y"),
-    )
-
-
-def fetch_zensie_data(dt_from, dt_to, sensor_ids):
-    query = db.session.query(
-        ReadingsZensieTRHClass.timestamp,
-        ReadingsZensieTRHClass.sensor_id,
-        SensorClass.name,
-        ReadingsZensieTRHClass.temperature,
-        ReadingsZensieTRHClass.humidity,
-    ).filter(
-        and_(
-            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-            ReadingsZensieTRHClass.timestamp >= dt_from,
-            ReadingsZensieTRHClass.timestamp <= dt_to,
-            ReadingsZensieTRHClass.sensor_id.in_(sensor_ids),
-        )
-    )
-
-    df = pd.read_sql(query.statement, query.session.bind)
-    return df
-
-
-@blueprint.route("/zensie_dashboard")
-@login_required
-def zensie_dashboard():
-    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-    num_zensie_sensors, temperature_bins_json = zensie_analysis(dt_from, dt_to)
-    return render_template(
-        "zensie_dashboard.html",
-        num_zensie_sensors=num_zensie_sensors,
-        temperature_bins_json=temperature_bins_json,
         dt_from=dt_from.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
     )
