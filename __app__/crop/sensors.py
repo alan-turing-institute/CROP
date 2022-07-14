@@ -18,7 +18,6 @@ from __app__.crop.structure import (
     ReadingsAranetTRHClass,
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
-    ReadingsZensieTRHClass,
     ReadingsWeatherClass,
 )
 
@@ -63,7 +62,6 @@ def find_sensor_type_from_id(session, sensor_id):
         sensor_id: sensor id
     Returns:
         success: bool,  sensor_type: str
-
     """
     query = session.query(TypeClass.sensor_type).filter(
         and_(
@@ -84,7 +82,6 @@ def find_sensor_type_from_id(session, sensor_id):
 def get_sensor_readings_db_timestamps(session, sensor_id, date_from, date_to):
     """
     Returns timestamps of sensor data for specific period of time as pandas data frame.
-
     Arguments:
         session: sqlalchemy active session object
         sensor_id: sensor id in the crop scheme (i.e. primary key in Sensor table).

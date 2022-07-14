@@ -46,7 +46,6 @@ from __app__.crop.constants import (
     ARANET_TRH_TABLE_NAME,
     ARANET_CO2_TABLE_NAME,
     ARANET_AIRVELOCITY_TABLE_NAME,
-    ZENSIE_TRH_TABLE_NAME,
     WEATHER_TABLE_NAME,
     WARNINGS_TABLE_NAME,
     MODEL_TABLE_NAME,
@@ -428,32 +427,6 @@ class ReadingsAranetAirVelocityClass(BASE):
     timestamp = Column(DateTime, nullable=False)
     current = Column(Float, nullable=False) # raw current, in Amps
     air_velocity = Column(Float, nullable=False) # m/s ?
-
-    time_created = Column(DateTime(), server_default=func.now())
-    time_updated = Column(DateTime(), onupdate=func.now())
-
-    # arguments
-    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
-
-
-class ReadingsZensieTRHClass(BASE):
-    """
-    Base class for the 30MHz Temperature and RH GU sensor readings
-    """
-
-    __tablename__ = ZENSIE_TRH_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    sensor_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-
-    timestamp = Column(DateTime, nullable=False)
-    temperature = Column(Float, nullable=False)
-    humidity = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
