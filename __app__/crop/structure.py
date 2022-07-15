@@ -425,7 +425,7 @@ class ReadingsAranetAirVelocityClass(BASE):
     )
 
     timestamp = Column(DateTime, nullable=False)
-    current = Column(Float, nullable=False) # raw current, in Amps
+    current = Column(Float, nullable=True) # raw current, in Amps
     air_velocity = Column(Float, nullable=False) # m/s ?
 
     time_created = Column(DateTime(), server_default=func.now())
