@@ -70,7 +70,7 @@ def find_sensor_type_from_id(session, sensor_id):
         )
     )
     results = session.execute(query).fetchone()
-    if len(results) == 1:
+    if results and len(results) == 1:
         success = True
         return success, results[0]
     else:
