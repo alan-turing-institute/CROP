@@ -24,7 +24,7 @@ The digital twin will:
 
 - **1** Users can access the CROP platform and database using multiple ways.
 - **2** The CROP web application is the main interface for the digital twin. Users can explore collected heterogeneous IoT sensor data, analyse farm conditions at various points in time, use the developed 3D visualisation tools.
-- **3** The CROP database is constantly updated from multiple streams of data: Hyper API, Stark energy usage platform, custom made (Raspberry Pi) sensors, and others.
+- **3** The CROP database is constantly updated from multiple streams of data: Hyper API, Stark energy usage platform, and others.
 - **4** CROP machine learning services integrate automated prediction and calibration models into the platform.
 - **5** The Unity 3D model is found in [this repo](http://github.com/alan-turing-institute/CROP_unity): 
 <br/>
