@@ -44,6 +44,8 @@ from __app__.crop.constants import (
     ID_COL_NAME,
     SENSOR_UPLOAD_LOG_TABLE_NAME,
     ARANET_TRH_TABLE_NAME,
+    ARANET_CO2_TABLE_NAME,
+    ARANET_AIRVELOCITY_TABLE_NAME,
     WEATHER_TABLE_NAME,
     WARNINGS_TABLE_NAME,
     MODEL_TABLE_NAME,
@@ -376,6 +378,55 @@ class ReadingsAranetTRHClass(BASE):
     timestamp = Column(DateTime, nullable=False)
     temperature = Column(Float, nullable=False)
     humidity = Column(Float, nullable=False)
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
+
+
+class ReadingsAranetCO2Class(BASE):
+    """
+    Base class for the Aranet CO2  GU sensor readings
+    """
+    __tablename__ = ARANET_CO2_TABLE_NAME
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    timestamp = Column(DateTime, nullable=False)
+    co2 = Column(Float, nullable=False) # units of parts-per-million
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
+
+
+class ReadingsAranetAirVelocityClass(BASE):
+    """
+    Base class for the Aranet air velocity GU sensor readings.
+    Record both the raw current from the sensor, and the corresponding calibrated
+    air velocity.
+    """
+    __tablename__ = ARANET_AIRVELOCITY_TABLE_NAME
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    timestamp = Column(DateTime, nullable=False)
+    current = Column(Float, nullable=True) # raw current, in Amps
+    air_velocity = Column(Float, nullable=False) # m/s ?
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())

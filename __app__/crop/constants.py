@@ -15,8 +15,11 @@ logging.basicConfig(level=logging.DEBUG)
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
 CONST_STARK = "Stark"
+CONST_ARANET_CO2_SENSOR_TYPE = "Aranet CO2"
+CONST_ARANET_AIRVELOCITY_SENSOR_TYPE = "Aranet Air Velocity"
 CONST_WEATHER_SENSOR_TYPE = "Weather"
 CONST_ARANET_TRH_SENSOR_TYPE = "Aranet T&RH"
+
 CONST_API_WEATHER_TYPE = "openweathermap"
 
 # FILE STRUCTURE
@@ -230,6 +233,8 @@ TEST_MODEL_VALUE_TABLE_NAME = "test_model_value"
 WARNINGS_TABLE_NAME = "warnings"
 
 ARANET_TRH_TABLE_NAME = "aranet_trh_data"
+ARANET_CO2_TABLE_NAME = "aranet_co2_data"
+ARANET_AIRVELOCITY_TABLE_NAME = "aranet_airvelocity_data"
 
 WEATHER_TABLE_NAME = "iweather"
 

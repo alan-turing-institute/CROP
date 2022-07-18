@@ -17,19 +17,58 @@ from __app__.crop.structure import (
     TypeClass,
     SensorClass,
     ReadingsAranetTRHClass,
+    ReadingsAranetCO2Class,
+    ReadingsAranetAirVelocityClass,
 )
 from __app__.crop.utils import query_result_to_array
-from __app__.crop.constants import CONST_CROP_HYPER_APIKEY, CONST_ARANET_TRH_SENSOR_TYPE
+from __app__.crop.constants import (
+    CONST_CROP_HYPER_APIKEY,
+    CONST_ARANET_TRH_SENSOR_TYPE,
+    CONST_ARANET_CO2_SENSOR_TYPE,
+    CONST_ARANET_AIRVELOCITY_SENSOR_TYPE
+)
 
 from __app__.crop.ingress import log_upload_event
-from __app__.crop.sensors import get_aranet_trh_sensor_data
+from __app__.crop.sensors import get_sensor_readings_db_timestamps
+
 
 CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/1/analytics/v3/device_metrics"
 
+READINGS_DICTS = [
+    {
+        "readings_class": ReadingsAranetTRHClass,
+        "sensor_type": CONST_ARANET_TRH_SENSOR_TYPE,
+        "columns": [
+            {"api_name": "aranet_ambient_temperature", "df_name": "Temperature", "db_name": "temperature"},
+            {"api_name": "aranet_relative_humidity", "df_name": "Humidity", "db_name": "humidity"},
+        ]
+    },
+    {
+        "readings_class": ReadingsAranetCO2Class,
+        "sensor_type": CONST_ARANET_CO2_SENSOR_TYPE,
+        "columns": [
+            {"api_name": "aranet_co2", "df_name": "CO2", "db_name": "co2"},
+        ]
+    },
+    {
+        "readings_class": ReadingsAranetAirVelocityClass,
+        "sensor_type": CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
+        "columns": [
+            {"api_name": "aranet_current", "df_name": "Current", "db_name": "current"},
+            {"api_name": "aranet_current_derived","df_name": "CurrentDerived", "db_name": "air_velocity"},
+        ]
+    },
+]
 
-def get_api_sensor_data(api_key, dt_from, dt_to):
+
+def get_api_sensor_data(
+        api_key,
+        dt_from,
+        dt_to,
+        columns
+):
     """
-    Makes a request to download sensor data for a specified period of time.
+    Makes a request to download sensor data for specified metrics for a specified period of time.
     Note that this gets data for _all_ sensors, and returns it as a dict, keyed by
     Aranet id.
 
@@ -37,6 +76,7 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
         api_key: api key for authentication
         dt_from: date range from
         dt_to: date range to
+        columns: list of dictionaries containing metric names, as defined in READINGS_DICTS
     Return:
         success: whether data request was succesful
         error: error message
@@ -57,10 +97,12 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
 
     url = CONST_CHECK_URL_PATH
 
+    # get metrics as a single string, comma-separating each metric name
+    metrics = ",".join([c["api_name"] for c in columns])
     params = {
         "start_time": dt_from_iso,
         "end_time": dt_to_iso,
-        "metrics": "aranet_ambient_temperature,aranet_relative_humidity",
+        "metrics": metrics,
         "resolution": "10m",
         "metadata": "true",
     }
@@ -70,7 +112,7 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
         error = "Request's [%s] status code: %d" % (url[:70], response.status_code)
         success = False
         return success, error, data_df_dict
-    # if we got to here, we have an API response for all T/RH sensors
+    # if we got to here, we have an API response for all sensors
     data = response.json()
     # the metadata contains a mapping between the Hyper id (MAC address) and the
     # aranet_pro_id
@@ -81,20 +123,19 @@ def get_api_sensor_data(api_key, dt_from, dt_to):
     for value_dict in value_dicts:
         hyper_id = value_dict["device_id"]
         aranet_pro_id = device_mapping[hyper_id]["vendor_device_id"]
-
+        # what if we don't have an aranet_pro_id for this sensor?
+        if not aranet_pro_id:
+            logging.info(f"No aranet pro id for sensor {hyper_id}")
+            continue
         metric_name = value_dict["metric"]
-        if metric_name == "aranet_ambient_temperature":
-            metric_name = "Temperature"
-        elif metric_name == "aranet_relative_humidity":
-            metric_name = "Humidity"
-
+        df_name = next(c["df_name"] for c in columns if c["api_name"] == metric_name)
         if aranet_pro_id not in data_df_dict:
             data_df = pd.DataFrame({"Timestamp": pd.to_datetime(timestamps)})
             data_df.set_index("Timestamp", inplace=True)
             data_df_dict[aranet_pro_id] = data_df
         else:
             data_df = data_df_dict[aranet_pro_id]
-        data_df[metric_name] = value_dict["values"]
+        data_df[df_name] = value_dict["values"]
         # put this DataFrame into a dict, keyed by the aranet id
         data_df_dict[aranet_pro_id] = data_df
 
@@ -114,34 +155,35 @@ def _get_sensor_id(aranet_pro_id, engine):
     return sensor_id
 
 
-def import_hyper_data(conn_string, database, dt_from, dt_to):
+def import_hyper_metric(engine, dt_from, dt_to, ReadingsClass, columns, sensor_type, conn_string):
     """
-    Uploads temperature and relative humidity data to the CROP database.
+    For each type of sensor, make a call to the Hyper API, get a corresponding dictionary
+    of dataframes (keyed by the Aranet ID of the sensor), get the timestamps of existing readings
+    in the database, and upload new readings.
 
     Arguments:
-        conn_string: connection string
-        database: the name of the database
-        dt_from: date range from
-        dt_to: date range to
-    Returns:
-        status, error
-    """
-    # Create a CROP database connection to use.
-    success, log, engine = connect_db(conn_string, database)
-    if not success:
-        logging.info(log)
-        return success, log
+        engine: sqlalchemy engine, connected to the database
+        dt_from: datetime
+        dt_to: datetime,
+        ReadingsClass: the SQLAlchemy class (from structure.py) corresponding to the sensor type
+        columns: list of dicts, names of the columns as defined in READINGS_DICTS at top of module.
+        sensor_type: str, only used for log message.
+        conn_string: str, only used for log message.
 
+    Returns:
+        success: bool, did we successfully retrieve data from the API, the DB, and upload new data?
+        error: str, any error messages that arose
+    """
     # Create the readings table if it doesn't exist.
     try:
-        ReadingsAranetTRHClass.__table__.create(bind=engine)
+        ReadingsClass.__table__.create(bind=engine)
     except ProgrammingError:
         # The table already exists.
         pass
 
-    logging.info(f"Requesting data from {dt_from} to {dt_to} from the Hyper API")
+    logging.info(f"Requesting {sensor_type} data from {dt_from} to {dt_to} from the Hyper API")
     success, error, hyper_data_dict = get_api_sensor_data(
-        CONST_CROP_HYPER_APIKEY, dt_from, dt_to
+        CONST_CROP_HYPER_APIKEY, dt_from, dt_to, columns
     )
     if not success:
         logging.info(error)
@@ -158,14 +200,13 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
             continue
 
         session = session_open(engine)
-        db_data_df = get_aranet_trh_sensor_data(
+        db_data_df = get_sensor_readings_db_timestamps(
             session,
             sensor_id,
             dt_from + timedelta(hours=-1),
             dt_to + timedelta(hours=1),
         )
         session_close(session)
-
         # From the data returned by Hyper, filter out all the data we already have.
         if len(db_data_df) > 0:
             api_index = api_data_df.index
@@ -179,14 +220,16 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
 
         logging.info(f"Writing {len(new_data_df)} new readings")
         session = session_open(engine)
+        # loop over all readings for this sensor.
         for idx, row in new_data_df.iterrows():
-            data = ReadingsAranetTRHClass(
+            new_reading = ReadingsClass(
                 sensor_id=sensor_id,
-                timestamp=idx,
-                temperature=row["Temperature"],
-                humidity=row["Humidity"],
+                timestamp=idx
             )
-            session.add(data)
+            for column in columns:
+                setattr(new_reading, column["db_name"], row[column["df_name"]])
+            session.add(new_reading)
+        # end of loop over readings - update the 'last_updated' column for the Sensor.
         session.query(SensorClass).filter(SensorClass.id == sensor_id).update(
             {"last_updated": datetime.utcnow()}
         )
@@ -194,11 +237,48 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
 
         upload_log = "New: {} (uploaded);".format(len(new_data_df.index))
         log_upload_event(
-            CONST_ARANET_TRH_SENSOR_TYPE,
+            sensor_type,
             "Hyper API; Sensor ID {}".format(sensor_id),
             success,
             upload_log,
-            conn_string,
+            conn_string
         )
 
-    return True, None
+    return True, ""
+
+
+def import_hyper_data(conn_string, database, dt_from, dt_to):
+    """
+    This is the main function for this module.
+    Uploads data to the CROP database, for various metrics, from the Hyper.ag API.
+    Uses the READINGS_DICTS defined at the top of this module to steer what metrics
+    go into what table, and calls import_hyper_metric for every entry in that.
+
+    Arguments:
+        conn_string: connection string
+        database: the name of the database
+        dt_from: date range from
+        dt_to: date range to
+    Returns:
+        status, error
+    """
+    # Create a CROP database connection to use.
+    success, log, engine = connect_db(conn_string, database)
+    if not success:
+        logging.info(log)
+        return success, log
+    error = ""
+    # loop through the different types of sensor, and call import_hyper_metric for each
+    for readings_dict in READINGS_DICTS:
+        metric_success, metric_error = import_hyper_metric(
+            engine,
+            dt_from,
+            dt_to,
+            readings_dict["readings_class"],
+            readings_dict["columns"],
+            readings_dict["sensor_type"],
+            conn_string
+        )
+        success &= metric_success
+        error += metric_error
+    return success, error
