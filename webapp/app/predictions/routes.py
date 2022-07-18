@@ -26,7 +26,7 @@ from __app__.crop.structure import (
     TestModelRunClass,
     TestModelValueClass,
     TestModelProductClass,
-    ReadingsZensieTRHClass,
+    ReadingsAranetTRHClass,
     SensorLocationClass,
     LocationClass,
     SensorClass,
@@ -38,9 +38,9 @@ from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
 from utilities.utils import filter_latest_sensor_location
 
 
-def zensie_query(dt_from, dt_to):
+def aranet_trh_query(dt_from, dt_to):
     """
-    Performs a query for zensie sensors.
+    Performs a query for temperature and relative humidity data.
 
     Arguments:
         dt_from_: date range from
@@ -48,28 +48,19 @@ def zensie_query(dt_from, dt_to):
     Returns:
         df: a df with the queried data
     """
-
-    logging.info(
-        "Calling zensie_analysis with parameters %s %s"
-        % (
-            dt_from.strftime(CONST_TIMESTAMP_FORMAT),
-            dt_to.strftime(CONST_TIMESTAMP_FORMAT),
-        )
-    )
-
     query = db.session.query(
-        ReadingsZensieTRHClass.timestamp,
-        ReadingsZensieTRHClass.sensor_id,
-        ReadingsZensieTRHClass.temperature,
-        ReadingsZensieTRHClass.humidity,
+        ReadingsAranetTRHClass.timestamp,
+        ReadingsAranetTRHClass.sensor_id,
+        ReadingsAranetTRHClass.temperature,
+        ReadingsAranetTRHClass.humidity,
         LocationClass.zone,
     ).filter(
         and_(
             SensorLocationClass.location_id == LocationClass.id,
-            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-            ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
-            ReadingsZensieTRHClass.timestamp >= dt_from,
-            ReadingsZensieTRHClass.timestamp <= dt_to,
+            ReadingsAranetTRHClass.sensor_id == SensorClass.id,
+            ReadingsAranetTRHClass.sensor_id == SensorLocationClass.sensor_id,
+            ReadingsAranetTRHClass.timestamp >= dt_from,
+            ReadingsAranetTRHClass.timestamp <= dt_to,
             filter_latest_sensor_location(db),
         )
     )
@@ -231,11 +222,11 @@ def json_temp_arima(df_arima):
     return json_str
 
 
-def json_temp_zensie(dt_from_daily, dt_to):
-    df = zensie_query(dt_from_daily, dt_to)
+def json_temp_trh(dt_from_daily, dt_to):
+    df = aranet_trh_query(dt_from_daily, dt_to)
 
     if not df.empty:
-        # resample zensie data per hour
+        # resample T&RH data per hour
         df_grp_hr = resample(df)
 
         time_ = []
@@ -303,38 +294,37 @@ def arima_template():
 
     json_arima = json_temp_arima(df_arima)
 
-    # zensie data
     unique_time_forecast = df_arima["time_forecast"].unique()
     date_time = pd.to_datetime(unique_time_forecast[0])
     dt_to_z = date_time + dt.timedelta(days=+3)
     dt_from_z = dt_to_z + dt.timedelta(days=-5)
-    json_zensie = json_temp_zensie(dt_from_z, dt_to_z)
+    json_trh = json_temp_trh(dt_from_z, dt_to_z)
 
     unique_time_forecast_18 = df_arima_18["time_forecast"].unique()
     date_time_18 = pd.to_datetime(unique_time_forecast_18[0])
     dt_to_z_18 = date_time_18 + dt.timedelta(days=+3)
     dt_from_z_18 = dt_to_z_18 + dt.timedelta(days=-5)
-    json_zensie_18 = json_temp_zensie(dt_from_z_18, dt_to_z_18)
+    json_trh_18 = json_temp_trh(dt_from_z_18, dt_to_z_18)
 
     unique_time_forecast_23 = df_arima_23["time_forecast"].unique()
     date_time_23 = pd.to_datetime(unique_time_forecast_23[0])
     dt_to_z_23 = date_time_23 + dt.timedelta(days=+3)
     dt_from_z_23 = dt_to_z_23 + dt.timedelta(days=-5)
-    json_zensie_23 = json_temp_zensie(dt_from_z_23, dt_to_z_23)
+    json_trh_23 = json_temp_trh(dt_from_z_23, dt_to_z_23)
 
     unique_time_forecast_27 = df_arima_27["time_forecast"].unique()
     date_time_27 = pd.to_datetime(unique_time_forecast_27[0])
     dt_to_z_27 = date_time_27 + dt.timedelta(days=+3)
     dt_from_z_27 = dt_to_z_27 + dt.timedelta(days=-5)
-    json_zensie_27 = json_temp_zensie(dt_from_z_27, dt_to_z_27)
+    json_trh_27 = json_temp_trh(dt_from_z_27, dt_to_z_27)
 
     return render_template(
         "arima.html",
         json_arima_f=json_arima,
-        json_zensie_f=json_zensie,
-        json_zensie_18_f=json_zensie_18,
-        json_zensie_23_f=json_zensie_23,
-        json_zensie_27_f=json_zensie_27,
+        json_trh_f=json_trh,
+        json_trh_18_f=json_trh_18,
+        json_trh_23_f=json_trh_23,
+        json_trh_27_f=json_trh_27,
     )
 
 
@@ -355,12 +345,12 @@ def ges_template():
     end_time = df_ges["timestamp"].max()
     df_ges = df_ges[start_time <= df_ges["timestamp"]]
     json_ges = json_temp_ges(df_ges)
-    # Get Zensie data within that window.
-    json_zensie = json_temp_zensie(start_time, end_time)
+    # Get Aranet T&RH data within that window.
+    json_trh = json_temp_trh(start_time, end_time)
     return render_template(
         "ges.html",
         json_ges_f=json_ges,
-        json_zensie_f=json_zensie,
+        json_trh_f=json_trh,
     )
 
 

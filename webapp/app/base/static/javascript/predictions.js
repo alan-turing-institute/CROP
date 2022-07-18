@@ -3,8 +3,8 @@ function plot(
   mid_json,
   bot_json,
   sce_json,
-  zensie_json,
-  zensie_measure,
+  trh_json,
+  trh_measure,
   canvasname,
   y_label,
   show_legend,
@@ -40,17 +40,15 @@ function plot(
     times_sce = [];
   }
 
-  zensie_values = [];
-  zensie_time = [];
+  trh_values = [];
+  trh_time = [];
 
-  for (let i = 0; i < zensie_json.length; i++) {
-    if (zensie_json[i]["sensor_id"] == top_json["sensor_id"]) {
-      for (ii = 0; ii < zensie_json[i]["Values"].length; ii++) {
-        zensie_values.push(
-          parseFloat(zensie_json[i]["Values"][ii][zensie_measure])
-        );
-        let date_z = new Date(zensie_json[i]["Values"][ii]["timestamp"]);
-        zensie_time.push(date_z);
+  for (let i = 0; i < trh_json.length; i++) {
+    if (trh_json[i]["sensor_id"] == top_json["sensor_id"]) {
+      for (ii = 0; ii < trh_json[i]["Values"].length; ii++) {
+        trh_values.push(parseFloat(trh_json[i]["Values"][ii][trh_measure]));
+        let date_z = new Date(trh_json[i]["Values"][ii]["timestamp"]);
+        trh_time.push(date_z);
       }
     }
   }
@@ -59,7 +57,7 @@ function plot(
   const top_scatter = dictionary_scatter(times_top, values_top);
   const bot_scatter = dictionary_scatter(times_bot, values_bot);
   const sce_scatter = dictionary_scatter(times_sce, values_sce);
-  const zensie_scatter = dictionary_scatter(zensie_time, zensie_values);
+  const trh_scatter = dictionary_scatter(trh_time, trh_values);
 
   const data = {
     label: "GES Prediction",
@@ -92,8 +90,8 @@ function plot(
         showLine: true,
       },
       {
-        label: "Zensie",
-        data: zensie_scatter,
+        label: "Aranet reading",
+        data: trh_scatter,
         borderColor: "#a0a0a0",
         fill: false,
         pointRadius: 1.5,

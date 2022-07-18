@@ -13,7 +13,7 @@ from app.readings import blueprint
 from utilities.utils import (
     query_result_to_array,
     parse_date_range_argument,
-    download_csv
+    download_csv,
 )
 
 from __app__.crop.structure import SQLA as db
@@ -22,14 +22,13 @@ from __app__.crop.structure import (
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     TypeClass,
-    ReadingsZensieTRHClass,
     ReadingsAranetTRHClass,
     DailyHarvestClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
 
 
-@blueprint.route("/<template>", methods=["GET","POST"])
+@blueprint.route("/<template>", methods=["GET", "POST"])
 @login_required
 def route_template(template):
     """
@@ -38,7 +37,7 @@ def route_template(template):
 
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-    if template in ["advanticsys", "energy", "zensie_trh", "aranet_trh", "dailyharvest"]:
+    if template in ["advanticsys", "energy", "aranet_trh", "dailyharvest"]:
         if template == "advanticsys":
 
             query = (
@@ -84,29 +83,6 @@ def route_template(template):
                     )
                 )
                 .order_by(desc(ReadingsEnergyClass.timestamp))
-                .limit(CONST_MAX_RECORDS)
-            )
-
-        elif template == "zensie_trh":
-
-            query = (
-                db.session.query(
-                    ReadingsZensieTRHClass.timestamp,
-                    SensorClass.name,
-                    ReadingsZensieTRHClass.temperature,
-                    ReadingsZensieTRHClass.humidity,
-                    ReadingsZensieTRHClass.time_created,
-                    ReadingsZensieTRHClass.time_updated,
-                    ReadingsZensieTRHClass.sensor_id,
-                )
-                .filter(
-                    and_(
-                        ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-                        ReadingsZensieTRHClass.timestamp >= dt_from,
-                        ReadingsZensieTRHClass.timestamp <= dt_to,
-                    )
-                )
-                .order_by(desc(ReadingsZensieTRHClass.timestamp))
                 .limit(CONST_MAX_RECORDS)
             )
 
@@ -158,5 +134,5 @@ def route_template(template):
             readings=results_arr,
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
-            num_records = CONST_MAX_RECORDS
+            num_records=CONST_MAX_RECORDS,
         )

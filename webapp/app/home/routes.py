@@ -17,7 +17,6 @@ from __app__.crop.structure import (
     SensorClass,
     LocationClass,
     SensorLocationClass,
-    ReadingsZensieTRHClass,
     ReadingsAranetTRHClass,
 )
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
@@ -68,83 +67,6 @@ def resample(df_, bins):
     df_out.reset_index(inplace=True, drop=True)
 
     return df_out
-
-
-# def warnings_query(dt_from, dt_to):
-#     """
-#     Performs a query for warnings.
-
-#     Arguments:
-#         dt_from_: date range from
-#         dt_to_: date range to
-#     Returns:
-#         df: a df with the queried data
-#     """
-#     query = db.session.query(
-
-#         LocationClass.zone,
-#     ).filter(
-#         and_(
-#             SensorLocationClass.location_id == LocationClass.id,
-#             ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-#             ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
-#             ReadingsZensieTRHClass.timestamp >= dt_from,
-#             ReadingsZensieTRHClass.timestamp <= dt_to,
-#         )
-#     )
-
-#     df = pd.read_sql(query.statement, query.session.bind)
-
-#     logging.info("Total number of records found: %d" % (len(df.index)))
-#     if df.empty:
-#         logging.debug("WARNING: Query returned empty")
-
-#     return df
-
-
-def zensie_query(dt_from, dt_to):
-    """
-    Performs a query for zensie sensors.
-
-    Arguments:
-        dt_from_: date range from
-        dt_to_: date range to
-    Returns:
-        df: a df with the queried data
-    """
-
-    logging.info(
-        "Calling zensie_analysis with parameters %s %s"
-        % (
-            dt_from.strftime(CONST_TIMESTAMP_FORMAT),
-            dt_to.strftime(CONST_TIMESTAMP_FORMAT),
-        )
-    )
-
-    query = db.session.query(
-        ReadingsZensieTRHClass.timestamp,
-        ReadingsZensieTRHClass.sensor_id,
-        ReadingsZensieTRHClass.temperature,
-        ReadingsZensieTRHClass.humidity,
-        LocationClass.zone,
-    ).filter(
-        and_(
-            SensorLocationClass.location_id == LocationClass.id,
-            ReadingsZensieTRHClass.sensor_id == SensorClass.id,
-            ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
-            ReadingsZensieTRHClass.timestamp >= dt_from,
-            ReadingsZensieTRHClass.timestamp <= dt_to,
-            filter_latest_sensor_location(db),
-        )
-    )
-
-    df = pd.read_sql(query.statement, query.session.bind)
-
-    logging.info("Total number of records found: %d" % (len(df.index)))
-
-    if df.empty:
-        logging.debug("WARNING: Query returned empty")
-    return df
 
 
 def aranet_query(dt_from, dt_to):
@@ -238,11 +160,11 @@ def grp_per_hr_zone(temp_df):
 
 def stratification(temp_df, sensor_ids):
     """
-    Extract the Zensie data from `temp_df` for different sensors, write as
-    JSON. Used for comparing e.g. front vs back or top vs bottom of the farm.
+    Extract the T&RH data from `temp_df` for different sensors, write as JSON. Used for
+    comparing e.g. front vs back or top vs bottom of the farm.
 
     Arguments:
-        temp_df: Zensie data as a DataFrame
+        temp_df: T&RH data as a DataFrame
         sensor_ids: Iterable of sensor IDs for each to include data
     Returns:
         json_strat: A json string containing hourly values for the time series
@@ -284,14 +206,15 @@ def stratification(temp_df, sensor_ids):
     return json_strat
 
 
-def bin_zensie_data(df, bins, zensie_measure, expected_total=None):
+def bin_trh_data(df, bins, measure, expected_total=None):
     """
-    Return a dataframe with counts of how many measurements of zensie_measure
-    were in each of the bins, by zone.
+    Return a dataframe with counts of how many measurements of `measure` were in each of
+    the bins, by zone.
+
     Arguments:
         df: data
         bins: a list of bins to perform the analysis
-        zensie_measure: Either "temperature" or "humidity".
+        measure: Either "temperature" or "humidity".
 
     Returns:
         output: A merged df with counts per bin
@@ -305,15 +228,15 @@ def bin_zensie_data(df, bins, zensie_measure, expected_total=None):
 
         df_each_zone = df.loc[df.zone == zone, :].copy()
         # breaks df in
-        df_each_zone["bin"] = pd.cut(df_each_zone[zensie_measure], bins[zone])
+        df_each_zone["bin"] = pd.cut(df_each_zone[measure], bins[zone])
         # converting bins to str
         df_each_zone["bin"] = df_each_zone["bin"].astype(str)
         # groups df per each bin
         bin_grp = df_each_zone.groupby(by=["zone", "bin"])
         # get measure counts per bin
-        bin_cnt = bin_grp[zensie_measure].count().reset_index()
+        bin_cnt = bin_grp[measure].count().reset_index()
         # renames column with counts
-        bin_cnt.rename(columns={zensie_measure: "cnt"}, inplace=True)
+        bin_cnt.rename(columns={measure: "cnt"}, inplace=True)
         df_ = resample(bin_cnt, bins[zone])
         if expected_total:
             total = df_["cnt"].sum()
@@ -395,10 +318,10 @@ def index():
     df = aranet_query(dt_from_weekly, dt_to)
     if not df.empty:
         df_mean_hr_weekly = grp_per_hr_zone(df)
-        df_temp_weekly = bin_zensie_data(
+        df_temp_weekly = bin_trh_data(
             df_mean_hr_weekly, TEMP_BINS, "temperature", expected_total=24 * 7
         )
-        df_hum_weekly = bin_zensie_data(
+        df_hum_weekly = bin_trh_data(
             df_mean_hr_weekly, HUM_BINS, "humidity", expected_total=24 * 7
         )
         weekly_temp_json = json_bin_counts(df_temp_weekly)
@@ -414,10 +337,10 @@ def index():
     df_daily = aranet_query(dt_from_daily, dt_to)
     if not df_daily.empty:
         df_mean_hr_daily = grp_per_hr_zone(df_daily)
-        df_temp_daily = bin_zensie_data(
+        df_temp_daily = bin_trh_data(
             df_mean_hr_daily, TEMP_BINS, "temperature", expected_total=24
         )
-        df_hum_daily = bin_zensie_data(
+        df_hum_daily = bin_trh_data(
             df_mean_hr_daily, HUM_BINS, "humidity", expected_total=24
         )
         daily_temp_json = json_bin_counts(df_temp_daily)
