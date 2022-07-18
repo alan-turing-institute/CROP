@@ -7,7 +7,7 @@ from sqlalchemy import and_, desc
 from config import config_dict
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
-    ReadingsZensieTRHClass,
+    ReadingsAranetTRHClass,
 )
 from webapp.crop_app import create_app
 from config import config_dict
@@ -31,21 +31,21 @@ def construct_query(sensor_ids, start_date=None, end_date=None):
             dt_from = dt_to - relativedelta(years=1)
     query = (
         db.session.query(
-            ReadingsZensieTRHClass.timestamp,
-            ReadingsZensieTRHClass.temperature,
-            ReadingsZensieTRHClass.humidity,
-            ReadingsZensieTRHClass.time_created,
-            ReadingsZensieTRHClass.time_updated,
-            ReadingsZensieTRHClass.sensor_id,
+            ReadingsAranetTRHClass.timestamp,
+            ReadingsAranetTRHClass.temperature,
+            ReadingsAranetTRHClass.humidity,
+            ReadingsAranetTRHClass.time_created,
+            ReadingsAranetTRHClass.time_updated,
+            ReadingsAranetTRHClass.sensor_id,
         )
         .filter(
             and_(
-                ReadingsZensieTRHClass.timestamp >= dt_from,
-                ReadingsZensieTRHClass.timestamp <= dt_to,
+                ReadingsAranetTRHClass.timestamp >= dt_from,
+                ReadingsAranetTRHClass.timestamp <= dt_to,
             )
         )
-        .filter(ReadingsZensieTRHClass.sensor_id.in_(sensor_ids))
-        .order_by(desc(ReadingsZensieTRHClass.timestamp))
+        .filter(ReadingsAranetTRHClass.sensor_id.in_(sensor_ids))
+        .order_by(desc(ReadingsAranetTRHClass.timestamp))
     )
     return query
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         "--output_csv",
         type=str,
         help="name of output csv file - will have temperature_ or humidity_ prepended to it",
-        default="ZensieTRH.csv",
+        default="AranetTRH.csv",
     )
     parser.add_argument("--start_date", type=str, help="time in format YYYY-MM-DD")
     parser.add_argument("--end_date", type=str, help="time in format YYYY-MM-DD")

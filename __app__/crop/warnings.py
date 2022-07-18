@@ -10,6 +10,8 @@ from __app__.crop.structure import (
     TypeClass,
     SensorClass,
     SensorLocationClass,
+    # TODO Once we come back to finishing the warnings feature, this reference to Zensie
+    # needs to be changed for Aranet
     ReadingsZensieTRHClass,
     LocationClass,
     DataWarningsClass,

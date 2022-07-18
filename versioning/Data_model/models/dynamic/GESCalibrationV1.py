@@ -89,9 +89,13 @@ def main():
     ).set_index("DateTime")
 
     Monitored_hour = Monitored_10_minutes.resample("H").mean()
-    Monitored_hour.index = Monitored_hour.index.tz_convert(
-        None
-    )  # Ensure consistency of timestamps
+    try:
+        Monitored_hour.index = Monitored_hour.index.tz_convert(
+            None
+        )  # Ensure consistency of timestamps
+    except TypeError:
+        # If the index is already time zone naive.
+        pass
 
     # Check final timestamps for RH_hour and Weather
 

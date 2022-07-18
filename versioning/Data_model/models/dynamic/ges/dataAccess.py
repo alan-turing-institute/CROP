@@ -149,12 +149,11 @@ def getDaysWeather(numDays=2, numRows=5):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(weather_transaction_template, params)
-    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
 def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
-    # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
+    # select * from aranet_trh_data where sensor_id=27 order by timestamp desc limit 10;
     today = datetime.datetime.now()
     delta = datetime.timedelta(days=deltaDays)
     dateNumDaysAgo = today - delta
@@ -168,7 +167,7 @@ def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
   select
     timestamp, temperature, humidity
   from 
-    zensie_trh_data 
+    aranet_trh_data 
   where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
   order by 
     timestamp asc 
@@ -176,12 +175,11 @@ def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(humidity_transaction_template, params)
-    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
 def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
-    # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
+    # select * from aranet_trh_data where sensor_id=27 order by timestamp desc limit 10;
     today = datetime.datetime.now()
     delta = datetime.timedelta(days=deltaDays)
     dateNumDaysAgo = today - delta
@@ -195,7 +193,7 @@ def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
   select
     timestamp, humidity
   from 
-    zensie_trh_data 
+    aranet_trh_data 
   where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
   order by 
     timestamp asc 
@@ -203,7 +201,6 @@ def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(humidity_transaction_template, params)
-    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
@@ -224,14 +221,14 @@ def insert_particles(particles_array):
 
 
 def getDataPointHumidity(sensorID=27, numRows=1):
-    # select * from zensie_trh_data where sensor_id=27 order by timestamp desc limit 10;
+    # select * from aranet_trh_data where sensor_id=27 order by timestamp desc limit 10;
     params = {"sensor_id": sensorID, "num_Rows": numRows}
 
     humidity_transaction_template = """
   select
     timestamp, humidity
   from 
-    zensie_trh_data 
+    aranet_trh_data 
   where (sensor_id = {{ sensor_id }})
   order by 
     timestamp desc 
@@ -239,7 +236,6 @@ def getDataPointHumidity(sensorID=27, numRows=1):
   """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(humidity_transaction_template, params)
-    # logging.info(get_sql_from_template(query=query, bind_params=bind_params))
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
@@ -324,9 +320,7 @@ def insertModelProduct(run_id=None, measure_id=None):
             sql = """INSERT INTO test_model_product(run_id, measure_id)
             VALUES (%s,%s) RETURNING id;"""
             product_id = insertRow(sql, (run_id, measure_id))
-            logging.info(
-                "Product inserted, logged as ID: {0}".format(product_id)
-            )
+            logging.info("Product inserted, logged as ID: {0}".format(product_id))
             return product_id
     return None
 

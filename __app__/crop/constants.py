@@ -15,9 +15,8 @@ logging.basicConfig(level=logging.DEBUG)
 CONST_ADVANTICSYS = "Advanticsys"
 CONST_AIR_VELOCITY = "Air_Velocity"
 CONST_STARK = "Stark"
-CONST_ZENSIE_TRH_SENSOR_TYPE = "30MHz T&RH"
-CONST_ZENSIE_WEATHER_SENSOR_TYPE = "30MHz Weather"
-CONST_ARANET_TRH_SENSOR_TYPE = CONST_ZENSIE_TRH_SENSOR_TYPE
+CONST_WEATHER_SENSOR_TYPE = "Weather"
+CONST_ARANET_TRH_SENSOR_TYPE = "Aranet T&RH"
 CONST_API_WEATHER_TYPE = "openweathermap"
 
 # FILE STRUCTURE
@@ -146,21 +145,11 @@ STARK_PASS = (
     else "DUMMY"
 )
 
-# 30MHz (Zensie)
-CONST_CROP_30MHZ_APIKEY = (
-    os.environ["CROP_30MHZ_APIKEY"].strip()
-    if "CROP_30MHZ_APIKEY" in os.environ
-    else "DUMMY"
-)
-CONST_CROP_30MHZ_TEST_T_RH_CHECKID = (
-    os.environ["CROP_30MHZ_TEST_T_RH_CHECKID"].strip()
-    if "CROP_30MHZ_TEST_T_RH_CHECKID" in os.environ
-    else "DUMMY"
-)
-
 # Hyper.ag
 CONST_CROP_HYPER_APIKEY = (
-    os.environ["CROP_HYPER_APIKEY"].strip() if "CROP_HYPER_APIKEY" in os.environ else "DUMMY"
+    os.environ["CROP_HYPER_APIKEY"].strip()
+    if "CROP_HYPER_APIKEY" in os.environ
+    else "DUMMY"
 )
 
 # openweatherdata API
@@ -240,7 +229,6 @@ TEST_MODEL_VALUE_TABLE_NAME = "test_model_value"
 
 WARNINGS_TABLE_NAME = "warnings"
 
-ZENSIE_TRH_TABLE_NAME = "zensie_trh_data"
 ARANET_TRH_TABLE_NAME = "aranet_trh_data"
 
 WEATHER_TABLE_NAME = "iweather"
