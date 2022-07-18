@@ -23,6 +23,8 @@ from __app__.crop.structure import (
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     ReadingsAranetTRHClass,
+    ReadingsAranetCO2Class,
+    ReadingsAranetAirVelocityClass,
     ReadingsWeatherClass,
 )
 
@@ -180,6 +182,85 @@ def get_aranet_trh_data(sensor_id):
     result = jasonify_query_result(execute_result)
 
     return result
+
+
+@blueprint.route("/getaranetco2data/<sensor_id>", methods=["GET"])
+# @login_required
+def get_aranet_co2_data(sensor_id):
+    """
+    Produces a JSON with the Aranet CO2
+    data for a specified sensor.
+
+    Args:
+        sensor_id - sensor ID as stored in CROP db (int).
+    Returns:
+        result - JSON string
+    """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
+    query = (
+        db.session.query(
+            ReadingsAranetCO2Class.sensor_id,
+            ReadingsAranetCO2Class.timestamp,
+            ReadingsAranetCO2Class.co2,
+            ReadingsAranetCO2Class.time_created,
+            ReadingsAranetCO2Class.time_updated,
+        )
+        .filter(
+            and_(
+                ReadingsAranetCO2Class.sensor_id == sensor_id,
+                ReadingsAranetCO2Class.timestamp >= dt_from,
+                ReadingsAranetCO2Class.timestamp <= dt_to,
+            )
+        )
+        .order_by(desc(ReadingsAranetCO2Class.timestamp))
+    )
+
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+
+    return result
+
+
+@blueprint.route("/getaranetairvelocitydata/<sensor_id>", methods=["GET"])
+# @login_required
+def get_aranet_airvelocity_data(sensor_id):
+    """
+    Produces a JSON with the Aranet air velocity
+    data for a specified sensor.
+
+    Args:
+        sensor_id - sensor ID as stored in CROP db (int).
+    Returns:
+        result - JSON string
+    """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
+    query = (
+        db.session.query(
+            ReadingsAranetAirVelocityClass.sensor_id,
+            ReadingsAranetAirVelocityClass.timestamp,
+            ReadingsAranetAirVelocityClass.current,
+            ReadingsAranetAirVelocityClass.air_velocity,
+            ReadingsAranetAirVelocityClass.time_created,
+            ReadingsAranetAirVelocityClass.time_updated,
+        )
+        .filter(
+            and_(
+                ReadingsAranetAirVelocityClass.sensor_id == sensor_id,
+                ReadingsAranetAirVelocityClass.timestamp >= dt_from,
+                ReadingsAranetAirVelocityClass.timestamp <= dt_to,
+            )
+        )
+        .order_by(desc(ReadingsAranetAirVelocityClass.timestamp))
+    )
+
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+    return result
+
 
 
 @blueprint.route("/getweatherdata", methods=["GET"])
