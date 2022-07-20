@@ -2,6 +2,7 @@
 Analysis dashboards module.
 """
 
+from collections import Iterable
 import copy
 from datetime import datetime, timedelta
 import json
@@ -66,36 +67,111 @@ SENSOR_CATEORIES = {
 CONST_SFP = 2.39  # specific fan power
 CONST_VTOT = 20337.0  # total volume – m3
 
-DEFAULT_SENSOR_TYPE = 3  # 3 is for Aranet T&RH
+DEFAULT_SENSOR_TYPE = "Aranet T&RH"
 
 # Some data that varies based on sensor type.
 # DATA_COLUMNS_BY_SENSOR_TYPE names the class for the readings table.
 DATA_TABLES_BY_SENSOR_TYPE = {
-    3: ReadingsAranetTRHClass,
-    12: ReadingsAranetCO2Class,
-    13: ReadingsAranetAirVelocityClass,
+    "Aranet T&RH": ReadingsAranetTRHClass,
+    "Aranet CO2": ReadingsAranetCO2Class,
+    "Aranet Air Velocity": ReadingsAranetAirVelocityClass,
 }
 # DATA_COLUMNS_BY_SENSOR_TYPE names the columns of that table that we want to plot as
 # data, and gives them human friendly names to display on the UI.
 # TODO Could the below data be read from the database?
 DATA_COLUMNS_BY_SENSOR_TYPE = {
-    3: [
+    "Aranet T&RH": [
         {"column_name": "temperature", "ui_name": "Temperature (°C)"},
         {"column_name": "humidity", "ui_name": "Humidity (%)"},
     ],
-    12: [
+    "Aranet CO2": [
         {"column_name": "co2", "ui_name": "CO2 (ppm)"},
     ],
-    13: [
+    "Aranet Air Velocity": [
         {"column_name": "air_velocity", "ui_name": "Air velocity (m/s)"},
     ],
 }
 
-# The set of sensor types for which we have the necessary information to get data and
-# plot it.
-VALID_SENSOR_TYPES = set(DATA_COLUMNS_BY_SENSOR_TYPE.keys()) & set(
-    DATA_TABLES_BY_SENSOR_TYPE.keys()
-)
+# The above constants are defined in terms of names of the sensor_types. The code
+# operates in terms of ids rather than names, so we wrap the above dictionaries into
+# functions.
+
+
+def get_sensor_type_name(sensor_type_id):
+    """Given a sensor type ID, get the name of the sensor type from the database."""
+    query = db.session.query(
+        TypeClass.sensor_type,
+    ).filter(TypeClass.id == sensor_type_id)
+    sensor_name = db.session.execute(query).fetchone()
+    if isinstance(sensor_name, Iterable):
+        sensor_name = sensor_name[0]
+    return sensor_name
+
+
+def get_sensor_type_id(sensor_type_name):
+    """Given a sensor type name, get the ID of the sensor type from the database."""
+    query = db.session.query(
+        TypeClass.id,
+    ).filter(TypeClass.sensor_type == sensor_type_name)
+    sensor_id = db.session.execute(query).fetchone()
+    if isinstance(sensor_id, Iterable):
+        sensor_id = sensor_id[0]
+    return sensor_id
+
+
+def get_table_by_sensor_type(sensor_type_id):
+    """Return the SQLAlchemy table corresponding to a given sensor type ID."""
+    global DATA_TABLES_BY_SENSOR_TYPE
+    if sensor_type_id in DATA_TABLES_BY_SENSOR_TYPE:
+        return DATA_TABLES_BY_SENSOR_TYPE[sensor_type_id]
+    else:
+        sensor_type_name = get_sensor_type_name(sensor_type_id)
+        if sensor_type_name in DATA_TABLES_BY_SENSOR_TYPE:
+            value = DATA_TABLES_BY_SENSOR_TYPE[sensor_type_name]
+        else:
+            value = None
+        DATA_TABLES_BY_SENSOR_TYPE[sensor_type_id] = value
+        return value
+
+
+def get_columns_by_sensor_type(sensor_type_id):
+    """Return the names of the data columns in the table corresponding to a given sensor
+    type ID.
+
+    By "data columns" we mean the ones that depend on the sensor type and hold the
+    actual data, e.g. temperature and humidity, but not timestamp. The return values are
+    dictionaries with two keys, "column_name" for the name by which the database knows
+    this column, and "ui_name" for nice human-readable name fit for a UI.
+    """
+    global DATA_COLUMNS_BY_SENSOR_TYPE
+    if sensor_type_id in DATA_COLUMNS_BY_SENSOR_TYPE:
+        return DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type_id]
+    else:
+        sensor_type_name = get_sensor_type_name(sensor_type_id)
+        if sensor_type_name in DATA_COLUMNS_BY_SENSOR_TYPE:
+            value = DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type_name]
+        else:
+            value = None
+        DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type_id] = value
+        return value
+
+
+def get_default_sensor_type():
+    """Get the ID of the default sensor type."""
+    return get_sensor_type_id(DEFAULT_SENSOR_TYPE)
+
+
+def is_valid_sensor_type(sensor_type_id):
+    """Return True if we have the necessary metadata about the table and its columns
+    needed for fetching and plotting data for the given sensor type, otherwise False.
+    """
+    return (
+        get_table_by_sensor_type(sensor_type_id) is not None
+        and get_columns_by_sensor_type(sensor_type_id) is not None
+    )
+
+
+# # # DONE WITH GLOBAL CONSTANTS AND SENSOR TYPE METADATA, BEGIN MAIN CONTENT # # #
 
 
 def resample(df, bins, dt_from, dt_to):
@@ -592,12 +668,12 @@ def advanticsys_dashboard():
 
 
 def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
-    if sensor_type not in VALID_SENSOR_TYPES:
+    if not is_valid_sensor_type(sensor_type):
         raise ValueError(f"Don't know how to fetch data for sensor type {sensor_type}")
-    data_table = DATA_TABLES_BY_SENSOR_TYPE[sensor_type]
+    data_table = get_table_by_sensor_type(sensor_type)
     data_table_columns = [
         getattr(data_table, column["column_name"])
-        for column in DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type]
+        for column in get_columns_by_sensor_type(sensor_type)
     ]
     query = db.session.query(
         data_table.timestamp,
@@ -675,7 +751,7 @@ def add_mean_over_sensors(sensor_type, sensor_ids, df, roll_window_minutes=10):
     # while another may have 05 and 15. A 10 minute rolling mean smooths out these
     # differences.
     roll_window = timedelta(minutes=roll_window_minutes)
-    for column in DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type]:
+    for column in get_columns_by_sensor_type(sensor_type):
         column_name = column["column_name"]
         df_mean[column_name] = df_mean[column_name].rolling(roll_window).mean()
     df_mean = df_mean.reset_index()
@@ -683,23 +759,22 @@ def add_mean_over_sensors(sensor_type, sensor_ids, df, roll_window_minutes=10):
     return df
 
 
-def fetch_all_sensor_types(valid_sensor_types):
+def fetch_all_sensor_types():
     """Get all sensor types from the CROP database, for which we know how to render the
     timeseries dashboard.
 
     Arguments:
-        valid_sensor_types: A list of IDs of sensor types that we know how to fetch and
-        plot data for. Sensor types in the database that are not in this list are
-        discarded.
+        None
     Returns:
         List of dictionaries with keys "id" (int) and "sensor_type" (str).
     """
     query = db.session.query(
         TypeClass.id,
         TypeClass.sensor_type,
-    ).filter(TypeClass.id.in_(valid_sensor_types))
+    )
     sensor_types = db.session.execute(query).fetchall()
     sensor_types = query_result_to_array(sensor_types)
+    sensor_types = [st for st in sensor_types if is_valid_sensor_type(st["id"])]
     return sensor_types
 
 
@@ -729,15 +804,17 @@ def timeseries_dashboard():
     dt_to = request.args.get("endDate")
     sensor_ids = request.args.get("sensorIds")
     if sensor_ids is not None:
+        # sensor_ids is passed as a comma-separated (or space or semicolon, although
+        # those aren't currently used) string of ints, split it into a list of ints.
         sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids.rstrip(" ,;"))))
     sensor_type = request.args.get("sensorType")
     if sensor_type is None:
-        sensor_type = DEFAULT_SENSOR_TYPE
+        sensor_type = get_default_sensor_type()
     else:
         sensor_type = int(sensor_type)
     # Get the data from the database that will be required in all scenarios for how the
     # page might be rendered.
-    sensor_types = fetch_all_sensor_types(VALID_SENSOR_TYPES)
+    sensor_types = fetch_all_sensor_types()
     all_sensors = fetch_all_sensors(sensor_type)
 
     # If we don't have the information necessary to plot data for sensors, just render
@@ -746,7 +823,7 @@ def timeseries_dashboard():
         dt_from is None
         or dt_to is None
         or sensor_ids is None
-        or sensor_type not in VALID_SENSOR_TYPES
+        or not is_valid_sensor_type(sensor_type)
     ):
         today = datetime.today()
         dt_from = today - timedelta(days=7)
@@ -783,7 +860,7 @@ def timeseries_dashboard():
         # Insert at start, to make "mean" be the first one displayed on the page.
         data_keys.insert(0, "mean")
 
-    data_columns = DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type]
+    data_columns = get_columns_by_sensor_type(sensor_type)
     data_dict = dict()
     summary_dict = dict()
     for key in data_keys:
