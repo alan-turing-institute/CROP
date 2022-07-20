@@ -29,9 +29,8 @@ export CROP_STARK_PASS="<<<replaceme>>"
 export CROP_DOCKER_USER="<<<replaceme>>"
 export CROP_DOCKER_PASS="<<<replaceme>>"
 
-# 30MHz
-export CROP_30MHZ_ORGANIZATION="<<<replaceme>>"
-export CROP_30MHZ_APIKEY=“helloapikey”
-
 # OpenWeatherData API
 export CROP_OPENWEATHERMAP_APIKEY="<<replaceme>>"
+
+# HYPER.AG
+export CROP_HYPER_APIKEY="<<replaceme>>"

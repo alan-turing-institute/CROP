@@ -10,6 +10,8 @@ from __app__.crop.structure import (
     TypeClass,
     SensorClass,
     SensorLocationClass,
+    # TODO Once we come back to finishing the warnings feature, this reference to Zensie
+    # needs to be changed for Aranet
     ReadingsZensieTRHClass,
     LocationClass,
     DataWarningsClass,
@@ -104,7 +106,7 @@ def too_humid_in_propagation_room(readings, location_zone):
 
 def check_issues_in_farm(session):
 
-    start_date = datetime.now() - timedelta(hours=24)
+    start_date = datetime.utcnow() - timedelta(hours=24)
     propagation_zone = "Propagation"
 
     readings = db_query_tmpr_day_zenzie(session, propagation_zone, start_date)

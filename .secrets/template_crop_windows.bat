@@ -33,8 +33,8 @@ setx CROP_STARK_PASS "<<<replaceme>>"
 setx CROP_DOCKER_USER "<<<replaceme>>"
 setx CROP_DOCKER_PASS "<<<replaceme>>"
 
-# 30MHz
-setx CROP_30MHZ_ORGANIZATION "<<<replaceme>>"
-setx CROP_30MHZ_APIKEY "<<<replaceme>>"
-
+# Openweathermap
 setx CROP_OPENWEATHERMAP_APIKEY "<<replaceme>>"
+
+# HYPER.AG
+setx CROP_HYPER_APIKEY "<<replaceme>>"

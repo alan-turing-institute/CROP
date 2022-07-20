@@ -2,6 +2,17 @@
 
 ###################################################################################
 # Creates Function App(s)
+#
+#
+# Prerequisites
+# =============
+# Azure CLI (install via homebrew):
+#     brew update && brew install azure-cli
+#     az login
+#     az account set --subscription <subscriptionID>
+# Azure Functions Core Tools - (install via homebrew):
+#    brew tap azure/functions
+#    brew install azure-functions-core-tools@4
 ###################################################################################
 
 CONST_FUNCAPP_PLAN=$1
@@ -21,13 +32,14 @@ fi
 
 if [ -z "$CONST_FUNCAPP_DOCKER_IMAGE" ]
 then
-    CONST_FUNCAPP_DOCKER_IMAGE='turingcropapp/webapp:funcapp'
+    CONST_FUNCAPP_DOCKER_IMAGE='turingcropapp/functions:dev'
 fi
 
 if [ -z "$CONNECTION_STRING" ]
 then
-    # Getting the first storage account key
-    ACCESS_KEY=$(az storage account keys list --account-name $CROP_STORAGE_ACCOUNT --resource-group $CROP_RG_NAME --output tsv |head -1 | awk '{print $3}')
+    # Getting the first storage account key - this is a bit fragile in that it
+    # depends on the order that the azure cli returns parameters
+    ACCESS_KEY=$(az storage account keys list --account-name $CROP_STORAGE_ACCOUNT --resource-group $CROP_RG_NAME --output tsv |head -1 | awk '{print $4}')
     # Creating a connection string
     CONNECTION_STRING="DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=${CROP_STORAGE_ACCOUNT};AccountKey=${ACCESS_KEY}"
 fi
@@ -66,7 +78,9 @@ az functionapp create \
     --resource-group $CROP_RG_NAME \
     --storage-account $CROP_STORAGE_ACCOUNT \
     --name $function_name \
-    --functions-version 2 \
+    --functions-version 3 \
+    --runtime python \
+    --runtime-version 3.8 \
     --plan $CONST_FUNCAPP_PLAN \
     --deployment-container-image-name $CONST_FUNCAPP_DOCKER_IMAGE \
     --docker-registry-server-user $CROP_DOCKER_USER \
@@ -90,8 +104,8 @@ az functionapp config appsettings set \
     "CROP_SQL_PORT=$CROP_SQL_PORT" \
     "CROP_STARK_USERNAME=$CROP_STARK_USERNAME" \
     "CROP_STARK_PASS=$CROP_STARK_PASS" \
-    "CROP_30MHZ_APIKEY=$CROP_30MHZ_APIKEY" \
-    "CROP_30MHZ_TEST_T_RH_CHECKID=$CROP_30MHZ_TEST_T_RH_CHECKID" \
+    "CROP_HYPER_APIKEY=$CROP_HYPER_APIKEY" \
+    "CROP_OPENWEATHERMAP_APIKEY=$CROP_OPENWEATHERMAP_APIKEY" \
     "AzureWebJobsStorage=$CONNECTION_STRING" \
     > /dev/null
 

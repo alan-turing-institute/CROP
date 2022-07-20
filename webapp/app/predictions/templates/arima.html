@@ -93,7 +93,7 @@
 <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
 
 <script>
-  function sensor_loop(json_arima, zensie_data_dict ) {
+  function sensor_loop(json_arima, trh_data_dict ) {
     //get unique sensor ids
     list_sensors = []
     for (var i = 0; i < json_arima.length; i++){
@@ -117,19 +117,19 @@
       // See static/javascript/predictions.js for the plot function.
       const show_legend = i == 0
       const axis_title = "Temperature (°C)"
-      plot(json_arima_sensor[2], json_arima_sensor[1], json_arima_sensor[0], null, zensie_data_dict[String(current_sensor)], "temperature", canvasname, axis_title, show_legend, null);
+      plot(json_arima_sensor[2], json_arima_sensor[1], json_arima_sensor[0], null, trh_data_dict[String(current_sensor)], "temperature", canvasname, axis_title, show_legend, null);
     }
   }
 
   var arima_data = JSON.parse('{{json_arima_f | safe}}');
-  var zensie_data = JSON.parse('{{json_zensie_f | safe}}');
-  var zensie_data_18 = JSON.parse('{{json_zensie_18_f | safe}}');
-  var zensie_data_23 = JSON.parse('{{json_zensie_23_f | safe}}');
-  var zensie_data_27 = JSON.parse('{{json_zensie_27_f | safe}}');
-  // TODO The zensie data format is a redundant, all the three elements
+  var trh_data = JSON.parse('{{json_trh_f | safe}}');
+  var trh_data_18 = JSON.parse('{{json_trh_18_f | safe}}');
+  var trh_data_23 = JSON.parse('{{json_trh_23_f | safe}}');
+  var trh_data_27 = JSON.parse('{{json_trh_27_f | safe}}');
+  // TODO The trh data format is a redundant, all the three elements
   //  actually hold all the data. Sort this out.
-  const zensie_data_dict = {18: zensie_data_18, 23: zensie_data_23, 27:zensie_data_27}
-  sensor_loop(arima_data, zensie_data_dict)
+  const trh_data_dict = {18: trh_data_18, 23: trh_data_23, 27:trh_data_27}
+  sensor_loop(arima_data, trh_data_dict)
 </script>
 
 
