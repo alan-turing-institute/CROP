@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} 30MHz Sensors Analysis Dashboard {% endblock title %}
+{% block title %} Aranet T&RH Sensors Analysis Dashboard {% endblock title %}
 
 {% block stylesheets %}
 {{ super() }}
@@ -30,7 +30,7 @@
           <div class="x_content">
             <div class="row x_title">
               <div class="col-md-6">
-                <h2>30MHz Sensors Temperature Range Counts</h2>
+                <h2>Aranet T&RH Sensors Temperature Range Counts</h2>
               </div>
               <!--
                 TODO Make this dropdown menu for choosing the date range actually do
@@ -38,7 +38,7 @@
               <div class="col-md-6">
                 <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
                   <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                  <span></span> 
+                  <span></span>
                   <b class="caret"></b>
                 </div>
               </div>
@@ -100,7 +100,7 @@
 
 <script>
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/dashboards/zensie_dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/dashboards/aranet_trh_dashboard?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
         location.replace(request_url)
     });
 
@@ -117,9 +117,9 @@
     "rgba(137,214,11,1)",
     "rgba(207,19,10,1)",
   ];
-  const zensie_temp_data = JSON.parse('{{temperature_bins_json | safe}}');
-  for (const sensor_id in zensie_temp_data) {
-      const data = zensie_temp_data[sensor_id]
+  const aranet_temp_data = JSON.parse('{{temperature_bins_json | safe}}');
+  for (const sensor_id in aranet_temp_data) {
+      const data = aranet_temp_data[sensor_id]
       const plot_data = [];
       for (let j = 0; j < data["bins"].length; j++) {
           plot_data.push({

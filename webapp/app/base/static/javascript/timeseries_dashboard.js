@@ -10,26 +10,56 @@ $("#reportrange").on("apply.daterangepicker", function (ev, picker) {
   setDateRange(picker.startDate, picker.endDate);
 });
 
+function getCheckedSensorIds() {
+  const sensorCheckboxesDiv = document.getElementById("sensorCheckboxesDiv");
+  const sensorIds = [];
+  for (const childElement of sensorCheckboxesDiv.children) {
+    const id = childElement.children[0].value;
+    const checked = childElement.children[0].checked;
+    if (checked) sensorIds.push(id);
+  }
+  return sensorIds;
+}
+
+function getSelectedSensorTypeStr() {
+  const sensorTypeSelector = document.getElementById("sensorTypeSelector");
+  const sensorType = sensorTypeSelector.value;
+  const sensorTypeStr = encodeURIComponent(sensorType);
+  return sensorTypeStr;
+}
+
+function changeSensorType() {
+  const sensorTypeStr = getSelectedSensorTypeStr();
+  const url = "/dashboards/timeseries_dashboard";
+  const params = "sensorType=" + sensorTypeStr;
+  location.replace(url + "?" + params);
+}
+
 function requestTimeSeries(download) {
-  const sensorIds = document.getElementById("sensorIdInput").value;
-  if (sensorIds === undefined) {
-    alert("Please give a list of sensor IDs.");
+  const sensorIds = getCheckedSensorIds();
+  if (sensorIds === undefined || sensorIds.length === 0) {
+    alert("Please select sensors to plot/download data for.");
     return null;
   }
   if (startDate === undefined || endDate === undefined) {
     alert("Please set start and end date.");
     return null;
   }
-  if (!/^\d[\d;, ]*$/.test(sensorIds)) {
-    alert("Invalid list of sensor IDs.");
-    return null;
-  }
+
   const startStr = encodeURIComponent(startDate.format("YYYYMMDD"));
   const endStr = encodeURIComponent(endDate.format("YYYYMMDD"));
   const idsStr = encodeURIComponent(sensorIds);
+  const sensorTypeStr = getSelectedSensorTypeStr();
   const url = "/dashboards/timeseries_dashboard";
   const params =
-    "startDate=" + startStr + "&endDate=" + endStr + "&sensorIds=" + idsStr;
+    "startDate=" +
+    startStr +
+    "&endDate=" +
+    endStr +
+    "&sensorIds=" +
+    idsStr +
+    "&sensorType=" +
+    sensorTypeStr;
   if (download) {
     // A clunky way to trigger a download: Make a form that generates a POST request.
     const form = document.createElement("form");
@@ -113,9 +143,4 @@ function makePlot(data, yDataName, yLabel, canvasName) {
   config.data = { datasets: datasets };
   const ctx = document.getElementById(canvasName);
   new Chart(ctx, config);
-}
-
-function makePlots(data) {
-  makePlot(data, "temperature", "Temperature", "temperatureCanvas");
-  makePlot(data, "humidity", "Relative humidity", "humidityCanvas");
 }

@@ -43,7 +43,6 @@ def main():
 
     path_conf = config(section="paths")
     data_dir = Path(path_conf["data_dir"])
-    filepath_X = data_dir / path_conf["filename_x"]
     filepath_Weather = data_dir / path_conf["filename_weather"]
     filepath_Monitored = data_dir / path_conf["filename_monitored"]
     filepath_LastDataPoint = data_dir / path_conf["filename_lastdatapoint"]
@@ -71,27 +70,31 @@ def main():
 
     # Weather
     num_weather_days = int(cal_conf["num_weather_days"])
-    # The 6 is because weather data is read for every 10 minutes.
-    num_weather_rows = num_weather_days * 24 * 6
-    sensorID = int(cal_conf["sensor_id"])
+    # There should really be data every 5 or 10 minutes, but to play it safe, allow for
+    # every minute.
+    max_number_of_query_rows = num_weather_days * 24 * 60
 
-    Weather_data = getDaysWeather(num_weather_days, num_weather_rows)
+    Weather_data = getDaysWeather(num_weather_days, max_number_of_query_rows)
     Weather_hour = pd.DataFrame(
         Weather_data, columns=["DateTime", "T_e", "RH_e"]
     ).set_index("DateTime")
 
     # Monitored Data
     Monitored_data = getDaysHumidityTemp(
-        num_weather_days, num_weather_rows, cal_conf["sensor_id"]
+        num_weather_days, max_number_of_query_rows, cal_conf["sensor_id"]
     )
     Monitored_10_minutes = pd.DataFrame(
         Monitored_data, columns=["DateTime", "T_i", "RH_i"]
     ).set_index("DateTime")
 
     Monitored_hour = Monitored_10_minutes.resample("H").mean()
-    Monitored_hour.index = Monitored_hour.index.tz_convert(
-        None
-    )  # Ensure consistency of timestamps
+    try:
+        Monitored_hour.index = Monitored_hour.index.tz_convert(
+            None
+        )  # Ensure consistency of timestamps
+    except TypeError:
+        # If the index is already time zone naive.
+        pass
 
     # Check final timestamps for RH_hour and Weather
 

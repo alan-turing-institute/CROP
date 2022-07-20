@@ -65,12 +65,12 @@ getData = function(sql_command) {
 
 getTemperatureHumidityData = function(limitRows, datesToGetData) {
   
-  select_command = "SELECT DISTINCT sensors.name, zensie_trh_data.*"
-  from_command = "FROM sensor_types, sensors, zensie_trh_data"
-  where_criteria1 = "WHERE sensors.id = zensie_trh_data.sensor_id"
-  where_criteria2 = sprintf("AND zensie_trh_data.timestamp >= '%s'", datesToGetData$startDate)
-  where_criteria3 = sprintf("AND zensie_trh_data.timestamp < '%s'", datesToGetData$endDate)
-  where_criteria4 = sprintf("order by zensie_trh_data.timestamp asc")
+  select_command = "SELECT DISTINCT sensors.name, aranet_trh_data.*"
+  from_command = "FROM sensor_types, sensors, aranet_trh_data"
+  where_criteria1 = "WHERE sensors.id = aranet_trh_data.sensor_id"
+  where_criteria2 = sprintf("AND aranet_trh_data.timestamp >= '%s'", datesToGetData$startDate)
+  where_criteria3 = sprintf("AND aranet_trh_data.timestamp < '%s'", datesToGetData$endDate)
+  where_criteria4 = sprintf("order by aranet_trh_data.timestamp asc")
   
   limit_command = ""
   if (limitRows > 0)

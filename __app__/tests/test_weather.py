@@ -13,8 +13,8 @@ from __app__.crop.ingress_weather import (
 
 def test_get_weather_data():
 
-    dt_from = datetime.now() + timedelta(days=-1)
-    dt_to = datetime.now()
+    dt_from = datetime.utcnow() + timedelta(days=-1)
+    dt_to = datetime.utcnow()
     timestamp_from = int(dt_from.timestamp())
     timestamp_to = int(dt_to.timestamp())
     timestamp_avg = int((timestamp_from + timestamp_to) / 2)
