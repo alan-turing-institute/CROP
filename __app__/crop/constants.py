@@ -257,10 +257,10 @@ BATCH_EVENT_TABLE_NAME = "batch_events"
 HARVEST_TABLE_NAME = "harvests"
 
 GROWAPP_IP = os.environ["GROWAPP_IP"] if "GROWAPP_IP" in os.environ else "DUMMY"
-GROWAPP_DB = os.environ["GROWAPP_DB"] if "GROWAPP_DB" in os.environ else "DUMMY"
-GROWAPP_USER = os.environ["GROWAPP_USER"] if "GROWAPP_USER" in os.environ else "DUMMY"
+GROWAPP_DB = os.environ["GROWAPP_DATABASE"] if "GROWAPP_DATABASE" in os.environ else "DUMMY"
+GROWAPP_USER = os.environ["GROWAPP_USERNAME"] if "GROWAPP_USERNAME" in os.environ else "DUMMY"
 GROWAPP_PASSWORD = (
-    os.environ["GROWAPP_PASSWORD"] if "GROWAPP_PASSWORD" in os.environ else "DUMMY"
+    os.environ["GROWAPP_PASS"] if "GROWAPP_PASS" in os.environ else "DUMMY"
 )
 GROWAPP_SCHEMA = (
     os.environ["GROWAPP_SCHEMA"] if "GROWAPP_SCHEMA" in os.environ else "DUMMY"
