@@ -270,6 +270,7 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
     error = ""
     # loop through the different types of sensor, and call import_hyper_metric for each
     for readings_dict in READINGS_DICTS:
+        logging.info("===> Importing data from {}".format(readings_dict["sensor_type"]))
         metric_success, metric_error = import_hyper_metric(
             engine,
             dt_from,

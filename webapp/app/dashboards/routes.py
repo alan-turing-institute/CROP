@@ -2,6 +2,7 @@
 Analysis dashboards module.
 """
 
+from collections import Iterable
 import copy
 from datetime import datetime, timedelta
 import json
@@ -17,14 +18,21 @@ from sqlalchemy import and_
 
 from app.dashboards import blueprint
 
-from utilities.utils import download_csv, parse_date_range_argument
+from utilities.utils import (
+    download_csv,
+    parse_date_range_argument,
+    query_result_to_array,
+)
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
     SensorClass,
+    TypeClass,
     ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
+    ReadingsAranetCO2Class,
     ReadingsAranetTRHClass,
+    ReadingsAranetAirVelocityClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
@@ -58,6 +66,112 @@ SENSOR_CATEORIES = {
 # Ventilation constants
 CONST_SFP = 2.39  # specific fan power
 CONST_VTOT = 20337.0  # total volume – m3
+
+DEFAULT_SENSOR_TYPE = "Aranet T&RH"
+
+# Some data that varies based on sensor type.
+# DATA_COLUMNS_BY_SENSOR_TYPE names the class for the readings table.
+DATA_TABLES_BY_SENSOR_TYPE = {
+    "Aranet T&RH": ReadingsAranetTRHClass,
+    "Aranet CO2": ReadingsAranetCO2Class,
+    "Aranet Air Velocity": ReadingsAranetAirVelocityClass,
+}
+# DATA_COLUMNS_BY_SENSOR_TYPE names the columns of that table that we want to plot as
+# data, and gives them human friendly names to display on the UI.
+# TODO Could the below data be read from the database?
+DATA_COLUMNS_BY_SENSOR_TYPE = {
+    "Aranet T&RH": [
+        {"column_name": "temperature", "ui_name": "Temperature (°C)"},
+        {"column_name": "humidity", "ui_name": "Humidity (%)"},
+    ],
+    "Aranet CO2": [
+        {"column_name": "co2", "ui_name": "CO2 (ppm)"},
+    ],
+    "Aranet Air Velocity": [
+        {"column_name": "air_velocity", "ui_name": "Air velocity (m/s)"},
+    ],
+}
+
+# The above constants are defined in terms of names of the sensor_types. The code
+# operates in terms of ids rather than names, so we wrap the above dictionaries into
+# functions.
+
+
+def get_sensor_type_name(sensor_type_id):
+    """Given a sensor type ID, get the name of the sensor type from the database."""
+    query = db.session.query(
+        TypeClass.sensor_type,
+    ).filter(TypeClass.id == sensor_type_id)
+    sensor_name = db.session.execute(query).fetchone()
+    if isinstance(sensor_name, Iterable):
+        sensor_name = sensor_name[0]
+    return sensor_name
+
+
+def get_sensor_type_id(sensor_type_name):
+    """Given a sensor type name, get the ID of the sensor type from the database."""
+    query = db.session.query(
+        TypeClass.id,
+    ).filter(TypeClass.sensor_type == sensor_type_name)
+    sensor_id = db.session.execute(query).fetchone()
+    if isinstance(sensor_id, Iterable):
+        sensor_id = sensor_id[0]
+    return sensor_id
+
+
+def get_table_by_sensor_type(sensor_type_id):
+    """Return the SQLAlchemy table corresponding to a given sensor type ID."""
+    global DATA_TABLES_BY_SENSOR_TYPE
+    if sensor_type_id in DATA_TABLES_BY_SENSOR_TYPE:
+        return DATA_TABLES_BY_SENSOR_TYPE[sensor_type_id]
+    else:
+        sensor_type_name = get_sensor_type_name(sensor_type_id)
+        if sensor_type_name in DATA_TABLES_BY_SENSOR_TYPE:
+            value = DATA_TABLES_BY_SENSOR_TYPE[sensor_type_name]
+        else:
+            value = None
+        DATA_TABLES_BY_SENSOR_TYPE[sensor_type_id] = value
+        return value
+
+
+def get_columns_by_sensor_type(sensor_type_id):
+    """Return the names of the data columns in the table corresponding to a given sensor
+    type ID.
+
+    By "data columns" we mean the ones that depend on the sensor type and hold the
+    actual data, e.g. temperature and humidity, but not timestamp. The return values are
+    dictionaries with two keys, "column_name" for the name by which the database knows
+    this column, and "ui_name" for nice human-readable name fit for a UI.
+    """
+    global DATA_COLUMNS_BY_SENSOR_TYPE
+    if sensor_type_id in DATA_COLUMNS_BY_SENSOR_TYPE:
+        return DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type_id]
+    else:
+        sensor_type_name = get_sensor_type_name(sensor_type_id)
+        if sensor_type_name in DATA_COLUMNS_BY_SENSOR_TYPE:
+            value = DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type_name]
+        else:
+            value = None
+        DATA_COLUMNS_BY_SENSOR_TYPE[sensor_type_id] = value
+        return value
+
+
+def get_default_sensor_type():
+    """Get the ID of the default sensor type."""
+    return get_sensor_type_id(DEFAULT_SENSOR_TYPE)
+
+
+def is_valid_sensor_type(sensor_type_id):
+    """Return True if we have the necessary metadata about the table and its columns
+    needed for fetching and plotting data for the given sensor type, otherwise False.
+    """
+    return (
+        get_table_by_sensor_type(sensor_type_id) is not None
+        and get_columns_by_sensor_type(sensor_type_id) is not None
+    )
+
+
+# # # DONE WITH GLOBAL CONSTANTS AND SENSOR TYPE METADATA, BEGIN MAIN CONTENT # # #
 
 
 def resample(df, bins, dt_from, dt_to):
@@ -553,19 +667,25 @@ def advanticsys_dashboard():
     )
 
 
-def fetch_aranet_trh_data(dt_from, dt_to, sensor_ids):
+def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
+    if not is_valid_sensor_type(sensor_type):
+        raise ValueError(f"Don't know how to fetch data for sensor type {sensor_type}")
+    data_table = get_table_by_sensor_type(sensor_type)
+    data_table_columns = [
+        getattr(data_table, column["column_name"])
+        for column in get_columns_by_sensor_type(sensor_type)
+    ]
     query = db.session.query(
-        ReadingsAranetTRHClass.timestamp,
-        ReadingsAranetTRHClass.sensor_id,
+        data_table.timestamp,
+        data_table.sensor_id,
         SensorClass.name,
-        ReadingsAranetTRHClass.temperature,
-        ReadingsAranetTRHClass.humidity,
+        *data_table_columns,
     ).filter(
         and_(
-            ReadingsAranetTRHClass.sensor_id == SensorClass.id,
-            ReadingsAranetTRHClass.timestamp >= dt_from,
-            ReadingsAranetTRHClass.timestamp <= dt_to,
-            ReadingsAranetTRHClass.sensor_id.in_(sensor_ids),
+            data_table.sensor_id == SensorClass.id,
+            data_table.timestamp >= dt_from,
+            data_table.timestamp <= dt_to,
+            data_table.sensor_id.in_(sensor_ids),
         )
     )
 
@@ -616,14 +736,10 @@ def energy_dashboard():
     )
 
 
-def format_sensor_ids_str(sensor_ids):
-    if sensor_ids:
-        return str(sensor_ids).replace("(", "").rstrip(" ,)")
-    else:
-        return ""
+# # # TIMESERIES DASHBOARD # # #
 
 
-def add_mean_over_sensors(sensor_ids, df):
+def add_mean_over_sensors(sensor_type, sensor_ids, df, roll_window_minutes=10):
     """Take the dataframe for timeseries, and add data for a new "sensor" that's the
     mean of all the ones in the data
     """
@@ -634,12 +750,50 @@ def add_mean_over_sensors(sensor_ids, df):
     # "phase shifted" with respect to each other, e.g. one may have data for 00 and 10,
     # while another may have 05 and 15. A 10 minute rolling mean smooths out these
     # differences.
-    roll_window = timedelta(minutes=10)
-    for column_name in ("temperature", "humidity"):
+    roll_window = timedelta(minutes=roll_window_minutes)
+    for column in get_columns_by_sensor_type(sensor_type):
+        column_name = column["column_name"]
         df_mean[column_name] = df_mean[column_name].rolling(roll_window).mean()
     df_mean = df_mean.reset_index()
     df = pd.concat((df_mean, df), axis=0)
     return df
+
+
+def fetch_all_sensor_types():
+    """Get all sensor types from the CROP database, for which we know how to render the
+    timeseries dashboard.
+
+    Arguments:
+        None
+    Returns:
+        List of dictionaries with keys "id" (int) and "sensor_type" (str).
+    """
+    query = db.session.query(
+        TypeClass.id,
+        TypeClass.sensor_type,
+    )
+    sensor_types = db.session.execute(query).fetchall()
+    sensor_types = query_result_to_array(sensor_types)
+    sensor_types = [st for st in sensor_types if is_valid_sensor_type(st["id"])]
+    return sensor_types
+
+
+def fetch_all_sensors(sensor_type):
+    """Get all sensors of a given sensor type from the CROP database.
+
+    Arguments:
+        sensor_type: The database ID (primary key) of the sensor type.
+    Returns:
+        List of dictionaries with keys "id" (int) and "name" (str), sorted by "id".
+    """
+    query = db.session.query(
+        SensorClass.id,
+        SensorClass.name,
+    ).filter(SensorClass.type_id == sensor_type)
+    sensors = db.session.execute(query).fetchall()
+    sensors = query_result_to_array(sensors)
+    sensors = list(sorted(sensors, key=lambda x: x["id"]))
+    return sensors
 
 
 @blueprint.route("/timeseries_dashboard", methods=["GET", "POST"])
@@ -649,39 +803,64 @@ def timeseries_dashboard():
     dt_from = request.args.get("startDate")
     dt_to = request.args.get("endDate")
     sensor_ids = request.args.get("sensorIds")
-    if dt_from is None or dt_to is None or sensor_ids is None:
+    if sensor_ids is not None:
+        # sensor_ids is passed as a comma-separated (or space or semicolon, although
+        # those aren't currently used) string of ints, split it into a list of ints.
+        sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids.rstrip(" ,;"))))
+    sensor_type = request.args.get("sensorType")
+    if sensor_type is None:
+        sensor_type = get_default_sensor_type()
+    else:
+        sensor_type = int(sensor_type)
+    # Get the data from the database that will be required in all scenarios for how the
+    # page might be rendered.
+    sensor_types = fetch_all_sensor_types()
+    all_sensors = fetch_all_sensors(sensor_type)
+
+    # If we don't have the information necessary to plot data for sensors, just render
+    # the selector version of the page.
+    if (
+        dt_from is None
+        or dt_to is None
+        or sensor_ids is None
+        or not is_valid_sensor_type(sensor_type)
+    ):
         today = datetime.today()
-        dt_from = today - timedelta(days=1)
+        dt_from = today - timedelta(days=7)
         dt_to = today
         return render_template(
             "timeseries_dashboard.html",
-            sensor_ids=format_sensor_ids_str(sensor_ids),
+            sensor_type=sensor_type,
+            sensor_types=sensor_types,
+            all_sensors=all_sensors,
+            sensor_ids=sensor_ids,
             dt_from=dt_from,
             dt_to=dt_to,
             data=dict(),
             summaries=dict(),
+            data_columns=[],
         )
 
-    # Convert strings to objects
+    # Convert datetime strings to objects and make dt_to run to the end of the day in
+    # question.
     dt_from = datetime.strptime(dt_from, "%Y%m%d")
-    # Make dt_to run to the end of the day in question.
     dt_to = (
         datetime.strptime(dt_to, "%Y%m%d")
         + timedelta(days=1)
         + timedelta(milliseconds=-1)
     )
-    sensor_ids = tuple(map(int, re.split(r"[ ;,]+", sensor_ids.rstrip(" ,;"))))
 
-    df = fetch_aranet_trh_data(dt_from, dt_to, sensor_ids)
+    df = fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids)
     if request.method == "POST":
         return download_csv(df, "timeseries")
 
     data_keys = list(sensor_ids)
     if len(sensor_ids) > 1:
-        df = add_mean_over_sensors(sensor_ids, df)
+        df = add_mean_over_sensors(sensor_type, sensor_ids, df)
         # Insert at start, to make "mean" be the first one displayed on the page.
         data_keys.insert(0, "mean")
 
+    data_columns = get_columns_by_sensor_type(sensor_type)
     data_dict = dict()
     summary_dict = dict()
     for key in data_keys:
@@ -696,9 +875,13 @@ def timeseries_dashboard():
         summary_dict[key] = json.loads(df_key.describe().to_json())
     return render_template(
         "timeseries_dashboard.html",
-        sensor_ids=format_sensor_ids_str(sensor_ids),
+        sensor_type=sensor_type,
+        sensor_types=sensor_types,
+        all_sensors=all_sensors,
+        sensor_ids=sensor_ids,
         dt_from=dt_from,
         dt_to=dt_to,
         data=data_dict,
         summaries=summary_dict,
+        data_columns=data_columns,
     )

@@ -115,7 +115,11 @@ def get_sensor_readings_db_timestamps(session, sensor_id, date_from, date_to):
     result_df = DataFrame(session.execute(query).fetchall())
 
     if len(result_df.index) > 0:
+        # the dataframe names seem to be different in different
+        # versions of pandas - can try renaming twice to cover both
+        # possibilities
         result_df.rename(columns={0: "Timestamp"}, inplace=True)
+        result_df.rename(columns={"timestamp": "Timestamp"}, inplace=True)
         result_df.set_index("Timestamp", inplace=True)
 
     return result_df

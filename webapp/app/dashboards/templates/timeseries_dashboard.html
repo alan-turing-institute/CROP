@@ -29,102 +29,130 @@
           <div class="x_content">
             <div class="row x_title">
               <div class="col-sm-12">
-                <h3>Sensor IDs and time range</h2>
-                <p>Choose sensors and time range to either download or display data
-                for.</p>
+                <h3>Choose sensors and time period</h2>
                 <form>
                   <div>
+
                     <div>
-                      <input id="sensorIdInput" type="text" value="{{ sensor_ids }}"/>
-                      <span>Comma-separated list of sensor ID numbers</span>
+                      Sensor class
+                      <select
+                          id="sensorTypeSelector"
+                          class="selectpicker"
+                          name="sensorTypeSelector"
+                          onchange="changeSensorType()">
+                        {% for s in sensor_types %}
+                        <option
+                            value={{ s.id }}
+                            {% if sensor_type and s.id == sensor_type %} selected {% endif %}
+                            >
+                            {{s.sensor_type}}
+                        </option>
+                        {% endfor %}
+                      </select>
                     </div>
-                    <div id="reportrange" style="width: fit-content; background: #fff; cursor: pointer; margin-top: 5px; padding: 5px 10px; border: 1px solid #ccc">
-                      <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                      <span></span>
-                      <b class="caret"></b>
+
+                    <div>
+                      Time period
+                      <div id="reportrange" style="width: fit-content; background: #fff; cursor: pointer; margin-top: 5px; padding: 5px 10px; border: 1px solid #ccc">
+                        <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                        <span></span>
+                        <b class="caret"></b>
+                      </div>
                     </div>
+
+                    <div>
+                      Choose sensor(s)
+                      <div id="sensorCheckboxesDiv">
+                        {% for s in all_sensors %}
+                        <div class="checkbox-inline" id="sensorCheckbox{{s.id}}">
+                          <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="sensor_checkbox_{{s.id}}"
+                              {% if sensor_ids and s.id in sensor_ids %} checked {% endif %}
+                              value={{s.id}}>
+                          <label
+                              class="form-check-label"
+                              for="sensor_checkbox_{{s.id}}">
+                            {{s.id}}: {{s.name}}
+                          </label>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+
                   </div>
-                <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(false)">Plot</button>
-                <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(true)">Download</button>
+                  <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(false)">Plot</button>
+                  <button style="margin-top: 5px" type="button" onclick="requestTimeSeries(true)">Download</button>
                 </form>
               </div>
             </div>
           </div>
+
           {% if data %}
           <div class="row">
+            {% for dc in data_columns %}
             <div class="col-lg-6 col-md-9 col-sm-15">
               <div class="x_panel tile fixed_height_640 overflow_hidden">
-                <div class="plotDiv" id="temperaturePlot">
-                  <canvas id="temperatureCanvas"></canvas>
+                <div class="plotDiv" id="{{dc.column_name}}Plot">
+                  <canvas id="{{dc.column_name}}Canvas"></canvas>
                 </div>
               </div>
             </div>
-            <div class="col-lg-6 col-md-9 col-sm-15">
-              <div class="x_panel tile fixed_height_640 overflow_hidden">
-                <div class="plotDiv" id="humidityPlot">
-                  <canvas id="humidityCanvas"></canvas>
-                </div>
-              </div>
-            </div>
+            {% endfor %}
           </div>
           {% endif %}
+
           {%
-            for sensorId in data:
+          for sensorId in data:
           %}
           <div style="margin-top: 3em" class="row x_content">
             <div class="col-lg-12">
               <h4>Data for sensor {{sensorId}}</h4>
               <h5>Summary statistics</h5>
-              <div id="humidity-summary-{{sensorId}}" class="data-summary"></div>
-                <table id="summary-table-{{sensorId}}" class="table table-sm nowrap" cellspacing="0" width="100%">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th>Number of values</th>
-                      <th>Average</th>
-                      <th>Standard deviation</th>
-                      <th>Min</th>
-                      <th>25th percentile</th>
-                      <th>50th percentile</th>
-                      <th>75th percentile</th>
-                      <th>Max</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-
+              <div id="summary-div-{{sensorId}}" class="data-summary"></div>
+              <table id="summary-table-{{sensorId}}" class="table table-sm nowrap" cellspacing="0" width="100%">
+                <thead>
                   <tr>
-                    <td>Temperature</td>
-                    <td>{{ summaries[sensorId].temperature.count }}</td>
-                    <td>{{ summaries[sensorId].temperature.mean }}</td>
-                    <td>{{ summaries[sensorId].temperature.std }}</td>
-                    <td>{{ summaries[sensorId].temperature.min }}</td>
-                    <td>{{ summaries[sensorId].temperature["25%"] }}</td>
-                    <td>{{ summaries[sensorId].temperature["50%"] }}</td>
-                    <td>{{ summaries[sensorId].temperature["75%"] }}</td>
-                    <td>{{ summaries[sensorId].temperature.max }}</td>
+                    <th></th>
+                    <th>Number of values</th>
+                    <th>Average</th>
+                    <th>Standard deviation</th>
+                    <th>Min</th>
+                    <th>25th percentile</th>
+                    <th>50th percentile</th>
+                    <th>75th percentile</th>
+                    <th>Max</th>
                   </tr>
-                  <tr>
-                    <td>Humidity</td>
-                    <td>{{ summaries[sensorId].humidity.count }}</td>
-                    <td>{{ summaries[sensorId].humidity.mean }}</td>
-                    <td>{{ summaries[sensorId].humidity.std }}</td>
-                    <td>{{ summaries[sensorId].humidity.min }}</td>
-                    <td>{{ summaries[sensorId].humidity["25%"] }}</td>
-                    <td>{{ summaries[sensorId].humidity["50%"] }}</td>
-                    <td>{{ summaries[sensorId].humidity["75%"] }}</td>
-                    <td>{{ summaries[sensorId].humidity.max }}</td>
-                  </tr>
+                </thead>
+                <tbody>
 
-                  </tbody>
-                </table>
+                  {% for dc in data_columns %}
+                  <tr>
+                    <td>{{dc.ui_name}}</td>
+                    <td>{{ summaries[sensorId][dc.column_name].count }}</td>
+                    <td>{{ summaries[sensorId][dc.column_name].mean }}</td>
+                    <td>{{ summaries[sensorId][dc.column_name].std }}</td>
+                    <td>{{ summaries[sensorId][dc.column_name].min }}</td>
+                    <td>{{ summaries[sensorId][dc.column_name]["25%"] }}</td>
+                    <td>{{ summaries[sensorId][dc.column_name]["50%"] }}</td>
+                    <td>{{ summaries[sensorId][dc.column_name]["75%"] }}</td>
+                    <td>{{ summaries[sensorId][dc.column_name].max }}</td>
+                  </tr>
+                  {% endfor %}
+
+                </tbody>
+              </table>
+
               <h5>Raw data</h5>
               <div class="table-responsive">
                 <table id="datatable-responsive-{{sensorId}}" class="table table-sm table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
                   <thead>
                     <tr>
                       <th>Timestamp</th>
-                      <th>Temperature</th>
-                      <th>Humidity</th>
+                      {% for dc in data_columns %}
+                      <th>{{dc.ui_name}}</th>
+                      {% endfor %}
                     </tr>
                   </thead>
                   <tbody>
@@ -134,8 +162,9 @@
                     %}
                     <tr>
                       <td>{{ row.timestamp }}</td>
-                      <td>{{ row.temperature }}</td>
-                      <td>{{ row.humidity }}</td>
+                      {% for dc in data_columns %}
+                      <td>{{ row[dc.column_name] }}</td>
+                      {% endfor %}
                     </tr>
                     {%
                     endfor
@@ -147,7 +176,7 @@
             </div>
           </div>
           {%
-            endfor
+          endfor
           %}
         </div>
       </div>
@@ -157,51 +186,58 @@
 {% endblock content %}
 
 {% block javascripts %}
-  {{ super() }}
+{{ super() }}
 
-  <!-- Datatables -->
-  <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.flash.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-keytable/js/dataTables.keyTable.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/datatables.net-scroller/js/dataTables.scroller.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
-  <!-- Utility functions -->
-  <script src="{{ url_for('static', filename='javascript/utility.js') }}"></script>
-  <script src="{{ url_for('static', filename='javascript/timeseries_dashboard.js') }}"></script>
-  <!-- Chart.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<!-- Datatables -->
+<script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.flash.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-keytable/js/dataTables.keyTable.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/datatables.net-scroller/js/dataTables.scroller.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
+<!-- Utility functions -->
+<script src="{{ url_for('static', filename='javascript/utility.js') }}"></script>
+<script src="{{ url_for('static', filename='javascript/timeseries_dashboard.js') }}"></script>
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
 
-  <script>
-    const dateFormatIn = "YYYY-MM-DD hh:mm:ss"
-    const dtFrom = moment("{{ dt_from }}", dateFormatIn)
-    const dtTo = moment("{{ dt_to }}", dateFormatIn)
-    const dateFormatOut = "MMM DD, YYYY"
-    $(window).load(function () {
-          $("#reportrange span").html(dtFrom.format(dateFormatOut) + " - " + dtTo.format(dateFormatOut));
+<script>
+  const dateFormatIn = "YYYY-MM-DD hh:mm:ss"
+  const dtFrom = moment("{{ dt_from }}", dateFormatIn)
+  const dtTo = moment("{{ dt_to }}", dateFormatIn)
+  const dateFormatOut = "MMM DD, YYYY"
+  $(window).load(function () {
+      $("#reportrange span").html(dtFrom.format(dateFormatOut) + " - " + dtTo.format(dateFormatOut));
+    });
+  setDateRange(dtFrom, dtTo)
+
+  const data = {{data | safe}};
+  Object.keys(data).forEach((sensorId) => {
+      // Skip the case that isn't an actual sensor, but the mean of sensors.
+      $(`#datatable-responsive-${sensorId}`).DataTable( {
+          responsive: true
         });
-    setDateRange(dtFrom, dtTo)
+    });
+  if (Object.keys(data).length > 0) {
+      makePlots(data);
+    }
 
-    const data = {{data | safe}};
-    Object.keys(data).forEach((sensorId) => {
-          // Skip the case that isn't an actual sensor, but the mean of sensors.
-          $(`#datatable-responsive-${sensorId}`).DataTable( {
-                responsive: true
-              });
-        });
-    if (Object.keys(data).length > 0) {
-          makePlots(data);
-        }
+</script>
 
-  </script>
+<script>
+  {% for dc in data_columns %}
+  makePlot(data, "{{dc.column_name}}", "{{dc.ui_name}}",
+      "{{dc.column_name}}Canvas");
+  {% endfor %}
+</script>
 
 {% endblock javascripts %}
