@@ -298,11 +298,6 @@ def current_values_json(df_hourly):
     return df_test.to_json(orient="records")
 
 
-# @blueprint.route("/<template>")
-# @login_required
-# def route_template(template):
-
-
 @blueprint.route("/index")
 @login_required
 def index():
@@ -310,14 +305,15 @@ def index():
     Index page
     """
     dt_to = dt.datetime.now(dt.timezone.utc)
+    dt_from_fortnightly = dt_to - dt.timedelta(days=14)
     dt_from_weekly = dt_to - dt.timedelta(days=7)
     dt_from_daily = dt_to - dt.timedelta(days=1)
     dt_from_hourly = dt_to - dt.timedelta(hours=2)
 
     # weekly
-    df = aranet_query(dt_from_weekly, dt_to)
-    if not df.empty:
-        df_mean_hr_weekly = grp_per_hr_zone(df)
+    df_weekly = aranet_query(dt_from_weekly, dt_to)
+    if not df_weekly.empty:
+        df_mean_hr_weekly = grp_per_hr_zone(df_weekly)
         df_temp_weekly = bin_trh_data(
             df_mean_hr_weekly, TEMP_BINS, "temperature", expected_total=24 * 7
         )
@@ -328,11 +324,9 @@ def index():
         weekly_hum_json = json_bin_counts(df_hum_weekly)
         # Sensor id locations:
         # 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
-        json_strat = stratification(df, (18, 21, 22, 23))
     else:
         weekly_temp_json = {}
         weekly_hum_json = {}
-        json_vertstrat = {}
 
     df_daily = aranet_query(dt_from_daily, dt_to)
     if not df_daily.empty:
@@ -354,6 +348,12 @@ def index():
         hourly_json = current_values_json(df_hourly)
     else:
         hourly_json = {}
+
+    df_fortnightly = aranet_query(dt_from_fortnightly, dt_to)
+    if not df_fortnightly.empty:
+        json_strat = stratification(df_fortnightly, (18, 21, 22, 23))
+    else:
+        json_strat = {}
 
     return render_template(
         "index.html",
