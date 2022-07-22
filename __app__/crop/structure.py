@@ -20,6 +20,7 @@ from sqlalchemy import (
     UniqueConstraint,
     LargeBinary,
 )
+from sqlalchemy.dialects.postgresql import UUID
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -396,6 +397,7 @@ class ReadingsAranetCO2Class(BASE):
     """
     Base class for the Aranet CO2  GU sensor readings
     """
+
     __tablename__ = ARANET_CO2_TABLE_NAME
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -406,7 +408,7 @@ class ReadingsAranetCO2Class(BASE):
     )
 
     timestamp = Column(DateTime, nullable=False)
-    co2 = Column(Float, nullable=False) # units of parts-per-million
+    co2 = Column(Float, nullable=False)  # units of parts-per-million
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
@@ -421,6 +423,7 @@ class ReadingsAranetAirVelocityClass(BASE):
     Record both the raw current from the sensor, and the corresponding calibrated
     air velocity.
     """
+
     __tablename__ = ARANET_AIRVELOCITY_TABLE_NAME
     # columns
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -431,8 +434,8 @@ class ReadingsAranetAirVelocityClass(BASE):
     )
 
     timestamp = Column(DateTime, nullable=False)
-    current = Column(Float, nullable=True) # raw current, in Amps
-    air_velocity = Column(Float, nullable=False) # m/s ?
+    current = Column(Float, nullable=True)  # raw current, in Amps
+    air_velocity = Column(Float, nullable=False)  # m/s ?
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
@@ -883,7 +886,7 @@ class CropTypeClass(BASE):
     __tablename__ = CROP_TYPE_TABLE_NAME
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    growapp_id = Column(String(100), nullable=False)
+    growapp_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
     name = Column(String(100), nullable=False)
     seed_density = Column(Float, nullable=True)
     propagation_period = Column(Integer, nullable=True)
@@ -916,7 +919,7 @@ class BatchClass(BASE):
     __tablename__ = BATCH_TABLE_NAME
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    growapp_id = Column(String(100), nullable=False)
+    growapp_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
     tray_size = Column(Float, nullable=True)
     number_of_trays = Column(Integer, nullable=False)
     crop_type_id = Column(
@@ -962,7 +965,7 @@ class BatchEventClass(BASE):
         ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
         nullable=True,
     )
-    growapp_id = Column(String(100), nullable=False)
+    growapp_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
     event_type = Column(Enum(EventType), nullable=False)
     event_time = Column(DateTime, nullable=False)
     next_action_time = Column(DateTime, nullable=True)
@@ -989,7 +992,7 @@ class HarvestClass(BASE):
         ForeignKey("{}.{}".format(BATCH_EVENT_TABLE_NAME, ID_COL_NAME)),
         nullable=False,
     )
-    growapp_id = Column(String(100), nullable=False)
+    growapp_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
     crop_yield = Column(Float, nullable=False)
     waste_disease = Column(Float, nullable=False)
     waste_defect = Column(Float, nullable=False)
@@ -997,7 +1000,7 @@ class HarvestClass(BASE):
 
     # constructor
     def __init__(
-        batch_event_id, crop_yield, waste_disease, waste_defect, over_production
+        self, batch_event_id, crop_yield, waste_disease, waste_defect, over_production
     ):
         self.batch_event_id = batch_event_id
         self.crop_yield = crop_yield

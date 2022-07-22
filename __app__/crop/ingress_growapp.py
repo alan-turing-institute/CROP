@@ -8,7 +8,6 @@ get_xyz functions, that then return DataFrames containing exactly the data that 
 the CROP tables.
 We can then generalize the functions for writing tables into the CROP database, including the
 logic for not adding data that is already there (we use the 'growapp_id' column for this).
-
 """
 
 import logging
@@ -76,7 +75,7 @@ def get_growapp_db_session(return_engine=False):
         return None
     session = session_open(engine)
     if return_engine:
-        return session,engine
+        return session, engine
     else:
         return session
 
@@ -100,7 +99,7 @@ def get_cropapp_db_session(return_engine=False):
         return None
     session = session_open(engine)
     if return_engine:
-        return session,engine
+        return session, engine
     else:
         return session
 
@@ -120,7 +119,7 @@ def get_croptype_data():
         GrowAppCropClass.seed_density,
         GrowAppCropClass.propagation_period,
         GrowAppCropClass.grow_period,
-        GrowAppCropClass.is_pre_harvest
+        GrowAppCropClass.is_pre_harvest,
     )
     # get the results to an array of dicts before putting into
     # pandas dataframe, to avoid
@@ -128,8 +127,7 @@ def get_croptype_data():
     results = session.execute(query).fetchall()
     results_array = query_result_to_array(results)
     crop_df = pd.DataFrame(results_array)
-    crop_df.rename(columns={"id":"growapp_id"}, inplace=True)
-    crop_df["growapp_id"] = crop_df["growapp_id"].astype(str)
+    crop_df.rename(columns={"id": "growapp_id"}, inplace=True)
     session_close(session)
     return crop_df
 
@@ -151,16 +149,23 @@ def get_batch_data():
         GrowAppBatchClass.crop_id,
     )
     results = grow_session.execute(query).fetchall()
+    session_close(grow_session)
     results_array = query_result_to_array(results)
     batch_df = pd.DataFrame(results_array)
-    batch_df.rename(columns={"id":"growapp_id"}, inplace=True)
+    batch_df.rename(columns={"id": "growapp_id"}, inplace=True)
     batch_df["growapp_id"] = batch_df["growapp_id"].astype(str)
-    session_close(session)
 
     # we need to get the crop_id from our croptype table
     crop_session = get_cropapp_db_session()
-
+    query = crop_session.query(CropTypeClass.id, CropTypeClass.growapp_id)
+    crop_types = crop_session.execute(query).fetchall()
     session_close(crop_session)
+    crop_types_df = pd.DataFrame(query_result_to_array(crop_types))
+    batch_df = (
+        batch_df.join(crop_types_df.set_index("growapp_id"), on="crop_id")
+        .drop(columns=["crop_id"])
+        .rename(columns={"id": "crop_type_id"})
+    )
     return batch_df
 
 
@@ -178,9 +183,7 @@ def get_existing_growapp_ids(session, DbClass):
     =======
     existing_growids: pandas DataFrame
     """
-    query = session.query(
-        DbClass.growapp_id
-    )
+    query = session.query(DbClass.growapp_id)
     results = session.execute(query).fetchall()
     results_array = query_result_to_array(results)
     existing_growids = pd.DataFrame(results_array)
@@ -208,20 +211,20 @@ def write_new_data(data_df, DbClass):
 
     """
     session, engine = get_cropapp_db_session(return_engine=True)
-    existing_growids = get_existing_growapp_ids(session, CropTypeClass)
-    if len(existing_growids) > 0:
-        existing_index = existing_growids.index
-        data_df = data_df[~data_df["growapp_id"].isin(existing_index)]
-
     try:
         DbClass.__table__.create(bind=engine)
     except ProgrammingError:
         # The table already exists.
         pass
+
+    existing_growids = get_existing_growapp_ids(session, CropTypeClass)
+    if len(existing_growids) > 0:
+        existing_index = existing_growids.index
+        data_df = data_df[~data_df["growapp_id"].isin(existing_index)]
+
     logging.info(f"==> Will write {len(data_df)} rows to {DbClass.__tablename__}")
     # loop over all rows in the dataframe
-    data_df["growapp_id"] = data_df.index
-    for _ , row in data_df.iterrows():
+    for _, row in data_df.iterrows():
         new_row = DbClass(**(row.to_dict()))
         session.add(new_row)
     logging.info(f"Finished writing to {DbClass.__tablename__}")
