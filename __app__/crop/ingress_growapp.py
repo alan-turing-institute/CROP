@@ -134,6 +134,36 @@ def get_croptype_data():
     return crop_df
 
 
+def get_batch_data():
+    """
+    Read from the 'Batch' table in the GrowApp database, and transform
+    into the format expected by the corresponding table in the CROP db.
+
+    Returns
+    =======
+    batch_df: pandas DataFrame
+    """
+    grow_session = get_growapp_db_session()
+    query = grow_session.query(
+        GrowAppBatchClass.id,
+        GrowAppBatchClass.tray_size,
+        GrowAppBatchClass.number_of_trays,
+        GrowAppBatchClass.crop_id,
+    )
+    results = grow_session.execute(query).fetchall()
+    results_array = query_result_to_array(results)
+    batch_df = pd.DataFrame(results_array)
+    batch_df.rename(columns={"id":"growapp_id"}, inplace=True)
+    batch_df["growapp_id"] = batch_df["growapp_id"].astype(str)
+    session_close(session)
+
+    # we need to get the crop_id from our croptype table
+    crop_session = get_cropapp_db_session()
+
+    session_close(crop_session)
+    return batch_df
+
+
 def get_existing_growapp_ids(session, DbClass):
     """
     Read from the table of crops in the CROP database to get list
