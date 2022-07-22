@@ -962,6 +962,7 @@ class BatchEventClass(BASE):
         ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
         nullable=True,
     )
+    growapp_id = Column(String(100), nullable=False)
     event_type = Column(Enum(EventType), nullable=False)
     event_time = Column(DateTime, nullable=False)
     next_action_time = Column(DateTime, nullable=True)
@@ -988,6 +989,7 @@ class HarvestClass(BASE):
         ForeignKey("{}.{}".format(BATCH_EVENT_TABLE_NAME, ID_COL_NAME)),
         nullable=False,
     )
+    growapp_id = Column(String(100), nullable=False)
     crop_yield = Column(Float, nullable=False)
     waste_disease = Column(Float, nullable=False)
     waste_defect = Column(Float, nullable=False)
