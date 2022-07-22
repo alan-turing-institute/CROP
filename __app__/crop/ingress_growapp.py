@@ -104,6 +104,43 @@ def get_cropapp_db_session(return_engine=False):
         return session
 
 
+def convert_growapp_foreign_key(growapp_df, growapp_column_name, CropDbClass):
+    """Convert a foreign key column of data from a GrowApp table, and convert its values
+    to the corresponding foreign key ids in the given Crop db table.
+
+    Foreign key relations from GrowApp tables refer to the IDs in other GrowApp tables.
+    This function takes dataframe with such a column, and converts it's values to the
+    corresponding IDs in a Crop db table. The pairing is done by looking at the table
+    CropDbClass, and matching its `id` column with its `growapp_id` column.
+
+    Parameters
+    ==========
+    growapp_df: Dataframe of data from a GrowApp table, a foreign key column of which
+    needs to be converted to Crop IDs
+    growapp_column_name: The name of the column that needs converting
+    CropDbClass: The Crop db class from which we should get the new values for the
+    foreign key.
+
+    Returns
+    =======
+    A copy of growapp_df, with values in growapp_column_name replaced with values from
+    CropDbClass's id column
+    """
+    crop_session = get_cropapp_db_session()
+    query = crop_session.query(CropDbClass.id, CropDbClass.growapp_id)
+    crop_id_pairs = crop_session.execute(query).fetchall()
+    session_close(crop_session)
+    crop_id_pairs = pd.DataFrame(query_result_to_array(crop_id_pairs)).set_index(
+        "growapp_id"
+    )
+    growapp_df = (
+        growapp_df.join(crop_id_pairs, on=growapp_column_name)
+        .drop(columns=[growapp_column_name])
+        .rename(columns={"id": growapp_column_name})
+    )
+    return growapp_df
+
+
 def get_croptype_data():
     """
     Read from the table of crops in the GrowApp database
@@ -153,20 +190,45 @@ def get_batch_data():
     results_array = query_result_to_array(results)
     batch_df = pd.DataFrame(results_array)
     batch_df.rename(columns={"id": "growapp_id"}, inplace=True)
-    batch_df["growapp_id"] = batch_df["growapp_id"].astype(str)
 
     # we need to get the crop_id from our croptype table
-    crop_session = get_cropapp_db_session()
-    query = crop_session.query(CropTypeClass.id, CropTypeClass.growapp_id)
-    crop_types = crop_session.execute(query).fetchall()
-    session_close(crop_session)
-    crop_types_df = pd.DataFrame(query_result_to_array(crop_types))
-    batch_df = (
-        batch_df.join(crop_types_df.set_index("growapp_id"), on="crop_id")
-        .drop(columns=["crop_id"])
-        .rename(columns={"id": "crop_type_id"})
-    )
+    batch_df = convert_growapp_foreign_key(batch_df, "crop_id", CropTypeClass)
+    batch_df = batch_df.rename(columns={"crop_id": "crop_type_id"})
     return batch_df
+
+
+def get_batchevent_data():
+    """
+    Read from the 'BatchEvent' table in the GrowApp database, and transform
+    into the format expected by the corresponding table in the CROP db.
+
+    Returns
+    =======
+    batchevent_df: pandas DataFrame
+    """
+    grow_session = get_growapp_db_session()
+    query = grow_session.query(
+        GrowAppBatchEventClass.id,
+        GrowAppBatchEventClass.type_,
+        GrowAppBatchEventClass.was_manual,
+        GrowAppBatchEventClass.batch_id,
+        GrowAppBatchEventClass.event_happened,
+        GrowAppBatchEventClass.description,
+        GrowAppBatchEventClass.next_action_days,
+        GrowAppBatchEventClass.next_action,
+    )
+    results = grow_session.execute(query).fetchall()
+    session_close(grow_session)
+    results_array = query_result_to_array(results)
+    batchevents_df = pd.DataFrame(results_array)
+    batchevents_df.rename(columns={"id": "growapp_id"}, inplace=True)
+
+    # we need to get the batch_id from our batch table
+    batchevents_df = convert_growapp_foreign_key(batchevents_df, "batch_id", BatchClass)
+    # TODO Continue here: We need to maybe drop some of the columns of batchevents_df or
+    # massage some types, and then, the trickiest part: Get the location_id, by doing
+    # some non-trivial joins.
+    return batchevents_df
 
 
 def get_existing_growapp_ids(session, DbClass):
@@ -217,7 +279,7 @@ def write_new_data(data_df, DbClass):
         # The table already exists.
         pass
 
-    existing_growids = get_existing_growapp_ids(session, CropTypeClass)
+    existing_growids = get_existing_growapp_ids(session, DbClass)
     if len(existing_growids) > 0:
         existing_index = existing_growids.index
         data_df = data_df[~data_df["growapp_id"].isin(existing_index)]

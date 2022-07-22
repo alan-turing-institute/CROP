@@ -21,9 +21,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from flask_sqlalchemy import SQLAlchemy
 
-from __app__.crop.constants import (
-    SQL_ENGINE
-)
+from __app__.crop.constants import SQL_ENGINE
 
 SQLA = SQLAlchemy()
 BASE = SQLA.Model
@@ -33,6 +31,7 @@ class TrayTypeClass(BASE):
     """
     A list of all the possible types of tray in the farm.
     """
+
     __tablename__ = "tray_type"
 
     id = Column(UUID(as_uuid=True), primary_key=True)
@@ -52,6 +51,7 @@ class CropClass(BASE):
     """
     Details on the different types of crop.
     """
+
     __tablename__ = "crop"
     id = Column(UUID(as_uuid=True), primary_key=True)
     version = Column(Integer, nullable=True)
@@ -69,6 +69,7 @@ class FarmClass(BASE):
     """
     A list of farm locations.
     """
+
     __tablename__ = "farm"
 
     id = Column(UUID(as_uuid=True), primary_key=True)
@@ -84,20 +85,15 @@ class ZoneClass(BASE):
     """
     A list of farm zones.
     """
+
     __tablename__ = "zone"
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     version = Column(Integer, nullable=True)
-    farm_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("farm.id"),
-        nullable=False
-    )
+    farm_id = Column(UUID(as_uuid=True), ForeignKey("farm.id"), nullable=False)
     name = Column(String(255), nullable=True)
     default_tray_type_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("tray_type.id"),
-        nullable=False
+        UUID(as_uuid=True), ForeignKey("tray_type.id"), nullable=False
     )
     created = Column(DateTime, nullable=True)
     modified = Column(DateTime, nullable=True)
@@ -109,6 +105,7 @@ class AisleClass(BASE):
     """
     A list of all the aisles in the farm.
     """
+
     __tablename__ = "aisle"
 
     id = Column(UUID(as_uuid=True), primary_key=True)
@@ -127,6 +124,7 @@ class StackClass(BASE):
     """
     A list of all the aisles in the farm.
     """
+
     __tablename__ = "stack"
 
     id = Column(UUID(as_uuid=True), primary_key=True)
@@ -144,6 +142,7 @@ class ShelfClass(BASE):
     """
     A list of all the aisles in the farm.
     """
+
     __tablename__ = "shelf"
 
     id = Column(UUID(as_uuid=True), primary_key=True)
@@ -161,6 +160,7 @@ class LocationClass(BASE):
     """
     All possible locations in the farm.
     """
+
     __tablename__ = "location"
     id = Column(UUID(as_uuid=True), primary_key=True)
     version = Column(Integer, nullable=True)
@@ -194,6 +194,7 @@ class BenchClass(BASE):
     """
     A bench at a specific location.
     """
+
     __tablename__ = "bench"
     id = Column(UUID(as_uuid=True), primary_key=True)
     version = Column(Integer, nullable=True)
@@ -212,9 +213,15 @@ class BatchEventClass(BASE):
     """
     Everything that happens to any batch
     """
+
     __tablename__ = "batch_event"
     id = Column(UUID(as_uuid=True), primary_key=True)
     type_ = Column("type", Integer, nullable=True)
+    batch_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch.id"),
+        nullable=False,
+    )
     was_manual = Column(Boolean, nullable=True)
     event_happened = Column(DateTime, nullable=True)
     description = Column(String(255), nullable=True)
@@ -227,6 +234,7 @@ class BatchClass(BASE):
     """
     Every batch that is, or has been, in the farm.
     """
+
     __tablename__ = "batch"
     id = Column(UUID(as_uuid=True), primary_key=True)
     version = Column(Integer, nullable=True)
