@@ -30,6 +30,11 @@ from __app__.crop.structure import (
 
 from __app__.crop.growapp_structure import (
     LocationClass as GrowAppLocationClass,
+    ZoneClass as GrowAppZoneClass,
+    AisleClass as GrowAppAisleClass,
+    StackClass as GrowAppStackClass,
+    ShelfClass as GrowAppShelfClass,
+    BenchClass as GrowAppBenchClass,
     CropClass as GrowAppCropClass,
     BatchClass as GrowAppBatchClass,
     BatchEventClass as GrowAppBatchEventClass,
@@ -48,6 +53,15 @@ from __app__.crop.constants import (
 )
 
 from __app__.crop.ingress import log_upload_event
+
+BATCH_EVENT_TYPE_MAPPING = {
+    0: 0, # none
+    10: 1, # weigh
+    20: 2, # propagate
+    30: 3, # transfer
+    40: 4, # harvest
+    99: 99, # edit
+}
 
 
 def get_growapp_db_session(return_engine=False):
@@ -197,6 +211,76 @@ def get_batch_data():
     return batch_df
 
 
+def get_location_id(growapp_batch_id, growapp_batchevent_type):
+    """
+    Follow the chain of foreign keys in the growapp database, to get
+    an aisle/column/shelf, which we can then use to query the Location
+    table in our database, and get a location_id.
+
+    Parameters
+    ==========
+    growapp_batch_id: uuid, foreign key of the Batch in the Growapp DB
+    growapp_batchevent_type: int (maybe we don't care?)
+    """
+    grow_session = get_growapp_db_session()
+    batch_query = grow_session.query(
+        GrowBatchClass.current_bench_id
+    ).filter(
+        GrowBatchClass.id == growap_batch_id
+    )
+    results = grow_session.execute(batch_query).fetchall()
+    results_array = query_result_to_array(results)
+    if len(results_array) != 1:
+        raise RuntimeError("Couldn't find batch_id {}".format(growapp_batch_id))
+    growapp_bench_id = results_array[0]["current_bench_id"]
+    # now query the Bench table with that ID
+    bench_query = grow_session.query(
+        GrowBenchClass.location_id
+    ).filter(
+        GrowBenchClass.id == growapp_bench_id
+    )
+    results = grow_session.execute(bench_query).fetchall()
+    results_array = query_result_to_array(results)
+    if len(results_array) != 1:
+        raise RuntimeError("Couldn't find location_id {}".format(growapp_location_id))
+    growapp_location_id = results_array[0]["location_id"]
+    # now query the Location table with that ID
+    location_query = grow_session.query(
+        GrowLocationClass.zone_id,
+        GrowLocationClass.aisle_id,
+        GrowLocationClass.stack_id,
+        GrowLocationClass.shelf_id
+    ).filter(
+        GrowLocationClass.id == growapp_location_id
+    )
+    results = grow_session.execute(location_query).fetchall()
+    results_array = query_result_to_array(results)
+    if len(results_array) != 1:
+        raise RuntimeError("Couldn't find location_id {}".format(growapp_location_id))
+    grow_zone_id = results_array[0]["zone_id"]
+    grow_aisle_id = results_array[0]["aisle_id"]
+    grow_stack_id = results_array[0]["stack_id"]
+    grow_shelf_id = results_array[0]["shelf_id"]
+    locname_query = grow_session.query(
+        GrowZoneClass.name,
+        GrowAisleClass.name.
+        GrowStackClass.name,
+        GrowShelfClass.name
+    ).filter(
+        and_(
+            GrowZoneClass.id == grow_zone_id,
+            GrowAisleClass.id == grow_aisle_id,
+            GrowStackClass.id == grow_stack_id,
+            GrowShelfClass.id == grow_shelf_id
+        )
+    )
+    results = grow_session.execute(locname_query).fetchall()
+    results_array = query_result_to_array(results)
+    session_close(grow_session)
+    # TODO query our Location table, possibly create new location if this one doesn't yet exist
+    return results_array
+
+
 def get_batchevent_data():
     """
     Read from the 'BatchEvent' table in the GrowApp database, and transform
@@ -221,7 +305,18 @@ def get_batchevent_data():
     session_close(grow_session)
     results_array = query_result_to_array(results)
     batchevents_df = pd.DataFrame(results_array)
-    batchevents_df.rename(columns={"id": "growapp_id"}, inplace=True)
+
+    # convert some columns to datetime
+    batchevents_df["next_action"] = pd.to_datetime(batchevents_df["next_action"], errors="coerce")
+    batchevents_df["event_happened"] = pd.to_datetime(batchevents_df["event_happened"], errors="coerce")
+    # look up event type in our scheme
+    batchevents_df["type_"] = batchevents_df["type_"].apply(lambda x: BATCH_EVENT_TYPE_MAPPING[x])
+    batchevents_df.rename(columns={
+        "id": "growapp_id",
+        "next_action": "next_action_time",
+        "event_happened": "event_time",
+        "type_": "event_type"
+    }, inplace=True)
 
     # we need to get the batch_id from our batch table
     batchevents_df = convert_growapp_foreign_key(batchevents_df, "batch_id", BatchClass)
