@@ -117,25 +117,33 @@ function plot(
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      legend: {
-        display: show_legend,
-        position: "top",
+      plugins: {
+        legend: {
+          display: show_legend,
+          position: "top",
+        },
       },
       scales: {
-        yAxes: [
-          {
-            scaleLabel: {
-              display: true,
-              labelString: y_label,
-              fontSize: 18,
+        y: {
+          display: true,
+          title: {
+            display: true,
+            text: y_label,
+            font: { size: 18 },
+          },
+        },
+        x: {
+          type: "time",
+          time: {
+            displayFormats: {
+              hour: "DD MMM hA",
             },
           },
-        ],
-        xAxes: [
-          {
-            type: "time",
+          ticks: {
+            maxTicksLimit: 13,
+            includeBounds: false,
           },
-        ],
+        },
       },
     },
   };
