@@ -122,7 +122,7 @@ class AisleClass(BASE):
 
 class StackClass(BASE):
     """
-    A list of all the aisles in the farm.
+    A list of all the stacks/columns in the farm.
     """
 
     __tablename__ = "stack"
@@ -140,7 +140,7 @@ class StackClass(BASE):
 
 class ShelfClass(BASE):
     """
-    A list of all the aisles in the farm.
+    A list of all the shelves in the farm.
     """
 
     __tablename__ = "shelf"
