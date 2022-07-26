@@ -260,6 +260,37 @@
           <div class="clearfix"></div>
         </div>
 
+        <div
+            class="x_content"
+            style="display: flex; flex-direction: row; justify-content: space-between; flex-wrap: nowrap;"
+            >
+            <label
+                for="vertTimeRange"
+                style="flex-grow: 0; flex-shrink: 0; margin-right: 20px">
+              Number of days
+            </label>
+          <input
+              type="range"
+              id="vertTimeRange"
+              name="vertTimeRange"
+              min=1
+              max=14
+              value=7
+              step=1
+              class="form-range"
+              style="direction: rtl; flex-grow: 1; flex-shrink: 1">
+          <input
+              type="number"
+              id="vertTimeNumber"
+              name="vertTimeNumber"
+              min=1
+              max=14
+              value=7
+              step=1
+              class="form-number"
+              style="flex-grow: 0; flex-shrink: 0; width: 70px; margin-left: 20px">
+        </div>
+
         <div class="x_content">
           <canvas id="vertical_temp_stratification"></canvas>
         </div>
@@ -280,6 +311,38 @@
           </ul>
           <div class="clearfix"></div>
         </div>
+
+        <div
+            class="x_content"
+            style="display: flex; flex-direction: row; justify-content: space-between; flex-wrap: nowrap;"
+            >
+          <label
+            for="horzTimeRange"
+            style="flex-grow: 0; flex-shrink: 0; margin-right: 20px">
+            Number of days
+          </label>
+          <input
+              type="range"
+              id="horzTimeRange"
+              name="horzTimeRange"
+              min=1
+              max=14
+              value=7
+              step=1
+              class="form-range"
+              style="direction: rtl; flex-grow: 1; flex-shrink: 1">
+          <input
+              type="number"
+              id="horzTimeNumber"
+              name="horzTimeNumber"
+              min=1
+              max=14
+              value=7
+              step=1
+              class="form-number"
+              style="flex-grow: 0; flex-shrink: 0; width: 70px; margin-left: 20px">
+        </div>
+
 
         <div class="x_content">
           <canvas id="horizontal_temp_stratification"></canvas>
@@ -366,9 +429,9 @@
 {% block javascripts %}
 {{ super()}}
 <!-- Chart.js -->
-<!-- TODO Which of the two actually gets used? --!>
-<script src="{{ url_for('static', filename='vendors/Chart.js/dist/Chart.min.js') }}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js" integrity="sha512-sW/w8s4RWTdFFSduOTGtk4isV1+190E/GghVffMA9XczdJ2MDzSzLEubKAs5h0wzgSJOQTRYyaz73L3d6RtJSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 <!-- gauge.js -->
 <script src="{{ url_for('static', filename='vendors/gauge.js/dist/gauge.min.js') }}"></script>
 <!-- Skycons -->
