@@ -743,6 +743,8 @@ def add_mean_over_sensors(sensor_type, sensor_ids, df, roll_window_minutes=10):
     """Take the dataframe for timeseries, and add data for a new "sensor" that's the
     mean of all the ones in the data
     """
+    if len(df) == 0:
+        return df
     df_mean = df.groupby("timestamp").mean()
     df_mean.loc[:, "sensor_id"] = "mean"
     df_mean.loc[:, "name"] = "mean"
