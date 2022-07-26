@@ -196,12 +196,15 @@ def get_location_id(session, location):
         location_id = results_array[0]["id"]
         print("Found existing location with id {}".format(location_id))
         return location_id
-    else:
+    elif zone and aisle and column and shelf:
         location = LocationClass(zone=zone, aisle=aisle, column=column, shelf=shelf)
         session.add(location)
         session.commit()
         print("Added a new location at {} {} {} {}".format(zone, aisle, column, shelf))
         return location.id
+    else:
+        print("Some aspect of location unknown")
+        return None
 
 
 def write_sensor_location(session, sensor_id, location, installation_date):
@@ -220,6 +223,8 @@ def write_sensor_location(session, sensor_id, location, installation_date):
     success: bool
     """
     location_id = get_location_id(session, location)
+    if not location_id:
+        return False
     sensor_location = SensorLocationClass()
     sensor_location.location_id = location_id
     sensor_location.sensor_id = sensor_id
