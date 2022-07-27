@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Advanticsys Sensor Data {% endblock title %}
+{% block title %} Aranet Temperature and Relative Humidity Data {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -23,7 +23,7 @@
 
                 <div class="row x_title">
                     <div class="col-md-6">
-                        <h3>Uploaded Advanticsys Sensor Data <small>(showing max {{num_records}} records)</small></h3>
+                        <h3>Uploaded Aranet CO2 Sensor Data <small>(showing max {{num_records}} records)</small></h3>
                     </div>
 
                     <div class="col-md-6">
@@ -40,8 +40,7 @@
                   <tr>
                     <th>Timestamp</th>
                     <th>ID</th>
-                    <th>Temperature</th>
-                    <th>Humidity</th>
+                    <th>Name</th>
                     <th>CO2</th>
                     <th>Upload Time</th>
                   </tr>
@@ -54,8 +53,7 @@
                 <tr>
                     <td>{{ t_reading.timestamp }}</td>
                     <td>{{ t_reading.sensor_id }}</td>
-                    <td>{{ t_reading.temperature }}</td>
-                    <td>{{ t_reading.humidity }}</td>
+                    <td>{{ t_reading.name }}</td>
                     <td>{{ t_reading.co2 }}</td>
                     <td>{{ t_reading.time_created }}</td>
                 </tr>
@@ -107,15 +105,10 @@
 
         $('#reportrange span').html("{{ dt_from }}" + ' - ' + "{{ dt_to }}");
 
-        // $('#reportrange').daterangepicker({
-        //     startDate: moment("{{ dt_from }}", "MMMM D, YYYY"),
-        //     endDate: moment("{{ dt_to }}", "MMMM D, YYYY"),
-        // })
-
     });
 
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/readings/advanticsys?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/readings/aranet_co2?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
 
         location.replace(request_url)
     });
