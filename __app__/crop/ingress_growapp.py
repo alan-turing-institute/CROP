@@ -342,6 +342,8 @@ def get_batch_data(dt_from=None, dt_to=None):
     session_close(grow_session)
     results_array = query_result_to_array(results)
     batch_df = pd.DataFrame(results_array)
+    if len(batch_df) == 0:
+        return batch_df
     batch_df.rename(columns={"id": "growapp_id"}, inplace=True)
 
     # we need to get the crop_id from our croptype table
@@ -386,7 +388,8 @@ def get_batchevent_data(dt_from=None, dt_to=None):
     session_close(grow_session)
     results_array = query_result_to_array(results)
     batchevents_df = pd.DataFrame(results_array)
-
+    if len(batchevents_df) == 0:
+        return batchevents_df
     # convert some columns to datetime
     batchevents_df["next_action"] = pd.to_datetime(
         batchevents_df["next_action"], errors="coerce"
@@ -458,6 +461,8 @@ def get_harvest_data(dt_from=None, dt_to=None):
     results_array = query_result_to_array(results)
     session_close(grow_session)
     df = pd.DataFrame(results_array)
+    if len(df) == 0:
+        return df
     df = df[df.harvested_event_id.notnull()]
     df.rename(columns={
         "id": "growapp_id",
@@ -487,6 +492,9 @@ def write_new_data(data_df, DbClass):
     success: bool
 
     """
+    if len(data_df) == 0:
+        logging.info(f"==> No new data to write for {DbClass.__tablename__}")
+        return True
     session, engine = get_cropapp_db_session(return_engine=True)
     try:
         DbClass.__table__.create(bind=engine)
