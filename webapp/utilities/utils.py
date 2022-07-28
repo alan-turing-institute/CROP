@@ -5,11 +5,41 @@ import sys
 import io
 import json
 from datetime import datetime, timedelta
+import numpy as np
 import pandas as pd
 from flask import send_file
 from sqlalchemy import and_, func
 
 from __app__.crop.structure import SensorLocationClass
+
+
+def query_result_to_dict(query_result, date_iso=True):
+    """
+    If we have a single query result, return output as a dict rather than a list
+    Args:
+        query_result: a ResultProxy representing results of the sql alchemy query execution
+    Returns:
+        results_dict: a dict containing the results
+    """
+    if len(query_result) != 1:
+        print("Only call query_result_to_dict if we have a single result.")
+        return {}
+    rowproxy = query_result[0]
+    dict_entry = {}
+    if "_asdict" in dir(rowproxy):
+        rowproxy = rowproxy._asdict()
+    for column, value in rowproxy.items():
+        if isinstance(value, datetime):
+            if date_iso:
+                dict_entry = {**dict_entry, **{column: value.isoformat()}}
+            else:
+                dict_entry = {
+                    **dict_entry,
+                    **{column: value.replace(microsecond=0)},
+                }
+        else:
+            dict_entry = {**dict_entry, **{column: value}}
+    return dict_entry
 
 
 def query_result_to_array(query_result, date_iso=True):
@@ -31,7 +61,7 @@ def query_result_to_array(query_result, date_iso=True):
             rowproxy = rowproxy._asdict()
             # print ("rowproxy: ", rowproxy)#
         else:
-            None
+            pass
 
         for column, value in rowproxy.items():
 
@@ -163,3 +193,22 @@ def filter_latest_sensor_location(db):
         query.c.sensor_id == SensorLocationClass.sensor_id,
         query.c.installation_date == SensorLocationClass.installation_date,
     )
+
+
+def vapour_pressure_deficit(temperature, relative_humidity):
+    """Compute vapour pressure deficit from T&RH data.
+
+    Args:
+        temperature: Temperature in celsius. Must support element-wise np.exp, so can be
+            a scalar or e.g. a numpy array.
+        relative_humidity: Relative humidity in percentage. Can be a scalar or an array
+            of the same length as temperature.
+
+    Returns:
+    Vapour pressure deficit, in pascals.
+    """
+    # See https://pulsegrow.com/blogs/learn/vpd for the magic formula.
+    saturation_vapour_pressure = 610.78 * np.exp(
+        temperature / (temperature + 237.3) * 17.2694
+    )
+    return saturation_vapour_pressure * (1.0 - relative_humidity / 100.0)

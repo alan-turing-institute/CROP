@@ -23,7 +23,7 @@
 
                 <div class="row x_title">
                     <div class="col-md-6">
-                        <h3>Uploaded Aranet Temperature and Relative Humidity Sensor Data <small>(showing max {{num_records}} records)</small></h3>
+                        <h3>Uploaded Aranet Air Velocity Sensor Data <small>(showing max {{num_records}} records)</small></h3>
                     </div>
 
                     <div class="col-md-6">
@@ -41,9 +41,8 @@
                     <th>Timestamp</th>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Temperature (°C)</th>
-                    <th>Humidity (%)</th>
-                    <th>VPD (Pa)</th>
+                    <th>Current</th>
+                    <th>Air Velocity</th>
                     <th>Upload Time</th>
                   </tr>
                 </thead>
@@ -56,9 +55,8 @@
                     <td>{{ t_reading.timestamp }}</td>
                     <td>{{ t_reading.sensor_id }}</td>
                     <td>{{ t_reading.name }}</td>
-                    <td>{{ t_reading.temperature }}</td>
-                    <td>{{ t_reading.humidity }}</td>
-                    <td>{{ t_reading.vpd }}</td>
+                    <td>{{ t_reading.current }}</td>
+                    <td>{{ t_reading.air_velocity }}</td>
                     <td>{{ t_reading.time_created }}</td>
                 </tr>
                 {%
@@ -112,7 +110,7 @@
     });
 
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/readings/aranet_trh?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/readings/aranet_airvelocity?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
 
         location.replace(request_url)
     });

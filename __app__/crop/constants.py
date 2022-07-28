@@ -245,8 +245,23 @@ CONST_MAX_RECORDS = 50000
 
 CONST_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-
 # Warnings log
 
 WARNING_PROP_LOW_TEMPR = "Temperature is low in propagation, add heater"
 WARNING_NO_DATA_PROP = "Missing data in propagation - check sensor battery"
+
+#
+CROP_TYPE_TABLE_NAME = "crop_types"
+BATCH_TABLE_NAME = "batches"
+BATCH_EVENT_TABLE_NAME = "batch_events"
+HARVEST_TABLE_NAME = "harvests"
+
+GROWAPP_IP = os.environ["GROWAPP_IP"] if "GROWAPP_IP" in os.environ else "DUMMY"
+GROWAPP_DB = os.environ["GROWAPP_DATABASE"] if "GROWAPP_DATABASE" in os.environ else "DUMMY"
+GROWAPP_USER = os.environ["GROWAPP_USERNAME"] if "GROWAPP_USERNAME" in os.environ else "DUMMY"
+GROWAPP_PASSWORD = (
+    os.environ["GROWAPP_PASS"] if "GROWAPP_PASS" in os.environ else "DUMMY"
+)
+GROWAPP_SCHEMA = (
+    os.environ["GROWAPP_SCHEMA"] if "GROWAPP_SCHEMA" in os.environ else "DUMMY"
+)

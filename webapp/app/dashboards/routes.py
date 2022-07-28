@@ -21,6 +21,7 @@ from app.dashboards import blueprint
 from utilities.utils import (
     download_csv,
     parse_date_range_argument,
+    vapour_pressure_deficit,
     query_result_to_array,
 )
 
@@ -83,6 +84,7 @@ DATA_COLUMNS_BY_SENSOR_TYPE = {
     "Aranet T&RH": [
         {"column_name": "temperature", "ui_name": "Temperature (°C)"},
         {"column_name": "humidity", "ui_name": "Humidity (%)"},
+        {"column_name": "vpd", "ui_name": "VPD (Pa)"},
     ],
     "Aranet CO2": [
         {"column_name": "co2", "ui_name": "CO2 (ppm)"},
@@ -668,12 +670,17 @@ def advanticsys_dashboard():
 
 
 def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
+    sensor_type_name = get_sensor_type_name(sensor_type)
     if not is_valid_sensor_type(sensor_type):
         raise ValueError(f"Don't know how to fetch data for sensor type {sensor_type}")
     data_table = get_table_by_sensor_type(sensor_type)
     data_table_columns = [
         getattr(data_table, column["column_name"])
         for column in get_columns_by_sensor_type(sensor_type)
+        # The VPD "column" is a special case: It's not an actual database column,
+        # although we treat it as if it was. See at the end of this function, where we
+        # compute it.
+        if not (sensor_type_name == "Aranet T&RH" and column["column_name"] == "vpd")
     ]
     query = db.session.query(
         data_table.timestamp,
@@ -690,6 +697,12 @@ def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
+    if sensor_type_name == "Aranet T&RH":
+        df.loc[:, "vpd"] = vapour_pressure_deficit(
+            df.loc[:, "temperature"], df.loc[:, "humidity"]
+        ).round(2)
+        # Rounding to two decimal places, because our precision isn't infinite, and
+        # long floats look really ugly on the front end.
     return df
 
 
@@ -743,6 +756,8 @@ def add_mean_over_sensors(sensor_type, sensor_ids, df, roll_window_minutes=10):
     """Take the dataframe for timeseries, and add data for a new "sensor" that's the
     mean of all the ones in the data
     """
+    if len(df) == 0:
+        return df
     df_mean = df.groupby("timestamp").mean()
     df_mean.loc[:, "sensor_id"] = "mean"
     df_mean.loc[:, "name"] = "mean"
@@ -872,7 +887,8 @@ def timeseries_dashboard():
         # You may wonder, why we first to_json, and then json.loads. That's just to have
         # the data in a nice nested dictionary that a final json.dumps can deal with.
         data_dict[key] = json.loads(df_key.to_json(orient="records", date_format="iso"))
-        summary_dict[key] = json.loads(df_key.describe().to_json())
+        # Round the summary stats to two decimals, for nice front end presentation.
+        summary_dict[key] = json.loads(df_key.describe().round(2).to_json())
     return render_template(
         "timeseries_dashboard.html",
         sensor_type=sensor_type,

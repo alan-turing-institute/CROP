@@ -14,16 +14,17 @@ from utilities.utils import (
     query_result_to_array,
     parse_date_range_argument,
     download_csv,
+    vapour_pressure_deficit,
 )
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
     SensorClass,
-    ReadingsAdvanticsysClass,
     ReadingsEnergyClass,
     TypeClass,
     ReadingsAranetTRHClass,
-    DailyHarvestClass,
+    ReadingsAranetCO2Class,
+    ReadingsAranetAirVelocityClass,
 )
 from __app__.crop.constants import CONST_MAX_RECORDS
 
@@ -37,33 +38,9 @@ def route_template(template):
 
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-    if template in ["advanticsys", "energy", "aranet_trh", "dailyharvest"]:
-        if template == "advanticsys":
+    if template in ["energy", "aranet_trh", "aranet_co2", "aranet_air_velocity"]:
 
-            query = (
-                db.session.query(
-                    ReadingsAdvanticsysClass.timestamp,
-                    SensorClass.id,
-                    SensorClass.name,
-                    ReadingsAdvanticsysClass.temperature,
-                    ReadingsAdvanticsysClass.humidity,
-                    ReadingsAdvanticsysClass.co2,
-                    ReadingsAdvanticsysClass.time_created,
-                    ReadingsAdvanticsysClass.time_updated,
-                    ReadingsAdvanticsysClass.sensor_id,
-                )
-                .filter(
-                    and_(
-                        ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
-                        ReadingsAdvanticsysClass.timestamp >= dt_from,
-                        ReadingsAdvanticsysClass.timestamp <= dt_to,
-                    )
-                )
-                .order_by(desc(ReadingsAdvanticsysClass.timestamp))
-                .limit(CONST_MAX_RECORDS)
-            )
-
-        elif template == "energy":
+        if template == "energy":
 
             query = (
                 db.session.query(
@@ -108,26 +85,61 @@ def route_template(template):
                 .order_by(desc(ReadingsAranetTRHClass.timestamp))
                 .limit(CONST_MAX_RECORDS)
             )
+        elif template == "aranet_co2":
 
-        elif template == "dailyharvest":
-            query = db.session.query(
-                DailyHarvestClass.crop,
-                DailyHarvestClass.propagation_date,
-                DailyHarvestClass.location_id,
-                DailyHarvestClass.stack,
-                DailyHarvestClass.total_yield_weight,
-                DailyHarvestClass.disease_trays,
-                DailyHarvestClass.defect_trays,
-                DailyHarvestClass.notes,
-                DailyHarvestClass.user,
-                DailyHarvestClass.time_created,
-            ).limit(CONST_MAX_RECORDS)
+            query = (
+                db.session.query(
+                    ReadingsAranetCO2Class.timestamp,
+                    SensorClass.name,
+                    ReadingsAranetCO2Class.co2,
+                    ReadingsAranetCO2Class.time_created,
+                    ReadingsAranetCO2Class.time_updated,
+                    ReadingsAranetCO2Class.sensor_id,
+                )
+                .filter(
+                    and_(
+                        ReadingsAranetCO2Class.sensor_id == SensorClass.id,
+                        ReadingsAranetCO2Class.timestamp >= dt_from,
+                        ReadingsAranetCO2Class.timestamp <= dt_to,
+                    )
+                )
+                .order_by(desc(ReadingsAranetCO2Class.timestamp))
+                .limit(CONST_MAX_RECORDS)
+            )
+        elif template == "aranet_air_velocity":
 
-        readings = db.session.execute(query).fetchall()
+            query = (
+                db.session.query(
+                    ReadingsAranetAirVelocityClass.timestamp,
+                    SensorClass.name,
+                    ReadingsAranetAirVelocityClass.current,
+                    ReadingsAranetAirVelocityClass.air_velocity,
+                    ReadingsAranetAirVelocityClass.time_created,
+                    ReadingsAranetAirVelocityClass.time_updated,
+                    ReadingsAranetAirVelocityClass.sensor_id,
+                )
+                .filter(
+                    and_(
+                        ReadingsAranetAirVelocityClass.sensor_id == SensorClass.id,
+                        ReadingsAranetAirVelocityClass.timestamp >= dt_from,
+                        ReadingsAranetAirVelocityClass.timestamp <= dt_to,
+                    )
+                )
+                .order_by(desc(ReadingsAranetAirVelocityClass.timestamp))
+                .limit(CONST_MAX_RECORDS)
+            )
 
-        results_arr = query_result_to_array(readings, date_iso=False)
+        df = pd.read_sql(query.statement, query.session.bind)
+        if template == "aranet_trh":
+            df.loc[:, "vpd"] = vapour_pressure_deficit(
+                df.loc[:, "temperature"], df.loc[:, "humidity"]
+            ).round(2)
+            # Rounding to two decimal places, because our precision isn't infinite, and
+            # long floats look really ugly on the front end.
+        results_arr = df.to_dict("records")
+
     if request.method == "POST":
-        return download_csv(readings, template)
+        return download_csv(results_arr, template)
     else:
         return render_template(
             template + ".html",
