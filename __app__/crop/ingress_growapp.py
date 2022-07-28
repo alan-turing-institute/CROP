@@ -16,6 +16,7 @@ from urllib import parse
 import pandas as pd
 from sqlalchemy import and_
 from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.dialects.postgresql import insert
 
 from __app__.crop.db import connect_db, session_open, session_close
 from __app__.crop.structure import (
@@ -24,6 +25,7 @@ from __app__.crop.structure import (
     BatchClass,
     BatchEventClass,
     HarvestClass,
+    EventType,
 )
 from __app__.crop.growapp_structure import (
     LocationClass as GrowAppLocationClass,
@@ -50,12 +52,12 @@ from __app__.crop.constants import (
 from __app__.crop.ingress import log_upload_event
 
 BATCH_EVENT_TYPE_MAPPING = {
-    0: 0,  # none
-    10: 1,  # weigh
-    20: 2,  # propagate
-    30: 3,  # transfer
-    40: 4,  # harvest
-    99: 99,  # edit
+    0: EventType.none,
+    10: EventType.weigh,
+    20: EventType.propagate,
+    30: EventType.transfer,
+    40: EventType.harvest,
+    99: EventType.edit,
 }
 
 
@@ -150,60 +152,29 @@ def convert_growapp_foreign_key(growapp_df, growapp_column_name, CropDbClass):
     return growapp_df
 
 
-def get_croptype_data():
+def add_new_location(zone, aisle, stack, shelf):
     """
-    Read from the table of crops in the GrowApp database
+    Add a new location to the CROP database, and return its primary key.
+
+    Parameters
+    ==========
+    zone: str
+    aisle: str
+    stack: int (aka column)
+    shelf: int
 
     Returns
     =======
-    crop_df: pandas DataFrame of results
+    location_id: int, PK of the newly created location in the CROP DB.
     """
-    session = get_growapp_db_session()
-    query = session.query(
-        GrowAppCropClass.id,
-        GrowAppCropClass.name,
-        GrowAppCropClass.seed_density,
-        GrowAppCropClass.propagation_period,
-        GrowAppCropClass.grow_period,
-        GrowAppCropClass.is_pre_harvest,
-    )
-    # get the results to an array of dicts before putting into
-    # pandas dataframe, to avoid
-    # https://github.com/pandas-dev/pandas/issues/40682
-    results = session.execute(query).fetchall()
-    results_array = query_result_to_array(results)
-    crop_df = pd.DataFrame(results_array)
-    crop_df.rename(columns={"id": "growapp_id"}, inplace=True)
+    session = get_cropapp_db_session()
+    location = LocationClass(zone=zone, aisle=aisle, column=stack, shelf=shelf)
+    session.add(location)
+    session.commit()
+    id = location.id
     session_close(session)
-    return crop_df
-
-
-def get_batch_data():
-    """
-    Read from the 'Batch' table in the GrowApp database, and transform
-    into the format expected by the corresponding table in the CROP db.
-
-    Returns
-    =======
-    batch_df: pandas DataFrame
-    """
-    grow_session = get_growapp_db_session()
-    query = grow_session.query(
-        GrowAppBatchClass.id,
-        GrowAppBatchClass.tray_size,
-        GrowAppBatchClass.number_of_trays,
-        GrowAppBatchClass.crop_id,
-    )
-    results = grow_session.execute(query).fetchall()
-    session_close(grow_session)
-    results_array = query_result_to_array(results)
-    batch_df = pd.DataFrame(results_array)
-    batch_df.rename(columns={"id": "growapp_id"}, inplace=True)
-
-    # we need to get the crop_id from our croptype table
-    batch_df = convert_growapp_foreign_key(batch_df, "crop_id", CropTypeClass)
-    batch_df = batch_df.rename(columns={"crop_id": "crop_type_id"})
-    return batch_df
+    print("Returning new location with id {}".format(id))
+    return id
 
 
 def get_location_id(growapp_batch_id):
@@ -214,7 +185,7 @@ def get_location_id(growapp_batch_id):
 
     Parameters
     ==========
-    growapp_batch_id: uuid, foreign key of the Batch in the Growapp DB
+    growapp_batch_id: uuid, foreign key corresponding to the Batch in the Growapp DB
 
     Raises
     ======
@@ -225,6 +196,7 @@ def get_location_id(growapp_batch_id):
     =======
     A location ID, i.e. a primary key for the CROP location table.
     """
+    print("looking for a location for growapp batch_id {}".format(growapp_batch_id))
     grow_session = get_growapp_db_session()
     batch_query = grow_session.query(GrowAppBatchClass.current_bench_id).filter(
         GrowAppBatchClass.id == growapp_batch_id
@@ -282,30 +254,111 @@ def get_location_id(growapp_batch_id):
         )
     growapp_location = results_array[0]
     session_close(grow_session)
-
+    print(f"Found location {growapp_location}.")
+    # fill in missing "zone" by hand
+    if not growapp_location["zone"]:
+        growapp_location["zone"] = "Farm"
     # Query the Crop Location table to find the corresponding location ID.
     crop_session = get_cropapp_db_session()
     query = crop_session.query(LocationClass.id).filter(
         and_(
             LocationClass.zone == growapp_location["zone"],
             LocationClass.aisle == growapp_location["aisle"],
-            LocationClass.column == growapp_location["stack"],
-            LocationClass.shelf == growapp_location["shelf"],
+            LocationClass.column == int(growapp_location["stack"]),
+            LocationClass.shelf == int(growapp_location["shelf"]),
         )
     )
     results = crop_session.execute(query).fetchall()
     session_close(crop_session)
     results_array = query_result_to_array(results)
     if len(results_array) == 0:
-        raise ValueError(f"Location {growapp_location} not found in the CROP DB.")
+        print(f"Location {growapp_location} not found in the CROP DB.  Will create it")
+        return add_new_location(
+            growapp_location["zone"],
+            growapp_location["aisle"],
+            int(growapp_location["stack"]),
+            int(growapp_location["shelf"])
+        )
     else:
-        return results_array[0]
+        return results_array[0]["id"]
 
 
-def get_batchevent_data():
+def get_croptype_data():
+    """
+    Read from the table of crops in the GrowApp database
+
+    Returns
+    =======
+    crop_df: pandas DataFrame of results
+    """
+    session = get_growapp_db_session()
+    query = session.query(
+        GrowAppCropClass.id,
+        GrowAppCropClass.name,
+        GrowAppCropClass.seed_density,
+        GrowAppCropClass.propagation_period,
+        GrowAppCropClass.grow_period,
+        GrowAppCropClass.is_pre_harvest,
+    )
+    # get the results to an array of dicts before putting into
+    # pandas dataframe, to avoid
+    # https://github.com/pandas-dev/pandas/issues/40682
+    results = session.execute(query).fetchall()
+    results_array = query_result_to_array(results)
+    crop_df = pd.DataFrame(results_array)
+    crop_df.rename(columns={"id": "growapp_id"}, inplace=True)
+    session_close(session)
+    return crop_df
+
+
+def get_batch_data(dt_from=None, dt_to=None):
+    """
+    Read from the 'Batch' table in the GrowApp database, and transform
+    into the format expected by the corresponding table in the CROP db.
+
+    Parameters
+    ==========
+    dt_from, dt_to: datetime, time bounds for the query
+
+    Returns
+    =======
+    batch_df: pandas DataFrame
+    """
+    grow_session = get_growapp_db_session()
+    query = grow_session.query(
+        GrowAppBatchClass.id,
+        GrowAppBatchClass.tray_size,
+        GrowAppBatchClass.number_of_trays,
+        GrowAppBatchClass.crop_id,
+    )
+    if dt_from:
+        query = query.filter(
+            GrowAppBatchClass.status_date > dt_from
+        )
+    if dt_to:
+        query = query.filter(
+            GrowAppBatchClass.status_date < dt_to
+        )
+    results = grow_session.execute(query).fetchall()
+    session_close(grow_session)
+    results_array = query_result_to_array(results)
+    batch_df = pd.DataFrame(results_array)
+    batch_df.rename(columns={"id": "growapp_id"}, inplace=True)
+
+    # we need to get the crop_id from our croptype table
+    batch_df = convert_growapp_foreign_key(batch_df, "crop_id", CropTypeClass)
+    batch_df = batch_df.rename(columns={"crop_id": "crop_type_id"})
+    return batch_df
+
+
+def get_batchevent_data(dt_from=None, dt_to=None):
     """
     Read from the 'BatchEvent' table in the GrowApp database, and transform
     into the format expected by the corresponding table in the CROP db.
+
+    Parameters
+    ==========
+    dt_from, dt_to: datetime, time bounds for the query
 
     Returns
     =======
@@ -322,6 +375,14 @@ def get_batchevent_data():
         GrowAppBatchEventClass.next_action_days,
         GrowAppBatchEventClass.next_action,
     )
+    if dt_from:
+        query = query.filter(
+            GrowAppBatchEventClass.event_happened > dt_from
+        )
+    if dt_to:
+        query = query.filter(
+            GrowAppBatchEventClass.event_happened < dt_to
+        )
     results = grow_session.execute(query).fetchall()
     session_close(grow_session)
     results_array = query_result_to_array(results)
@@ -330,6 +391,10 @@ def get_batchevent_data():
     # convert some columns to datetime
     batchevents_df["next_action"] = pd.to_datetime(
         batchevents_df["next_action"], errors="coerce"
+    )
+    # convert NaT to None
+    batchevents_df["next_action"] = batchevents_df["next_action"].astype(object).where(
+        batchevents_df.next_action.notnull(), None
     )
     batchevents_df["event_happened"] = pd.to_datetime(
         batchevents_df["event_happened"], errors="coerce"
@@ -348,22 +413,68 @@ def get_batchevent_data():
         inplace=True,
     )
     batchevents_df.loc[:, "location_id"] = None
-    transfer_events = batchevents_df.loc[:, "event_type"] == 3
+    transfer_events = batchevents_df.loc[:, "event_type"] == EventType.transfer
     batchevents_df.loc[transfer_events, "location_id"] = batchevents_df.loc[
         transfer_events, "batch_id"
     ].apply(get_location_id)
 
     # we need to get the batch_id from our batch table
     batchevents_df = convert_growapp_foreign_key(batchevents_df, "batch_id", BatchClass)
-    # TODO Continue here: We need to maybe drop some of the columns of batchevents_df or
-    # massage some types, and then, the trickiest part: Get the location_id, by doing
-    # some non-trivial joins.
+    # drop some unused columns
+    batchevents_df.drop(columns=["next_action_days", "was_manual", "description"], inplace=True)
     return batchevents_df
+
+
+def get_harvest_data(dt_from=None, dt_to=None):
+    """
+    Combine info from the growapp Batch and BatchEvent tables to
+    fill a dataframe ready to go into the Harvest table in the CROP db.
+
+    Parameters
+    ==========
+    dt_from, dt_to: datetime, time bounds for the query
+
+    Returns
+    =======
+    harvest_df: pandas DataFrame containing all columns needed for the Harvest table.
+    """
+    grow_session = get_growapp_db_session()
+    grow_query = grow_session.query(
+        GrowAppBatchClass.id,
+        GrowAppBatchClass.harvested_event_id,
+        GrowAppBatchClass.yield_,
+        GrowAppBatchClass.waste_disease,
+        GrowAppBatchClass.waste_defect,
+        GrowAppBatchClass.overproduction,
+    )
+    if dt_from:
+        grow_query = grow_query.filter(
+            GrowAppBatchClass.status_date > dt_from
+        )
+    if dt_to:
+        grow_query = grow_query.filter(
+            GrowAppBatchClass.status_date < dt_to
+        )
+    results = grow_session.execute(grow_query).fetchall()
+    results_array = query_result_to_array(results)
+    session_close(grow_session)
+    df = pd.DataFrame(results_array)
+    df = df[df.harvested_event_id.notnull()]
+    df.rename(columns={
+        "id": "growapp_id",
+        "harvested_event_id": "batch_event_id",
+        "yield_": "crop_yield",
+        "overproduction": "over_production"
+    },inplace=True)
+    # get the batchevent_id from our batchevent table
+    df = convert_growapp_foreign_key(df, "batch_event_id", BatchEventClass)
+    df.loc[:,"location_id"] = df.loc[:,"growapp_id"].apply(get_location_id)
+    return df
 
 
 def get_existing_growapp_ids(session, DbClass):
     """
-    Read from the table of crops in the CROP database to get list
+    Read from the table in the CROP database to get list
     of existing growapp_ids.
 
     Parameters
@@ -386,9 +497,7 @@ def get_existing_growapp_ids(session, DbClass):
 
 def write_new_data(data_df, DbClass):
     """
-    First read from the table in the CROP database to get list
-    of existing growapp_ids, then remove those rows from the input data_df,
-    and write the remaining ones back to the CROP database.
+    Write rows from the input dataframe to the DbClass table in the CROP database.
     Relies on there being a column 'growapp_id' in the table, in order to
     identify existing rows.
 
@@ -409,16 +518,47 @@ def write_new_data(data_df, DbClass):
         # The table already exists.
         pass
 
-    existing_growids = get_existing_growapp_ids(session, DbClass)
-    if len(existing_growids) > 0:
-        existing_index = existing_growids.index
-        data_df = data_df[~data_df["growapp_id"].isin(existing_index)]
+#    existing_growids = get_existing_growapp_ids(session, DbClass)
+#    if len(existing_growids) > 0:
+#        existing_index = existing_growids.index
+#        data_df = data_df[~data_df["growapp_id"].isin(existing_index)]
 
     logging.info(f"==> Will write {len(data_df)} rows to {DbClass.__tablename__}")
     # loop over all rows in the dataframe
     for _, row in data_df.iterrows():
-        new_row = DbClass(**(row.to_dict()))
-        session.add(new_row)
+        insert_stmt = insert(DbClass).values(**(row.to_dict()))
+        do_nothing_stmt = insert_stmt.on_conflict_do_nothing( index_elements=['growapp_id'])
+        session.execute(do_nothing_stmt)
     logging.info(f"Finished writing to {DbClass.__tablename__}")
     session.commit()
     session_close(session)
+    return True
+
+
+
+def import_growapp_data(dt_from=None, dt_to=None):
+    """
+    For initial creation and filling of the CROP database tables, we need to query
+    everything in the GrowApp DB.  After that, can use timestamp ranges to filter
+    the batch and batchevent queries
+
+    Parameters
+    ==========
+    dt_from: datetime, starting period for Batch and BatchEvent queries
+    dt_to: datetime, ending period for Batch and BatchEvent queries
+
+    Returns
+    =======
+    success: bool
+    """
+    success = True
+    # always query the whole crop type table - it will be small
+    croptype_df = get_croptype_data()
+    success &= write_new_data(croptype_df, CropTypeClass)
+    batch_df = get_batch_data(dt_from, dt_to)
+    success &= write_new_data(batch_df, BatchClass)
+    batchevent_df = get_batchevent_data(dt_from, dt_to)
+    success &= write_new_data(batchevent_df, BatchEventClass)
+    harvest_df = get_harvest_data(dt_from, dt_to)
+    success &= write_new_data(harvest_df, HarvestClass)
+    return success
