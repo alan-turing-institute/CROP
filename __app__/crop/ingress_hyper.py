@@ -20,7 +20,6 @@ from __app__.crop.structure import (
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
 )
-from __app__.crop.utils import query_result_to_array
 from __app__.crop.constants import (
     CONST_CROP_HYPER_APIKEY,
     CONST_ARANET_TRH_SENSOR_TYPE,

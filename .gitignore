@@ -18,8 +18,8 @@ CROP.pyproj.user
 /utils/upload_real_test_data
 
 # Data
-/data/ 
-/versioning/Data_model/models/dynamic/data 
+/data/
+/versioning/Data_model/models/dynamic/data
 /versioning/LatestData
 *.RDS
 *.RData
@@ -156,3 +156,6 @@ node_modules
 
 # macOS folder metadata
 .DS_Store
+
+# emacs autosave
+*~
