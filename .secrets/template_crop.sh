@@ -34,3 +34,10 @@ export CROP_OPENWEATHERMAP_APIKEY="<<replaceme>>"
 
 # HYPER.AG
 export CROP_HYPER_APIKEY="<<replaceme>>"
+
+# GrowApp database (also need IP whitelisting)
+export GROWAPP_IP="<<replaceme>>"
+export GROWAPP_DATABASE="<<replaceme>>"
+export GROWAPP_SCHEMA="<<replaceme>>"
+export GROWAPP_USERNAME="<<replaceme>>"
+export GROWAPP_PASS="<<replaceme>>"
