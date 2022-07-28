@@ -14,6 +14,7 @@ from utilities.utils import (
     query_result_to_array,
     parse_date_range_argument,
     download_csv,
+    vapour_pressure_deficit,
 )
 
 from __app__.crop.structure import SQLA as db
@@ -128,13 +129,17 @@ def route_template(template):
                 .limit(CONST_MAX_RECORDS)
             )
 
+        df = pd.read_sql(query.statement, query.session.bind)
+        if template == "aranet_trh":
+            df.loc[:, "vpd"] = vapour_pressure_deficit(
+                df.loc[:, "temperature"], df.loc[:, "humidity"]
+            ).round(2)
+            # Rounding to two decimal places, because our precision isn't infinite, and
+            # long floats look really ugly on the front end.
+        results_arr = df.to_dict("records")
 
-
-        readings = db.session.execute(query).fetchall()
-
-        results_arr = query_result_to_array(readings, date_iso=False)
     if request.method == "POST":
-        return download_csv(readings, template)
+        return download_csv(results_arr, template)
     else:
         return render_template(
             template + ".html",
