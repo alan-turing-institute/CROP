@@ -971,7 +971,8 @@ class BatchEventClass(BASE):
     next_action_time = Column(DateTime, nullable=True)
 
     # constructor
-    def __init__(self, batch_id, location_id, event_type, event_time, next_action_time):
+    def __init__(self, growapp_id, batch_id, location_id, event_type, event_time, next_action_time):
+        self.growapp_id = growapp_id
         self.batch_id = batch_id
         self.location_id = location_id
         self.event_type = event_type
@@ -992,7 +993,13 @@ class HarvestClass(BASE):
         ForeignKey("{}.{}".format(BATCH_EVENT_TABLE_NAME, ID_COL_NAME)),
         nullable=False,
     )
+    # note that the growapp_id is a key to the Grow Batch table
     growapp_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
+    location_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(LOCATION_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
     crop_yield = Column(Float, nullable=False)
     waste_disease = Column(Float, nullable=False)
     waste_defect = Column(Float, nullable=False)
@@ -1000,9 +1007,11 @@ class HarvestClass(BASE):
 
     # constructor
     def __init__(
-        self, batch_event_id, crop_yield, waste_disease, waste_defect, over_production
+            self, batch_event_id, growapp_id, location_id, crop_yield, waste_disease, waste_defect, over_production
     ):
         self.batch_event_id = batch_event_id
+        self.growapp_id = growapp_id
+        self.location_id = location_id
         self.crop_yield = crop_yield
         self.waste_disease = waste_disease
         self.waste_defect = waste_defect
