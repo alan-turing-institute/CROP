@@ -5,6 +5,7 @@ import sys
 import io
 import json
 from datetime import datetime, timedelta
+import numpy as np
 import pandas as pd
 from flask import send_file
 from sqlalchemy import and_, func
@@ -163,3 +164,22 @@ def filter_latest_sensor_location(db):
         query.c.sensor_id == SensorLocationClass.sensor_id,
         query.c.installation_date == SensorLocationClass.installation_date,
     )
+
+
+def vapour_pressure_deficit(temperature, relative_humidity):
+    """Compute vapour pressure deficit from T&RH data.
+
+    Args:
+        temperature: Temperature in celsius. Must support element-wise np.exp, so can be
+            a scalar or e.g. a numpy array.
+        relative_humidity: Relative humidity in percentage. Can be a scalar or an array
+            of the same length as temperature.
+
+    Returns:
+    Vapour pressure deficit, in pascals.
+    """
+    # See https://pulsegrow.com/blogs/learn/vpd for the magic formula.
+    saturation_vapour_pressure = 610.78 * np.exp(
+        temperature / (temperature + 237.3) * 17.2694
+    )
+    return saturation_vapour_pressure * (1.0 - relative_humidity / 100.0)

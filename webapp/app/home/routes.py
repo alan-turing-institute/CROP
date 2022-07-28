@@ -20,7 +20,7 @@ from __app__.crop.structure import (
     ReadingsAranetTRHClass,
 )
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
-from utilities.utils import filter_latest_sensor_location
+from utilities.utils import filter_latest_sensor_location, vapour_pressure_deficit
 
 TEMP_BINS = {
     "Propagation": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
@@ -37,6 +37,14 @@ HUM_BINS = {
     "MidFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70
     "BackFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
     "R&D": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
+}
+VPD_BINS = {
+    "Propagation": [0.0, 300.0, 600.0, 1000.0, 1500.0],
+    "FrontFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
+    "Fridge": [0.0, 300.0, 600.0, 1000.0, 1500.0],
+    "MidFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
+    "BackFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
+    "R&D": [0.0, 300.0, 600.0, 1000.0, 1500.0],
 }
 LOCATION_ZONES = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
 
@@ -106,9 +114,11 @@ def aranet_query(dt_from, dt_to):
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
+    df.loc[:, "vpd"] = vapour_pressure_deficit(
+        df.loc[:, "temperature"], df.loc[:, "humidity"]
+    )
 
     logging.info("Total number of records found: %d" % (len(df.index)))
-
     if df.empty:
         logging.debug("WARNING: Query returned empty")
     return df
@@ -196,7 +206,7 @@ def stratification(temp_df, sensor_ids):
     json_strat = (
         df_grp_hr.groupby(["sensor_id"], as_index=True)
         .apply(
-            lambda x: x[["temperature", "humidity", "timestamp"]].to_dict(
+            lambda x: x[["temperature", "humidity", "vpd", "timestamp"]].to_dict(
                 orient="records"
             )
         )
@@ -320,8 +330,12 @@ def index():
         df_hum_weekly = bin_trh_data(
             df_mean_hr_weekly, HUM_BINS, "humidity", expected_total=24 * 7
         )
+        df_vpd_weekly = bin_trh_data(
+            df_mean_hr_weekly, VPD_BINS, "vpd", expected_total=24 * 7
+        )
         weekly_temp_json = json_bin_counts(df_temp_weekly)
         weekly_hum_json = json_bin_counts(df_hum_weekly)
+        weekly_vpd_json = json_bin_counts(df_vpd_weekly)
         # Sensor id locations:
         # 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
     else:
@@ -337,11 +351,16 @@ def index():
         df_hum_daily = bin_trh_data(
             df_mean_hr_daily, HUM_BINS, "humidity", expected_total=24
         )
+        df_vpd_daily = bin_trh_data(
+            df_mean_hr_daily, VPD_BINS, "vpd", expected_total=24
+        )
         daily_temp_json = json_bin_counts(df_temp_daily)
         daily_hum_json = json_bin_counts(df_hum_daily)
+        daily_vpd_json = json_bin_counts(df_vpd_daily)
     else:
         daily_temp_json = {}
         daily_hum_json = {}
+        daily_vpd_json = {}
 
     df_hourly = aranet_query(dt_from_hourly, dt_to)
     if not df_hourly.empty:
@@ -360,8 +379,10 @@ def index():
         hourly_data=hourly_json,
         temperature_data=weekly_temp_json,
         humidity_data=weekly_hum_json,
+        vpd_data=weekly_vpd_json,
         temperature_data_daily=daily_temp_json,
         humidity_data_daily=daily_hum_json,
+        vpd_data_daily=daily_vpd_json,
         stratification=json_strat,
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
