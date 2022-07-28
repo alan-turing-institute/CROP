@@ -26,6 +26,10 @@ from __app__.crop.structure import (
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
     ReadingsWeatherClass,
+    CropTypeClass,
+    BatchClass,
+    BatchEventClass,
+    HarvestClass
 )
 
 
