@@ -82,19 +82,25 @@ const plotConfigTemplate = {
       },
     },
     scales: {
-      yAxes: [
-        {
-          scaleLabel: {
-            display: true,
-            fontSize: 18,
+      y: {
+        display: true,
+        title: {
+          display: true,
+          font: { size: 18 },
+        },
+      },
+      x: {
+        type: "time",
+        time: {
+          displayFormats: {
+            hour: "DD MMM hA",
           },
         },
-      ],
-      xAxes: [
-        {
-          type: "time",
+        ticks: {
+          maxTicksLimit: 6,
+          includeBounds: false,
         },
-      ],
+      },
     },
   },
 };
@@ -136,10 +142,11 @@ function makePlot(data, yDataName, yLabel, canvasName) {
       pointRadius: pointRadius,
       borderWidth: borderWidth,
       borderColor: colour,
+      fill: true,
     });
   }
   const config = JSON.parse(JSON.stringify(plotConfigTemplate)); // Make a copy
-  config.options.scales.yAxes[0].scaleLabel.labelString = yLabel;
+  config.options.scales.y.title.text = yLabel;
   config.data = { datasets: datasets };
   const ctx = document.getElementById(canvasName);
   new Chart(ctx, config);

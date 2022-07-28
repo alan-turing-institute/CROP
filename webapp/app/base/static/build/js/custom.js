@@ -1993,8 +1993,8 @@ if (typeof NProgress != 'undefined') {
 				console.log('init_charts');
 			
 				
-				Chart.defaults.global.legend = {
-					enabled: false
+				Chart.defaults.legend = {
+					display: false
 				};
 				
 				

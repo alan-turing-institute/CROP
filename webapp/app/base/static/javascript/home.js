@@ -5,27 +5,39 @@ function check_data(data) {
 }
 
 function set_hourly_values(hourly_data_json) {
-  let tempFF = hourly_data_json[1]["temperature"];
+  const numDecimals = 1;
+  let tempFF = hourly_data_json[1]["temperature"].toFixed(numDecimals);
   document.getElementById("tempFF").innerHTML = tempFF;
-  let tempFM = hourly_data_json[2]["temperature"];
+  let tempFM = hourly_data_json[2]["temperature"].toFixed(numDecimals);
   document.getElementById("tempFM").innerHTML = tempFM;
-  let tempFB = hourly_data_json[0]["temperature"];
+  let tempFB = hourly_data_json[0]["temperature"].toFixed(numDecimals);
   document.getElementById("tempFB").innerHTML = tempFB;
-  let tempPR = hourly_data_json[3]["temperature"];
+  let tempPR = hourly_data_json[3]["temperature"].toFixed(numDecimals);
   document.getElementById("tempPR").innerHTML = tempPR;
-  let tempRD = hourly_data_json[4]["temperature"];
+  let tempRD = hourly_data_json[4]["temperature"].toFixed(numDecimals);
   document.getElementById("tempRD").innerHTML = tempRD;
 
-  let humFF = hourly_data_json[1]["humidity"];
+  let humFF = hourly_data_json[1]["humidity"].toFixed(numDecimals);
   document.getElementById("humFF").innerHTML = humFF;
-  let humFM = hourly_data_json[2]["humidity"];
+  let humFM = hourly_data_json[2]["humidity"].toFixed(numDecimals);
   document.getElementById("humFM").innerHTML = humFM;
-  let humFB = hourly_data_json[0]["humidity"];
+  let humFB = hourly_data_json[0]["humidity"].toFixed(numDecimals);
   document.getElementById("humFB").innerHTML = humFB;
-  let humPR = hourly_data_json[3]["humidity"];
+  let humPR = hourly_data_json[3]["humidity"].toFixed(numDecimals);
   document.getElementById("humPR").innerHTML = humPR;
-  let humRD = hourly_data_json[4]["humidity"];
+  let humRD = hourly_data_json[4]["humidity"].toFixed(numDecimals);
   document.getElementById("humRD").innerHTML = humRD;
+
+  let vpdFF = hourly_data_json[1]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdFF").innerHTML = vpdFF;
+  let vpdFM = hourly_data_json[2]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdFM").innerHTML = vpdFM;
+  let vpdFB = hourly_data_json[0]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdFB").innerHTML = vpdFB;
+  let vpdPR = hourly_data_json[3]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdPR").innerHTML = vpdPR;
+  let vpdRD = hourly_data_json[4]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdRD").innerHTML = vpdRD;
 }
 
 function time_series_charts(
@@ -46,6 +58,7 @@ function time_series_charts(
         borderColor: item.color,
         pointRadius: 1,
         borderWidth: 1,
+        fill: true,
       };
     }),
   };
@@ -60,29 +73,33 @@ function time_series_charts(
         },
       },
       scales: {
-        yAxes: [
-          {
-            scaleLabel: {
-              display: true,
-              labelString: y_label,
-              fontSize: 18,
-            },
-            ticks: {
-              suggestedMin: limits.min,
-              suggestedMax: limits.max,
+        y: {
+          display: true,
+          title: {
+            display: true,
+            text: y_label,
+            font: { size: 18 },
+          },
+          suggestedMin: limits.min,
+          suggestedMax: limits.max,
+        },
+        x: {
+          type: "time",
+          time: {
+            displayFormats: {
+              hour: "DD MMM hA",
             },
           },
-        ],
-        xAxes: [
-          {
-            type: "time",
+          ticks: {
+            maxTicksLimit: 6,
+            includeBounds: false,
           },
-        ],
+        },
       },
     },
   };
   const ctx = document.getElementById(canvasname);
-  new Chart(ctx, config);
+  return new Chart(ctx, config);
 }
 
 function roundcharts(json_data, zoneid, canvasname, colouramp) {
@@ -109,8 +126,10 @@ function roundcharts(json_data, zoneid, canvasname, colouramp) {
     type: "doughnut",
     data: data,
     options: {
-      legend: {
-        display: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
       },
       aspectRatio: 1.5,
     },
@@ -201,48 +220,60 @@ function create_charts(
   temperature_data_daily,
   humidity_data,
   humidity_data_daily,
+  vpd_data,
+  vpd_data_daily,
   stratification,
   hourly_data
 ) {
   set_hourly_values(hourly_data);
-  // blue to red
-  const colouramp_redblue = [
+  // blue to red, and grey for missing
+  const colouramp_redbluegrey = [
     "rgba(63,103,126,1)",
     "rgba(27,196,121,1)",
     "rgba(137,214,11,1)",
     "rgba(207,19,10,1)",
+    "rgba(200,200,200,1)",
   ];
-  const colouramp_blue = [
+  const colouramp_bluegrey = [
     "rgba(27,55,74,1)",
     "rgba(0,96,196,1)",
     "rgba(0,129,196,1)",
     "rgba(141,245,252,1)",
+    "rgba(200,200,200,1)",
   ];
 
   // main farm
   let zone0_name = temperature_data[0]["zone"];
   document.getElementById("zone0_name").innerHTML = zone0_name;
-  roundcharts(temperature_data, 0, "roundchart0", colouramp_redblue);
+  roundcharts(temperature_data, 0, "roundchart0", colouramp_redbluegrey);
 
   let zone1_name = temperature_data[1]["zone"];
   document.getElementById("zone1_name").innerHTML = zone1_name;
-  roundcharts(temperature_data, 1, "roundchart1", colouramp_redblue);
+  roundcharts(temperature_data, 1, "roundchart1", colouramp_redbluegrey);
 
   let zone2_name = temperature_data[2]["zone"];
   document.getElementById("zone2_name").innerHTML = zone2_name;
-  roundcharts(temperature_data, 2, "roundchart2", colouramp_redblue);
+  roundcharts(temperature_data, 2, "roundchart2", colouramp_redbluegrey);
 
-  roundcharts(temperature_data_daily, 0, "roundchart10", colouramp_redblue);
-  roundcharts(temperature_data_daily, 1, "roundchart11", colouramp_redblue);
-  roundcharts(temperature_data_daily, 2, "roundchart12", colouramp_redblue);
+  roundcharts(temperature_data_daily, 0, "roundchart10", colouramp_redbluegrey);
+  roundcharts(temperature_data_daily, 1, "roundchart11", colouramp_redbluegrey);
+  roundcharts(temperature_data_daily, 2, "roundchart12", colouramp_redbluegrey);
 
-  roundcharts(humidity_data, 0, "roundchart5", colouramp_blue);
-  roundcharts(humidity_data, 1, "roundchart6", colouramp_blue);
-  roundcharts(humidity_data, 2, "roundchart7", colouramp_blue);
+  roundcharts(humidity_data, 0, "roundchart5", colouramp_bluegrey);
+  roundcharts(humidity_data, 1, "roundchart6", colouramp_bluegrey);
+  roundcharts(humidity_data, 2, "roundchart7", colouramp_bluegrey);
 
-  roundcharts(humidity_data_daily, 0, "roundchart15", colouramp_blue);
-  roundcharts(humidity_data_daily, 1, "roundchart16", colouramp_blue);
-  roundcharts(humidity_data_daily, 2, "roundchart17", colouramp_blue);
+  roundcharts(humidity_data_daily, 0, "roundchart15", colouramp_bluegrey);
+  roundcharts(humidity_data_daily, 1, "roundchart16", colouramp_bluegrey);
+  roundcharts(humidity_data_daily, 2, "roundchart17", colouramp_bluegrey);
+
+  roundcharts(vpd_data, 0, "vpd_roundchart0", colouramp_bluegrey);
+  roundcharts(vpd_data, 1, "vpd_roundchart1", colouramp_bluegrey);
+  roundcharts(vpd_data, 2, "vpd_roundchart2", colouramp_bluegrey);
+
+  roundcharts(vpd_data_daily, 0, "vpd_roundchart10", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 1, "vpd_roundchart11", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 2, "vpd_roundchart12", colouramp_bluegrey);
 
   // Find out min and max values, to set the axis limits.
   const temperature_limits = stratification_minmax(
@@ -253,6 +284,7 @@ function create_charts(
     stratification_json,
     "humidity"
   );
+  const vpd_limits = stratification_minmax(stratification_json, "vpd");
   // Sensor id locations:
   // 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
   vertical_series = [
@@ -263,7 +295,7 @@ function create_charts(
     { id: 22, color: "#ff0000", label: "Back farm" },
     { id: 21, color: "#3399ff", label: "Front farm" },
   ];
-  time_series_charts(
+  const verticalTempStratChart = time_series_charts(
     stratification,
     vertical_series,
     temperature_limits,
@@ -271,7 +303,7 @@ function create_charts(
     "Temperature (°C)",
     "vertical_temp_stratification"
   );
-  time_series_charts(
+  const horizontalTempStratChart = time_series_charts(
     stratification,
     horizontal_series,
     temperature_limits,
@@ -279,7 +311,7 @@ function create_charts(
     "Temperature (°C)",
     "horizontal_temp_stratification"
   );
-  time_series_charts(
+  const verticalHumidityStratChart = time_series_charts(
     stratification,
     vertical_series,
     humidity_limits,
@@ -287,7 +319,7 @@ function create_charts(
     "Humidity (%)",
     "vertical_humidity_stratification"
   );
-  time_series_charts(
+  const horizontalHumidityStratChart = time_series_charts(
     stratification,
     horizontal_series,
     humidity_limits,
@@ -295,22 +327,83 @@ function create_charts(
     "Humidity (%)",
     "horizontal_humidity_stratification"
   );
+  const verticalVpdStratChart = time_series_charts(
+    stratification,
+    vertical_series,
+    vpd_limits,
+    "vpd",
+    "VPD (Pa)",
+    "vertical_vpd_stratification"
+  );
+  const horizontalVpdStratChart = time_series_charts(
+    stratification,
+    horizontal_series,
+    vpd_limits,
+    "vpd",
+    "Vpd (Pa)",
+    "horizontal_vpd_stratification"
+  );
+  createStratificationZoomListeners([
+    verticalTempStratChart,
+    verticalHumidityStratChart,
+    verticalVpdStratChart,
+    horizontalTempStratChart,
+    horizontalHumidityStratChart,
+    horizontalVpdStratChart,
+  ]);
 
   // Propagation
   let zone3_name = temperature_data[3]["zone"];
   document.getElementById("zone3_name").innerHTML = zone3_name;
-  roundcharts(temperature_data, 3, "roundchart3", colouramp_redblue);
-  roundcharts(temperature_data_daily, 3, "roundchart13", colouramp_redblue);
+  roundcharts(temperature_data, 3, "roundchart3", colouramp_redbluegrey);
+  roundcharts(temperature_data_daily, 3, "roundchart13", colouramp_redbluegrey);
 
-  roundcharts(humidity_data, 3, "roundchart8", colouramp_blue);
-  roundcharts(humidity_data_daily, 3, "roundchart18", colouramp_blue);
+  roundcharts(humidity_data, 3, "roundchart8", colouramp_bluegrey);
+  roundcharts(humidity_data_daily, 3, "roundchart18", colouramp_bluegrey);
+
+  roundcharts(vpd_data, 3, "vpd_roundchart3", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 3, "vpd_roundchart13", colouramp_bluegrey);
 
   // R&D
   let zone4_name = temperature_data[4]["zone"];
   document.getElementById("zone4_name").innerHTML = zone4_name;
-  roundcharts(temperature_data, 4, "roundchart4", colouramp_redblue);
-  roundcharts(temperature_data_daily, 4, "roundchart14", colouramp_redblue);
+  roundcharts(temperature_data, 4, "roundchart4", colouramp_redbluegrey);
+  roundcharts(temperature_data_daily, 4, "roundchart14", colouramp_redbluegrey);
 
-  roundcharts(humidity_data, 4, "roundchart9", colouramp_blue);
-  roundcharts(humidity_data_daily, 4, "roundchart19", colouramp_blue);
+  roundcharts(humidity_data, 4, "roundchart9", colouramp_bluegrey);
+  roundcharts(humidity_data_daily, 4, "roundchart19", colouramp_bluegrey);
+
+  roundcharts(vpd_data, 4, "vpd_roundchart4", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 4, "vpd_roundchart14", colouramp_bluegrey);
+}
+
+function setMinTime(daysFromNow, charts) {
+  const minTime = moment().subtract(daysFromNow, "days");
+  for (chart of charts) {
+    chart.options.scales.x.min = minTime;
+    chart.update();
+  }
+}
+
+function createStratificationZoomListeners(charts) {
+  const vertTimeRange = document.getElementById("vertTimeRange");
+  const horzTimeRange = document.getElementById("horzTimeRange");
+  const vertTimeNumber = document.getElementById("vertTimeNumber");
+  const horzTimeNumber = document.getElementById("horzTimeNumber");
+
+  function onChangeMinTime(daysFromNow) {
+    setMinTime(daysFromNow, charts);
+    horzTimeRange.value = daysFromNow;
+    vertTimeRange.value = daysFromNow;
+    horzTimeNumber.value = daysFromNow;
+    vertTimeNumber.value = daysFromNow;
+  }
+
+  vertTimeRange.oninput = (e) => onChangeMinTime(e.target.value);
+  horzTimeRange.oninput = (e) => onChangeMinTime(e.target.value);
+  vertTimeNumber.onchange = (e) => onChangeMinTime(e.target.value);
+  horzTimeNumber.onchange = (e) => onChangeMinTime(e.target.value);
+
+  // To set the initial values when the page is first loaded.
+  onChangeMinTime(vertTimeRange.value);
 }
