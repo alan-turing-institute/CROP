@@ -41,8 +41,9 @@
                     <th>Timestamp</th>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Temperature</th>
-                    <th>Humidity</th>
+                    <th>Temperature (°C)</th>
+                    <th>Humidity (%)</th>
+                    <th>VPD (Pa)</th>
                     <th>Upload Time</th>
                   </tr>
                 </thead>
@@ -57,6 +58,7 @@
                     <td>{{ t_reading.name }}</td>
                     <td>{{ t_reading.temperature }}</td>
                     <td>{{ t_reading.humidity }}</td>
+                    <td>{{ t_reading.vpd }}</td>
                     <td>{{ t_reading.time_created }}</td>
                 </tr>
                 {%

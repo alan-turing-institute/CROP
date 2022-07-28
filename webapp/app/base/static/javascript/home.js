@@ -5,27 +5,39 @@ function check_data(data) {
 }
 
 function set_hourly_values(hourly_data_json) {
-  let tempFF = hourly_data_json[1]["temperature"];
+  const numDecimals = 1;
+  let tempFF = hourly_data_json[1]["temperature"].toFixed(numDecimals);
   document.getElementById("tempFF").innerHTML = tempFF;
-  let tempFM = hourly_data_json[2]["temperature"];
+  let tempFM = hourly_data_json[2]["temperature"].toFixed(numDecimals);
   document.getElementById("tempFM").innerHTML = tempFM;
-  let tempFB = hourly_data_json[0]["temperature"];
+  let tempFB = hourly_data_json[0]["temperature"].toFixed(numDecimals);
   document.getElementById("tempFB").innerHTML = tempFB;
-  let tempPR = hourly_data_json[3]["temperature"];
+  let tempPR = hourly_data_json[3]["temperature"].toFixed(numDecimals);
   document.getElementById("tempPR").innerHTML = tempPR;
-  let tempRD = hourly_data_json[4]["temperature"];
+  let tempRD = hourly_data_json[4]["temperature"].toFixed(numDecimals);
   document.getElementById("tempRD").innerHTML = tempRD;
 
-  let humFF = hourly_data_json[1]["humidity"];
+  let humFF = hourly_data_json[1]["humidity"].toFixed(numDecimals);
   document.getElementById("humFF").innerHTML = humFF;
-  let humFM = hourly_data_json[2]["humidity"];
+  let humFM = hourly_data_json[2]["humidity"].toFixed(numDecimals);
   document.getElementById("humFM").innerHTML = humFM;
-  let humFB = hourly_data_json[0]["humidity"];
+  let humFB = hourly_data_json[0]["humidity"].toFixed(numDecimals);
   document.getElementById("humFB").innerHTML = humFB;
-  let humPR = hourly_data_json[3]["humidity"];
+  let humPR = hourly_data_json[3]["humidity"].toFixed(numDecimals);
   document.getElementById("humPR").innerHTML = humPR;
-  let humRD = hourly_data_json[4]["humidity"];
+  let humRD = hourly_data_json[4]["humidity"].toFixed(numDecimals);
   document.getElementById("humRD").innerHTML = humRD;
+
+  let vpdFF = hourly_data_json[1]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdFF").innerHTML = vpdFF;
+  let vpdFM = hourly_data_json[2]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdFM").innerHTML = vpdFM;
+  let vpdFB = hourly_data_json[0]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdFB").innerHTML = vpdFB;
+  let vpdPR = hourly_data_json[3]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdPR").innerHTML = vpdPR;
+  let vpdRD = hourly_data_json[4]["vpd"].toFixed(numDecimals);
+  document.getElementById("vpdRD").innerHTML = vpdRD;
 }
 
 function time_series_charts(
@@ -208,6 +220,8 @@ function create_charts(
   temperature_data_daily,
   humidity_data,
   humidity_data_daily,
+  vpd_data,
+  vpd_data_daily,
   stratification,
   hourly_data
 ) {
@@ -253,6 +267,14 @@ function create_charts(
   roundcharts(humidity_data_daily, 1, "roundchart16", colouramp_bluegrey);
   roundcharts(humidity_data_daily, 2, "roundchart17", colouramp_bluegrey);
 
+  roundcharts(vpd_data, 0, "vpd_roundchart0", colouramp_bluegrey);
+  roundcharts(vpd_data, 1, "vpd_roundchart1", colouramp_bluegrey);
+  roundcharts(vpd_data, 2, "vpd_roundchart2", colouramp_bluegrey);
+
+  roundcharts(vpd_data_daily, 0, "vpd_roundchart10", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 1, "vpd_roundchart11", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 2, "vpd_roundchart12", colouramp_bluegrey);
+
   // Find out min and max values, to set the axis limits.
   const temperature_limits = stratification_minmax(
     stratification_json,
@@ -262,6 +284,7 @@ function create_charts(
     stratification_json,
     "humidity"
   );
+  const vpd_limits = stratification_minmax(stratification_json, "vpd");
   // Sensor id locations:
   // 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
   vertical_series = [
@@ -304,11 +327,29 @@ function create_charts(
     "Humidity (%)",
     "horizontal_humidity_stratification"
   );
+  const verticalVpdStratChart = time_series_charts(
+    stratification,
+    vertical_series,
+    vpd_limits,
+    "vpd",
+    "VPD (Pa)",
+    "vertical_vpd_stratification"
+  );
+  const horizontalVpdStratChart = time_series_charts(
+    stratification,
+    horizontal_series,
+    vpd_limits,
+    "vpd",
+    "Vpd (Pa)",
+    "horizontal_vpd_stratification"
+  );
   createStratificationZoomListeners([
     verticalTempStratChart,
     verticalHumidityStratChart,
+    verticalVpdStratChart,
     horizontalTempStratChart,
     horizontalHumidityStratChart,
+    horizontalVpdStratChart,
   ]);
 
   // Propagation
@@ -320,6 +361,9 @@ function create_charts(
   roundcharts(humidity_data, 3, "roundchart8", colouramp_bluegrey);
   roundcharts(humidity_data_daily, 3, "roundchart18", colouramp_bluegrey);
 
+  roundcharts(vpd_data, 3, "vpd_roundchart3", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 3, "vpd_roundchart13", colouramp_bluegrey);
+
   // R&D
   let zone4_name = temperature_data[4]["zone"];
   document.getElementById("zone4_name").innerHTML = zone4_name;
@@ -328,6 +372,9 @@ function create_charts(
 
   roundcharts(humidity_data, 4, "roundchart9", colouramp_bluegrey);
   roundcharts(humidity_data_daily, 4, "roundchart19", colouramp_bluegrey);
+
+  roundcharts(vpd_data, 4, "vpd_roundchart4", colouramp_bluegrey);
+  roundcharts(vpd_data_daily, 4, "vpd_roundchart14", colouramp_bluegrey);
 }
 
 function setMinTime(daysFromNow, charts) {
