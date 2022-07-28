@@ -80,6 +80,9 @@
               <div class="block_content">
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
+                  <!-- TODO Why is the order of the zones in the columns so confusingly
+                    zone1, zone2, zone0, zone3, zone4?
+                  -->
                   <tr>
                     <th bgcolor="#e7e7e7">Main farm</th>
                     <th bgcolor="#f3f3f3">Main farm</th>
@@ -88,7 +91,6 @@
                     <th bgcolor="#e7e7e7"><span id="zone4_name"></span></th>
                   </tr>
                 </table>
-
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
                   <tr>
@@ -130,10 +132,10 @@
                       <canvas id="roundchart12"></canvas>
                       <p style="font-weight:normal">daily</p>
                     </th>
-                    <th width=25% bgcolor="#e7e7e7"> 
+                    <th width=25% bgcolor="#e7e7e7">
                       <span id="zone0_name"></span>
                       <canvas id="roundchart0" ></canvas>
-                      <p style="font-weight:normal">weekly</p> 
+                      <p style="font-weight:normal">weekly</p>
                     </th>
                     <th width=15% valign="top" bgcolor="#e7e7e7">
                       <canvas id="roundchart10" ></canvas>
@@ -186,7 +188,7 @@
                       <canvas id="roundchart17"></canvas>
                       <p style="font-weight:normal">daily</p>
                     </th>
-                    <th width=25% bgcolor="#e7e7e7"> 
+                    <th width=25% bgcolor="#e7e7e7">
                       <canvas id="roundchart5" ></canvas>
                       <p style="font-weight:normal">weekly</p>
                     </th>
@@ -212,23 +214,85 @@
                     </th>
                   </tr>
 
+                <table style="table-layout: fixed;width:100%; overflow:visible">
+                  <tr>
+                    <th bgcolor="#e7e7e7"> <span id="vpdFF" style="font-size: 30px"></span>Pa</th>
+                    <th bgcolor="#f3f3f3"> <span id="vpdFM" style="font-size: 30px"></span>Pa</th>
+                    <th bgcolor="#e7e7e7"> <span id="vpdFB" style="font-size: 30px"></span>Pa</th>
+                    <th bgcolor="#f3f3f3"> <span id="vpdPR" style="font-size: 30px"></span>Pa</th>
+                    <th bgcolor="#e7e7e7"> <span id="vpdRD" style="font-size: 30px"></span>Pa</th>
+                  </tr>
+                </table>
+
+                <table style="table-layout: fixed;width:100%; overflow:visible">
+                  <tr >
+                    <th width=25% bgcolor="#e7e7e7">
+                      <canvas id="vpd_roundchart1" ></canvas>
+                      <p style="font-weight:normal">weekly</p>
+                    </th>
+                    <th width=15% valign="top" bgcolor="#e7e7e7">
+                      <canvas id="vpd_roundchart11" ></canvas>
+                      <p style="font-weight:normal">daily</p>
+                    </th>
+                    <th width=25% bgcolor="#f3f3f3">
+                      <canvas id="vpd_roundchart2" ></canvas>
+                      <p style="font-weight:normal">weekly</p>
+                    </th>
+                    <th width=15% valign="top" bgcolor="#f3f3f3">
+                      <canvas id="vpd_roundchart12"></canvas>
+                      <p style="font-weight:normal">daily</p>
+                    </th>
+                    <th width=25% bgcolor="#e7e7e7">
+                      <canvas id="vpd_roundchart0" ></canvas>
+                      <p style="font-weight:normal">weekly</p>
+                    </th>
+                    <th width=15% valign="top" bgcolor="#e7e7e7">
+                      <canvas id="vpd_roundchart10" ></canvas>
+                      <p style="font-weight:normal">daily</p>
+                    </th>
+                    <th width=25% bgcolor="#f3f3f3">
+                      <canvas id="vpd_roundchart3" ></canvas>
+                      <p style="font-weight:normal">weekly</p>
+                    </th>
+                    <th width=15% valign="top" bgcolor="#f3f3f3">
+                      <canvas id="vpd_roundchart13" ></canvas>
+                      <p style="font-weight:normal">daily</p>
+                    </th>
+                    <th width=25% bgcolor="#e7e7e7">
+                      <canvas id="vpd_roundchart4" ></canvas>
+                      <p style="font-weight:normal">weekly</p>
+                    </th>
+                    <th width=15% valign="top" bgcolor="#e7e7e7">
+                      <canvas id="vpd_roundchart14" ></canvas>
+                      <p style="font-weight:normal">daily</p>
+                    </th>
+                  </tr>
+
+
                 </table>
                 <table>
                   <tr >
 
                     <div>
-                      Temperature: 
-                      <span style= "color: rgb(39, 39, 97); font-size: 20px" >&#9632; </span> freeze 
+                      Temperature:
+                      <span style= "color: rgb(39, 39, 97); font-size: 20px" >&#9632; </span> freeze
                       <span style= "color: rgb(6, 163, 85); font-size: 20px" >&#9632; </span> cold
                       <span style= "color: rgb(124, 236, 79); font-size: 20px" >&#9632; </span> warm
                       <span style= "color: rgb(207, 0, 52); font-size: 20px" >&#9632; </span> hot
                     </div>
                     <div>
-                      Humidity: 
-                      <span style= "color: rgb(39, 39, 97); font-size: 20px" >&#9632; </span> dry 
+                      Humidity:
+                      <span style= "color: rgb(39, 39, 97); font-size: 20px" >&#9632; </span> dry
                       <span style= "color: rgb(16, 72, 155); font-size: 20px" >&#9632; </span> low RH
                       <span style= "color: rgb(81, 163, 230); font-size: 20px" >&#9632; </span> high RH
                       <span style= "color: rgb(134, 217, 255); font-size: 20px" >&#9632; </span> wet
+                    </div>
+                    <div>
+                      VPD:
+                      <span style= "color: rgb(39, 39, 97); font-size: 20px" >&#9632; </span> very low
+                      <span style= "color: rgb(16, 72, 155); font-size: 20px" >&#9632; </span> low
+                      <span style= "color: rgb(81, 163, 230); font-size: 20px" >&#9632; </span> high
+                      <span style= "color: rgb(134, 217, 255); font-size: 20px" >&#9632; </span> very high
                     </div>
 
                   </tr>
@@ -242,7 +306,6 @@
 
       </div>
     </div>
-
 
   </div>
   <br />
@@ -297,6 +360,9 @@
         <div class="x_content">
           <canvas id="vertical_humidity_stratification"></canvas>
         </div>
+        <div class="x_content">
+          <canvas id="vertical_vpd_stratification"></canvas>
+        </div>
 
       </div>
     </div>
@@ -349,6 +415,9 @@
         </div>
         <div class="x_content">
           <canvas id="horizontal_humidity_stratification"></canvas>
+        </div>
+        <div class="x_content">
+          <canvas id="horizontal_vpd_stratification"></canvas>
         </div>
 
       </div>
@@ -461,20 +530,31 @@
   // Imports from backend
   const temperature_json = JSON.parse('{{temperature_data | safe}}');
   const humidity_json = JSON.parse('{{humidity_data | safe}}');
+  const vpd_json = JSON.parse('{{vpd_data | safe}}');
   const temperature_json_daily = JSON.parse('{{temperature_data_daily | safe}}');
   const humidity_json_daily = JSON.parse('{{humidity_data_daily | safe}}');
+  const vpd_json_daily = JSON.parse('{{vpd_data_daily | safe}}');
   const stratification_json = JSON.parse('{{stratification | safe}}');
   const hourly_data_json = JSON.parse('{{hourly_data | safe}}');
 
   check_data(temperature_json);
   check_data(temperature_json_daily);
   check_data(humidity_json);
+  check_data(humidity_json_daily);
+  check_data(vpd_json);
+  check_data(vpd_json_daily);
   check_data(stratification_json);
   check_data(hourly_data_json)
 
   create_charts(
-      temperature_json, temperature_json_daily, humidity_json,
-      humidity_json_daily, stratification_json, hourly_data_json,
+      temperature_json,
+      temperature_json_daily,
+      humidity_json,
+      humidity_json_daily,
+      vpd_json,
+      vpd_json_daily,
+      stratification_json,
+      hourly_data_json,
     );
 </script>
 
