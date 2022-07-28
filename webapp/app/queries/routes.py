@@ -10,6 +10,7 @@ from app.queries import blueprint
 
 from utilities.utils import (
     filter_latest_sensor_location,
+    query_result_to_array,
     jasonify_query_result,
     parse_date_range_argument,
 )
@@ -334,10 +335,12 @@ def get_all_batches():
         db.session.query(
             BatchClass.id,
             BatchClass.growapp_id,
-            BatchClass.crop_type_id,
+            CropTypeClass.name,
             BatchClass.tray_size,
             BatchClass.number_of_trays
         )
+    ).filter(
+        CropTypeClass.id == BatchClass.crop_type_id
     )
     execute_result = db.session.execute(query).fetchall()
     result = jasonify_query_result(execute_result)
@@ -349,14 +352,134 @@ def get_batch_details(batch_id):
     """
     Get all information, including 'events', for a given batch.
     """
-    static_data_query = (
+    query = (
         db.session.query(
             BatchClass.id,
             BatchClass.growapp_id,
-            BatchClass.crop_type_id,
+            CropTypeClass.name,
             BatchClass.tray_size,
             BatchClass.number_of_trays
         ).filter(
-            BatchClass.id == batch_id
+            and_(
+                BatchClass.id == batch_id,
+                CropTypeClass.id == BatchClass.crop_type_id
+                )
         )
     )
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+    return result
+
+
+@blueprint.route("/batchevents", methods=["GET"])
+def get_all_batchevents():
+    """
+    Get all batch events.
+    """
+    query = (
+        db.session.query(
+            BatchEventClass.id,
+            BatchEventClass.growapp_id,
+            BatchEventClass.event_type,
+            BatchEventClass.event_time,
+            BatchEventClass.next_action_time,
+            BatchEventClass.location_id
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    results_arr = query_result_to_array(execute_result)
+    for r in results_arr:
+        r["event_type"] = r["event_type"].name
+    result = jasonify_query_result(results_arr)
+    return result
+
+
+@blueprint.route("/batchtransferevents", methods=["GET"])
+def get_transfer_batchevents():
+    """
+    Get all batch events with a location (i.e. transfer events).
+    """
+    query = (
+        db.session.query(
+            BatchEventClass.id,
+            BatchEventClass.growapp_id,
+            BatchEventClass.event_type,
+            BatchEventClass.event_time,
+            BatchEventClass.next_action_time,
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf
+        ).filter(
+            LocationClass.id == BatchEventClass.location_id
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    results_arr = query_result_to_array(execute_result)
+    for r in results_arr:
+        r["event_type"] = r["event_type"].name
+    result = jasonify_query_result(results_arr)
+    return result
+
+
+@blueprint.route("/batchevents/<batch_id>", methods=["GET"])
+def get_all_batchevents_for_batch(batch_id):
+    """
+    Get all batch events for a specific batch.
+    """
+    query = (
+        db.session.query(
+            BatchEventClass.id,
+            BatchEventClass.growapp_id,
+            BatchEventClass.event_type,
+            BatchEventClass.event_time,
+            BatchEventClass.next_action_time,
+            BatchEventClass.location_id
+        ).filter(
+            and_(
+                BatchEventClass.batch_id == batch_id,
+            )
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    results_arr = query_result_to_array(execute_result)
+    for r in results_arr:
+        r["event_type"] = r["event_type"].name
+    result = jasonify_query_result(results_arr)
+    return result
+
+
+@blueprint.route("/harvests", methods=["GET"])
+def get_all_harvests():
+    """
+    Get all harvests.
+    """
+    query = (
+        db.session.query(
+            HarvestClass.id,
+            HarvestClass.growapp_id,
+            HarvestClass.crop_yield,
+            HarvestClass.waste_disease,
+            HarvestClass.waste_defect,
+            HarvestClass.over_production,
+            BatchEventClass.batch_id,
+            BatchEventClass.event_time,
+            BatchClass.tray_size,
+            BatchClass.number_of_trays,
+            CropTypeClass.name,
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf
+        ).filter(
+            and_(
+                BatchEventClass.id == HarvestClass.batch_event_id,
+                BatchClass.id == BatchEventClass.batch_id,
+                CropTypeClass.id == BatchClass.crop_type_id,
+                LocationClass.id == HarvestClass.location_id
+            )
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    result = jasonify_query_result(execute_result)
+    return result
