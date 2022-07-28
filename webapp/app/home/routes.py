@@ -179,22 +179,8 @@ def stratification(temp_df, sensor_ids):
     df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
     df_ = df.loc[df["sensor_id"].isin(sensor_ids)]
-    df_grp_hr = (
-        df_.groupby(
-            by=[
-                df_.timestamp.map(
-                    lambda x: "%04d-%02d-%02dT%02d" % (x.year, x.month, x.day, x.hour)
-                ),
-                "date",
-                "sensor_id",
-            ]
-        )
-        .mean()
-        .reset_index()
-    )
-
     json_strat = (
-        df_grp_hr.groupby(["sensor_id"], as_index=True)
+        df_.groupby(["sensor_id"], as_index=True)
         .apply(
             lambda x: x[["temperature", "humidity", "timestamp"]].to_dict(
                 orient="records"
