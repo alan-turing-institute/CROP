@@ -38,6 +38,8 @@ HUM_BINS = {
     "BackFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
     "R&D": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
 }
+# TODO The below numbers are just a guess, we need to ask the farm people what would
+# actually make sense.
 VPD_BINS = {
     "Propagation": [0.0, 300.0, 600.0, 1000.0, 1500.0],
     "FrontFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
