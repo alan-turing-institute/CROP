@@ -173,7 +173,7 @@ def add_new_location(zone, aisle, stack, shelf):
     session.commit()
     id = location.id
     session_close(session)
-    print("Returning new location with id {}".format(id))
+    logging.info(f"Returning new location with id {id}")
     return id
 
 
@@ -196,7 +196,6 @@ def get_location_id(growapp_batch_id):
     =======
     A location ID, i.e. a primary key for the CROP location table.
     """
-    print("looking for a location for growapp batch_id {}".format(growapp_batch_id))
     grow_session = get_growapp_db_session()
     batch_query = grow_session.query(GrowAppBatchClass.current_bench_id).filter(
         GrowAppBatchClass.id == growapp_batch_id
@@ -254,8 +253,8 @@ def get_location_id(growapp_batch_id):
         )
     growapp_location = results_array[0]
     session_close(grow_session)
-    print(f"Found location {growapp_location}.")
     # fill in missing "zone" by hand
+    logging.info(f"Found location {growapp_location}")
     if not growapp_location["zone"]:
         growapp_location["zone"] = "Farm"
     # Query the Crop Location table to find the corresponding location ID.
@@ -272,7 +271,7 @@ def get_location_id(growapp_batch_id):
     session_close(crop_session)
     results_array = query_result_to_array(results)
     if len(results_array) == 0:
-        print(f"Location {growapp_location} not found in the CROP DB.  Will create it")
+        logging.info(f"Location {growapp_location} not found in the CROP DB.  Will create it")
         return add_new_location(
             growapp_location["zone"],
             growapp_location["aisle"],
@@ -472,29 +471,6 @@ def get_harvest_data(dt_from=None, dt_to=None):
     return df
 
 
-def get_existing_growapp_ids(session, DbClass):
-    """
-    Read from the table in the CROP database to get list
-    of existing growapp_ids.
-
-    Parameters
-    ==========
-    session: SQLAlchemy session object
-    DbClass: class as defined in structure.py.  Assumed to have 'growid' attribute.
-
-    Returns
-    =======
-    existing_growids: pandas DataFrame
-    """
-    query = session.query(DbClass.growapp_id)
-    results = session.execute(query).fetchall()
-    results_array = query_result_to_array(results)
-    existing_growids = pd.DataFrame(results_array)
-    if len(existing_growids) > 0:
-        existing_growids.set_index("growapp_id", inplace=True)
-    return existing_growids
-
-
 def write_new_data(data_df, DbClass):
     """
     Write rows from the input dataframe to the DbClass table in the CROP database.
@@ -517,12 +493,6 @@ def write_new_data(data_df, DbClass):
     except ProgrammingError:
         # The table already exists.
         pass
-
-#    existing_growids = get_existing_growapp_ids(session, DbClass)
-#    if len(existing_growids) > 0:
-#        existing_index = existing_growids.index
-#        data_df = data_df[~data_df["growapp_id"].isin(existing_index)]
-
     logging.info(f"==> Will write {len(data_df)} rows to {DbClass.__tablename__}")
     # loop over all rows in the dataframe
     for _, row in data_df.iterrows():
@@ -553,12 +523,32 @@ def import_growapp_data(dt_from=None, dt_to=None):
     """
     success = True
     # always query the whole crop type table - it will be small
+    logging.info("Querying Growapp crop table")
     croptype_df = get_croptype_data()
     success &= write_new_data(croptype_df, CropTypeClass)
+    if success:
+        logging.info("Successfully wrote to CropType table")
+    else:
+        logging.info("Problem writing to CropType table")
+    logging.info("Querying Growapp batch table")
     batch_df = get_batch_data(dt_from, dt_to)
     success &= write_new_data(batch_df, BatchClass)
+    if success:
+        logging.info("Successfully wrote to Batch table")
+    else:
+        logging.info("Problem writing to Batch table")
+    logging.info("Querying Growapp batch event table")
     batchevent_df = get_batchevent_data(dt_from, dt_to)
     success &= write_new_data(batchevent_df, BatchEventClass)
+    if success:
+        logging.info("Successfully wrote to BatchEvent table")
+    else:
+        logging.info("Problem writing to BatchEvent table")
+    logging.info("Querying Growapp batch table to get harvest data")
     harvest_df = get_harvest_data(dt_from, dt_to)
     success &= write_new_data(harvest_df, HarvestClass)
+    if success:
+        logging.info("Successfully wrote to Harvest table")
+    else:
+        logging.info("Problem writing to Harvest table")
     return success
