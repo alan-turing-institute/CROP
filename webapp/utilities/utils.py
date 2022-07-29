@@ -133,7 +133,8 @@ def parse_date_range_argument(request_args):
         request_args - request arguments as a string
         arg - argument to be extracted from the request arguments
 
-    Returns parsed argument
+    Returns:
+        tuple of two datetime objects
     """
 
     if request_args is None:

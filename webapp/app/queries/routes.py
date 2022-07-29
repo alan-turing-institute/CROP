@@ -1,12 +1,15 @@
 """
 Module (routes.py) to handle queries from the 3d model javascript application
 """
-
+from datetime import datetime, timedelta
 from flask import request
 from flask_login import login_required
 from sqlalchemy import func, and_, desc
 
 from app.queries import blueprint
+
+# pandas to deduplicate two arrays
+import pandas as pd
 
 from utilities.utils import (
     filter_latest_sensor_location,
@@ -30,7 +33,8 @@ from __app__.crop.structure import (
     CropTypeClass,
     BatchClass,
     BatchEventClass,
-    HarvestClass
+    HarvestClass,
+    EventType
 )
 
 
@@ -302,8 +306,8 @@ def get_weather():
 
     execute_result = db.session.execute(query).fetchall()
     result = jasonify_query_result(execute_result)
-
     return result
+
 
 @blueprint.route("/croptypes", methods=["GET"])
 def get_crop_types():
@@ -376,6 +380,9 @@ def get_all_batchevents():
     """
     Get all batch events.
     """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
     query = (
         db.session.query(
             BatchEventClass.id,
@@ -384,6 +391,11 @@ def get_all_batchevents():
             BatchEventClass.event_time,
             BatchEventClass.next_action_time,
             BatchEventClass.location_id
+        ).filter(
+            and_(
+                BatchEventClass.event_time > dt_from,
+                BatchEventClass.event_time < dt_to
+            )
         )
     )
     execute_result = db.session.execute(query).fetchall()
@@ -399,6 +411,9 @@ def get_transfer_batchevents():
     """
     Get all batch events with a location (i.e. transfer events).
     """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
     query = (
         db.session.query(
             BatchEventClass.id,
@@ -411,7 +426,11 @@ def get_transfer_batchevents():
             LocationClass.column,
             LocationClass.shelf
         ).filter(
-            LocationClass.id == BatchEventClass.location_id
+            and_(
+                LocationClass.id == BatchEventClass.location_id,
+                BatchEventClass.event_time > dt_from,
+                BatchEventClass.event_time < dt_to
+            )
         )
     )
     execute_result = db.session.execute(query).fetchall()
@@ -427,6 +446,9 @@ def get_all_batchevents_for_batch(batch_id):
     """
     Get all batch events for a specific batch.
     """
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
     query = (
         db.session.query(
             BatchEventClass.id,
@@ -438,6 +460,8 @@ def get_all_batchevents_for_batch(batch_id):
         ).filter(
             and_(
                 BatchEventClass.batch_id == batch_id,
+                BatchEventClass.event_time > dt_from,
+                BatchEventClass.event_time < dt_to
             )
         )
     )
@@ -483,3 +507,58 @@ def get_all_harvests():
     execute_result = db.session.execute(query).fetchall()
     result = jasonify_query_result(execute_result)
     return result
+
+
+@blueprint.route("/batchesinfarm", methods=["GET"])
+def get_growing_batches():
+
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    # first query all the batches that have a location
+    # set the dt_from back 30 days here (the longest possible grow period)
+    dt_from = dt_from + timedelta(days=-30)
+    query = (
+        db.session.query(
+            BatchEventClass.id,
+            BatchEventClass.event_time,
+            BatchEventClass.next_action_time,
+            BatchEventClass.batch_id,
+            BatchClass.tray_size,
+            BatchClass.number_of_trays,
+            CropTypeClass.name,
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf
+        ).filter(
+            and_(
+                BatchEventClass.event_type == EventType.transfer,
+                LocationClass.id == BatchEventClass.location_id,
+                BatchClass.id == BatchEventClass.batch_id,
+                CropTypeClass.id == BatchClass.crop_type_id,
+                BatchEventClass.event_time > dt_from,
+                BatchEventClass.event_time < dt_to
+            )
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    transfer_result = query_result_to_array(execute_result)
+    # now query batch events with event type "harvest"
+    query = (
+        db.session.query(
+            BatchEventClass.batch_id,
+        ).filter(
+            and_(
+                BatchEventClass.event_type == EventType.harvest,
+                BatchEventClass.event_time > dt_from,
+                BatchEventClass.event_time < dt_to
+            )
+        )
+    )
+    execute_result = db.session.execute(query).fetchall()
+    harvest_result = query_result_to_array(execute_result)
+    # now remove these from the transfer result using pandas
+    transfer_df = pd.DataFrame(transfer_result)
+    harvest_df = pd.DataFrame(harvest_result)
+    if len(harvest_df) > 0:
+        transfer_df = transfer_df[~transfer_df.batch_id.isin(harvest_df["batch_id"])]
+    return transfer_df.to_json(orient='records')
