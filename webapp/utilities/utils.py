@@ -4,6 +4,7 @@ Utilities module
 import sys
 import io
 import json
+import uuid
 from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
@@ -92,7 +93,14 @@ def jasonify_query_result(query_result):
 
     results_arr = query_result_to_array(query_result)
 
-    result = json.dumps(results_arr, ensure_ascii=True, indent=4, sort_keys=True)
+    # extend the JSONEncode to deal with UUID objects
+    class UUIDEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, uuid.UUID):
+                return str(obj)
+            return json.JSONEncoder.default(self, obj)
+
+    result = json.dumps(results_arr, ensure_ascii=True, indent=4, sort_keys=True, cls=UUIDEncoder)
 
     return result
 
@@ -125,7 +133,8 @@ def parse_date_range_argument(request_args):
         request_args - request arguments as a string
         arg - argument to be extracted from the request arguments
 
-    Returns parsed argument
+    Returns:
+        tuple of two datetime objects
     """
 
     if request_args is None:
