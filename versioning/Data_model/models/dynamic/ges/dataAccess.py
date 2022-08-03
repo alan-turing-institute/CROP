@@ -104,6 +104,7 @@ def getData(query):
         logging.info(error)
     finally:
         closeConnection(conn=conn)
+    print(f"Got data from {query} - returning {len(rows)} rows")
     return rows
 
 
@@ -140,11 +141,11 @@ def getDaysWeather(numDays=2, numRows=5):
     weather_transaction_template = """
   select
     timestamp, temperature, relative_humidity
-  from 
-    iweather 
+  from
+    iweather
   where timestamp >= {{ timestamp }}
-  order by 
-    timestamp asc 
+  order by
+    timestamp asc
   limit {{ numRows }}
   """
     j = JinjaSql(param_style="pyformat")
@@ -166,11 +167,11 @@ def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
     humidity_transaction_template = """
   select
     timestamp, temperature, humidity
-  from 
-    aranet_trh_data 
+  from
+    aranet_trh_data
   where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
-  order by 
-    timestamp asc 
+  order by
+    timestamp asc
   limit {{ numRows }}
   """
     j = JinjaSql(param_style="pyformat")
@@ -192,11 +193,11 @@ def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
     humidity_transaction_template = """
   select
     timestamp, humidity
-  from 
-    aranet_trh_data 
+  from
+    aranet_trh_data
   where (sensor_id = {{ sensor_id }} AND timestamp >= {{ timestamp }})
-  order by 
-    timestamp asc 
+  order by
+    timestamp asc
   limit {{ numRows }}
   """
     j = JinjaSql(param_style="pyformat")
@@ -227,11 +228,11 @@ def getDataPointHumidity(sensorID=27, numRows=1):
     humidity_transaction_template = """
   select
     timestamp, humidity
-  from 
-    aranet_trh_data 
+  from
+    aranet_trh_data
   where (sensor_id = {{ sensor_id }})
-  order by 
-    timestamp desc 
+  order by
+    timestamp desc
   limit {{ num_Rows }}
   """
     j = JinjaSql(param_style="pyformat")
