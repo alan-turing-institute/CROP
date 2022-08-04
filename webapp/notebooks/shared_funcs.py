@@ -18,7 +18,7 @@ def get_synth_data(df=None):
     cols_to_normal_sample = ['crop_yield', 'number_of_trays','over_production', 'waste_defect', 'waste_disease']
 
     date_samples = pd.date_range(start=df['event_time'].min(),
-                    end=pd.to_datetime('today'),
+                    end=df['event_time'].max(),
                     periods=10000)
 
     parameter_samples = {}
