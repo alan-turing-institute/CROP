@@ -73,7 +73,7 @@ def main():
     # There should really be data every 5 or 10 minutes, but to play it safe, allow for
     # every minute.
     max_number_of_query_rows = num_weather_days * 24 * 60
-
+    logging.info("About to call getDaysWeather")
     Weather_data = getDaysWeather(num_weather_days, max_number_of_query_rows)
     Weather_hour = pd.DataFrame(
         Weather_data, columns=["DateTime", "T_e", "RH_e"]
@@ -81,6 +81,7 @@ def main():
 
     logging.info(f"Got Weather_hour dataframe, length {len(Weather_hour)}")
     # Monitored Data
+    logging.info(f"About to call getDaysHumidityTemp for {cal_conf['sensor_id']}")
     Monitored_data = getDaysHumidityTemp(
         num_weather_days, max_number_of_query_rows, cal_conf["sensor_id"]
     )
