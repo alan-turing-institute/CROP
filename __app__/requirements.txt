@@ -11,6 +11,7 @@ SQLAlchemy-Utils==0.38.2
 flask_sqlalchemy==2.5.1
 flask_login==0.6.1
 bcrypt==3.2.2
+werkzeug==2.1.2
 
 psycopg2-binary==2.9.3
 pandas==1.4.2
