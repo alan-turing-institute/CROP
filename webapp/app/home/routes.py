@@ -50,6 +50,9 @@ VPD_BINS = {
     "R&D": [0.0, 300.0, 600.0, 1000.0, 1500.0],
 }
 LOCATION_REGIONS = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
+# The last columns considered to be in FrontFarm and MidFarm, respectively.
+REGION_SPLIT_FRONT_MID = 10
+REGION_SPLIT_MID_BACK = 20
 
 
 def resample(df_, bins):
@@ -81,6 +84,10 @@ def resample(df_, bins):
 
 
 def farm_region(zone, aisle, column, shelf):
+    """Given the exact location of a sensor, return what we call the "region", which
+    distinguishes between front, back, and mid parts of a tunnel (propagation and R&D
+    are regions by themselves).
+    """
     if zone in ("R&D", "Propagation"):
         return zone
     # TODO Update the next line.
@@ -93,11 +100,11 @@ def farm_region(zone, aisle, column, shelf):
         "BackFarm",
     ) or aisle not in ("A", "B"):
         return "N/A"
-    if column < 10:
+    if column <= REGION_SPLIT_FRONT_MID:
         return "FrontFarm"
-    if column > 20:
-        return "BackFarm"
-    return "MidFarm"
+    if column <= REGION_SPLIT_MID_BACK:
+        return "MidFarm"
+    return "BackFarm"
 
 
 def aranet_query(dt_from, dt_to):
