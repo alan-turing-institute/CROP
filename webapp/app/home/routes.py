@@ -85,20 +85,12 @@ def resample(df_, bins):
 
 def farm_region(zone, aisle, column, shelf):
     """Given the exact location of a sensor, return what we call the "region", which
-    distinguishes between front, back, and mid parts of a tunnel (propagation and R&D
-    are regions by themselves).
+    distinguishes between front, back, and mid parts of tunnel 3. Propagation and R&D
+    are regions by themselves, other tunnels have region "N/A".
     """
     if zone in ("R&D", "Propagation"):
         return zone
-    # TODO Update the next line.
-    if zone not in (
-        "Farm",
-        "Farm1",
-        "FF",
-        "MidFarm",
-        "FrontFarm",
-        "BackFarm",
-    ) or aisle not in ("A", "B"):
+    if zone != "Tunnel3":
         return "N/A"
     if column <= REGION_SPLIT_FRONT_MID:
         return "FrontFarm"
