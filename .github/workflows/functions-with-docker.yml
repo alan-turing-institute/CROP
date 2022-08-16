@@ -56,18 +56,18 @@ jobs:
       uses: Azure/functions-container-action@v1
       id: famain
       with:
-        app-name: cropappfunctionapp
+        app-name: cropappfuncontainer
         image: docker.io/turingcropapp/functions:prod ;
-	publish-profile: ${{ secrets.CROPAPPFUNCTIONAPP_PUBLISH_PROFILE }}
+        publish-profile: ${{ secrets.CROPAPPFUNCTIONAPP_PUBLISH_PROFILE }}
 
     - name: 'Run Azure Functions Container Action develop'
       if: ${{ github.ref == 'refs/heads/develop' }}
       uses: Azure/functions-container-action@v1
       id: fadev
       with:
-        app-name: cropapptestfunctionapp
+        app-name: cropapptestfuncontainer
         image: dockerhub/turingcropapp/functions:dev;
-	publish-profile: ${{ secrets.CROPAPPTESTFUNCTIONAPP_PUBLISH_PROFILE }}
+        publish-profile: ${{ secrets.CROPAPPTESTFUNCTIONAPP_PUBLISH_PROFILE }}
 
 # do we really need to login and out of azure cli??
 
