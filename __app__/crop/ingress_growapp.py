@@ -256,7 +256,20 @@ def get_location_id(growapp_batch_id):
     # fill in missing "zone" by hand
     logging.info(f"Found location {growapp_location}")
     if not growapp_location["zone"]:
-        growapp_location["zone"] = "Farm"
+        try:
+            aisle = growapp_location["aisle"]
+        except KeyError:
+            aisle = None
+        if aisle == "A" or aisle == "B":
+            growapp_location["zone"] = "Tunnel3"
+        elif aisle == "C":
+            growapp_location["zone"] = "Tunnel5"
+        elif aisle == "D":
+            growapp_location["zone"] = "Tunnel6"
+        elif aisle == "E":
+            growapp_location["zone"] = "Tunnel4"
+        else:
+            growapp_location["zone"] = "N/A"
     # Query the Crop Location table to find the corresponding location ID.
     crop_session = get_cropapp_db_session()
     query = crop_session.query(LocationClass.id).filter(
