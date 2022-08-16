@@ -14,10 +14,11 @@ from app.home import blueprint
 
 from __app__.crop.structure import SQLA as db
 from __app__.crop.structure import (
-    SensorClass,
     LocationClass,
-    SensorLocationClass,
     ReadingsAranetTRHClass,
+    SensorClass,
+    SensorLocationClass,
+    TypeClass,
 )
 from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
 from utilities.utils import filter_latest_sensor_location, vapour_pressure_deficit
@@ -48,7 +49,10 @@ VPD_BINS = {
     "BackFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
     "R&D": [0.0, 300.0, 600.0, 1000.0, 1500.0],
 }
-LOCATION_ZONES = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
+LOCATION_REGIONS = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
+# The last columns considered to be in FrontFarm and MidFarm, respectively.
+REGION_SPLIT_FRONT_MID = 10
+REGION_SPLIT_MID_BACK = 20
 
 
 def resample(df_, bins):
@@ -79,6 +83,22 @@ def resample(df_, bins):
     return df_out
 
 
+def farm_region(zone, aisle, column, shelf):
+    """Given the exact location of a sensor, return what we call the "region", which
+    distinguishes between front, back, and mid parts of tunnel 3. Propagation and R&D
+    are regions by themselves, other tunnels have region "N/A".
+    """
+    if zone in ("R&D", "Propagation"):
+        return zone
+    if zone != "Tunnel3":
+        return "N/A"
+    if column <= REGION_SPLIT_FRONT_MID:
+        return "FrontFarm"
+    if column <= REGION_SPLIT_MID_BACK:
+        return "MidFarm"
+    return "BackFarm"
+
+
 def aranet_query(dt_from, dt_to):
     """
     Performs a query for Aranet T/RH sensors.
@@ -103,15 +123,12 @@ def aranet_query(dt_from, dt_to):
         ReadingsAranetTRHClass.sensor_id,
         ReadingsAranetTRHClass.temperature,
         ReadingsAranetTRHClass.humidity,
-        LocationClass.zone,
+        SensorClass.id,
     ).filter(
         and_(
-            SensorLocationClass.location_id == LocationClass.id,
             ReadingsAranetTRHClass.sensor_id == SensorClass.id,
-            ReadingsAranetTRHClass.sensor_id == SensorLocationClass.sensor_id,
             ReadingsAranetTRHClass.timestamp >= dt_from,
             ReadingsAranetTRHClass.timestamp <= dt_to,
-            filter_latest_sensor_location(db),
         )
     )
 
@@ -120,13 +137,41 @@ def aranet_query(dt_from, dt_to):
         df.loc[:, "temperature"], df.loc[:, "humidity"]
     )
 
+    query = db.session.query(
+        SensorClass.id,
+        LocationClass.zone,
+        LocationClass.aisle,
+        LocationClass.column,
+        LocationClass.shelf,
+    ).filter(
+        and_(
+            TypeClass.sensor_type == "Aranet T&RH",
+            SensorClass.type_id == TypeClass.id,
+            SensorClass.id == SensorLocationClass.sensor_id,
+            SensorLocationClass.location_id == LocationClass.id,
+            filter_latest_sensor_location(db),
+        )
+    )
+    df_location = pd.read_sql(query.statement, query.session.bind).set_index("id")
+    df_location.loc[:, "region"] = df_location.apply(
+        lambda row: farm_region(row["zone"], row["aisle"], row["column"], row["shelf"]),
+        axis=1,
+    )
+    # TODO I think the following is essentially a join.
+    for sensor_id in df["id"].unique():
+        try:
+            region = df_location.loc[sensor_id, "region"]
+        except KeyError:
+            region = "Unknown"
+        df.loc[df["id"] == sensor_id, "region"] = region
+
     logging.info("Total number of records found: %d" % (len(df.index)))
     if df.empty:
         logging.debug("WARNING: Query returned empty")
     return df
 
 
-def grp_per_hr_zone(temp_df):
+def grp_per_hr_region(temp_df):
     """
     finds mean of values per hour for a selected date.
     Returns a dataframe ready for json
@@ -136,16 +181,10 @@ def grp_per_hr_zone(temp_df):
         dt_from: date range from
         dt_to: date range to
     Returns:
-        df_grp_zone_hr: df with temperate ranges
+        df_grp_region_hr: df with temperate ranges
     """
 
     df = copy.deepcopy(temp_df)
-
-    # df["timestamp"] = pd.to_datetime(df["timestamp"])
-
-    # mask per selected date
-    # mask = (df["timestamp"] >= dt_from) & (df["timestamp"] <= dt_to)
-    # filtered_df = df.loc[mask]
 
     # extracting date from datetime
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
@@ -153,13 +192,13 @@ def grp_per_hr_zone(temp_df):
     # Reseting index
     df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
 
-    df_grp_zone_hr = (
+    df_grp_region_hr = (
         df.groupby(
             by=[
                 df.timestamp.map(
                     lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
                 ),
-                "zone",
+                "region",
                 "date",
             ]
         )
@@ -167,7 +206,7 @@ def grp_per_hr_zone(temp_df):
         .reset_index()
     )
 
-    return df_grp_zone_hr
+    return df_grp_region_hr
 
 
 def stratification(temp_df, sensor_ids):
@@ -207,7 +246,7 @@ def stratification(temp_df, sensor_ids):
 def bin_trh_data(df, bins, measure, expected_total=None):
     """
     Return a dataframe with counts of how many measurements of `measure` were in each of
-    the bins, by zone.
+    the bins, by region.
 
     Arguments:
         df: data
@@ -218,33 +257,33 @@ def bin_trh_data(df, bins, measure, expected_total=None):
         output: A merged df with counts per bin
     """
     output_list = []
-    for zone in LOCATION_ZONES:
-        # check if zone exists in current bins dictionary:
-        if zone not in bins:
-            logging.info("WARNING: %s doesn't exist in current bin dictionary" % zone)
+    for region in LOCATION_REGIONS:
+        # check if region exists in current bins dictionary:
+        if region not in bins:
+            logging.info("WARNING: %s doesn't exist in current bin dictionary" % region)
             continue
 
-        df_each_zone = df.loc[df.zone == zone, :].copy()
+        df_each_region = df.loc[df.region == region, :].copy()
         # breaks df in
-        df_each_zone["bin"] = pd.cut(df_each_zone[measure], bins[zone])
+        df_each_region["bin"] = pd.cut(df_each_region[measure], bins[region])
         # converting bins to str
-        df_each_zone["bin"] = df_each_zone["bin"].astype(str)
+        df_each_region["bin"] = df_each_region["bin"].astype(str)
         # groups df per each bin
-        bin_grp = df_each_zone.groupby(by=["zone", "bin"])
+        bin_grp = df_each_region.groupby(by=["region", "bin"])
         # get measure counts per bin
         bin_cnt = bin_grp[measure].count().reset_index()
         # renames column with counts
         bin_cnt.rename(columns={measure: "cnt"}, inplace=True)
-        df_ = resample(bin_cnt, bins[zone])
+        df_ = resample(bin_cnt, bins[region])
         if expected_total:
             total = df_["cnt"].sum()
             df_.loc[df.index.max() + 1] = [
-                zone,
+                region,
                 "missing",
                 expected_total - total,
             ]
-        # renames the values of all the zones
-        df_["zone"] = zone
+        # renames the values of all the regions
+        df_["region"] = region
         output_list.append(df_)
 
     # Merge all df in one.
@@ -258,7 +297,7 @@ def json_bin_counts(df):
     dashboard.
     """
     output = (
-        df.groupby(["zone"], as_index=True)
+        df.groupby(["region"], as_index=True)
         .apply(lambda x: x[["bin", "cnt"]].to_dict(orient="records"))
         .reset_index()
         .rename(columns={0: "Values"})
@@ -274,7 +313,7 @@ def json_hum(df_hum):
 
     """
     return (
-        df_hum.groupby(["zone"], as_index=True)
+        df_hum.groupby(["region"], as_index=True)
         .apply(lambda x: x[["bin", "cnt"]].to_dict("r"))
         .reset_index()
         .rename(columns={0: "Values"})
@@ -282,18 +321,26 @@ def json_hum(df_hum):
     )
 
 
-def current_values_json(df_hourly):
+def regional_mean_json(df_hourly):
+    """Compute a DataFrame with the per-region means of the inputs T&RH columns."""
+    df_mean = (
+        df_hourly.loc[
+            :,
+            # df_hourly.groupby("region").timestamp.max(),
+            ["temperature", "humidity", "vpd", "timestamp", "region"],
+        ]
+        .groupby("region")
+        .mean()
+    ).reset_index()
 
-    df_test = df_hourly.loc[df_hourly.groupby("zone").timestamp.idxmax()]
-    df_test["temperature"] = df_test["temperature"].astype(int)
+    for i in range(len(LOCATION_REGIONS)):
 
-    for i in range(len(LOCATION_ZONES)):
+        if not df_mean["region"].str.contains(LOCATION_REGIONS[i]).any():
+            df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]})
+            df_mean = df_mean.append(df2)
 
-        if not df_test["zone"].str.contains(LOCATION_ZONES[i]).any():
-            df2 = pd.DataFrame({"zone": [LOCATION_ZONES[i]]})
-            df_test = df_test.append(df2)
-
-    return df_test.to_json(orient="records")
+    return_value = df_mean.to_json(orient="records")
+    return return_value
 
 
 @blueprint.route("/index")
@@ -311,7 +358,7 @@ def index():
     # weekly
     df_weekly = aranet_query(dt_from_weekly, dt_to)
     if not df_weekly.empty:
-        df_mean_hr_weekly = grp_per_hr_zone(df_weekly)
+        df_mean_hr_weekly = grp_per_hr_region(df_weekly)
         df_temp_weekly = bin_trh_data(
             df_mean_hr_weekly, TEMP_BINS, "temperature", expected_total=24 * 7
         )
@@ -324,15 +371,13 @@ def index():
         weekly_temp_json = json_bin_counts(df_temp_weekly)
         weekly_hum_json = json_bin_counts(df_hum_weekly)
         weekly_vpd_json = json_bin_counts(df_vpd_weekly)
-        # Sensor id locations:
-        # 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
     else:
         weekly_temp_json = {}
         weekly_hum_json = {}
 
     df_daily = aranet_query(dt_from_daily, dt_to)
     if not df_daily.empty:
-        df_mean_hr_daily = grp_per_hr_zone(df_daily)
+        df_mean_hr_daily = grp_per_hr_region(df_daily)
         df_temp_daily = bin_trh_data(
             df_mean_hr_daily, TEMP_BINS, "temperature", expected_total=24
         )
@@ -352,12 +397,14 @@ def index():
 
     df_hourly = aranet_query(dt_from_hourly, dt_to)
     if not df_hourly.empty:
-        hourly_json = current_values_json(df_hourly)
+        hourly_json = regional_mean_json(df_hourly)
     else:
         hourly_json = {}
 
     df_fortnightly = aranet_query(dt_from_fortnightly, dt_to)
     if not df_fortnightly.empty:
+        # Sensor id locations:
+        # 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
         json_strat = stratification(df_fortnightly, (18, 21, 22, 23))
     else:
         json_strat = {}

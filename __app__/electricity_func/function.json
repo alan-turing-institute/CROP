@@ -1,12 +1,12 @@
 {
   "scriptFile": "__init__.py",
-  "entryPoint": "growapp_import",
+  "entryPoint": "energy_import",
   "bindings": [
     {
         "name": "mytimer",
         "type": "timerTrigger",
         "direction": "in",
-        "schedule": "30 15 * * *"
+        "schedule": "0 */24 * * *"
     }
   ]
 }
