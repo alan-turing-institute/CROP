@@ -73,20 +73,23 @@ def main():
     # There should really be data every 5 or 10 minutes, but to play it safe, allow for
     # every minute.
     max_number_of_query_rows = num_weather_days * 24 * 60
-
+    logging.info("About to call getDaysWeather")
     Weather_data = getDaysWeather(num_weather_days, max_number_of_query_rows)
     Weather_hour = pd.DataFrame(
         Weather_data, columns=["DateTime", "T_e", "RH_e"]
     ).set_index("DateTime")
 
+    logging.info(f"Got Weather_hour dataframe, length {len(Weather_hour)}")
     # Monitored Data
+    logging.info(f"About to call getDaysHumidityTemp for {cal_conf['sensor_id']}")
     Monitored_data = getDaysHumidityTemp(
         num_weather_days, max_number_of_query_rows, cal_conf["sensor_id"]
     )
+    logging.info(f"Got Monitored_data dataframe, length {len(Monitored_data)}")
     Monitored_10_minutes = pd.DataFrame(
         Monitored_data, columns=["DateTime", "T_i", "RH_i"]
     ).set_index("DateTime")
-
+    logging.info(f"Got Monitored_10_minutes dataframe, length {len(Monitored_10_minutes)}")
     Monitored_hour = Monitored_10_minutes.resample("H").mean()
     try:
         Monitored_hour.index = Monitored_hour.index.tz_convert(
@@ -95,10 +98,10 @@ def main():
     except TypeError:
         # If the index is already time zone naive.
         pass
-
+    logging.info(f"Got Monitored_hour dataframe, length {len(Monitored_hour)}")
     # Check final timestamps for RH_hour and Weather
 
-    logging.info(Monitored_hour[-1:].index == Weather_hour[-1:].index)
+    logging.info(f"Is last monitored_hour index equal to weather_hour index? {Monitored_hour[-1:].index == Weather_hour[-1:].index}")
 
     # Select oldest of the two final timestamps (or most recent 3am/3pm time
     # which occurs in both)
@@ -143,6 +146,8 @@ def main():
     delta_h = int(cal_conf["delta_h"])  # hours between data points
     p2 = (ndp - 1) * delta_h + p1  # end data point
 
+    logging.info(f"p1 is {p1} ndp is {ndp} delta_h is {delta_h} p2 is {p2}")
+
     seq = np.linspace(p1, p2, ndp)
 
     # Step through each data point
@@ -163,7 +168,7 @@ def main():
         NP = np.shape(Parameters)[0]
 
         start = time.time()
-        logging.info("Running model ...")
+        logging.info(f"Running model ... useDataBase is {useDataBase}")
 
         if useDataBase:
             results = derivatives(
