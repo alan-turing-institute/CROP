@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './versioning/Data_model/models/dynamic'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './models/ges'
   PYTHON_VERSION: '3.9'
 
 jobs:
