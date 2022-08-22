@@ -8,13 +8,32 @@ function set_meanminmax_values(hourly_data, minmax_data) {
   const numDecimals = 1;
   for (region of ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"]) {
     for (metric of ["temperature", "humidity", "vpd"]) {
-      hourly = hourly_data.find((s) => s["region"] == region);
-      let mean = hourly[metric].toFixed(numDecimals);
+      const hourly = hourly_data.find((s) => s["region"] == region);
+      const mean = hourly[metric].toFixed(numDecimals);
       document.getElementById(`${metric}_${region}`).innerHTML = mean;
-      let min = minmax_data[region][`${metric}_min`].toFixed(numDecimals);
-      let max = minmax_data[region][`${metric}_max`].toFixed(numDecimals);
-      document.getElementById(`${metric}_${region}_min`).innerHTML = min;
-      document.getElementById(`${metric}_${region}_max`).innerHTML = max;
+
+      const min_obj = minmax_data.find(
+        (s) =>
+          s["region"] == region &&
+          s["variable_0"] == metric &&
+          s["variable_1"] == "min"
+      );
+      const max_obj = minmax_data.find(
+        (s) =>
+          s["region"] == region &&
+          s["variable_0"] == metric &&
+          s["variable_1"] == "max"
+      );
+      const min_value = min_obj["value"].toFixed(numDecimals);
+      const max_value = max_obj["value"].toFixed(numDecimals);
+      const min_timestamp = new Date(min_obj["timestamp"]);
+      const max_timestamp = new Date(max_obj["timestamp"]);
+      const min_element = document.getElementById(`${metric}_${region}_min`);
+      const max_element = document.getElementById(`${metric}_${region}_max`);
+      min_element.innerHTML = min_value;
+      min_element.title = `6h min. Recorded at ${min_timestamp}`;
+      max_element.innerHTML = max_value;
+      max_element.title = `6h max. Recorded at ${max_timestamp}`;
     }
   }
 }
