@@ -129,7 +129,7 @@
                     {% else %}
                     <th class="dashColumn dashColumnOdd">
                       {% endif %}
-                      <span style="vertical-align: middle;" title="2h average">
+                      <span style="vertical-align: middle;" title="Average over latest readings">
                         <!-- The comment makes sure there's no whitespace between the
                           spans, which would render a space between them. -->
                           <span id="temperature_{{region}}"></span><!--
@@ -201,7 +201,7 @@
                     {% else %}
                     <th class="dashColumn dashColumnOdd">
                       {% endif %}
-                      <span style="vertical-align: middle;" title="2h average">
+                      <span style="vertical-align: middle;" title="Average over latest readings">
                         <!-- The comment makes sure there's no whitespace between the
                           spans, which would render a space between them. -->
                           <span id="humidity_{{region}}"></span><!--
@@ -269,7 +269,7 @@
                       {% else %}
                       <th class="dashColumn dashColumnOdd">
                         {% endif %}
-                        <span style="vertical-align: middle;" title="2h average">
+                        <span style="vertical-align: middle;" title="Average over latest readings">
                           <!-- The comment makes sure there's no whitespace between the
                             spans, which would render a space between them. -->
                             <span id="vpd_{{region}}"></span><!--
