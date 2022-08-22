@@ -52,7 +52,7 @@ VPD_BINS = {
 LOCATION_REGIONS = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
 # The last columns considered to be in FrontFarm and MidFarm, respectively.
 REGION_SPLIT_FRONT_MID = 10
-REGION_SPLIT_MID_BACK = 20
+REGION_SPLIT_MID_BACK = 23
 
 
 def resample(df_, bins):
