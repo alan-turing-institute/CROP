@@ -323,10 +323,11 @@ def json_hum(df_hum):
 
 def regional_mean_json(df_hourly):
     """Compute a DataFrame with the per-region means of the inputs T&RH columns."""
+    latest_readings_by_sensor = df_hourly.groupby("sensor_id")["timestamp"].idxmax()
+    df_mean = df_hourly.loc[latest_readings_by_sensor, :]
     df_mean = (
-        df_hourly.loc[
+        df_mean.loc[
             :,
-            # df_hourly.groupby("region").timestamp.max(),
             ["temperature", "humidity", "vpd", "timestamp", "region"],
         ]
         .groupby("region")
