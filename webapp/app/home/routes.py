@@ -345,27 +345,29 @@ def regional_mean_json(df_hourly):
 
 
 def regional_minmax_json(df):
-    """Compute a DataFrame with the per-region means of the inputs T&RH columns."""
+    """Compute a DataFrame with the per-region min/max of the inputs T&RH columns."""
     df_minmax = (
-        df.loc[
-            :,
-            ["temperature", "humidity", "vpd", "region"],
-        ]
+        df.loc[:, ["temperature", "humidity", "vpd", "region"]]
         .groupby("region")
         .agg(["min", "max"])
-    )
-    # Flatten the nested columns created by agg
-    df_minmax.columns = [
-        "_".join(col).strip() if col[1] else col[0] for col in df_minmax.columns.values
-    ]
+    ).reset_index()
 
     # Add empty rows for regions that are missing.
     for i in range(len(LOCATION_REGIONS)):
-        if not df_minmax.index.str.contains(LOCATION_REGIONS[i]).any():
-            df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]}).set_index("region")
+        if not df_minmax["region"].str.contains(LOCATION_REGIONS[i]).any():
+            df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]})
             df_minmax = df_minmax.append(df2)
 
-    return_value = df_minmax.to_json(orient="index")
+    df_minmax = pd.melt(df_minmax, id_vars=["region"])
+    df_minmax["timestamp"] = df_minmax.apply(
+        lambda row: df.loc[
+            (df["region"] == row["region"]) & (df[row["variable_0"]] == row["value"]),
+            "timestamp",
+        ].max(),
+        axis=1,
+    )
+
+    return_value = df_minmax.to_json(orient="records")
     return return_value
 
 
