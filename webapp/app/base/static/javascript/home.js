@@ -4,45 +4,19 @@ function check_data(data) {
   } else console.log("its good data", data);
 }
 
-function set_hourly_values(hourly_data_json) {
-  data_FF = hourly_data_json.find((s) => s["region"] == "FrontFarm");
-  data_FM = hourly_data_json.find((s) => s["region"] == "MidFarm");
-  data_FB = hourly_data_json.find((s) => s["region"] == "BackFarm");
-  data_PR = hourly_data_json.find((s) => s["region"] == "Propagation");
-  data_RD = hourly_data_json.find((s) => s["region"] == "R&D");
+function set_meanminmax_values(hourly_data, minmax_data) {
   const numDecimals = 1;
-  let tempFF = data_FF["temperature"].toFixed(numDecimals);
-  document.getElementById("tempFF").innerHTML = tempFF;
-  let tempFM = data_FM["temperature"].toFixed(numDecimals);
-  document.getElementById("tempFM").innerHTML = tempFM;
-  let tempFB = data_FB["temperature"].toFixed(numDecimals);
-  document.getElementById("tempFB").innerHTML = tempFB;
-  let tempPR = data_PR["temperature"].toFixed(numDecimals);
-  document.getElementById("tempPR").innerHTML = tempPR;
-  let tempRD = data_RD["temperature"].toFixed(numDecimals);
-  document.getElementById("tempRD").innerHTML = tempRD;
-
-  let humFF = data_FF["humidity"].toFixed(numDecimals);
-  document.getElementById("humFF").innerHTML = humFF;
-  let humFM = data_FM["humidity"].toFixed(numDecimals);
-  document.getElementById("humFM").innerHTML = humFM;
-  let humFB = data_FB["humidity"].toFixed(numDecimals);
-  document.getElementById("humFB").innerHTML = humFB;
-  let humPR = data_PR["humidity"].toFixed(numDecimals);
-  document.getElementById("humPR").innerHTML = humPR;
-  let humRD = data_RD["humidity"].toFixed(numDecimals);
-  document.getElementById("humRD").innerHTML = humRD;
-
-  let vpdFF = data_FF["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdFF").innerHTML = vpdFF;
-  let vpdFM = data_FM["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdFM").innerHTML = vpdFM;
-  let vpdFB = data_FB["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdFB").innerHTML = vpdFB;
-  let vpdPR = data_PR["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdPR").innerHTML = vpdPR;
-  let vpdRD = data_RD["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdRD").innerHTML = vpdRD;
+  for (region of ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"]) {
+    for (metric of ["temperature", "humidity", "vpd"]) {
+      hourly = hourly_data.find((s) => s["region"] == region);
+      let mean = hourly[metric].toFixed(numDecimals);
+      document.getElementById(`${metric}_${region}`).innerHTML = mean;
+      let min = minmax_data[region][`${metric}_min`].toFixed(numDecimals);
+      let max = minmax_data[region][`${metric}_max`].toFixed(numDecimals);
+      document.getElementById(`${metric}_${region}_min`).innerHTML = min;
+      document.getElementById(`${metric}_${region}_max`).innerHTML = max;
+    }
+  }
 }
 
 function time_series_charts(
@@ -228,9 +202,10 @@ function create_charts(
   vpd_data,
   vpd_data_daily,
   stratification,
-  hourly_data
+  hourly_data,
+  recent_minmax_data
 ) {
-  set_hourly_values(hourly_data);
+  set_meanminmax_values(hourly_data, recent_minmax_data);
   // blue to red, and grey for missing
   const colouramp_redbluegrey = [
     "rgba(63,103,126,1)",
