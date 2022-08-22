@@ -42,17 +42,17 @@ HUM_BINS = {
 # TODO The below numbers are just a guess, we need to ask the farm people what would
 # actually make sense.
 VPD_BINS = {
-    "Propagation": [0.0, 300.0, 600.0, 1000.0, 1500.0],
-    "FrontFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
-    "Fridge": [0.0, 300.0, 600.0, 1000.0, 1500.0],
-    "MidFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
-    "BackFarm": [0.0, 300.0, 600.0, 1000.0, 1500.0],
-    "R&D": [0.0, 300.0, 600.0, 1000.0, 1500.0],
+    "Propagation": [0.0, 300.0, 600.0, 1000.0, 10000.0],
+    "FrontFarm": [0.0, 300.0, 600.0, 1000.0, 10000.0],
+    "Fridge": [0.0, 300.0, 600.0, 1000.0, 10000.0],
+    "MidFarm": [0.0, 300.0, 600.0, 1000.0, 10000.0],
+    "BackFarm": [0.0, 300.0, 600.0, 1000.0, 10000.0],
+    "R&D": [0.0, 300.0, 600.0, 1000.0, 10000.0],
 }
 LOCATION_REGIONS = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
 # The last columns considered to be in FrontFarm and MidFarm, respectively.
 REGION_SPLIT_FRONT_MID = 10
-REGION_SPLIT_MID_BACK = 20
+REGION_SPLIT_MID_BACK = 23
 
 
 def resample(df_, bins):
@@ -323,23 +323,51 @@ def json_hum(df_hum):
 
 def regional_mean_json(df_hourly):
     """Compute a DataFrame with the per-region means of the inputs T&RH columns."""
+    latest_readings_by_sensor = df_hourly.groupby("sensor_id")["timestamp"].idxmax()
+    df_mean = df_hourly.loc[latest_readings_by_sensor, :]
     df_mean = (
-        df_hourly.loc[
+        df_mean.loc[
             :,
-            # df_hourly.groupby("region").timestamp.max(),
             ["temperature", "humidity", "vpd", "timestamp", "region"],
         ]
         .groupby("region")
         .mean()
     ).reset_index()
 
+    # Add empty rows for regions that are missing.
     for i in range(len(LOCATION_REGIONS)):
-
         if not df_mean["region"].str.contains(LOCATION_REGIONS[i]).any():
             df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]})
             df_mean = df_mean.append(df2)
 
     return_value = df_mean.to_json(orient="records")
+    return return_value
+
+
+def regional_minmax_json(df):
+    """Compute a DataFrame with the per-region min/max of the inputs T&RH columns."""
+    df_minmax = (
+        df.loc[:, ["temperature", "humidity", "vpd", "region"]]
+        .groupby("region")
+        .agg(["min", "max"])
+    ).reset_index()
+
+    # Add empty rows for regions that are missing.
+    for i in range(len(LOCATION_REGIONS)):
+        if not df_minmax["region"].str.contains(LOCATION_REGIONS[i]).any():
+            df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]})
+            df_minmax = df_minmax.append(df2)
+
+    df_minmax = pd.melt(df_minmax, id_vars=["region"])
+    df_minmax["timestamp"] = df_minmax.apply(
+        lambda row: df.loc[
+            (df["region"] == row["region"]) & (df[row["variable_0"]] == row["value"]),
+            "timestamp",
+        ].max(),
+        axis=1,
+    )
+
+    return_value = df_minmax.to_json(orient="records")
     return return_value
 
 
@@ -349,10 +377,14 @@ def index():
     """
     Index page
     """
+    # TODO The page would probably load faster if we did one DB query to get all the
+    # data we need and then slice that.
+
     dt_to = dt.datetime.now(dt.timezone.utc)
     dt_from_fortnightly = dt_to - dt.timedelta(days=14)
     dt_from_weekly = dt_to - dt.timedelta(days=7)
     dt_from_daily = dt_to - dt.timedelta(days=1)
+    dt_from_6h = dt_to - dt.timedelta(hours=6)
     dt_from_hourly = dt_to - dt.timedelta(hours=2)
 
     # weekly
@@ -401,6 +433,12 @@ def index():
     else:
         hourly_json = {}
 
+    df_6h = aranet_query(dt_from_6h, dt_to)
+    if not df_6h.empty:
+        recent_minmax_json = regional_minmax_json(df_6h)
+    else:
+        recent_minmax_json = {}
+
     df_fortnightly = aranet_query(dt_from_fortnightly, dt_to)
     if not df_fortnightly.empty:
         # Sensor id locations:
@@ -412,6 +450,7 @@ def index():
     return render_template(
         "index.html",
         hourly_data=hourly_json,
+        recent_minmax_data=recent_minmax_json,
         temperature_data=weekly_temp_json,
         humidity_data=weekly_hum_json,
         vpd_data=weekly_vpd_json,

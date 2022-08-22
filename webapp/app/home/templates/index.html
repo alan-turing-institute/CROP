@@ -14,9 +14,29 @@
       rel="stylesheet">
 <link href="{{ url_for('static', filename='vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css') }}"
       rel="stylesheet">
+<style>
+.dashColumn {
+  font-size: 30px;
+}
+.dashColumnEven {
+  background-color:#e7e7e7;
+}
+.dashColumnOdd {
+  background-color:#f3f3f3;
+}
+.dashMainUnit {
+  font-size: 13px;
+}
+.dashLimitUnit {
+  font-size: 11px;
+}
+.dashLimitDiv {
+ display: inline-block;
+ font-size: 15px;
+ vertical-align: middle;
+}
+</style>
 {% endblock stylesheets %}
-
-
 
 
 {% block content %}
@@ -84,32 +104,46 @@
                     region1, region2, region0, region3, region4?
                   -->
                   <tr>
-                    <th bgcolor="#e7e7e7">Main farm</th>
-                    <th bgcolor="#f3f3f3">Main farm</th>
-                    <th bgcolor="#e7e7e7">Main farm</th>
-                    <th bgcolor="#f3f3f3"><span id="region3_name"></span></th>
-                    <th bgcolor="#e7e7e7"><span id="region4_name"></span></th>
+                    <th class="dashColumnEven">Main farm</th>
+                    <th class="dashColumnOdd">Main farm</th>
+                    <th class="dashColumnEven">Main farm</th>
+                    <th class="dashColumnOdd"><span id="region3_name"></span></th>
+                    <th class="dashColumnEven"><span id="region4_name"></span></th>
                   </tr>
                 </table>
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
                   <tr>
-                    <th bgcolor="#e7e7e7"><span id="region1_name" ></span></th>
-                    <th bgcolor="#f3f3f3"><span id="region2_name"></span></th>
-                    <th bgcolor="#e7e7e7"><span id="region0_name" ></span></th>
-                    <th bgcolor="#f3f3f3"></th>
-                    <th bgcolor="#e7e7e7"></th>
+                    <th class="dashColumnEven"><span id="region1_name" ></span></th>
+                    <th class="dashColumnOdd"><span id="region2_name"></span></th>
+                    <th class="dashColumnEven"><span id="region0_name" ></span></th>
+                    <th class="dashColumnOdd"></th>
+                    <th class="dashColumnEven"></th>
                   </tr>
                 </table>
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
-                  <tr>
-                    <th bgcolor="#e7e7e7"><span id="tempFF" style="font-size: 30px"></span>&#8451;</th>
-                    <th bgcolor="#f3f3f3"><span id="tempFM" style="font-size: 30px"></span>&#8451;</th>
-                    <th bgcolor="#e7e7e7"><span id="tempFB" style="font-size: 30px"></span>&#8451;</th>
-                    <th bgcolor="#f3f3f3"><span id="tempPR" style="font-size: 30px"></span>&#8451;</th>
-                    <th bgcolor="#e7e7e7"><span id="tempRD" style="font-size: 30px"></span>&#8451;</th>
-                  </tr>
+                  {% for region in ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"] %}
+                  {% if region in ["FrontFarm", "BackFarm", "R&D"] %}
+                  <th class="dashColumn dashColumnEven">
+                    {% else %}
+                    <th class="dashColumn dashColumnOdd">
+                      {% endif %}
+                      <span style="vertical-align: middle;" title="Average over latest readings">
+                        <!-- The comment makes sure there's no whitespace between the
+                          spans, which would render a space between them. -->
+                          <span id="temperature_{{region}}"></span><!--
+                          --><span class="dashMainUnit">&#8451;</span>
+                      </span>
+                      <div class="dashLimitDiv">
+                        <span id="temperature_{{region}}_max" title="6h max"></span><!--
+                        --><span class="dashLimitUnit">&#8451;</span>
+                        <br>
+                        <span id="temperature_{{region}}_min" title="6h min"></span><!--
+                        --><span class="dashLimitUnit">&#8451;</span>
+                      </div>
+                    </th>
+                    {% endfor %}
                 </table>
 
 
@@ -161,13 +195,27 @@
                 </table>
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
-                  <tr>
-                    <th bgcolor="#e7e7e7"> <span id="humFF" style="font-size: 30px"></span>%rh</th>
-                    <th bgcolor="#f3f3f3"> <span id="humFM" style="font-size: 30px"></span>%rh</th>
-                    <th bgcolor="#e7e7e7"> <span id="humFB" style="font-size: 30px"></span>%rh</th>
-                    <th bgcolor="#f3f3f3"> <span id="humPR" style="font-size: 30px"></span>%rh</th>
-                    <th bgcolor="#e7e7e7"> <span id="humRD" style="font-size: 30px"></span>%rh</th>
-                  </tr>
+                  {% for region in ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"] %}
+                  {% if region in ["FrontFarm", "BackFarm", "R&D"] %}
+                  <th class="dashColumn dashColumnEven">
+                    {% else %}
+                    <th class="dashColumn dashColumnOdd">
+                      {% endif %}
+                      <span style="vertical-align: middle;" title="Average over latest readings">
+                        <!-- The comment makes sure there's no whitespace between the
+                          spans, which would render a space between them. -->
+                          <span id="humidity_{{region}}"></span><!--
+                          --><span class="dashMainUnit">%rh</span>
+                      </span>
+                      <div class="dashLimitDiv">
+                        <span id="humidity_{{region}}_max" title="6h max"></span><!--
+                        --><span class="dashLimitUnit">%rh</span>
+                        <br>
+                        <span id="humidity_{{region}}_min" title="6h min"></span><!--
+                        --><span class="dashLimitUnit">%rh</span>
+                      </div>
+                    </th>
+                    {% endfor %}
                 </table>
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
@@ -214,15 +262,29 @@
                     </th>
                   </tr>
 
-                <table style="table-layout: fixed;width:100%; overflow:visible">
-                  <tr>
-                    <th bgcolor="#e7e7e7"> <span id="vpdFF" style="font-size: 30px"></span>Pa</th>
-                    <th bgcolor="#f3f3f3"> <span id="vpdFM" style="font-size: 30px"></span>Pa</th>
-                    <th bgcolor="#e7e7e7"> <span id="vpdFB" style="font-size: 30px"></span>Pa</th>
-                    <th bgcolor="#f3f3f3"> <span id="vpdPR" style="font-size: 30px"></span>Pa</th>
-                    <th bgcolor="#e7e7e7"> <span id="vpdRD" style="font-size: 30px"></span>Pa</th>
-                  </tr>
-                </table>
+                  <table style="table-layout: fixed;width:100%; overflow:visible">
+                    {% for region in ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"] %}
+                    {% if region in ["FrontFarm", "BackFarm", "R&D"] %}
+                    <th class="dashColumn dashColumnEven">
+                      {% else %}
+                      <th class="dashColumn dashColumnOdd">
+                        {% endif %}
+                        <span style="vertical-align: middle;" title="Average over latest readings">
+                          <!-- The comment makes sure there's no whitespace between the
+                            spans, which would render a space between them. -->
+                            <span id="vpd_{{region}}"></span><!--
+                            --><span class="dashMainUnit">Pa</span>
+                        </span>
+                        <div class="dashLimitDiv">
+                          <span id="vpd_{{region}}_max" title="6h max"></span><!--
+                          --><span class="dashLimitUnit">Pa</span>
+                          <br>
+                          <span id="vpd_{{region}}_min" title="6h min"></span><!--
+                          --><span class="dashLimitUnit">Pa</span>
+                        </div>
+                      </th>
+                      {% endfor %}
+                  </table>
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
                   <tr >
@@ -536,6 +598,7 @@
   const vpd_json_daily = JSON.parse('{{vpd_data_daily | safe}}');
   const stratification_json = JSON.parse('{{stratification | safe}}');
   const hourly_data_json = JSON.parse('{{hourly_data | safe}}');
+  const recent_minmax_data_json = JSON.parse('{{recent_minmax_data | safe}}');
 
   check_data(temperature_json);
   check_data(temperature_json_daily);
@@ -544,7 +607,7 @@
   check_data(vpd_json);
   check_data(vpd_json_daily);
   check_data(stratification_json);
-  check_data(hourly_data_json)
+  check_data(hourly_data_json);
 
   create_charts(
       temperature_json,
@@ -555,6 +618,7 @@
       vpd_json_daily,
       stratification_json,
       hourly_data_json,
+      recent_minmax_data_json
     );
 </script>
 
