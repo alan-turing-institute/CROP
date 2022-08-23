@@ -31,7 +31,7 @@ from flask_login import UserMixin
 
 from bcrypt import gensalt, hashpw
 
-from __app__.crop.constants import (
+from .constants import (
     SENSOR_TABLE_NAME,
     SENSOR_TYPE_TABLE_NAME,
     LOCATION_TABLE_NAME,
@@ -762,7 +762,15 @@ class BatchEventClass(BASE):
     next_action_time = Column(DateTime, nullable=True)
 
     # constructor
-    def __init__(self, growapp_id, batch_id, location_id, event_type, event_time, next_action_time):
+    def __init__(
+        self,
+        growapp_id,
+        batch_id,
+        location_id,
+        event_type,
+        event_time,
+        next_action_time,
+    ):
         self.growapp_id = growapp_id
         self.batch_id = batch_id
         self.location_id = location_id
@@ -798,7 +806,14 @@ class HarvestClass(BASE):
 
     # constructor
     def __init__(
-            self, batch_event_id, growapp_id, location_id, crop_yield, waste_disease, waste_defect, over_production
+        self,
+        batch_event_id,
+        growapp_id,
+        location_id,
+        crop_yield,
+        waste_disease,
+        waste_defect,
+        over_production,
     ):
         self.batch_event_id = batch_event_id
         self.growapp_id = growapp_id

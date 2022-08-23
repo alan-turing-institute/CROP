@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from flask_sqlalchemy import SQLAlchemy
 
-from __app__.crop.constants import SQL_ENGINE
+from .constants import SQL_ENGINE
 
 SQLA = SQLAlchemy()
 BASE = SQLA.Model

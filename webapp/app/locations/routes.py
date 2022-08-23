@@ -4,8 +4,8 @@ from flask import request, render_template
 from sqlalchemy import exc
 
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import LocationClass
+from core.structure import SQLA as db
+from core.structure import LocationClass
 
 
 CONST_ACTION_ADD = "Add"

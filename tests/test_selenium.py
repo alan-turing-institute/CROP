@@ -2,7 +2,7 @@
 Script to scrape stark.co.uk website for electricity usage data.
 """
 
-from __app__.crop.ingress_energy import scrape_data
+from core.ingress_energy import scrape_data
 
 
 def main():

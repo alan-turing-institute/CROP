@@ -8,8 +8,8 @@ from sqlalchemy_utils import database_exists, drop_database
 from sqlalchemy.orm import registry, RelationshipProperty, sessionmaker
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from __app__.crop.constants import SQL_DEFAULT_DBNAME
-from __app__.crop.structure import BASE
+from .constants import SQL_DEFAULT_DBNAME
+from .structure import BASE
 
 
 def create_database(conn_string, db_name):

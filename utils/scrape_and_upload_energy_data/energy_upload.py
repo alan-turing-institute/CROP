@@ -3,8 +3,8 @@ Scrape and upload stark energy data for the last 4 months
 
 """
 
-from __app__.crop.ingress_energy import scrape_data, import_energy_data
-from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from core.ingress_energy import scrape_data, import_energy_data
+from core.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 if __name__ == "__main__":
 

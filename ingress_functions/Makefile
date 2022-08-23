@@ -1,8 +1,8 @@
 .PHONY: build clean push 
 
 build:
-	docker build . -f Dockerfile -t turingcropapp/webapp:funcapp
+	docker build . -f Dockerfile -t turingcropapp/functions:local-build
 clean:
-	docker image rm turingcropapp/webapp:funcapp
+	docker image rm turingcropapp/functions:local-build
 push:
-	docker push turingcropapp/webapp:funcapp
+	docker push turingcropapp/functions:local-build

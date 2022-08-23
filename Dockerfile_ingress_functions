@@ -2,7 +2,6 @@
 
 FROM mcr.microsoft.com/azure-functions/python:3.0-python3.8
 
-
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
@@ -15,7 +14,6 @@ RUN apt-get update \
         wget \
         unzip \
     && rm -rf /var/lib/apt/lists/*
-
 
 # 1. Install Chrome (root image is debian)
 # See https://stackoverflow.com/questions/49132615/installing-chrome-in-docker-file
@@ -37,8 +35,9 @@ ENV PATH="/usr/local/bin/chromedriver:${PATH}"
 
 # . Install requirements
 RUN pip install --upgrade pip
-COPY requirements.txt /
+COPY ingress_functions/requirements.txt /
 RUN pip install -r /requirements.txt
 
 # . Copy python code to image
-COPY . /home/site/wwwroot
+COPY core /home/site/wwwroot
+COPY ingress_functions/. /home/site/wwwroot

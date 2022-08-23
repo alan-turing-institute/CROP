@@ -6,7 +6,7 @@ from numpy import mean
 
 from sqlalchemy import and_
 
-from __app__.crop.structure import (
+from .structure import (
     TypeClass,
     SensorClass,
     SensorLocationClass,
@@ -17,9 +17,9 @@ from __app__.crop.structure import (
     DataWarningsClass,
 )
 
-from __app__.crop.utils import query_result_to_array
+from .utils import query_result_to_array
 
-from __app__.crop.constants import (
+from .constants import (
     CONST_ADVANTICSYS,
     SQL_ENGINE,
     SQL_DBNAME,
@@ -27,7 +27,7 @@ from __app__.crop.constants import (
     SQL_CONNECTION_STRING_CROP,
 )
 
-from __app__.crop.db import connect_db, session_open, session_close
+from .db import connect_db, session_open, session_close
 
 db_name = "app_db"
 # TODO The below connection string needs secrets. Read them from environment variables.

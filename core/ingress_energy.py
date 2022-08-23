@@ -10,11 +10,11 @@ import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from __app__.crop.ingress import log_upload_event
-from __app__.crop.db import connect_db, session_open, session_close
-from __app__.crop.structure import SensorClass, TypeClass, ReadingsEnergyClass
+from .ingress import log_upload_event
+from .db import connect_db, session_open, session_close
+from .structure import SensorClass, TypeClass, ReadingsEnergyClass
 
-from __app__.crop.constants import CONST_STARK, STARK_USERNAME, STARK_PASS
+from .constants import CONST_STARK, STARK_USERNAME, STARK_PASS
 
 SLEEP_TIME = 0.3
 

@@ -1,7 +1,7 @@
 from utils.upload_synthetic_data import upload_synthetic_data
 
-from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
-from __app__.crop.db import drop_db
+from core.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
+from core.db import drop_db
 
 
 def pytest_configure(config):

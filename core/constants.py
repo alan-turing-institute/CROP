@@ -7,7 +7,7 @@ from urllib import parse
 
 import logging
 
-from __app__.crop.utils import make_conn_string
+from .utils import make_conn_string
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -250,8 +250,12 @@ BATCH_EVENT_TABLE_NAME = "batch_events"
 HARVEST_TABLE_NAME = "harvests"
 
 GROWAPP_IP = os.environ["GROWAPP_IP"] if "GROWAPP_IP" in os.environ else "DUMMY"
-GROWAPP_DB = os.environ["GROWAPP_DATABASE"] if "GROWAPP_DATABASE" in os.environ else "DUMMY"
-GROWAPP_USER = os.environ["GROWAPP_USERNAME"] if "GROWAPP_USERNAME" in os.environ else "DUMMY"
+GROWAPP_DB = (
+    os.environ["GROWAPP_DATABASE"] if "GROWAPP_DATABASE" in os.environ else "DUMMY"
+)
+GROWAPP_USER = (
+    os.environ["GROWAPP_USERNAME"] if "GROWAPP_USERNAME" in os.environ else "DUMMY"
+)
 GROWAPP_PASSWORD = (
     os.environ["GROWAPP_PASS"] if "GROWAPP_PASS" in os.environ else "DUMMY"
 )

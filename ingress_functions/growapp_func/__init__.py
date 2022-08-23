@@ -7,8 +7,8 @@ import logging
 
 import azure.functions as func
 
-from __app__.crop.ingress_growapp import import_growapp_data
-from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from core.ingress_growapp import import_growapp_data
+from core.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 
 def growapp_import(mytimer: func.TimerRequest):
