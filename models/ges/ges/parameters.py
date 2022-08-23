@@ -108,7 +108,7 @@ T_ss = 14.0 + T_k
 # Ventilation
 
 # Lights
-P_al = 7680.0 * 2.0
+P_al = 7680.0 * 2.0 * 0.65 # reduced lights from June 2022
 f_heat = 0.5
 f_light = 1 - f_heat
 # f_light = 1
