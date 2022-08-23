@@ -30,4 +30,4 @@ jobs:
         if: ${{ github.ref == 'refs/heads/test-actions' }}
         run: |
           docker build -f Dockerfile_webapp -t turingcropapp/webapp:test-actions . ;
-          docker push turingcropapp/webapp:test_actions ;
+          docker push turingcropapp/webapp:test-actions ;
