@@ -66,6 +66,7 @@ def climterp_linear(h1, h2, ExternalWeather):
 
     # clim_t = np.interp(mult,t,temp_in[-ind:])
     # clim_rh = np.interp(mult,t,rh_in[-ind:])
+    logging.info(f"Interpolating temperature {len(t)} {len(temp_in)}")
     clim_t = np.interp(mult, t, temp_in)
     clim_rh = np.interp(mult, t, rh_in)
 
@@ -387,7 +388,15 @@ def model(t, z, climate, ACHvec, iasvec, daynum, h1, h2, LatestTimeHourValue):
 
 
 def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
+    """
+    Parameters:
+    ===========
+    h1: int
+    h2: int
+    Weather: pandas DataFrame
+    """
 
+    logging.info(f"In derivatives, NP: {np.shape(paramsinput)[0]} h1:{h1} h2:{h2} len(Weather):{len(Weather)}")
     # Get weather data
     climate = np.transpose(climterp_linear(h1, h2, Weather))
 
@@ -435,7 +444,7 @@ def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
     tval = np.linspace(h1 * 3600, h2 * 3600, NOut)
 
     for i in range(NP):
-        logging.info(i + 1)
+        logging.info(f"in derivatives, step {i + 1} LatestTimeHourValue is {LatestTimeHourValue} ")
         AirChangeHour = paramsinput[i, 0]
         IntAirSpeed = paramsinput[i, 1]
         ACH = AirChangeHour / 3600
