@@ -2,7 +2,7 @@ name: "Build and push webapp to DockerHub"
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, test-actions]
   workflow_dispatch:
 
 jobs:
@@ -26,5 +26,8 @@ jobs:
         run: |
           docker build -f Dockerfile_webapp -t turingcropapp/webapp:dev . ;
           docker push turingcropapp/webapp:dev ;
-
-
+      - name: 'Build test-actions'
+        if: ${{ github.ref == 'refs/heads/test-actions' }}
+        run: |
+          docker build -f Dockerfile_webapp -t turingcropapp/webapp:test-actions . ;
+          docker push turingcropapp/webapp:test_actions ;
