@@ -12,23 +12,23 @@ import pandas as pd
 from sqlalchemy import and_
 from sqlalchemy.exc import ProgrammingError
 
-from __app__.crop.db import connect_db, session_open, session_close
-from __app__.crop.structure import (
+from .db import connect_db, session_open, session_close
+from .structure import (
     TypeClass,
     SensorClass,
     ReadingsAranetTRHClass,
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
 )
-from __app__.crop.constants import (
+from .constants import (
     CONST_CROP_HYPER_APIKEY,
     CONST_ARANET_TRH_SENSOR_TYPE,
     CONST_ARANET_CO2_SENSOR_TYPE,
-    CONST_ARANET_AIRVELOCITY_SENSOR_TYPE
+    CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
 )
 
-from __app__.crop.ingress import log_upload_event
-from __app__.crop.sensors import get_sensor_readings_db_timestamps
+from .ingress import log_upload_event
+from .sensors import get_sensor_readings_db_timestamps
 
 
 CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/1/analytics/v3/device_metrics"
@@ -38,34 +38,41 @@ READINGS_DICTS = [
         "readings_class": ReadingsAranetTRHClass,
         "sensor_type": CONST_ARANET_TRH_SENSOR_TYPE,
         "columns": [
-            {"api_name": "aranet_ambient_temperature", "df_name": "Temperature", "db_name": "temperature"},
-            {"api_name": "aranet_relative_humidity", "df_name": "Humidity", "db_name": "humidity"},
-        ]
+            {
+                "api_name": "aranet_ambient_temperature",
+                "df_name": "Temperature",
+                "db_name": "temperature",
+            },
+            {
+                "api_name": "aranet_relative_humidity",
+                "df_name": "Humidity",
+                "db_name": "humidity",
+            },
+        ],
     },
     {
         "readings_class": ReadingsAranetCO2Class,
         "sensor_type": CONST_ARANET_CO2_SENSOR_TYPE,
         "columns": [
             {"api_name": "aranet_co2", "df_name": "CO2", "db_name": "co2"},
-        ]
+        ],
     },
     {
         "readings_class": ReadingsAranetAirVelocityClass,
         "sensor_type": CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
         "columns": [
             {"api_name": "aranet_current", "df_name": "Current", "db_name": "current"},
-            {"api_name": "aranet_current_derived","df_name": "CurrentDerived", "db_name": "air_velocity"},
-        ]
+            {
+                "api_name": "aranet_current_derived",
+                "df_name": "CurrentDerived",
+                "db_name": "air_velocity",
+            },
+        ],
     },
 ]
 
 
-def get_api_sensor_data(
-        api_key,
-        dt_from,
-        dt_to,
-        columns
-):
+def get_api_sensor_data(api_key, dt_from, dt_to, columns):
     """
     Makes a request to download sensor data for specified metrics for a specified period of time.
     Note that this gets data for _all_ sensors, and returns it as a dict, keyed by
@@ -154,7 +161,9 @@ def _get_sensor_id(aranet_pro_id, engine):
     return sensor_id
 
 
-def import_hyper_metric(engine, dt_from, dt_to, ReadingsClass, columns, sensor_type, conn_string):
+def import_hyper_metric(
+    engine, dt_from, dt_to, ReadingsClass, columns, sensor_type, conn_string
+):
     """
     For each type of sensor, make a call to the Hyper API, get a corresponding dictionary
     of dataframes (keyed by the Aranet ID of the sensor), get the timestamps of existing readings
@@ -180,7 +189,9 @@ def import_hyper_metric(engine, dt_from, dt_to, ReadingsClass, columns, sensor_t
         # The table already exists.
         pass
 
-    logging.info(f"Requesting {sensor_type} data from {dt_from} to {dt_to} from the Hyper API")
+    logging.info(
+        f"Requesting {sensor_type} data from {dt_from} to {dt_to} from the Hyper API"
+    )
     success, error, hyper_data_dict = get_api_sensor_data(
         CONST_CROP_HYPER_APIKEY, dt_from, dt_to, columns
     )
@@ -221,10 +232,7 @@ def import_hyper_metric(engine, dt_from, dt_to, ReadingsClass, columns, sensor_t
         session = session_open(engine)
         # loop over all readings for this sensor.
         for idx, row in new_data_df.iterrows():
-            new_reading = ReadingsClass(
-                sensor_id=sensor_id,
-                timestamp=idx
-            )
+            new_reading = ReadingsClass(sensor_id=sensor_id, timestamp=idx)
             for column in columns:
                 setattr(new_reading, column["db_name"], row[column["df_name"]])
             session.add(new_reading)
@@ -240,7 +248,7 @@ def import_hyper_metric(engine, dt_from, dt_to, ReadingsClass, columns, sensor_t
             "Hyper API; Sensor ID {}".format(sensor_id),
             success,
             upload_log,
-            conn_string
+            conn_string,
         )
 
     return True, ""
@@ -277,7 +285,7 @@ def import_hyper_data(conn_string, database, dt_from, dt_to):
             readings_dict["readings_class"],
             readings_dict["columns"],
             readings_dict["sensor_type"],
-            conn_string
+            conn_string,
         )
         success &= metric_success
         error += metric_error

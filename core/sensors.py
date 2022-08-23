@@ -5,14 +5,14 @@ Python module for misc sensor functions.
 from pandas import DataFrame
 from sqlalchemy import and_
 
-from __app__.crop.constants import (
+from .constants import (
     CONST_ARANET_TRH_SENSOR_TYPE,
     CONST_ARANET_CO2_SENSOR_TYPE,
     CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
 )
 
 
-from __app__.crop.structure import (
+from .structure import (
     TypeClass,
     SensorClass,
     ReadingsAranetTRHClass,
@@ -64,10 +64,7 @@ def find_sensor_type_from_id(session, sensor_id):
         success: bool,  sensor_type: str
     """
     query = session.query(TypeClass.sensor_type).filter(
-        and_(
-            SensorClass.id == sensor_id,
-            TypeClass.id == SensorClass.type_id
-        )
+        and_(SensorClass.id == sensor_id, TypeClass.id == SensorClass.type_id)
     )
     results = session.execute(query).fetchone()
     if results and len(results) == 1:
@@ -92,9 +89,9 @@ def get_sensor_readings_db_timestamps(session, sensor_id, date_from, date_to):
     """
     # map sensor types to db tables (classes)
     mappings = {
-        CONST_ARANET_TRH_SENSOR_TYPE : ReadingsAranetTRHClass,
-        CONST_ARANET_CO2_SENSOR_TYPE : ReadingsAranetCO2Class,
-        CONST_ARANET_AIRVELOCITY_SENSOR_TYPE : ReadingsAranetAirVelocityClass,
+        CONST_ARANET_TRH_SENSOR_TYPE: ReadingsAranetTRHClass,
+        CONST_ARANET_CO2_SENSOR_TYPE: ReadingsAranetCO2Class,
+        CONST_ARANET_AIRVELOCITY_SENSOR_TYPE: ReadingsAranetAirVelocityClass,
     }
     # get the sensor type
     success, sensor_type = find_sensor_type_from_id(session, sensor_id)

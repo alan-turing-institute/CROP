@@ -16,11 +16,11 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 
-from __app__.crop.ingress import log_upload_event
-from __app__.crop.db import connect_db, session_open, session_close
-from __app__.crop.structure import SensorClass, TypeClass, ReadingsEnergyClass
+from .ingress import log_upload_event
+from .db import connect_db, session_open, session_close
+from .structure import SensorClass, TypeClass, ReadingsEnergyClass
 
-from __app__.crop.constants import CONST_STARK, STARK_USERNAME, STARK_PASS
+from .constants import CONST_STARK, STARK_USERNAME, STARK_PASS
 
 SLEEP_TIME = 5.3
 
@@ -36,7 +36,7 @@ def import_stark_data():
     """
     Imports stark electricity consumption data
     """
-    from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+    from .constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
     import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME)
 
@@ -437,5 +437,5 @@ def export_energy_data(electricity_df, conn_string, database):
 if __name__ == "__main__":
     import_stark_data()
     # df = pd.DataFrame(columns=['A', 'B'])
-    # from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+    # from .constants import SQL_CONNECTION_STRING, SQL_DBNAME
     # export_energy_data(df, SQL_CONNECTION_STRING, SQL_DBNAME)

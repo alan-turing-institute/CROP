@@ -13,7 +13,7 @@ RUN mkdir CROP
 WORKDIR CROP
 
 # Adding crop core
-ADD __app__ __app__
+ADD core core
 
 # Adding crop webapp
 ADD webapp webapp

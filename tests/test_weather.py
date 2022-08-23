@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timedelta
 import requests
 import requests_mock
-from __app__.crop.ingress_weather import (
+from core.ingress_weather import (
     get_openweathermap_data,
     CONST_OPENWEATHERMAP_URL,
 )

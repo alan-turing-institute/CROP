@@ -8,8 +8,8 @@ import logging
 import azure.functions as func
 
 
-from __app__.crop.ingress_energy_utc import import_stark_energy_data
-from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from core.ingress_energy_utc import import_stark_energy_data
+from core.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 
 def energy_import(mytimer: func.TimerRequest):

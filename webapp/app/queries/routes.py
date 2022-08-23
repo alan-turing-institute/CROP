@@ -18,8 +18,8 @@ from utilities.utils import (
     parse_date_range_argument,
 )
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import (
+from core.structure import SQLA as db
+from core.structure import (
     SensorLocationClass,
     TypeClass,
     SensorClass,
@@ -34,7 +34,7 @@ from __app__.crop.structure import (
     BatchClass,
     BatchEventClass,
     HarvestClass,
-    EventType
+    EventType,
 )
 
 
@@ -271,7 +271,6 @@ def get_aranet_airvelocity_data(sensor_id):
     return result
 
 
-
 @blueprint.route("/getweatherdata", methods=["GET"])
 # @login_required
 def get_weather():
@@ -314,16 +313,14 @@ def get_crop_types():
     """
     Get a list of types of crop, and some of their properties.
     """
-    query = (
-        db.session.query(
-            CropTypeClass.id,
-            CropTypeClass.growapp_id,
-            CropTypeClass.name,
-            CropTypeClass.seed_density,
-            CropTypeClass.propagation_period,
-            CropTypeClass.grow_period,
-            CropTypeClass.is_pre_harvest
-        )
+    query = db.session.query(
+        CropTypeClass.id,
+        CropTypeClass.growapp_id,
+        CropTypeClass.name,
+        CropTypeClass.seed_density,
+        CropTypeClass.propagation_period,
+        CropTypeClass.grow_period,
+        CropTypeClass.is_pre_harvest,
     )
     execute_result = db.session.execute(query).fetchall()
     result = jasonify_query_result(execute_result)
@@ -341,11 +338,9 @@ def get_all_batches():
             BatchClass.growapp_id,
             CropTypeClass.name,
             BatchClass.tray_size,
-            BatchClass.number_of_trays
+            BatchClass.number_of_trays,
         )
-    ).filter(
-        CropTypeClass.id == BatchClass.crop_type_id
-    )
+    ).filter(CropTypeClass.id == BatchClass.crop_type_id)
     execute_result = db.session.execute(query).fetchall()
     result = jasonify_query_result(execute_result)
     return result
@@ -356,19 +351,14 @@ def get_batch_details(batch_id):
     """
     Get all information, including 'events', for a given batch.
     """
-    query = (
-        db.session.query(
-            BatchClass.id,
-            BatchClass.growapp_id,
-            CropTypeClass.name,
-            BatchClass.tray_size,
-            BatchClass.number_of_trays
-        ).filter(
-            and_(
-                BatchClass.id == batch_id,
-                CropTypeClass.id == BatchClass.crop_type_id
-                )
-        )
+    query = db.session.query(
+        BatchClass.id,
+        BatchClass.growapp_id,
+        CropTypeClass.name,
+        BatchClass.tray_size,
+        BatchClass.number_of_trays,
+    ).filter(
+        and_(BatchClass.id == batch_id, CropTypeClass.id == BatchClass.crop_type_id)
     )
     execute_result = db.session.execute(query).fetchall()
     result = jasonify_query_result(execute_result)
@@ -383,20 +373,15 @@ def get_all_batchevents():
 
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-    query = (
-        db.session.query(
-            BatchEventClass.id,
-            BatchEventClass.growapp_id,
-            BatchEventClass.event_type,
-            BatchEventClass.event_time,
-            BatchEventClass.next_action_time,
-            BatchEventClass.location_id
-        ).filter(
-            and_(
-                BatchEventClass.event_time > dt_from,
-                BatchEventClass.event_time < dt_to
-            )
-        )
+    query = db.session.query(
+        BatchEventClass.id,
+        BatchEventClass.growapp_id,
+        BatchEventClass.event_type,
+        BatchEventClass.event_time,
+        BatchEventClass.next_action_time,
+        BatchEventClass.location_id,
+    ).filter(
+        and_(BatchEventClass.event_time > dt_from, BatchEventClass.event_time < dt_to)
     )
     execute_result = db.session.execute(query).fetchall()
     results_arr = query_result_to_array(execute_result)
@@ -414,23 +399,21 @@ def get_transfer_batchevents():
 
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-    query = (
-        db.session.query(
-            BatchEventClass.id,
-            BatchEventClass.growapp_id,
-            BatchEventClass.event_type,
-            BatchEventClass.event_time,
-            BatchEventClass.next_action_time,
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf
-        ).filter(
-            and_(
-                LocationClass.id == BatchEventClass.location_id,
-                BatchEventClass.event_time > dt_from,
-                BatchEventClass.event_time < dt_to
-            )
+    query = db.session.query(
+        BatchEventClass.id,
+        BatchEventClass.growapp_id,
+        BatchEventClass.event_type,
+        BatchEventClass.event_time,
+        BatchEventClass.next_action_time,
+        LocationClass.zone,
+        LocationClass.aisle,
+        LocationClass.column,
+        LocationClass.shelf,
+    ).filter(
+        and_(
+            LocationClass.id == BatchEventClass.location_id,
+            BatchEventClass.event_time > dt_from,
+            BatchEventClass.event_time < dt_to,
         )
     )
     execute_result = db.session.execute(query).fetchall()
@@ -449,20 +432,18 @@ def get_all_batchevents_for_batch(batch_id):
 
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-    query = (
-        db.session.query(
-            BatchEventClass.id,
-            BatchEventClass.growapp_id,
-            BatchEventClass.event_type,
-            BatchEventClass.event_time,
-            BatchEventClass.next_action_time,
-            BatchEventClass.location_id
-        ).filter(
-            and_(
-                BatchEventClass.batch_id == batch_id,
-                BatchEventClass.event_time > dt_from,
-                BatchEventClass.event_time < dt_to
-            )
+    query = db.session.query(
+        BatchEventClass.id,
+        BatchEventClass.growapp_id,
+        BatchEventClass.event_type,
+        BatchEventClass.event_time,
+        BatchEventClass.next_action_time,
+        BatchEventClass.location_id,
+    ).filter(
+        and_(
+            BatchEventClass.batch_id == batch_id,
+            BatchEventClass.event_time > dt_from,
+            BatchEventClass.event_time < dt_to,
         )
     )
     execute_result = db.session.execute(query).fetchall()
@@ -478,30 +459,28 @@ def get_all_harvests():
     """
     Get all harvests.
     """
-    query = (
-        db.session.query(
-            HarvestClass.id,
-            HarvestClass.growapp_id,
-            HarvestClass.crop_yield,
-            HarvestClass.waste_disease,
-            HarvestClass.waste_defect,
-            HarvestClass.over_production,
-            BatchEventClass.batch_id,
-            BatchEventClass.event_time,
-            BatchClass.tray_size,
-            BatchClass.number_of_trays,
-            CropTypeClass.name,
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf
-        ).filter(
-            and_(
-                BatchEventClass.id == HarvestClass.batch_event_id,
-                BatchClass.id == BatchEventClass.batch_id,
-                CropTypeClass.id == BatchClass.crop_type_id,
-                LocationClass.id == HarvestClass.location_id
-            )
+    query = db.session.query(
+        HarvestClass.id,
+        HarvestClass.growapp_id,
+        HarvestClass.crop_yield,
+        HarvestClass.waste_disease,
+        HarvestClass.waste_defect,
+        HarvestClass.over_production,
+        BatchEventClass.batch_id,
+        BatchEventClass.event_time,
+        BatchClass.tray_size,
+        BatchClass.number_of_trays,
+        CropTypeClass.name,
+        LocationClass.zone,
+        LocationClass.aisle,
+        LocationClass.column,
+        LocationClass.shelf,
+    ).filter(
+        and_(
+            BatchEventClass.id == HarvestClass.batch_event_id,
+            BatchClass.id == BatchEventClass.batch_id,
+            CropTypeClass.id == BatchClass.crop_type_id,
+            LocationClass.id == HarvestClass.location_id,
         )
     )
     execute_result = db.session.execute(query).fetchall()
@@ -516,42 +495,36 @@ def get_growing_batches():
     # first query all the batches that have a location
     # set the dt_from back 30 days here (the longest possible grow period)
     dt_from = dt_from + timedelta(days=-30)
-    query = (
-        db.session.query(
-            BatchEventClass.id,
-            BatchEventClass.event_time,
-            BatchEventClass.next_action_time,
-            BatchEventClass.batch_id,
-            BatchClass.tray_size,
-            BatchClass.number_of_trays,
-            CropTypeClass.name,
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf
-        ).filter(
-            and_(
-                BatchEventClass.event_type == EventType.transfer,
-                LocationClass.id == BatchEventClass.location_id,
-                BatchClass.id == BatchEventClass.batch_id,
-                CropTypeClass.id == BatchClass.crop_type_id,
-                BatchEventClass.event_time > dt_from,
-                BatchEventClass.event_time < dt_to
-            )
+    query = db.session.query(
+        BatchEventClass.id,
+        BatchEventClass.event_time,
+        BatchEventClass.next_action_time,
+        BatchEventClass.batch_id,
+        BatchClass.tray_size,
+        BatchClass.number_of_trays,
+        CropTypeClass.name,
+        LocationClass.zone,
+        LocationClass.aisle,
+        LocationClass.column,
+        LocationClass.shelf,
+    ).filter(
+        and_(
+            BatchEventClass.event_type == EventType.transfer,
+            LocationClass.id == BatchEventClass.location_id,
+            BatchClass.id == BatchEventClass.batch_id,
+            CropTypeClass.id == BatchClass.crop_type_id,
+            BatchEventClass.event_time > dt_from,
+            BatchEventClass.event_time < dt_to,
         )
     )
     execute_result = db.session.execute(query).fetchall()
     transfer_result = query_result_to_array(execute_result)
     # now query batch events with event type "harvest"
-    query = (
-        db.session.query(
-            BatchEventClass.batch_id,
-        ).filter(
-            and_(
-                BatchEventClass.event_type == EventType.harvest,
-                BatchEventClass.event_time > dt_from,
-                BatchEventClass.event_time < dt_to
-            )
+    query = db.session.query(BatchEventClass.batch_id,).filter(
+        and_(
+            BatchEventClass.event_type == EventType.harvest,
+            BatchEventClass.event_time > dt_from,
+            BatchEventClass.event_time < dt_to,
         )
     )
     execute_result = db.session.execute(query).fetchall()
@@ -561,4 +534,4 @@ def get_growing_batches():
     harvest_df = pd.DataFrame(harvest_result)
     if len(harvest_df) > 0:
         transfer_df = transfer_df[~transfer_df.batch_id.isin(harvest_df["batch_id"])]
-    return transfer_df.to_json(orient='records')
+    return transfer_df.to_json(orient="records")

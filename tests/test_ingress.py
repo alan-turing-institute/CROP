@@ -5,10 +5,10 @@ Module to test importing data from sensors to db
 import os
 import pandas as pd
 
-from __app__.crop.ingress import import_data
-from __app__.crop.ingress_adv import advanticsys_import
+from core.ingress import import_data
+from core.ingress_adv import advanticsys_import
 
-from __app__.crop.constants import (
+from core.constants import (
     SQL_USER,
     SQL_PASSWORD,
     SQL_HOST,

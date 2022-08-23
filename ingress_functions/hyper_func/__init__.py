@@ -7,8 +7,8 @@ import logging
 
 import azure.functions as func
 
-from __app__.crop.ingress_hyper import import_hyper_data
-from __app__.crop.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from core.ingress_hyper import import_hyper_data
+from core.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 
 def hyper_import(mytimer: func.TimerRequest):

@@ -2,19 +2,19 @@
 Module to import sensor data to a postgres database.
 """
 
-from __app__.crop.db import connect_db, session_open, session_close
+from .db import connect_db, session_open, session_close
 
-from __app__.crop.ingress_adv import insert_advanticsys_data
+from .ingress_adv import insert_advanticsys_data
 
-from __app__.crop.constants import (
+from .constants import (
     CONST_ADVANTICSYS,
     SQL_ENGINE,
     SQL_DBNAME,
 )
 
-from __app__.crop.utils import make_conn_string
-from __app__.crop.structure import DataUploadLogClass
-from __app__.crop.sensors import find_sensor_type_id
+from .utils import make_conn_string
+from .structure import DataUploadLogClass
+from .sensors import find_sensor_type_id
 
 
 def import_data(pd_df, sensor_type, user, password, host, port, db_name):

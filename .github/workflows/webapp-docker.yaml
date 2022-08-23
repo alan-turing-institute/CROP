@@ -19,12 +19,12 @@ jobs:
       - name: 'Build main'
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          docker build -f Dockerfile -t turingcropapp/webapp:prod . ;
+          docker build -f Dockerfile_webapp -t turingcropapp/webapp:prod . ;
           docker push turingcropapp/webapp:prod ;
       - name: 'Build dev'
         if: ${{ github.ref == 'refs/heads/develop' }}
         run: |
-          docker build -f Dockerfile -t turingcropapp/webapp:dev . ;
+          docker build -f Dockerfile_webapp -t turingcropapp/webapp:dev . ;
           docker push turingcropapp/webapp:dev ;
 
 

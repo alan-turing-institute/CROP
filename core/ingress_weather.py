@@ -10,19 +10,19 @@ import pandas as pd
 
 from sqlalchemy import and_
 
-from __app__.crop.db import connect_db, session_open, session_close
-from __app__.crop.structure import (
+from .db import connect_db, session_open, session_close
+from .structure import (
     ReadingsWeatherClass,
 )
-from __app__.crop.utils import query_result_to_array
-from __app__.crop.constants import (
+from .utils import query_result_to_array
+from .constants import (
     SQL_CONNECTION_STRING,
     SQL_DBNAME,
     CONST_API_WEATHER_TYPE,
     CONST_OPENWEATHERMAP_APIKEY,
 )
-from __app__.crop.ingress import log_upload_event
-from __app__.crop.sensors import get_db_weather_data
+from .ingress import log_upload_event
+from .sensors import get_db_weather_data
 
 CONST_OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=51.45&lon=0.14&appid="
 

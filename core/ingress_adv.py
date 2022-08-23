@@ -7,7 +7,7 @@ for the Advanticsys sensors
 import pandas as pd
 
 # from crop.db import create_database
-from __app__.crop.constants import (
+from .constants import (
     CONST_ADVANTICSYS_COL_LIST,
     CONST_ADVANTICSYS_COL_TIMESTAMP,
     CONST_ADVANTICSYS_COL_MODBUSID,
@@ -33,7 +33,7 @@ from __app__.crop.constants import (
 )
 
 
-from __app__.crop.structure import SensorClass, TypeClass, ReadingsAdvanticsysClass
+from .structure import SensorClass, TypeClass, ReadingsAdvanticsysClass
 
 
 def advanticsys_import(file_path):

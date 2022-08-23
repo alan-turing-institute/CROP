@@ -18,8 +18,8 @@ from sqlalchemy import and_
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.dialects.postgresql import insert
 
-from __app__.crop.db import connect_db, session_open, session_close
-from __app__.crop.structure import (
+from .db import connect_db, session_open, session_close
+from .structure import (
     LocationClass,
     CropTypeClass,
     BatchClass,
@@ -27,7 +27,7 @@ from __app__.crop.structure import (
     HarvestClass,
     EventType,
 )
-from __app__.crop.growapp_structure import (
+from .growapp_structure import (
     LocationClass as GrowAppLocationClass,
     ZoneClass as GrowAppZoneClass,
     AisleClass as GrowAppAisleClass,
@@ -38,8 +38,8 @@ from __app__.crop.growapp_structure import (
     BatchClass as GrowAppBatchClass,
     BatchEventClass as GrowAppBatchEventClass,
 )
-from __app__.crop.utils import query_result_to_array
-from __app__.crop.constants import (
+from .utils import query_result_to_array
+from .constants import (
     GROWAPP_IP,
     GROWAPP_DB,
     GROWAPP_USER,
@@ -49,7 +49,7 @@ from __app__.crop.constants import (
     SQL_DBNAME,
     SQL_ENGINE,
 )
-from __app__.crop.ingress import log_upload_event
+from .ingress import log_upload_event
 
 BATCH_EVENT_TYPE_MAPPING = {
     0: EventType.none,
@@ -284,12 +284,14 @@ def get_location_id(growapp_batch_id):
     session_close(crop_session)
     results_array = query_result_to_array(results)
     if len(results_array) == 0:
-        logging.info(f"Location {growapp_location} not found in the CROP DB.  Will create it")
+        logging.info(
+            f"Location {growapp_location} not found in the CROP DB.  Will create it"
+        )
         return add_new_location(
             growapp_location["zone"],
             growapp_location["aisle"],
             int(growapp_location["stack"]),
-            int(growapp_location["shelf"])
+            int(growapp_location["shelf"]),
         )
     else:
         return results_array[0]["id"]
@@ -344,13 +346,9 @@ def get_batch_data(dt_from=None, dt_to=None):
         GrowAppBatchClass.crop_id,
     )
     if dt_from:
-        query = query.filter(
-            GrowAppBatchClass.status_date > dt_from
-        )
+        query = query.filter(GrowAppBatchClass.status_date > dt_from)
     if dt_to:
-        query = query.filter(
-            GrowAppBatchClass.status_date < dt_to
-        )
+        query = query.filter(GrowAppBatchClass.status_date < dt_to)
     results = grow_session.execute(query).fetchall()
     session_close(grow_session)
     results_array = query_result_to_array(results)
@@ -390,13 +388,9 @@ def get_batchevent_data(dt_from=None, dt_to=None):
         GrowAppBatchEventClass.next_action,
     )
     if dt_from:
-        query = query.filter(
-            GrowAppBatchEventClass.event_happened > dt_from
-        )
+        query = query.filter(GrowAppBatchEventClass.event_happened > dt_from)
     if dt_to:
-        query = query.filter(
-            GrowAppBatchEventClass.event_happened < dt_to
-        )
+        query = query.filter(GrowAppBatchEventClass.event_happened < dt_to)
     results = grow_session.execute(query).fetchall()
     session_close(grow_session)
     results_array = query_result_to_array(results)
@@ -408,8 +402,10 @@ def get_batchevent_data(dt_from=None, dt_to=None):
         batchevents_df["next_action"], errors="coerce"
     )
     # convert NaT to None
-    batchevents_df["next_action"] = batchevents_df["next_action"].astype(object).where(
-        batchevents_df.next_action.notnull(), None
+    batchevents_df["next_action"] = (
+        batchevents_df["next_action"]
+        .astype(object)
+        .where(batchevents_df.next_action.notnull(), None)
     )
     batchevents_df["event_happened"] = pd.to_datetime(
         batchevents_df["event_happened"], errors="coerce"
@@ -436,7 +432,9 @@ def get_batchevent_data(dt_from=None, dt_to=None):
     # we need to get the batch_id from our batch table
     batchevents_df = convert_growapp_foreign_key(batchevents_df, "batch_id", BatchClass)
     # drop some unused columns
-    batchevents_df.drop(columns=["next_action_days", "was_manual", "description"], inplace=True)
+    batchevents_df.drop(
+        columns=["next_action_days", "was_manual", "description"], inplace=True
+    )
     return batchevents_df
 
 
@@ -463,13 +461,9 @@ def get_harvest_data(dt_from=None, dt_to=None):
         GrowAppBatchClass.overproduction,
     )
     if dt_from:
-        grow_query = grow_query.filter(
-            GrowAppBatchClass.status_date > dt_from
-        )
+        grow_query = grow_query.filter(GrowAppBatchClass.status_date > dt_from)
     if dt_to:
-        grow_query = grow_query.filter(
-            GrowAppBatchClass.status_date < dt_to
-        )
+        grow_query = grow_query.filter(GrowAppBatchClass.status_date < dt_to)
     results = grow_session.execute(grow_query).fetchall()
     results_array = query_result_to_array(results)
     session_close(grow_session)
@@ -477,15 +471,18 @@ def get_harvest_data(dt_from=None, dt_to=None):
     if len(df) == 0:
         return df
     df = df[df.harvested_event_id.notnull()]
-    df.rename(columns={
-        "id": "growapp_id",
-        "harvested_event_id": "batch_event_id",
-        "yield_": "crop_yield",
-        "overproduction": "over_production"
-    },inplace=True)
+    df.rename(
+        columns={
+            "id": "growapp_id",
+            "harvested_event_id": "batch_event_id",
+            "yield_": "crop_yield",
+            "overproduction": "over_production",
+        },
+        inplace=True,
+    )
     # get the batchevent_id from our batchevent table
     df = convert_growapp_foreign_key(df, "batch_event_id", BatchEventClass)
-    df.loc[:,"location_id"] = df.loc[:,"growapp_id"].apply(get_location_id)
+    df.loc[:, "location_id"] = df.loc[:, "growapp_id"].apply(get_location_id)
     return df
 
 
@@ -518,13 +515,14 @@ def write_new_data(data_df, DbClass):
     # loop over all rows in the dataframe
     for _, row in data_df.iterrows():
         insert_stmt = insert(DbClass).values(**(row.to_dict()))
-        do_nothing_stmt = insert_stmt.on_conflict_do_nothing( index_elements=['growapp_id'])
+        do_nothing_stmt = insert_stmt.on_conflict_do_nothing(
+            index_elements=["growapp_id"]
+        )
         session.execute(do_nothing_stmt)
     logging.info(f"Finished writing to {DbClass.__tablename__}")
     session.commit()
     session_close(session)
     return True
-
 
 
 def import_growapp_data(dt_from=None, dt_to=None):

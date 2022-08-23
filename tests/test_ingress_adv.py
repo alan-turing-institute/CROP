@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 
-from __app__.crop.constants import (
+from core.constants import (
     CONST_TEST_DIR_DATA,
     CONST_ADVANTICSYS_DIR,
     CONST_ADVANTICSYS_FOLDER,
@@ -25,7 +25,7 @@ from __app__.crop.constants import (
     SQL_CONNECTION_STRING,
 )
 
-from __app__.crop.ingress_adv import (
+from core.ingress_adv import (
     advanticsys_read_csv,
     advanticsys_check_structure,
     advanticsys_import,
@@ -34,7 +34,7 @@ from __app__.crop.ingress_adv import (
     insert_advanticsys_data,
 )
 
-from __app__.crop.db import connect_db, session_open, session_close
+from core.db import connect_db, session_open, session_close
 
 
 def test_advanticsys_read_csv():
