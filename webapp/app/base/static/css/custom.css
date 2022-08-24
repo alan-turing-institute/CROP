@@ -2103,44 +2103,6 @@ button,
     width: 100%;
     display: inline-block
 }
-.compose {
-    padding: 0;
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    background: #fff;
-    border: 1px solid #D9DEE4;
-    border-right: 0;
-    border-bottom: 0;
-    border-top-left-radius: 5px;
-    z-index: 9999;
-    display: none
-}
-.compose .compose-header {
-    padding: 5px;
-    background: #169F85;
-    color: #fff;
-    border-top-left-radius: 5px
-}
-.compose .compose-header .close {
-    text-shadow: 0 1px 0 #ffffff;
-    line-height: .8
-}
-.compose .compose-body .editor.btn-toolbar {
-    margin: 0
-}
-.compose .compose-body .editor-wrapper {
-    height: 100%;
-    min-height: 50px;
-    max-height: 180px;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    overflow: auto
-}
-.compose .compose-footer {
-    padding: 10px
-}
 .editor.btn-toolbar {
     zoom: 1;
     background: #F7F7F7;
@@ -3955,31 +3917,6 @@ ul.notifications {
     text-decoration: none;
     text-transform: uppercase;
     padding: 9px 8px
-}
-.tabbed_notifications .text {
-    padding: 5px 15px;
-    height: 140px;
-    border-radius: 7px;
-    box-shadow: 6px 6px 6px rgba(0, 0, 0, 0.3)
-}
-.tabbed_notifications div p {
-    display: inline-block
-}
-.tabbed_notifications h2 {
-    font-weight: bold;
-    text-transform: uppercase;
-    width: 80%;
-    float: left;
-    height: 20px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    display: block
-}
-.tabbed_notifications .close {
-    padding: 5px;
-    color: #E9EDEF;
-    float: right;
-    opacity: 1
 }
 .fc-state-default {
     background: #f5f5f5;
