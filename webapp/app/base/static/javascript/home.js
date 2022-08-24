@@ -9,8 +9,11 @@ function set_meanminmax_values(hourly_data, minmax_data) {
   for (region of ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"]) {
     for (metric of ["temperature", "humidity", "vpd"]) {
       const hourly = hourly_data.find((s) => s["region"] == region);
-      const mean = hourly[metric].toFixed(numDecimals);
-      document.getElementById(`${metric}_${region}`).innerHTML = mean;
+      const mean = hourly[metric];
+      if (mean != undefined) {
+        document.getElementById(`${metric}_${region}`).innerHTML =
+          mean.toFixed(numDecimals);
+      }
 
       const min_obj = minmax_data.find(
         (s) =>
@@ -24,16 +27,20 @@ function set_meanminmax_values(hourly_data, minmax_data) {
           s["variable_0"] == metric &&
           s["variable_1"] == "max"
       );
-      const min_value = min_obj["value"].toFixed(numDecimals);
-      const max_value = max_obj["value"].toFixed(numDecimals);
+      const min_value = min_obj["value"];
+      const max_value = max_obj["value"];
       const min_timestamp = new Date(min_obj["timestamp"]);
       const max_timestamp = new Date(max_obj["timestamp"]);
       const min_element = document.getElementById(`${metric}_${region}_min`);
       const max_element = document.getElementById(`${metric}_${region}_max`);
-      min_element.innerHTML = min_value;
-      min_element.title = `6h min. Recorded at ${min_timestamp}`;
-      max_element.innerHTML = max_value;
-      max_element.title = `6h max. Recorded at ${max_timestamp}`;
+      if (min_value != undefined) {
+        min_element.innerHTML = min_value.toFixed(numDecimals);
+        min_element.title = `6h min. Recorded at ${min_timestamp}`;
+      }
+      if (max_value != undefined) {
+        max_element.innerHTML = max_value.toFixed(numDecimals);
+        max_element.title = `6h max. Recorded at ${max_timestamp}`;
+      }
     }
   }
 }
