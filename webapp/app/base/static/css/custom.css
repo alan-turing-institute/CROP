@@ -3331,23 +3331,6 @@ a.hiddenanchor {
 #signin:target ~ .login_wrapper .registration_form {
     animation-name: fadeOutLeft
 }
-.animate {
-    -webkit-animation-duration: 0.5s;
-    -webkit-animation-timing-function: ease;
-    -webkit-animation-fill-mode: both;
-    -moz-animation-duration: 0.5s;
-    -moz-animation-timing-function: ease;
-    -moz-animation-fill-mode: both;
-    -o-animation-duration: 0.5s;
-    -o-animation-timing-function: ease;
-    -o-animation-fill-mode: both;
-    -ms-animation-duration: 0.5s;
-    -ms-animation-timing-function: ease;
-    -ms-animation-fill-mode: both;
-    animation-duration: 0.5s;
-    animation-timing-function: ease;
-    animation-fill-mode: both
-}
 .login_box {
     padding: 20px;
     margin: auto
