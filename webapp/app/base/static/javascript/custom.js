@@ -4258,5 +4258,4 @@ $(document).ready(function () {
   init_compose();
   init_CustomNotification();
   init_autosize();
-  init_autocomplete();
 });

@@ -2315,26 +2315,6 @@ select.parsley-error {
     text-transform: uppercase;
     letter-spacing: 1px
 }
-.autocomplete-suggestions {
-    border: 1px solid #e4e4e4;
-    background: #F4F4F4;
-    cursor: default;
-    overflow: auto
-}
-.autocomplete-suggestion {
-    padding: 2px 5px;
-    font-size: 1.2em;
-    white-space: nowrap;
-    overflow: hidden
-}
-.autocomplete-selected {
-    background: #f0f0f0
-}
-.autocomplete-suggestions strong {
-    font-weight: normal;
-    color: #3399ff;
-    font-weight: bolder
-}
 .btn {
     border-radius: 3px
 }
