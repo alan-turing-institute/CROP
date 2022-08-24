@@ -4,9 +4,9 @@ from flask import redirect, request, render_template
 from flask_login import login_required
 from sqlalchemy import and_, asc, desc
 
-from __app__.crop.constants import CONST_MAX_RECORDS
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import (
+from core.constants import CONST_MAX_RECORDS
+from core.structure import SQLA as db
+from core.structure import (
     SensorClass,
     TypeClass,
     SensorLocationClass,

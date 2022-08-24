@@ -25,8 +25,8 @@ from utilities.utils import (
     query_result_to_array,
 )
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import (
+from core.structure import SQLA as db
+from core.structure import (
     SensorClass,
     TypeClass,
     ReadingsAdvanticsysClass,
@@ -35,7 +35,7 @@ from __app__.crop.structure import (
     ReadingsAranetTRHClass,
     ReadingsAranetAirVelocityClass,
 )
-from __app__.crop.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
+from core.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
 
 # Temperature constants

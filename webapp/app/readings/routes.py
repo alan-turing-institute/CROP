@@ -17,8 +17,8 @@ from utilities.utils import (
     vapour_pressure_deficit,
 )
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import (
+from core.structure import SQLA as db
+from core.structure import (
     SensorClass,
     ReadingsEnergyClass,
     TypeClass,
@@ -26,7 +26,7 @@ from __app__.crop.structure import (
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
 )
-from __app__.crop.constants import CONST_MAX_RECORDS
+from core.constants import CONST_MAX_RECORDS
 
 
 @blueprint.route("/<template>", methods=["GET", "POST"])

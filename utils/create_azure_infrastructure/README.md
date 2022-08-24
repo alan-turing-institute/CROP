@@ -7,7 +7,7 @@
   - Latest versions of Python (3.7 or greater) and pip
   - Installed Python dependencies
 
-    `pip install -r ../../__app__/requirements.txt`
+    `pip install -r ../../requirements.txt`
 
   - Created and configured environmental parameters file (`../../.secrets/crop.sh`). Template for reference: `../../.secrets/template_crop.sh`
 
