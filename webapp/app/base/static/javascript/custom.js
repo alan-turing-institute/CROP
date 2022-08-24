@@ -196,72 +196,6 @@ if ($(".progress .progress-bar")[0]) {
 }
 // /Progressbar
 
-// iCheck
-$(document).ready(function () {
-  if ($("input.flat")[0]) {
-    $(document).ready(function () {
-      $("input.flat").iCheck({
-        checkboxClass: "icheckbox_flat-green",
-        radioClass: "iradio_flat-green",
-      });
-    });
-  }
-});
-// /iCheck
-
-// Table
-$("table input").on("ifChecked", function () {
-  checkState = "";
-  $(this).parent().parent().parent().addClass("selected");
-  countChecked();
-});
-$("table input").on("ifUnchecked", function () {
-  checkState = "";
-  $(this).parent().parent().parent().removeClass("selected");
-  countChecked();
-});
-
-var checkState = "";
-
-$(".bulk_action input").on("ifChecked", function () {
-  checkState = "";
-  $(this).parent().parent().parent().addClass("selected");
-  countChecked();
-});
-$(".bulk_action input").on("ifUnchecked", function () {
-  checkState = "";
-  $(this).parent().parent().parent().removeClass("selected");
-  countChecked();
-});
-$(".bulk_action input#check-all").on("ifChecked", function () {
-  checkState = "all";
-  countChecked();
-});
-$(".bulk_action input#check-all").on("ifUnchecked", function () {
-  checkState = "none";
-  countChecked();
-});
-
-function countChecked() {
-  if (checkState === "all") {
-    $(".bulk_action input[name='table_records']").iCheck("check");
-  }
-  if (checkState === "none") {
-    $(".bulk_action input[name='table_records']").iCheck("uncheck");
-  }
-
-  var checkCount = $(".bulk_action input[name='table_records']:checked").length;
-
-  if (checkCount) {
-    $(".column-title").hide();
-    $(".bulk-actions").show();
-    $(".action-cnt").html(checkCount + " Records Selected");
-  } else {
-    $(".column-title").show();
-    $(".bulk-actions").hide();
-  }
-}
-
 // Accordion
 $(document).ready(function () {
   $(".expand").on("click", function () {
@@ -2619,11 +2553,6 @@ function init_DataTables() {
   $datatable.dataTable({
     order: [[1, "asc"]],
     columnDefs: [{ orderable: false, targets: [0] }],
-  });
-  $datatable.on("draw.dt", function () {
-    $("checkbox input").iCheck({
-      checkboxClass: "icheckbox_flat-green",
-    });
   });
 
   TableManageButtons.init();
