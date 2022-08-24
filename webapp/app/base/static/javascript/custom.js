@@ -147,15 +147,6 @@ function init_sidebar() {
   });
 
   setContentHeight();
-
-  // fixed sidebar
-  if ($.fn.mCustomScrollbar) {
-    $(".menu_fixed").mCustomScrollbar({
-      autoHideScrollbar: true,
-      theme: "minimal",
-      mouseWheel: { preventDefault: true },
-    });
-  }
 }
 // /Sidebar
 
