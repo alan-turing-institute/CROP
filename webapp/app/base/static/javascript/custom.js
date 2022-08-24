@@ -880,29 +880,6 @@ function init_parsley() {
   } catch (err) {}
 }
 
-/* INPUTS */
-
-function onAddTag(tag) {
-  alert("Added a tag: " + tag);
-}
-
-function onRemoveTag(tag) {
-  alert("Removed a tag: " + tag);
-}
-
-function onChangeTag(input, tag) {
-  alert("Changed a tag: " + tag);
-}
-
-//tags input
-function init_TagsInput() {
-  if (typeof $.fn.tagsInput !== "undefined") {
-    $("#tags_1").tagsInput({
-      width: "auto",
-    });
-  }
-}
-
 /* WYSIWYG EDITOR */
 
 function init_wysiwyg() {
@@ -4654,7 +4631,6 @@ $(document).ready(function () {
   init_knob();
   init_IonRangeSlider();
   init_ColorPicker();
-  init_TagsInput();
   init_parsley();
   init_daterangepicker();
   init_daterangepicker_right();
