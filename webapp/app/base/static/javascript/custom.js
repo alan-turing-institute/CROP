@@ -440,14 +440,6 @@ function init_sparklines() {
   );
 }
 
-/* AUTOSIZE */
-
-function init_autosize() {
-  if (typeof $.fn.autosize !== "undefined") {
-    autosize($(".resizable_textarea"));
-  }
-}
-
 /* PARSLEY */
 
 function init_parsley() {
@@ -4257,5 +4249,4 @@ $(document).ready(function () {
   init_calendar();
   init_compose();
   init_CustomNotification();
-  init_autosize();
 });
