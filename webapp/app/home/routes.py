@@ -12,15 +12,15 @@ from sqlalchemy import and_
 
 from app.home import blueprint
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import (
+from core.structure import SQLA as db
+from core.structure import (
     LocationClass,
     ReadingsAranetTRHClass,
     SensorClass,
     SensorLocationClass,
     TypeClass,
 )
-from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
+from core.constants import CONST_TIMESTAMP_FORMAT
 from utilities.utils import filter_latest_sensor_location, vapour_pressure_deficit
 
 TEMP_BINS = {

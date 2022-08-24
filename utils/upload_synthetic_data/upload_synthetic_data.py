@@ -10,14 +10,14 @@ import os
 import sys
 import pandas as pd
 
-from __app__.crop.structure import (
+from core.structure import (
     TypeClass,
     LocationClass,
     SensorClass,
     SensorLocationClass,
 )
 
-from __app__.crop.constants import (
+from core.constants import (
     CONST_COREDATA_DIR,
     CONST_ADVANTICSYS_DIR,
     CONST_ADVANTICSYS_TEST_1,
@@ -26,14 +26,14 @@ from __app__.crop.constants import (
     CONST_SENSOR_LOCATION_TESTS,
 )
 
-from __app__.crop.db import (
+from core.db import (
     create_database,
     connect_db,
     session_open,
     session_close,
 )
 
-from __app__.crop.ingress_adv import advanticsys_import, insert_advanticsys_data
+from core.ingress_adv import advanticsys_import, insert_advanticsys_data
 
 
 def error_message(message):

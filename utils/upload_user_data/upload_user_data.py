@@ -9,12 +9,12 @@ import argparse
 import sys
 import pandas as pd
 
-from __app__.crop.structure import UserClass
+from core.structure import UserClass
 
-from __app__.crop.constants import SQL_CONNECTION_STRING
+from core.constants import SQL_CONNECTION_STRING
 
 
-from __app__.crop.db import (
+from core.db import (
     connect_db,
     session_open,
     session_close,

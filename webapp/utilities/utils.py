@@ -11,7 +11,7 @@ import pandas as pd
 from flask import send_file
 from sqlalchemy import and_, func
 
-from __app__.crop.structure import SensorLocationClass
+from core.structure import SensorLocationClass
 
 
 def query_result_to_dict(query_result, date_iso=True):
@@ -100,7 +100,9 @@ def jasonify_query_result(query_result):
                 return str(obj)
             return json.JSONEncoder.default(self, obj)
 
-    result = json.dumps(results_arr, ensure_ascii=True, indent=4, sort_keys=True, cls=UUIDEncoder)
+    result = json.dumps(
+        results_arr, ensure_ascii=True, indent=4, sort_keys=True, cls=UUIDEncoder
+    )
 
     return result
 

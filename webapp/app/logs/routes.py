@@ -10,9 +10,9 @@ from sqlalchemy import and_, desc
 from app.logs import blueprint
 from utilities.utils import query_result_to_array
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import DataUploadLogClass, TypeClass
-from __app__.crop.constants import CONST_MAX_RECORDS
+from core.structure import SQLA as db
+from core.structure import DataUploadLogClass, TypeClass
+from core.constants import CONST_MAX_RECORDS
 
 
 @blueprint.route("/<template>")
