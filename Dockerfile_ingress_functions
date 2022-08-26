@@ -39,5 +39,5 @@ COPY ingress_functions/requirements.txt /
 RUN pip install -r /requirements.txt
 
 # . Copy python code to image
-COPY core /home/site/wwwroot
+COPY core /home/site/wwwroot/core
 COPY ingress_functions/. /home/site/wwwroot
