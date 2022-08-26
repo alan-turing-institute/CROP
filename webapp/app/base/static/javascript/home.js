@@ -8,38 +8,48 @@ function set_meanminmax_values(hourly_data, minmax_data) {
   const numDecimals = 1;
   for (region of ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"]) {
     for (metric of ["temperature", "humidity", "vpd"]) {
-      const hourly = hourly_data.find((s) => s["region"] == region);
-      const mean = hourly[metric];
-      if (mean != undefined) {
-        document.getElementById(`${metric}_${region}`).innerHTML =
-          mean.toFixed(numDecimals);
-      }
-
-      const min_obj = minmax_data.find(
-        (s) =>
-          s["region"] == region &&
-          s["variable_0"] == metric &&
-          s["variable_1"] == "min"
-      );
-      const max_obj = minmax_data.find(
-        (s) =>
-          s["region"] == region &&
-          s["variable_0"] == metric &&
-          s["variable_1"] == "max"
-      );
-      const min_value = min_obj["value"];
-      const max_value = max_obj["value"];
-      const min_timestamp = new Date(min_obj["timestamp"]);
-      const max_timestamp = new Date(max_obj["timestamp"]);
+      const mean_element = document.getElementById(`${metric}_${region}`);
       const min_element = document.getElementById(`${metric}_${region}_min`);
       const max_element = document.getElementById(`${metric}_${region}_max`);
-      if (min_value != undefined) {
-        min_element.innerHTML = min_value.toFixed(numDecimals);
-        min_element.title = `6h min. Recorded at ${min_timestamp}`;
+
+      if (hourly_data.length > 0) {
+        const hourly = hourly_data.find((s) => s["region"] == region);
+        const mean = hourly[metric];
+        if (mean != undefined) {
+          mean_element.innerHTML = mean.toFixed(numDecimals);
+        }
+      } else {
+        mean_element.innerHTML = "N/A";
       }
-      if (max_value != undefined) {
-        max_element.innerHTML = max_value.toFixed(numDecimals);
-        max_element.title = `6h max. Recorded at ${max_timestamp}`;
+
+      if (hourly_data.length > 0) {
+        const min_obj = minmax_data.find(
+          (s) =>
+            s["region"] == region &&
+            s["variable_0"] == metric &&
+            s["variable_1"] == "min"
+        );
+        const max_obj = minmax_data.find(
+          (s) =>
+            s["region"] == region &&
+            s["variable_0"] == metric &&
+            s["variable_1"] == "max"
+        );
+        const min_value = min_obj["value"];
+        const max_value = max_obj["value"];
+        const min_timestamp = new Date(min_obj["timestamp"]);
+        const max_timestamp = new Date(max_obj["timestamp"]);
+        if (min_value != undefined) {
+          min_element.innerHTML = min_value.toFixed(numDecimals);
+          min_element.title = `6h min. Recorded at ${min_timestamp}`;
+        }
+        if (max_value != undefined) {
+          max_element.innerHTML = max_value.toFixed(numDecimals);
+          max_element.title = `6h max. Recorded at ${max_timestamp}`;
+        }
+      } else {
+        min_element.innerHTML = "N/A";
+        max_element.innerHTML = "N/A";
       }
     }
   }
@@ -110,9 +120,18 @@ function time_series_charts(
 function roundcharts(json_data, regionid, canvasname, colouramp) {
   bin_ = [];
   cnt_ = [];
-  for (j = 0; j < json_data[regionid]["Values"].length; j++) {
-    bin_.push(json_data[regionid]["Values"][j]["bin"]);
-    cnt_.push(parseFloat(json_data[regionid]["Values"][j]["cnt"]));
+  try {
+    for (j = 0; j < json_data[regionid]["Values"].length; j++) {
+      bin_.push(json_data[regionid]["Values"][j]["bin"]);
+      cnt_.push(parseFloat(json_data[regionid]["Values"][j]["cnt"]));
+    }
+  } catch (e) {
+    if (e instanceof TypeError) {
+      console.log(`In roundcharts, got ${e}`);
+      return null;
+    } else {
+      throw e;
+    }
   }
 
   const data_ = [];
