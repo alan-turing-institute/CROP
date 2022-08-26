@@ -157,6 +157,7 @@ def aranet_query(dt_from, dt_to):
         lambda row: farm_region(row["zone"], row["aisle"], row["column"], row["shelf"]),
         axis=1,
     )
+    df["region"] = "N/A"
     # TODO I think the following is essentially a join.
     for sensor_id in df["id"].unique():
         try:
@@ -171,41 +172,35 @@ def aranet_query(dt_from, dt_to):
     return df
 
 
-def grp_per_hr_region(temp_df):
+def grp_per_hr_region(df):
     """
-    finds mean of values per hour for a selected date.
-    Returns a dataframe ready for json
-
-    Arguments:
-        temp_df:
-        dt_from: date range from
-        dt_to: date range to
-    Returns:
-        df_grp_region_hr: df with temperate ranges
+    Compute hourly means of the T&RH dataframe.
     """
-
-    df = copy.deepcopy(temp_df)
-
+    df = copy.deepcopy(df)
     # extracting date from datetime
-    df["date"] = pd.to_datetime(df["timestamp"].dt.date)
-
+    if len(df) > 0:
+        df["date"] = pd.to_datetime(df["timestamp"].dt.date)
+    else:
+        df["date"] = []
     # Reseting index
     df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
-
-    df_grp_region_hr = (
-        df.groupby(
-            by=[
-                df.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
-                ),
-                "region",
-                "date",
-            ]
+    if len(df) > 0:
+        df_grp_region_hr = (
+            df.groupby(
+                by=[
+                    df.timestamp.map(
+                        lambda x: "%04d-%02d-%02d-%02d"
+                        % (x.year, x.month, x.day, x.hour)
+                    ),
+                    "region",
+                    "date",
+                ]
+            )
+            .mean()
+            .reset_index()
         )
-        .mean()
-        .reset_index()
-    )
-
+    else:
+        df_grp_region_hr = df
     return df_grp_region_hr
 
 
@@ -252,6 +247,8 @@ def bin_trh_data(df, bins, measure, expected_total=None):
         df: data
         bins: a list of bins to perform the analysis
         measure: Either "temperature" or "humidity".
+        expected_total: Total number of entries we expect. Optional. If provided,
+            "missing" will be added for as many entries as we are short of the expected.
 
     Returns:
         output: A merged df with counts per bin
@@ -277,11 +274,7 @@ def bin_trh_data(df, bins, measure, expected_total=None):
         df_ = resample(bin_cnt, bins[region])
         if expected_total:
             total = df_["cnt"].sum()
-            df_.loc[df.index.max() + 1] = [
-                region,
-                "missing",
-                expected_total - total,
-            ]
+            df_.loc[df.index.max() + 1] = [region, "missing", expected_total - total]
         # renames the values of all the regions
         df_["region"] = region
         output_list.append(df_)
@@ -356,7 +349,7 @@ def regional_minmax_json(df):
     for i in range(len(LOCATION_REGIONS)):
         if not df_minmax["region"].str.contains(LOCATION_REGIONS[i]).any():
             df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]})
-            df_minmax = df_minmax.append(df2)
+            df_minmax = pd.concat([df_minmax, df2])
 
     df_minmax = pd.melt(df_minmax, id_vars=["region"])
     df_minmax["timestamp"] = df_minmax.apply(
@@ -389,56 +382,49 @@ def index():
 
     # weekly
     df_weekly = aranet_query(dt_from_weekly, dt_to)
-    if not df_weekly.empty:
-        df_mean_hr_weekly = grp_per_hr_region(df_weekly)
-        df_temp_weekly = bin_trh_data(
-            df_mean_hr_weekly, TEMP_BINS, "temperature", expected_total=24 * 7
-        )
-        df_hum_weekly = bin_trh_data(
-            df_mean_hr_weekly, HUM_BINS, "humidity", expected_total=24 * 7
-        )
-        df_vpd_weekly = bin_trh_data(
-            df_mean_hr_weekly, VPD_BINS, "vpd", expected_total=24 * 7
-        )
-        weekly_temp_json = json_bin_counts(df_temp_weekly)
-        weekly_hum_json = json_bin_counts(df_hum_weekly)
-        weekly_vpd_json = json_bin_counts(df_vpd_weekly)
-    else:
-        weekly_temp_json = {}
-        weekly_hum_json = {}
+    df_mean_hr_weekly = grp_per_hr_region(df_weekly)
+    df_temp_weekly = bin_trh_data(
+        df_mean_hr_weekly, TEMP_BINS, "temperature", expected_total=24 * 7
+    )
+    df_hum_weekly = bin_trh_data(
+        df_mean_hr_weekly, HUM_BINS, "humidity", expected_total=24 * 7
+    )
+    df_vpd_weekly = bin_trh_data(
+        df_mean_hr_weekly, VPD_BINS, "vpd", expected_total=24 * 7
+    )
+    weekly_temp_json = json_bin_counts(df_temp_weekly)
+    weekly_hum_json = json_bin_counts(df_hum_weekly)
+    weekly_vpd_json = json_bin_counts(df_vpd_weekly)
 
+    # daily
     df_daily = aranet_query(dt_from_daily, dt_to)
-    if not df_daily.empty:
-        df_mean_hr_daily = grp_per_hr_region(df_daily)
-        df_temp_daily = bin_trh_data(
-            df_mean_hr_daily, TEMP_BINS, "temperature", expected_total=24
-        )
-        df_hum_daily = bin_trh_data(
-            df_mean_hr_daily, HUM_BINS, "humidity", expected_total=24
-        )
-        df_vpd_daily = bin_trh_data(
-            df_mean_hr_daily, VPD_BINS, "vpd", expected_total=24
-        )
-        daily_temp_json = json_bin_counts(df_temp_daily)
-        daily_hum_json = json_bin_counts(df_hum_daily)
-        daily_vpd_json = json_bin_counts(df_vpd_daily)
-    else:
-        daily_temp_json = {}
-        daily_hum_json = {}
-        daily_vpd_json = {}
+    df_mean_hr_daily = grp_per_hr_region(df_daily)
+    df_temp_daily = bin_trh_data(
+        df_mean_hr_daily, TEMP_BINS, "temperature", expected_total=24
+    )
+    df_hum_daily = bin_trh_data(
+        df_mean_hr_daily, HUM_BINS, "humidity", expected_total=24
+    )
+    df_vpd_daily = bin_trh_data(df_mean_hr_daily, VPD_BINS, "vpd", expected_total=24)
+    daily_temp_json = json_bin_counts(df_temp_daily)
+    daily_hum_json = json_bin_counts(df_hum_daily)
+    daily_vpd_json = json_bin_counts(df_vpd_daily)
 
+    # hourly
     df_hourly = aranet_query(dt_from_hourly, dt_to)
     if not df_hourly.empty:
         hourly_json = regional_mean_json(df_hourly)
     else:
         hourly_json = {}
 
+    # 6h
     df_6h = aranet_query(dt_from_6h, dt_to)
     if not df_6h.empty:
         recent_minmax_json = regional_minmax_json(df_6h)
     else:
         recent_minmax_json = {}
 
+    # fortnightly
     df_fortnightly = aranet_query(dt_from_fortnightly, dt_to)
     if not df_fortnightly.empty:
         # Sensor id locations:
