@@ -42,7 +42,7 @@ The Unity 3D model is found in [this repo](http://github.com/alan-turing-institu
 
 CROP is implemented using a well established software stack (given below) and exploits four different services on the Azure cloud computing platform.
 
-### Solution / Software stack
+### Software stack
 
 <table style="text-align:center">
   <thead>
@@ -91,6 +91,33 @@ CROP is implemented using a well established software stack (given below) and ex
   </tbody>
 </table>
 
+### Repository structure
+The directories are structured as follows:
+* `core` has all the code for interacting with the database.
+This includes defining the database schema in `structure.py`, some utilities, and modules for each of the ingress functions, for reading and writing the data from various sensors and other data sources.
+* `tests` has the test suite for `core`.
+* `webapp` has the Flask webapp.
+* `ingress_functions` has the configurations and code for the Azure functions for importing data into the database.
+The code itself for each function is nearly trivial:
+It just calls the corresponding function in `core`.
+This folder mainly exists to hold the `host.json` and `function.json` files for each function.
+* `models` has the code for the forecasting models, ARIMA and GES.
+* `media` has illustrations, logos, etc.
+* `utils` and `misc_scripts` have various utilities that don't fit the other categories.
+* `.secrets` has shell scripts for setting environment variables with secrets, such as database passwords, to facilitate running a local copy of the webapp for development use.
+The version-controlled files are merely templates, to be filled in with the actual values for the secrets.
+
+All of `tests`, `webapp`, `ingress_functions`, `utils`, and `models` import and use various parts of `core`. None of them communicate with each other.
+
+The repository root also has three Docker files:
+* `Dockerfile_ingress_functions` builds a container that holds all the functions in `ingress_functions`, in an environment to run them on an Azure function app.
+* `Dockerfile_webapp` builds the webapp, ready to be deployed as an Azure app service. It builds on `webappbase`.
+* `Dockerfile_webappbase` is a container that installs some of the dependencies needed by the webapp.
+It's separated from `webapp` to improve build times, and shouldn't need to be rebuilt except in rare circumstances.
+
+Note that even though the GES model also runs as an Azure function app, it has no Dockerfile. This is because it is deployed directly from the Github Action.
+
+Some of the subfolders have their own READMEs. See them for more details of each part.
 
 ### Development credits
 
