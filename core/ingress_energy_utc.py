@@ -41,8 +41,23 @@ def import_stark_data():
     import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME)
 
 
+def replace_sources(energy_df):
+    """
+    As of August 2022, the data sources from Stark are now
+    HH 1200062020440 - K17D04641 (for what was '1a Carpenters Place`)
+    and
+    HH 1200023857140 - E16D04555 - 216749138 (for what was 'Clapham').
+    Switch these back in the dataframe so we can keep a consistent set
+    of data
+    """
+    energy_df.replace("HH 1200062020440 - K17D04641","1a Carpenters Place", inplace=True)
+    energy_df.replace("HH 1200023857140 - E16D04555 - 216749138", "Clapham", inplace=True)
+    return energy_df
+
+
 def import_stark_energy_data(SQL_CONNECTION_STRING, SQL_DBNAME):
     status, error, energy_df = scrape_data()
+    energy_df = replace_sources(energy_df)
     # energy_df.to_csv('energy_df.csv')
     # energy_df = pd.read_csv("./energy_df.csv")
     export_energy_data(energy_df, SQL_CONNECTION_STRING, SQL_DBNAME)
@@ -172,10 +187,9 @@ def scrape_data(hide=True):
         client.find_element_by_id("btnOpenGroupTreeSearch").click()
         sleep(SLEEP_TIME)
 
-    def openTree(client):
-        client.find_element_by_id("groupTree").find_element_by_class_name(
-            "treeToggleWrapper"
-        ).click()
+    def openTree(client, index=0):
+        expand_toggles = client.find_element_by_id("groupTree").find_elements_by_class_name("treeToggleWrapper")
+        expand_toggles[index].click()
         sleep(SLEEP_TIME)
 
     def getTreeBranches(client):
@@ -239,10 +253,18 @@ def scrape_data(hide=True):
         sleep(SLEEP_TIME)
 
     def filterDataSources(elements_list):
+        """
+        Not sure I like this - takes in a list of elements and returns
+        a (filtered) list of strings [element.text]
+        Wouldn't it be cleaner to just return the filtered list of elements?
+        """
         avail_data_sources = []
         for element in elements_list:
             ds_name = (element.text).strip()
             if ds_name.startswith("~"):
+                continue
+            ## NEW - get only the recent data, with weirdly named sources
+            if not ds_name.startswith("HH"):
                 continue
             avail_data_sources.append(element.text)
         return avail_data_sources
@@ -255,10 +277,15 @@ def scrape_data(hide=True):
         ).days
 
     openDataTreePage(client)
+    ## NEW - need to expand subtrees to get newer data
     openTree(client)
+    # expand '1a Carpenters Place' to get 'HH 1200062020440 - K17D04641'
+    openTree(client, 1)
+    # expand 'Clapham' to get 'HH 1200023857140 - E16D04555 - 216749138'
+    openTree(client, 3)
     avail_data_sources = filterDataSources(getTreeBranches(client))
     visit_data_sources = []
-
+    ## NEW the data sources we want are elements 1 and 3
     for i_a in range(len(avail_data_sources)):
         logging.info(
             "=========> [i_a = {}] Available Report for: {}".format(
@@ -267,7 +294,8 @@ def scrape_data(hide=True):
         )
         if i_a > 0:
             openDataTreePage(client)
-
+        ## this seems weird, why are we calling getTreeBranches again,
+        ## but not filtering them here?
         elements_list = getTreeBranches(client)
         for element in elements_list:
             ds_name = (element.text).strip()
