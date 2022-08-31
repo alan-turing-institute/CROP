@@ -107,7 +107,7 @@ This folder mainly exists to hold the `host.json` and `function.json` files for 
 * `.secrets` has shell scripts for setting environment variables with secrets, such as database passwords, to facilitate running a local copy of the webapp for development use.
 The version-controlled files are merely templates, to be filled in with the actual values for the secrets.
 
-All of `tests`, `webapp`, `ingress_functions`, `util_scripts`, and `models` import and use various parts of `core`. None of them communicate with each other.
+All of `tests`, `webapp`, `ingress_functions`, `util_scripts`, and `models` import and use various parts of `core`. None of them import from or talk to each other.
 
 The repository root also has three Docker files:
 * `Dockerfile_ingress_functions` builds a container that holds all the functions in `ingress_functions`, in an environment to run them on an Azure function app.
