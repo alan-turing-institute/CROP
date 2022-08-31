@@ -29,8 +29,8 @@ The digital twin:
     - forecast future farm conditions using machine learning models built into the platform.
 - The CROP database is constantly updated from multiple streams of data: Hyper API, Stark energy usage platform, and others.
 - For forecasting, CROP uses two models
-    - An ARIMA model uses past temperature and relative humidity data in the farm to forecast conditions a few days into the future.
-    - A GES model uses past sensor data, weather data, farm operational parameters (lighting schedules, fan settings, etc.) and Gaussian processes to forecast conditions a few days into the future. The GES model has the ability to predict various alternative scenarios, such as how would conditions change if the lights were switched on at a different time, or the fan settings were changed.
+    - An **A**uto**r**egressive **I**ntegrated **M**oving **A**verage (ARIMA) model uses past temperature and relative humidity data in the farm to forecast conditions a few days into the future.
+    - A [**G**reenhouse **E**nergy **S**imulation](https://github.com/EECi/GES) (GES) model uses past sensor data, weather data and farm operational parameters (lighting schedules, fan settings, etc.) to forecast conditions a few days into the future using Gaussian Process Regression. The GES model has the ability to predict various alternative scenarios, such as how would conditions change if the lights were switched on at a different time, or the fan settings were changed.
 
 The Unity 3D model is found in [this repo](http://github.com/alan-turing-institute/CROP_unity)
 <br/>
@@ -134,7 +134,7 @@ The Github Actions
 
 The Azure services for the webapp and the ingress functions listen to updates on Docker Hub, and deploy the latest container once it has been pushed to the Hub.
 
-`main` and `develop` are deployed to production and testing versions of the platform, respectively. The former is relatively stable, the latter may be broken in the course of development.
+The `main` and `develop` branches are deployed to production and testing versions of the platform, respectively. The former is relatively stable, the latter may be broken in the course of development.
 
 ## Getting help
 
