@@ -28,7 +28,7 @@ The digital twin:
     - use the interactive 3D visualisation of the farm,
     - forecast future farm conditions using machine learning models built into the platform.
 - The CROP database is constantly updated from multiple streams of data: Hyper API, Stark energy usage platform, and others.
-- For forecasting, we CROP uses two models
+- For forecasting, CROP uses two models
     - An ARIMA model uses past temperature and relative humidity data in the farm to forecast conditions a few days into the future.
     - A GES model uses past sensor data, weather data, farm operational parameters (lighting schedules, fan settings, etc.) and Gaussian processes to forecast conditions a few days into the future. The GES model has the ability to predict various alternative scenarios, such as how would conditions change if the lights were switched on at a different time, or the fan settings were changed.
 
