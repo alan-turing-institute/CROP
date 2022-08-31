@@ -27,7 +27,7 @@ from .constants import (
     CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
 )
 
-from .ingress import log_upload_event
+from .utils import log_upload_event
 from .sensors import get_sensor_readings_db_timestamps
 
 

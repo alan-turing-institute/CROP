@@ -1,15 +1,37 @@
 """
 A module for constants
 """
-import os
-import pandas as pd
+import logging
 from urllib import parse
 
-import logging
-
-from .utils import make_conn_string
+import os
+import pandas as pd
 
 logging.basicConfig(level=logging.DEBUG)
+
+
+def make_conn_string(sql_engine, sql_user, sql_password, sql_host, sql_port):
+    """
+    Constructs a connection string.
+    Arguments:
+        sql_engine
+        sql_user
+        sql_password
+        sql_host
+        sql_port
+
+    Returns:
+        connection string
+    """
+
+    return "%s://%s:%s@%s:%s" % (
+        sql_engine,
+        sql_user,
+        parse.quote(sql_password),
+        sql_host,
+        sql_port,
+    )
+
 
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"
@@ -187,15 +209,6 @@ SQL_SSLMODE = "require"
 SQL_TEST_DBNAME = "test_db"
 
 SQL_CONNECTION_STRING = make_conn_string(
-    SQL_ENGINE,
-    SQL_USER,
-    parse.quote(SQL_PASSWORD),
-    SQL_HOST,
-    SQL_PORT,
-)
-
-
-SQL_CONNECTION_STRING = "%s://%s:%s@%s:%s" % (
     SQL_ENGINE,
     SQL_USER,
     parse.quote(SQL_PASSWORD),

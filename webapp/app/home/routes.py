@@ -21,7 +21,7 @@ from core.structure import (
     TypeClass,
 )
 from core.constants import CONST_TIMESTAMP_FORMAT
-from utilities.utils import filter_latest_sensor_location, vapour_pressure_deficit
+from core.utils import filter_latest_sensor_location, vapour_pressure_deficit
 
 TEMP_BINS = {
     "Propagation": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
