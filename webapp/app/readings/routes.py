@@ -10,7 +10,7 @@ import pandas as pd
 import io
 
 from app.readings import blueprint
-from utilities.utils import (
+from core.utils import (
     query_result_to_array,
     parse_date_range_argument,
     download_csv,

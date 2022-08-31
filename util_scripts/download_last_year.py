@@ -5,13 +5,13 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 from sqlalchemy import and_, desc
 from config import config_dict
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import (
+from core.structure import SQLA as db
+from core.structure import (
     ReadingsAranetTRHClass,
 )
 from webapp.crop_app import create_app
 from config import config_dict
-from utilities.utils import query_result_to_array
+from core.utils import query_result_to_array
 
 
 def construct_query(sensor_ids, start_date=None, end_date=None):

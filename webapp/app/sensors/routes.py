@@ -13,7 +13,7 @@ from core.structure import (
     LocationClass,
 )
 from app.sensors import blueprint
-from utilities.utils import filter_latest_sensor_location, query_result_to_array
+from core.utils import filter_latest_sensor_location, query_result_to_array
 
 
 @blueprint.route("/sensor_list", methods=["POST", "GET"])

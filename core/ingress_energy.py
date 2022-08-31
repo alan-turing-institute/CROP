@@ -10,7 +10,7 @@ import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from .ingress import log_upload_event
+from .utils import log_upload_event
 from .db import connect_db, session_open, session_close
 from .structure import SensorClass, TypeClass, ReadingsEnergyClass
 

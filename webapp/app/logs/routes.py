@@ -8,7 +8,7 @@ from flask_login import login_required
 from sqlalchemy import and_, desc
 
 from app.logs import blueprint
-from utilities.utils import query_result_to_array
+from core.utils import query_result_to_array
 
 from core.structure import SQLA as db
 from core.structure import DataUploadLogClass, TypeClass

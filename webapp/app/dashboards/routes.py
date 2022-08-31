@@ -18,7 +18,7 @@ from sqlalchemy import and_
 
 from app.dashboards import blueprint
 
-from utilities.utils import (
+from core.utils import (
     download_csv,
     parse_date_range_argument,
     vapour_pressure_deficit,
