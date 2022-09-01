@@ -11,10 +11,10 @@ from app.queries import blueprint
 # pandas to deduplicate two arrays
 import pandas as pd
 
-from utilities.utils import (
+from core.utils import (
     filter_latest_sensor_location,
     query_result_to_array,
-    jasonify_query_result,
+    jsonify_query_result,
     parse_date_range_argument,
 )
 
@@ -70,7 +70,7 @@ def get_all_sensors():
 
     execute_result = db.session.execute(query).fetchall()
 
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
 
     return result
 
@@ -110,7 +110,7 @@ def get_advanticsys_data(sensor_id):
     )
 
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
 
     return result
 
@@ -148,7 +148,7 @@ def get_stark_data(sensor_id):
     )
 
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
 
     return result
 
@@ -188,7 +188,7 @@ def get_aranet_trh_data(sensor_id):
     )
 
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
 
     return result
 
@@ -227,7 +227,7 @@ def get_aranet_co2_data(sensor_id):
     )
 
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
 
     return result
 
@@ -267,7 +267,7 @@ def get_aranet_airvelocity_data(sensor_id):
     )
 
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
     return result
 
 
@@ -304,7 +304,7 @@ def get_weather():
     )
 
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
     return result
 
 
@@ -323,7 +323,7 @@ def get_crop_types():
         CropTypeClass.is_pre_harvest,
     )
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
     return result
 
 
@@ -342,7 +342,7 @@ def get_all_batches():
         )
     ).filter(CropTypeClass.id == BatchClass.crop_type_id)
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
     return result
 
 
@@ -361,7 +361,7 @@ def get_batch_details(batch_id):
         and_(BatchClass.id == batch_id, CropTypeClass.id == BatchClass.crop_type_id)
     )
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
     return result
 
 
@@ -387,7 +387,7 @@ def get_all_batchevents():
     results_arr = query_result_to_array(execute_result)
     for r in results_arr:
         r["event_type"] = r["event_type"].name
-    result = jasonify_query_result(results_arr)
+    result = jsonify_query_result(results_arr)
     return result
 
 
@@ -420,7 +420,7 @@ def get_transfer_batchevents():
     results_arr = query_result_to_array(execute_result)
     for r in results_arr:
         r["event_type"] = r["event_type"].name
-    result = jasonify_query_result(results_arr)
+    result = jsonify_query_result(results_arr)
     return result
 
 
@@ -450,7 +450,7 @@ def get_all_batchevents_for_batch(batch_id):
     results_arr = query_result_to_array(execute_result)
     for r in results_arr:
         r["event_type"] = r["event_type"].name
-    result = jasonify_query_result(results_arr)
+    result = jsonify_query_result(results_arr)
     return result
 
 
@@ -484,7 +484,7 @@ def get_all_harvests():
         )
     )
     execute_result = db.session.execute(query).fetchall()
-    result = jasonify_query_result(execute_result)
+    result = jsonify_query_result(execute_result)
     return result
 
 

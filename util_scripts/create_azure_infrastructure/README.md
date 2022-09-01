@@ -1,3 +1,6 @@
+# OUT OF DATE
+The scripts in this folder are out of date as of 2022-08-31. They need to be updated or removed. Using them might mess up your deployment.
+
 # CROP infrastructure
 
 **Azure** cloud platform is used to host the CROP infrastructure, i.e. webapp, storage, serverless applications. The creation of the infrastructure is an automated process that can be performed by following few simple steps outlined below.

@@ -38,7 +38,7 @@ from .growapp_structure import (
     BatchClass as GrowAppBatchClass,
     BatchEventClass as GrowAppBatchEventClass,
 )
-from .utils import query_result_to_array
+from .utils import query_result_to_array, log_upload_event
 from .constants import (
     GROWAPP_IP,
     GROWAPP_DB,
@@ -49,7 +49,6 @@ from .constants import (
     SQL_DBNAME,
     SQL_ENGINE,
 )
-from .ingress import log_upload_event
 
 BATCH_EVENT_TYPE_MAPPING = {
     0: EventType.none,
