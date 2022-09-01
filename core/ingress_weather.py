@@ -14,14 +14,13 @@ from .db import connect_db, session_open, session_close
 from .structure import (
     ReadingsWeatherClass,
 )
-from .utils import query_result_to_array
+from .utils import query_result_to_array, log_upload_event
 from .constants import (
     SQL_CONNECTION_STRING,
     SQL_DBNAME,
     CONST_API_WEATHER_TYPE,
     CONST_OPENWEATHERMAP_APIKEY,
 )
-from .ingress import log_upload_event
 from .sensors import get_db_weather_data
 
 CONST_OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=51.45&lon=0.14&appid="
@@ -51,6 +50,8 @@ def upload_openweathermap_data(
 
     # now get the Openweathermap API data
     success, error, df_api = get_openweathermap_data(dt_from, dt_to)
+    if not success:
+        return success, error
 
     # filter out the rows that are already in the db data
     new_data_df = df_api[~df_api.index.isin(df_db.index)]

@@ -35,7 +35,7 @@ from core.structure import (
 from core.structure import SQLA as db
 from core.constants import CONST_TIMESTAMP_FORMAT
 
-from utilities.utils import filter_latest_sensor_location
+from core.utils import filter_latest_sensor_location
 
 
 def aranet_trh_query(dt_from, dt_to):
