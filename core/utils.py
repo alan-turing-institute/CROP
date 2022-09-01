@@ -227,7 +227,9 @@ def vapour_pressure_deficit(temperature, relative_humidity):
     Returns:
     Vapour pressure deficit, in pascals.
     """
-    # See https://pulsegrow.com/blogs/learn/vpd for the magic formula.
+    # This called the Tetens equations, see
+    # https://en.wikipedia.org/wiki/Tetens_equation and
+    # https://pulsegrow.com/blogs/learn/vpd.
     saturation_vapour_pressure = 610.78 * np.exp(
         temperature / (temperature + 237.3) * 17.2694
     )
