@@ -10,8 +10,8 @@ from app import login_manager
 from app.base import blueprint
 from app.base.forms import LoginForm, CreateAccountForm
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.structure import UserClass
+from core.structure import SQLA as db
+from core.structure import UserClass
 
 
 @blueprint.route("/")
@@ -92,12 +92,12 @@ def shutdown():
 
 @login_manager.unauthorized_handler
 def unauthorized_callback():
-    return redirect(url_for('base_blueprint.login'))
+    return redirect(url_for("base_blueprint.login"))
 
 
 @blueprint.errorhandler(403)
 def access_forbidden(error):
-    return redirect(url_for('base_blueprint.login'))
+    return redirect(url_for("base_blueprint.login"))
 
 
 @blueprint.errorhandler(404)
