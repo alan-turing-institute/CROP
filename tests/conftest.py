@@ -1,4 +1,4 @@
-from utils.upload_synthetic_data import upload_synthetic_data
+from misc_utils.upload_synthetic_data import upload_synthetic_data
 
 from core.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
 from core.db import drop_db
