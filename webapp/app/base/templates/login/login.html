@@ -4,8 +4,6 @@
 
 {% block stylesheets %}
   {{ super() }}
-  <!-- Animate.css -->
-  <link href="{{ url_for('static', filename='vendors/animate.css/animate.min.css') }}" rel="stylesheet">
   <!-- Alertify -->
   <link href="{{ url_for('static', filename='vendors/alertifyjs/css/alertify.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='vendors/alertifyjs/css/custom.alertify.css') }}" rel="stylesheet">
@@ -21,12 +19,12 @@
   <!-- Parsley -->
   <script src="{{ url_for('static', filename='vendors/parsleyjs/dist/parsley.min.js') }}"></script>
   <!-- Login -->
-  <script src="{{ url_for('static', filename='build/js/login.js') }}"></script>
+  <script src="{{ url_for('static', filename='javascript/login.js') }}"></script>
   <div>
     <a class="hiddenanchor" id="signup"></a>
     <a class="hiddenanchor" id="signin"></a>
     <div class="login_wrapper">
-      <div class="animate form login_form">
+      <div class="form login_form">
         <section class="login_content">
           <form data-parsley-validate method="post">
             <h1>Login Form</h1>
@@ -59,7 +57,7 @@
         </section>
       </div>
 
-      <div id="register" class="animate form registration_form">
+      <div id="register" class="form registration_form">
         <section class="login_content">
           <form data-parsley-validate id="create-user-form" method="post">
            
