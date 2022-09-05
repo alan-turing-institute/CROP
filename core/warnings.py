@@ -1,146 +1,217 @@
-import time
 from datetime import datetime, timedelta
 
 import pandas as pd
-from numpy import mean
 
-from sqlalchemy import and_
+from sqlalchemy import and_, select
+from sqlalchemy.exc import ProgrammingError
 
 from .structure import (
     TypeClass,
     SensorClass,
     SensorLocationClass,
-    # TODO Once we come back to finishing the warnings feature, this reference to Zensie
-    # needs to be changed for Aranet
-    ReadingsZensieTRHClass,
+    ReadingsAranetTRHClass,
     LocationClass,
-    DataWarningsClass,
+    WarningsClass,
+    WarningTypesClass,
 )
 
-from .utils import query_result_to_array
-
-from .constants import (
-    CONST_ADVANTICSYS,
-    SQL_ENGINE,
-    SQL_DBNAME,
-    SQL_HOST,
-    SQL_CONNECTION_STRING_CROP,
+from .utils import (
+    get_crop_db_session,
+    filter_latest_sensor_location,
 )
 
-from .db import connect_db, session_open, session_close
+from .db import session_close
 
-db_name = "app_db"
-# TODO The below connection string needs secrets. Read them from environment variables.
-# The current one is a placeholder.
-CONNECTION_STRING = "postgresql://username@hostname:password@serverurl:port"
+REPORTING_NO_DATA_NAME = "Sensor reporting no data"
+REPORTING_LITTLE_DATA_NAME = "Sensor reporting little data"
+REPORTING_SOME_DATA_NAME = "Sensor reporting only some data"
+SHORT_DESCRIPTIONS = {
+    REPORTING_NO_DATA_NAME: "Sensor number {} is not reporting data.",
+    REPORTING_LITTLE_DATA_NAME: "Sensor number {} is reporting only a minority of data points.",
+    REPORTING_SOME_DATA_NAME: "Sensor number {} is reporting only some data points.",
+}
 
-# Try to connect to a database that exists
-success, log, engine = connect_db(CONNECTION_STRING, SQL_DBNAME)
+
+def write_warning_types(session):
+    """Write to WarningTypesClass the rows defined by the above constants."""
+    for name, short_description in SHORT_DESCRIPTIONS.items():
+        warning_type = session.execute(
+            select(WarningTypesClass).where(WarningTypesClass.name == name)
+        ).first()
+        if warning_type is None:
+            # This row doesn't exist yet, so add it.
+            warning_type = WarningTypesClass(
+                name=name, short_description=short_description
+            )
+            session.add(warning_type)
+        else:
+            # This row exists, so update it.
+            warning_type = warning_type[0]
+            warning_type.name = name
+    session.commit()
 
 
-def db_query_tmpr_day_zenzie(session, location_zone, date_range):
-
-    """
-    Function to query temperature readings from the Crop dabase's
-    zenzie sensors located in the propagation area of the farm
-    location_zone (str): the zone of the farm to query
-    """
+def get_warning_types(session):
     query = session.query(
-        ReadingsZensieTRHClass.temperature,
-        ReadingsZensieTRHClass.humidity,
-        ReadingsZensieTRHClass.sensor_id,
-    ).filter(
+        WarningTypesClass.id,
+        WarningTypesClass.name,
+        WarningTypesClass.short_description,
+        WarningTypesClass.long_description,
+    )
+    results = pd.read_sql(query.statement, query.session.bind)
+    results = results.set_index("name")
+    return results
+
+
+def get_aranet_sensors(session):
+    query = session.query(SensorClass.id, LocationClass.zone).filter(
         and_(
-            LocationClass.zone == location_zone,
-            SensorLocationClass.location_id == LocationClass.id,  # propagation location
-            # SensorLocationClass.location_id == location_id,
-            ReadingsZensieTRHClass.sensor_id == SensorLocationClass.sensor_id,
-            ReadingsZensieTRHClass.time_created >= date_range,
+            TypeClass.id == SensorClass.type_id,
+            SensorLocationClass.location_id == LocationClass.id,
+            SensorClass.id == SensorLocationClass.sensor_id,
+            TypeClass.sensor_type == "Aranet T&RH",
+            filter_latest_sensor_location(session),
         )
     )
-    readings = session.execute(query).fetchall()
-    # TODO: r = query_result_to_array(readings)
-
-    return readings
+    results = pd.read_sql(query.statement, query.session.bind)
+    return results
 
 
-def too_cold_in_propagation_room(readings, location_zone):
-    """
-    Function to calculate if the temperature is too low in an area of the farm
-    readings: list of temperature values queried from the db
-    """
-    if len(readings) < 5:
-        print("Missing data in  %s - check sensor battery" % (location_zone))
-
-    else:
-        average_temp_ = [item[0] for _, item in enumerate(readings)]
-        average_temp = mean(average_temp_)
-
-        min_temp = 23
-        if average_temp < min_temp:
-            # issue warning
-            print("Temperature is low in %s, add heater" % (location_zone))
-            return average_temp
-        elif average_temp > 50:
-            print(average_temp)
-            return average_temp
-
-
-def too_humid_in_propagation_room(readings, location_zone):
-    """
-    Function to calculate if the humitidy is too high in an area of the farm
-    readings: list of humidity values queried from the db
-    """
-    if len(readings) < 5:
-        print("Missing data in  %s - check sensor battery" % (location_zone))
-    else:
-        average_hum_ = [item[1] for _, item in enumerate(readings)]
-        average_hum = mean(average_hum_)
-
-        max_hum = 80
-        if average_hum >= max_hum:
-            # issue warning
-            print("Too humid in  %s room - ventilate or dehumidify" % (location_zone))
-            return average_hum
-
-
-def check_issues_in_farm(session):
-
-    start_date = datetime.utcnow() - timedelta(hours=24)
-    propagation_zone = "Propagation"
-
-    readings = db_query_tmpr_day_zenzie(session, propagation_zone, start_date)
-
-    too_cold_in_propagation_room(readings, propagation_zone)
-
-    too_humid_in_propagation_room(readings, propagation_zone)
-
-
-def issue_warnings():
-    None
-
-
-def upload_warnings(session, warning):
-    start_time = time.time()
-
-    session = session_open(engine)
-    for idx, row in warning.iterrows():
-
-        data = DataWarningsClass(
-            type_id=type_id,
-            timestamp=idx,
-            priority=prior,
-            log=warning_log,
-            # temperature=row["Temperature"],
-            # humidity=row["Humidity"],
+def get_aranet_data(session, start_datetime, end_datetime):
+    query = session.query(
+        ReadingsAranetTRHClass.sensor_id,
+        ReadingsAranetTRHClass.humidity,
+        ReadingsAranetTRHClass.temperature,
+        ReadingsAranetTRHClass.timestamp,
+    ).filter(
+        and_(
+            ReadingsAranetTRHClass.timestamp >= start_datetime,
+            ReadingsAranetTRHClass.timestamp < end_datetime,
         )
+    )
+    results = pd.read_sql(query.statement, query.session.bind)
+    return results
 
-    session.add(data)
+
+# def too_cold_in_propagation_room(readings, location_zone):
+#    """
+#    Function to calculate if the temperature is too low in an area of the farm
+#    readings: list of temperature values queried from the db
+#    """
+#    if len(readings) < 5:
+#        print("Missing data in  %s - check sensor battery" % (location_zone))
+#
+#    else:
+#        average_temp_ = [item[0] for _, item in enumerate(readings)]
+#        average_temp = mean(average_temp_)
+#
+#        min_temp = 23
+#        if average_temp < min_temp:
+#            # issue warning
+#            print("Temperature is low in %s, add heater" % (location_zone))
+#            return average_temp
+#        elif average_temp > 50:
+#            print(average_temp)
+#            return average_temp
+#
+#
+# def too_humid_in_propagation_room(readings, location_zone):
+#    """
+#    Function to calculate if the humitidy is too high in an area of the farm
+#    readings: list of humidity values queried from the db
+#    """
+#    if len(readings) < 5:
+#        print("Missing data in  %s - check sensor battery" % (location_zone))
+#    else:
+#        average_hum_ = [item[1] for _, item in enumerate(readings)]
+#        average_hum = mean(average_hum_)
+#
+#        max_hum = 80
+#        if average_hum >= max_hum:
+#            # issue warning
+#            print("Too humid in  %s room - ventilate or dehumidify" % (location_zone))
+#            return average_hum
+
+
+# def upload_warnings(session, warning):
+#    session = session_open(engine)
+#    for idx, row in warning.iterrows():
+#        data = WarningsClass(
+#            type_id=type_id,
+#            priority=prior,
+#            log=warning_log,
+#        )
+#
+#    session.add(data)
+
+
+def create_and_upload_aranet_warnings(session, warning_types):
+    check_period_hours = 24
+    end_datetime = datetime.utcnow()
+    start_datetime = end_datetime - timedelta(hours=check_period_hours)
+    aranet_data = get_aranet_data(session, start_datetime, end_datetime)
+    aranet_sensors = get_aranet_sensors(session)
+    print(aranet_data)
+    print(aranet_sensors)
+    filter_out_last_hour = aranet_data["timestamp"] < end_datetime - timedelta(hours=1)
+    counts_by_sensor = (
+        aranet_data.loc[filter_out_last_hour, ["sensor_id", "timestamp"]]
+        .groupby("sensor_id")
+        .count()
+    )
+
+    priorities = {
+        REPORTING_NO_DATA_NAME: 3,
+        REPORTING_LITTLE_DATA_NAME: 2,
+        REPORTING_SOME_DATA_NAME: 1,
+    }
+    for _, row in aranet_sensors.iterrows():
+        sensor_id = row["id"]
+        if sensor_id not in counts_by_sensor.index:
+            reporting_status = REPORTING_NO_DATA_NAME
+        else:
+            count = counts_by_sensor.loc[sensor_id, "timestamp"]
+            max_count = (check_period_hours - 1) * 6
+            if count >= max_count:
+                reporting_status = "full data"
+            elif max_count // 2 < count < max_count:
+                reporting_status = REPORTING_SOME_DATA_NAME
+            else:
+                reporting_status = REPORTING_LITTLE_DATA_NAME
+        if reporting_status != "full data":
+            session.add(
+                WarningsClass(
+                    sensor_id=int(sensor_id),
+                    warning_type_id=int(warning_types.loc[reporting_status, "id"]),
+                    priority=priorities[reporting_status],
+                )
+            )
+    session.commit()
+
+
+def create_and_upload_warnings():
+    session, engine = get_crop_db_session(return_engine=True)
+    if session is None:
+        return False
+
+    # Create the relevant tables if they don't yet exist
+    try:
+        WarningTypesClass.__table__.create(bind=engine)
+    except ProgrammingError:
+        pass
+    try:
+        WarningsClass.__table__.create(bind=engine)
+    except ProgrammingError:
+        pass
+
+    try:
+        write_warning_types(session)
+        warning_types = get_warning_types(session)
+        create_and_upload_aranet_warnings(session, warning_types)
+    finally:
+        session_close(session)
+    return True
 
 
 if __name__ == "__main__":
-    session = session_open(engine)
-
-    check_issues_in_farm(session)
-
-    session_close(session)
+    create_and_upload_warnings()

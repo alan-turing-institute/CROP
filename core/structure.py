@@ -8,17 +8,18 @@ Module to define the structure of the database. Each Class, defines a table in t
 import enum
 from sqlalchemy import (
     Boolean,
-    ForeignKey,
     Column,
-    Enum,
-    Integer,
-    Float,
-    String,
     DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    JSON,
+    LargeBinary,
+    String,
     Text,
     Unicode,
     UniqueConstraint,
-    LargeBinary,
 )
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -59,6 +60,8 @@ from .constants import (
     BATCH_TABLE_NAME,
     BATCH_EVENT_TABLE_NAME,
     HARVEST_TABLE_NAME,
+    WARNING_TYPES_TABLE_NAME,
+    WARNINGS_TABLE_NAME,
 )
 
 SQLA = SQLAlchemy()
@@ -340,9 +343,9 @@ class LocationClass(BASE):
     id = Column(Integer, primary_key=True, autoincrement=True)  # e
 
     zone = Column(String(50), nullable=False)
-    aisle = Column(String(50), nullable=False)
-    column = Column(Integer, nullable=False)
-    shelf = Column(Integer, nullable=False)
+    aisle = Column(String(50), nullable=True)
+    column = Column(Integer, nullable=True)
+    shelf = Column(Integer, nullable=True)
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
@@ -822,3 +825,63 @@ class HarvestClass(BASE):
         self.waste_disease = waste_disease
         self.waste_defect = waste_defect
         self.over_production = over_production
+
+
+class WarningTypesClass(BASE):
+    """
+    Table for different types of warnings CROP may report.
+
+    The short_description and long_description columns should be either strings that are
+    shown in any logging/reporting interface for warnings of this type, or templates for
+    such strings. A template can hold various placeholders that are to be filled in with
+    extra data for each particular error. How these placeholders are specified and how
+    they are to be filled in is not specified by the database schema, but is the
+    responsibility of the logging/reporting code.
+    """
+
+    __tablename__ = WARNING_TYPES_TABLE_NAME
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(64), nullable=False, unique=True)
+    short_description = Column(Unicode(64), nullable=False)
+    long_description = Column(Unicode(1024), nullable=True)
+    time_created = Column(DateTime(), nullable=True, server_default=func.now())
+
+
+class WarningsClass(BASE):
+    """
+    Table for warnings CROP reports.
+
+    time_created is for when this warning was created, time is for any other time
+    variable that may be relevant for the warning.
+
+    The sensor_id, batch_id, and time columns are nullable because many warning types
+    may have no use for them. Any extra data other than an attached sensor, batch, or
+    timestamp should be recorded in the other_data column. How the data in that column
+    is to be interpreted depends on the warning type, and is something the code
+    processing the warnings needs to take care of.
+
+    Priority should be a positive integer, with higher values meaning higher priority.
+    """
+
+    __tablename__ = WARNINGS_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    warning_type_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(WARNING_TYPES_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=True,
+    )
+    batch_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(BATCH_TABLE_NAME, ID_COL_NAME)),
+        nullable=True,
+    )
+    time = Column(DateTime(), nullable=True, server_default=func.now())
+    other_data = Column(JSON, nullable=True)
+    priority = Column(Integer, nullable=True)
+    time_created = Column(DateTime(), nullable=False, server_default=func.now())
