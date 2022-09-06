@@ -370,6 +370,9 @@ def regional_minmax_json(df):
 
 def get_warnings(time_from):
     """Get the latest alerts from the CROP database as a pandas DataFrame."""
+    # TODO This query is wrong: It leaves out any rows in WarningsClass that don't
+    # have a non-null sensor_id. There should be a way to fix it using some sort of of
+    # outerjoin or somesuch, but my sqlalchemy skills failed me in a rush.
     query = db.session.query(
         WarningClass.sensor_id,
         WarningClass.batch_id,

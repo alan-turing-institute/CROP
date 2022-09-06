@@ -13,6 +13,7 @@ from .structure import (
     SensorClass,
     SensorLocationClass,
     ReadingsAranetTRHClass,
+    ReadingsWeatherClass,
     LocationClass,
     WarningClass,
     WarningTypeClass,
@@ -30,6 +31,7 @@ REPORTING_SOME_DATA_NAME = "Sensor reporting only some data"
 NO_LOCATION_NAME = "No location"
 TOO_COLD_NAME = "Too cold"
 TOO_HUMID_NAME = "Too humid"
+OUTSIDE_TOO_HUMID_NAME = "Outside too humid"
 SHORT_DESCRIPTIONS = {
     REPORTING_NO_DATA_NAME: "Sensor {sensor_name} is not reporting data.",
     REPORTING_LITTLE_DATA_NAME: "Sensor {sensor_name} is reporting only a minority of data points.",
@@ -37,6 +39,7 @@ SHORT_DESCRIPTIONS = {
     NO_LOCATION_NAME: "Sensor {sensor_name} has no location set.",
     TOO_COLD_NAME: "Too cold: Sensor {sensor_name} in {zone} was at {min_temperature}°C at {time}.",
     TOO_HUMID_NAME: "Too humid: Sensor {sensor_name} in {zone} was at {max_humidity}% relative humidity at {time}.",
+    OUTSIDE_TOO_HUMID_NAME: "Relative humidity outside ({outside_rh}%) is higher than inside ({inside_rh}%).",
 }
 PRIORITIES = {
     REPORTING_NO_DATA_NAME: 3,
@@ -45,6 +48,7 @@ PRIORITIES = {
     NO_LOCATION_NAME: 1,
     TOO_COLD_NAME: 2,
     TOO_HUMID_NAME: 3,
+    OUTSIDE_TOO_HUMID_NAME: 4,
 }
 
 # TODO Should this rather be in the database?
@@ -136,6 +140,21 @@ def get_aranet_data(session, start_datetime, end_datetime):
         and_(
             ReadingsAranetTRHClass.timestamp >= start_datetime,
             ReadingsAranetTRHClass.timestamp < end_datetime,
+        )
+    )
+    results = pd.read_sql(query.statement, query.session.bind)
+    return results
+
+
+def get_weather_data(session, start_datetime, end_datetime):
+    query = session.query(
+        ReadingsWeatherClass.relative_humidity,
+        ReadingsWeatherClass.temperature,
+        ReadingsWeatherClass.timestamp,
+    ).filter(
+        and_(
+            ReadingsWeatherClass.timestamp >= start_datetime,
+            ReadingsWeatherClass.timestamp < end_datetime,
         )
     )
     results = pd.read_sql(query.statement, query.session.bind)
@@ -252,18 +271,42 @@ def warn_missing_aranet_data(
     session.commit()
 
 
+def warn_external_conditions(session, warning_types, data, weather_data):
+    """Warn if outside temperature or relative humidity are somehow problematic."""
+    # TODO Is relative humidity really the right thing to compare? Wouldn't absolute
+    # humidity be more relevant for this?
+    weather_last_idx = weather_data["timestamp"].idxmax()
+    latest_outside_rh = weather_data.loc[weather_last_idx, "relative_humidity"]
+    now = datetime.utcnow()
+    last_two_hours_data = data[data["timestamp"] >= now - timedelta(hours=2)]
+    if len(last_two_hours_data) == 0:
+        return
+    latest_inside_rh = last_two_hours_data["humidity"].mean()
+    if latest_outside_rh > latest_inside_rh:
+        warning_type_id = int(warning_types.loc[OUTSIDE_TOO_HUMID_NAME, "id"])
+        warning = WarningClass(
+            warning_type_id=warning_type_id,
+            priority=PRIORITIES[OUTSIDE_TOO_HUMID_NAME],
+            other_data={"outside_rh": latest_outside_rh, "inside_rh": latest_inside_rh},
+        )
+        session.add(warning)
+        session.commit()
+
+
 def warn_aranet(session, warning_types):
     """Create various warnings related to Aranet sensors."""
     data_time_period_hours = 24
     end_datetime = datetime.utcnow()
     start_datetime = end_datetime - timedelta(hours=data_time_period_hours)
     data = get_aranet_data(session, start_datetime, end_datetime)
+    weather_data = get_weather_data(session, start_datetime, end_datetime)
     sensors = get_aranet_sensors(session)
 
     warn_missing_aranet_data(
         session, warning_types, data, sensors, data_time_period_hours
     )
     warn_trh_conditions(session, warning_types, data, sensors)
+    warn_external_conditions(session, warning_types, data, weather_data)
 
 
 def create_and_upload_warnings():
