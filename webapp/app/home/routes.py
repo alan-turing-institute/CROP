@@ -523,6 +523,4 @@ def index():
 @login_required
 def model():
     """Unity model page."""
-    return render_template(
-        "model.html",
-    )
+    return render_template("model.html")
