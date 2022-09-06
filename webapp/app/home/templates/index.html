@@ -499,44 +499,16 @@
         <div class="x_content">
           <div class="dashboard-widget-content">
             <ul class="list-unstyled timeline widget">
+              {% for warning in warnings %}
               <li>
                 <div class="block">
                   <div class="block_content">
-                    <h2 class="title">
-                      <a>Sensor in R&D not producing any data</a>
-                    </h2>
-                    <div class="byline">
-                      <span>1 hours ago</span> by <a>Zenzie</a>
-                    </div>
+                    <h2 class="title">{{warning.description}}</h2>
+                    <div class="byline">{{warning.time_string}}</div>
                   </div>
                 </div>
               </li>
-
-              <li>
-                <div class="block">
-                  <div class="block_content">
-                    <h2 class="title">
-                      <a>High Humidity Back of Farm</a>
-                    </h2>
-                    <div class="byline">
-                      <span>8 hours ago</span> by <a>Zenzie</a>
-                    </div>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div class="block">
-                  <div class="block_content">
-                    <h2 class="title">
-                      <a>High Temperature in Mid Farm</a>
-                    </h2>
-                    <div class="byline">
-                      <span>13 hours ago</span> by <a>Zenzie</a>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
+              {% endfor %}
             </ul>
           </div>
         </div>

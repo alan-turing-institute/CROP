@@ -5,6 +5,8 @@ import logging
 import copy
 import datetime as dt
 import pandas as pd
+import json
+import pytz
 
 from flask import render_template, request
 from flask_login import login_required
@@ -19,6 +21,8 @@ from core.structure import (
     SensorClass,
     SensorLocationClass,
     TypeClass,
+    WarningClass,
+    WarningTypeClass,
 )
 from core.constants import CONST_TIMESTAMP_FORMAT
 from core.utils import filter_latest_sensor_location, vapour_pressure_deficit
@@ -364,6 +368,68 @@ def regional_minmax_json(df):
     return return_value
 
 
+def get_warnings(time_from):
+    """Get the latest alerts from the CROP database as a pandas DataFrame."""
+    query = db.session.query(
+        WarningClass.sensor_id,
+        WarningClass.batch_id,
+        WarningClass.time,
+        WarningClass.other_data,
+        WarningClass.priority,
+        WarningClass.time_created,
+        WarningTypeClass.short_description,
+        WarningTypeClass.long_description,
+        SensorClass.name.label("sensor_name"),
+    ).filter(
+        and_(
+            WarningTypeClass.id == WarningClass.warning_type_id,
+            WarningClass.time_created > time_from,
+            SensorClass.id == WarningClass.sensor_id,
+        )
+    )
+    warnings = pd.read_sql(query.statement, query.session.bind)
+    warnings["time_created"] = warnings["time_created"].apply(
+        lambda x: x.tz_localize(dt.timezone.utc)
+    )
+    warnings["template_values"] = warnings.apply(
+        lambda row: {
+            "sensor_id": row["sensor_id"],
+            "sensor_name": row["sensor_name"],
+            "batch_id": row["batch_id"],
+            "time": row["time"],
+            **({} if row["other_data"] is None else row["other_data"]),
+        },
+        axis=1,
+    )
+    warnings["description"] = warnings.apply(
+        lambda row: row["short_description"].format(**row["template_values"]), axis=1
+    )
+    descriptions_with_times = warnings.loc[:, ["description", "time_created"]]
+    # Pick the latest version of each warning only
+    descriptions_with_times = (
+        descriptions_with_times.groupby("description")
+        .max()
+        .reset_index()
+        .sort_values("time_created", ascending=False)
+    )
+    return descriptions_with_times
+
+
+def format_warnings_json(warnings):
+    """Convert a DataFrame of warnings into a list of dictionaries ready to be jsonified
+    for Jinja.
+    """
+    warnings["time_string"] = warnings["time_created"].apply(
+        lambda x: x.tz_convert(pytz.timezone("Europe/London")).strftime(
+            "%a %d %b %y, %H:%M"
+        )
+    )
+    # Converting to and from JSON ensures that we have a Python object that can be
+    # cleanly converted to JSON by render_template.
+    warnings_json = json.loads(warnings.to_json(orient="records"))
+    return warnings_json
+
+
 @blueprint.route("/index")
 @login_required
 def index():
@@ -433,6 +499,9 @@ def index():
     else:
         json_strat = {}
 
+    warnings = get_warnings(dt_from_daily)
+    warnings_json = format_warnings_json(warnings)
+
     return render_template(
         "index.html",
         hourly_data=hourly_json,
@@ -446,6 +515,7 @@ def index():
         stratification=json_strat,
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
+        warnings=warnings_json,
     )
 
 
