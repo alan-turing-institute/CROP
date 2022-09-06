@@ -3,6 +3,7 @@ conditions.
 """
 from datetime import datetime, timedelta
 
+import numpy as np
 import pandas as pd
 from sqlalchemy import and_, select
 from sqlalchemy.exc import ProgrammingError
@@ -22,6 +23,7 @@ from .utils import (
 )
 from .db import session_close
 
+# TODO Can we avoid having these constants? If not, should they be in core.constants?
 REPORTING_NO_DATA_NAME = "Sensor reporting no data"
 REPORTING_LITTLE_DATA_NAME = "Sensor reporting little data"
 REPORTING_SOME_DATA_NAME = "Sensor reporting only some data"
@@ -33,7 +35,7 @@ SHORT_DESCRIPTIONS = {
     REPORTING_LITTLE_DATA_NAME: "Sensor {sensor_name} is reporting only a minority of data points.",
     REPORTING_SOME_DATA_NAME: "Sensor {sensor_name} is reporting only some data points.",
     NO_LOCATION_NAME: "Sensor {sensor_name} has no location set.",
-    TOO_COLD_NAME: "Too cold: Sensor {sensor_name} in {zone} was at {min_temp}°C at {time}.",
+    TOO_COLD_NAME: "Too cold: Sensor {sensor_name} in {zone} was at {min_temperature}°C at {time}.",
     TOO_HUMID_NAME: "Too humid: Sensor {sensor_name} in {zone} was at {max_humidity}% relative humidity at {time}.",
 }
 PRIORITIES = {
@@ -45,8 +47,30 @@ PRIORITIES = {
     TOO_HUMID_NAME: 3,
 }
 
-PROPAGATION_MIN_TEMPERATURE = 23.0
-PROPAGATION_MAX_HUMIDITY = 80.0
+# TODO Should this rather be in the database?
+ZONE_CONDITION_BOUNDS = {
+    "Propagation": [
+        # For each element in this list, if the `bound_type` extremal value (min or max)
+        # of `metric` compares to `bound_value` with `comparison_operator`, then create
+        # a warning of `warning_type` in the warn_conditions_zone function. E.g. this
+        # first entry says that if the min temperature reached by any sensor in
+        # Propagation was less than 23.0, we should create a TOO_COLD warning.
+        {
+            "metric": "temperature",
+            "bound_type": "min",
+            "comparison_operator": np.less,
+            "bound_value": 23.0,
+            "warning_type": TOO_COLD_NAME,
+        },
+        {
+            "metric": "humidity",
+            "bound_type": "max",
+            "comparison_operator": np.greater,
+            "bound_value": 80.0,
+            "warning_type": TOO_HUMID_NAME,
+        },
+    ]
+}
 
 
 def write_warning_types(session):
@@ -122,65 +146,68 @@ def warn_missing_locations(session, warning_types):
     """Create warnings for sensors that have no location set."""
     sensors = get_sensors_without_locations(session)
     for _, row in sensors.iterrows():
+        # The conversions to int seem necessary because SQLAlchemy can't handle
+        # numpy.int64.
+        warning_type_id = int(warning_types.loc[NO_LOCATION_NAME, "id"])
         warning = WarningClass(
             sensor_id=int(row["id"]),
-            warning_type_id=int(warning_types.loc[NO_LOCATION_NAME, "id"]),
+            warning_type_id=warning_type_id,
             priority=PRIORITIES[NO_LOCATION_NAME],
         )
         session.add(warning)
     session.commit()
 
 
-# TODO Make this general for any zone, have limits be in a DB table or dictionary.
-def warn_propagation_conditions(session, warning_types, data, sensors):
-    """Create warnings if T&RH conditions in Propagation are outside allowed bounds."""
-    sensors = sensors.set_index("id")
-    # Drop sensors for which we do not know their location. Copy to be able to mutate
-    # the DataFrame later.
-    data = data.loc[data["sensor_id"].isin(sensors.index), :].copy()
-    # Filter out everything outside of the selected zone.
-    data["zone"] = data["sensor_id"].apply(
-        lambda sensor_id: sensors.loc[sensor_id, "zone"]
-    )
-    df = data[data["zone"] == "Propagation"]
-
-    minmax_values = (
+def warn_zone_trh_conditions(session, warning_types, data, zone):
+    """Create warnings if T&RH conditions in `zone` are outside allowed bounds."""
+    df = data[data["zone"] == zone]
+    extremal_values = (
         df.loc[:, ["sensor_id", "temperature", "humidity"]]
         .groupby("sensor_id")
         .agg(("min", "max"))
     )
-    for sensor_id, row in minmax_values.iterrows():
-        min_temp = row["temperature"]["min"]
-        max_humidity = row["humidity"]["max"]
-        if min_temp < PROPAGATION_MIN_TEMPERATURE:
-            # Find the latest time this value occurred.
-            time = df.loc[
-                (df["sensor_id"] == sensor_id) & (df["temperature"] == min_temp),
-                "timestamp",
-            ].max()
-            warning = WarningClass(
-                sensor_id=int(sensor_id),
-                warning_type_id=int(warning_types.loc[TOO_COLD_NAME, "id"]),
-                priority=PRIORITIES[TOO_COLD_NAME],
-                time=time,
-                other_data={"min_temp": min_temp, "zone": "Propagation"},
+    for sensor_id, row in extremal_values.iterrows():
+        for bound in ZONE_CONDITION_BOUNDS[zone]:
+            # See comment at the definition of ZONE_CONDITION_BOUNDS for an explanation
+            # of this part.
+            metric, bound_type, bound_value, comparison_operator, warning_type = (
+                bound["metric"],
+                bound["bound_type"],
+                bound["bound_value"],
+                bound["comparison_operator"],
+                bound["warning_type"],
             )
-            session.add(warning)
-        if max_humidity < PROPAGATION_MAX_HUMIDITY:
-            # Find the latest time this value occurred.
-            time = df.loc[
-                (df["sensor_id"] == sensor_id) & (df["humidity"] == max_humidity),
-                "timestamp",
-            ].max()
-            warning = WarningClass(
-                sensor_id=int(sensor_id),
-                warning_type_id=int(warning_types.loc[TOO_HUMID_NAME, "id"]),
-                priority=PRIORITIES[TOO_HUMID_NAME],
-                time=time,
-                other_data={"max_humidity": max_humidity, "zone": "Propagation"},
-            )
-            session.add(warning)
+            extremal_value = row[metric][bound_type]
+            if comparison_operator(extremal_value, bound_value):
+                # Find the latest time this value occurred.
+                time = df.loc[
+                    (df["sensor_id"] == sensor_id) & (df[metric] == extremal_value),
+                    "timestamp",
+                ].max()
+                warning_type_id = int(warning_types.loc[warning_type, "id"])
+                bound_name = f"{bound_type}_{metric}"
+                warning = WarningClass(
+                    sensor_id=sensor_id,
+                    warning_type_id=warning_type_id,
+                    priority=PRIORITIES[warning_type],
+                    time=time,
+                    other_data={bound_name: extremal_value, "zone": zone},
+                )
+                session.add(warning)
     session.commit()
+
+
+def warn_trh_conditions(session, warning_types, data, sensors):
+    """Create warnings if T&RH conditions are outside allowed bounds."""
+    sensors = sensors.set_index("id")
+    # Drop sensors for which we do not know their location. Copy to be able to mutate
+    # the DataFrame later.
+    data = data.loc[data["sensor_id"].isin(sensors.index), :].copy()
+    data["zone"] = data["sensor_id"].apply(
+        lambda sensor_id: sensors.loc[sensor_id, "zone"]
+    )
+    for zone in ZONE_CONDITION_BOUNDS:
+        warn_zone_trh_conditions(session, warning_types, data, zone)
 
 
 def warn_missing_aranet_data(
@@ -196,7 +223,12 @@ def warn_missing_aranet_data(
         .count()
     )
 
+    # Note that this loop doesn't include sensors that don't have a location set, since
+    # they weren't included in the query that produced `sensors`.
     for _, row in sensors.iterrows():
+        # Skip sensors explicitly marked as not being in use.
+        if row["zone"] in ("Not in use", "Retired"):
+            continue
         sensor_id = row["id"]
         if sensor_id not in counts_by_sensor.index:
             reporting_status = REPORTING_NO_DATA_NAME
@@ -210,9 +242,10 @@ def warn_missing_aranet_data(
             else:
                 reporting_status = REPORTING_LITTLE_DATA_NAME
         if reporting_status != "full data":
+            warning_type_id = int(warning_types.loc[reporting_status, "id"])
             warning = WarningClass(
-                sensor_id=int(sensor_id),
-                warning_type_id=int(warning_types.loc[reporting_status, "id"]),
+                sensor_id=sensor_id,
+                warning_type_id=warning_type_id,
                 priority=PRIORITIES[reporting_status],
             )
             session.add(warning)
@@ -230,7 +263,7 @@ def warn_aranet(session, warning_types):
     warn_missing_aranet_data(
         session, warning_types, data, sensors, data_time_period_hours
     )
-    warn_propagation_conditions(session, warning_types, data, sensors)
+    warn_trh_conditions(session, warning_types, data, sensors)
 
 
 def create_and_upload_warnings():
