@@ -827,7 +827,7 @@ class HarvestClass(BASE):
         self.over_production = over_production
 
 
-class WarningTypesClass(BASE):
+class WarningTypeClass(BASE):
     """
     Table for different types of warnings CROP may report.
 
@@ -842,12 +842,12 @@ class WarningTypesClass(BASE):
     __tablename__ = WARNING_TYPES_TABLE_NAME
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(64), nullable=False, unique=True)
-    short_description = Column(Unicode(64), nullable=False)
-    long_description = Column(Unicode(1024), nullable=True)
+    short_description = Column(Unicode(256), nullable=False)
+    long_description = Column(Unicode(2048), nullable=True)
     time_created = Column(DateTime(), nullable=True, server_default=func.now())
 
 
-class WarningsClass(BASE):
+class WarningClass(BASE):
     """
     Table for warnings CROP reports.
 

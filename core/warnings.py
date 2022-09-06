@@ -11,8 +11,8 @@ from .structure import (
     SensorLocationClass,
     ReadingsAranetTRHClass,
     LocationClass,
-    WarningsClass,
-    WarningTypesClass,
+    WarningClass,
+    WarningTypeClass,
 )
 
 from .utils import (
@@ -26,37 +26,37 @@ REPORTING_NO_DATA_NAME = "Sensor reporting no data"
 REPORTING_LITTLE_DATA_NAME = "Sensor reporting little data"
 REPORTING_SOME_DATA_NAME = "Sensor reporting only some data"
 SHORT_DESCRIPTIONS = {
-    REPORTING_NO_DATA_NAME: "Sensor number {} is not reporting data.",
-    REPORTING_LITTLE_DATA_NAME: "Sensor number {} is reporting only a minority of data points.",
-    REPORTING_SOME_DATA_NAME: "Sensor number {} is reporting only some data points.",
+    REPORTING_NO_DATA_NAME: "Sensor {sensor_name} is not reporting data.",
+    REPORTING_LITTLE_DATA_NAME: "Sensor {sensor_name} is reporting only a minority of data points.",
+    REPORTING_SOME_DATA_NAME: "Sensor {sensor_name} is reporting only some data points.",
 }
 
 
 def write_warning_types(session):
-    """Write to WarningTypesClass the rows defined by the above constants."""
+    """Write to WarningTypeClass the rows defined by the above constants."""
     for name, short_description in SHORT_DESCRIPTIONS.items():
         warning_type = session.execute(
-            select(WarningTypesClass).where(WarningTypesClass.name == name)
+            select(WarningTypeClass).where(WarningTypeClass.name == name)
         ).first()
         if warning_type is None:
             # This row doesn't exist yet, so add it.
-            warning_type = WarningTypesClass(
+            warning_type = WarningTypeClass(
                 name=name, short_description=short_description
             )
             session.add(warning_type)
         else:
             # This row exists, so update it.
             warning_type = warning_type[0]
-            warning_type.name = name
+            warning_type.short_description = short_description
     session.commit()
 
 
 def get_warning_types(session):
     query = session.query(
-        WarningTypesClass.id,
-        WarningTypesClass.name,
-        WarningTypesClass.short_description,
-        WarningTypesClass.long_description,
+        WarningTypeClass.id,
+        WarningTypeClass.name,
+        WarningTypeClass.short_description,
+        WarningTypeClass.long_description,
     )
     results = pd.read_sql(query.statement, query.session.bind)
     results = results.set_index("name")
@@ -136,7 +136,7 @@ def get_aranet_data(session, start_datetime, end_datetime):
 # def upload_warnings(session, warning):
 #    session = session_open(engine)
 #    for idx, row in warning.iterrows():
-#        data = WarningsClass(
+#        data = WarningClass(
 #            type_id=type_id,
 #            priority=prior,
 #            log=warning_log,
@@ -151,8 +151,6 @@ def create_and_upload_aranet_warnings(session, warning_types):
     start_datetime = end_datetime - timedelta(hours=check_period_hours)
     aranet_data = get_aranet_data(session, start_datetime, end_datetime)
     aranet_sensors = get_aranet_sensors(session)
-    print(aranet_data)
-    print(aranet_sensors)
     filter_out_last_hour = aranet_data["timestamp"] < end_datetime - timedelta(hours=1)
     counts_by_sensor = (
         aranet_data.loc[filter_out_last_hour, ["sensor_id", "timestamp"]]
@@ -180,7 +178,7 @@ def create_and_upload_aranet_warnings(session, warning_types):
                 reporting_status = REPORTING_LITTLE_DATA_NAME
         if reporting_status != "full data":
             session.add(
-                WarningsClass(
+                WarningClass(
                     sensor_id=int(sensor_id),
                     warning_type_id=int(warning_types.loc[reporting_status, "id"]),
                     priority=priorities[reporting_status],
@@ -196,11 +194,11 @@ def create_and_upload_warnings():
 
     # Create the relevant tables if they don't yet exist
     try:
-        WarningTypesClass.__table__.create(bind=engine)
+        WarningTypeClass.__table__.create(bind=engine)
     except ProgrammingError:
         pass
     try:
-        WarningsClass.__table__.create(bind=engine)
+        WarningClass.__table__.create(bind=engine)
     except ProgrammingError:
         pass
 
