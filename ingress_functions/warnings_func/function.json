@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "entryPoint": "create_warnings",
+  "bindings": [
+    {
+        "name": "mytimer",
+        "type": "timerTrigger",
+        "direction": "in",
+        "schedule": "0 */1 * * *"
+    }
+  ]
+}
