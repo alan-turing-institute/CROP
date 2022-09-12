@@ -15,7 +15,7 @@ from flask_login import login_required
 
 from sqlalchemy import and_, func
 
-from __app__.crop.structure import (
+from core.structure import (
     ModelClass,
     ModelMeasureClass,
     ModelRunClass,
@@ -32,10 +32,10 @@ from __app__.crop.structure import (
     SensorClass,
 )
 
-from __app__.crop.structure import SQLA as db
-from __app__.crop.constants import CONST_TIMESTAMP_FORMAT
+from core.structure import SQLA as db
+from core.constants import CONST_TIMESTAMP_FORMAT
 
-from utilities.utils import filter_latest_sensor_location
+from core.utils import filter_latest_sensor_location
 
 
 def aranet_trh_query(dt_from, dt_to):

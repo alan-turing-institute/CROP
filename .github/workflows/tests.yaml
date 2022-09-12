@@ -2,7 +2,7 @@ name: "Unit tests"
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, test-actions]
   workflow_dispatch:
 
 jobs:
@@ -35,5 +35,4 @@ jobs:
       - run: git submodule update --init --recursive
       - run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          cd __app__
           pytest -vv
