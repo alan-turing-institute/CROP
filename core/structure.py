@@ -605,29 +605,6 @@ class SensorLocationClass(BASE):
     __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
 
 
-class WeatherClass(BASE):
-    """
-    Class for reading the Met Weather API
-    """
-
-    # TODO: connect to met weather api
-
-    __tablename__ = "weather"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-
-    temperature = Column(Float, nullable=False)
-    rainfall = Column(Float)
-    humidity = Column(Float)
-    wind_speed = Column(Float)
-    wind_direction = Column(Float)
-    weather_type = Column(String)
-    forecast = Column(Float)
-
-    time_created = Column(DateTime(), server_default=func.now())
-    time_updated = Column(DateTime(), onupdate=func.now())
-
-
 class UserClass(BASE, UserMixin):
     """
     Class for storing user credentials.
