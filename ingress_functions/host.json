@@ -1,0 +1,17 @@
+{
+  "version": "2.0",
+  "functions": [ "hyper_func", "weather_func", "growapp_func", "electricity_func" ],
+  "functionTimeout": "01:00:00",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    }
+  },
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[2.*, 3.0.0)"
+  }
+}

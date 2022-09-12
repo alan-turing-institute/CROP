@@ -4,40 +4,55 @@ function check_data(data) {
   } else console.log("its good data", data);
 }
 
-function set_hourly_values(hourly_data_json) {
+function set_meanminmax_values(hourly_data, minmax_data) {
   const numDecimals = 1;
-  let tempFF = hourly_data_json[1]["temperature"].toFixed(numDecimals);
-  document.getElementById("tempFF").innerHTML = tempFF;
-  let tempFM = hourly_data_json[2]["temperature"].toFixed(numDecimals);
-  document.getElementById("tempFM").innerHTML = tempFM;
-  let tempFB = hourly_data_json[0]["temperature"].toFixed(numDecimals);
-  document.getElementById("tempFB").innerHTML = tempFB;
-  let tempPR = hourly_data_json[3]["temperature"].toFixed(numDecimals);
-  document.getElementById("tempPR").innerHTML = tempPR;
-  let tempRD = hourly_data_json[4]["temperature"].toFixed(numDecimals);
-  document.getElementById("tempRD").innerHTML = tempRD;
+  for (region of ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"]) {
+    for (metric of ["temperature", "humidity", "vpd"]) {
+      const mean_element = document.getElementById(`${metric}_${region}`);
+      const min_element = document.getElementById(`${metric}_${region}_min`);
+      const max_element = document.getElementById(`${metric}_${region}_max`);
 
-  let humFF = hourly_data_json[1]["humidity"].toFixed(numDecimals);
-  document.getElementById("humFF").innerHTML = humFF;
-  let humFM = hourly_data_json[2]["humidity"].toFixed(numDecimals);
-  document.getElementById("humFM").innerHTML = humFM;
-  let humFB = hourly_data_json[0]["humidity"].toFixed(numDecimals);
-  document.getElementById("humFB").innerHTML = humFB;
-  let humPR = hourly_data_json[3]["humidity"].toFixed(numDecimals);
-  document.getElementById("humPR").innerHTML = humPR;
-  let humRD = hourly_data_json[4]["humidity"].toFixed(numDecimals);
-  document.getElementById("humRD").innerHTML = humRD;
+      if (hourly_data.length > 0) {
+        const hourly = hourly_data.find((s) => s["region"] == region);
+        const mean = hourly[metric];
+        if (mean != undefined) {
+          mean_element.innerHTML = mean.toFixed(numDecimals);
+        }
+      } else {
+        mean_element.innerHTML = "N/A";
+      }
 
-  let vpdFF = hourly_data_json[1]["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdFF").innerHTML = vpdFF;
-  let vpdFM = hourly_data_json[2]["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdFM").innerHTML = vpdFM;
-  let vpdFB = hourly_data_json[0]["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdFB").innerHTML = vpdFB;
-  let vpdPR = hourly_data_json[3]["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdPR").innerHTML = vpdPR;
-  let vpdRD = hourly_data_json[4]["vpd"].toFixed(numDecimals);
-  document.getElementById("vpdRD").innerHTML = vpdRD;
+      if (hourly_data.length > 0) {
+        const min_obj = minmax_data.find(
+          (s) =>
+            s["region"] == region &&
+            s["variable_0"] == metric &&
+            s["variable_1"] == "min"
+        );
+        const max_obj = minmax_data.find(
+          (s) =>
+            s["region"] == region &&
+            s["variable_0"] == metric &&
+            s["variable_1"] == "max"
+        );
+        const min_value = min_obj["value"];
+        const max_value = max_obj["value"];
+        const min_timestamp = new Date(min_obj["timestamp"]);
+        const max_timestamp = new Date(max_obj["timestamp"]);
+        if (min_value != undefined) {
+          min_element.innerHTML = min_value.toFixed(numDecimals);
+          min_element.title = `6h min. Recorded at ${min_timestamp}`;
+        }
+        if (max_value != undefined) {
+          max_element.innerHTML = max_value.toFixed(numDecimals);
+          max_element.title = `6h max. Recorded at ${max_timestamp}`;
+        }
+      } else {
+        min_element.innerHTML = "N/A";
+        max_element.innerHTML = "N/A";
+      }
+    }
+  }
 }
 
 function time_series_charts(
@@ -102,17 +117,26 @@ function time_series_charts(
   return new Chart(ctx, config);
 }
 
-function roundcharts(json_data, zoneid, canvasname, colouramp) {
+function roundcharts(json_data, regionid, canvasname, colouramp) {
   bin_ = [];
   cnt_ = [];
-  for (j = 0; j < json_data[zoneid]["Values"].length; j++) {
-    bin_.push(json_data[zoneid]["Values"][j]["bin"]);
-    cnt_.push(parseFloat(json_data[zoneid]["Values"][j]["cnt"]));
+  try {
+    for (j = 0; j < json_data[regionid]["Values"].length; j++) {
+      bin_.push(json_data[regionid]["Values"][j]["bin"]);
+      cnt_.push(parseFloat(json_data[regionid]["Values"][j]["cnt"]));
+    }
+  } catch (e) {
+    if (e instanceof TypeError) {
+      console.log(`In roundcharts, got ${e}`);
+      return null;
+    } else {
+      throw e;
+    }
   }
 
   const data_ = [];
   data_.push({
-    label: [json_data[zoneid]["zone"]],
+    label: [json_data[regionid]["region"]],
     data: cnt_,
     backgroundColor: colouramp,
   });
@@ -138,13 +162,13 @@ function roundcharts(json_data, zoneid, canvasname, colouramp) {
   new Chart(ctx, config);
 }
 
-function horizontal_charts(json_data, zoneid, canvasname, colouramp) {
-  // iterates through zones (5)
+function horizontal_charts(json_data, regionid, canvasname, colouramp) {
+  // iterates through regions (5)
   bin_ = [];
   cnt_ = [];
-  for (j = 0; j < json_data[zoneid]["Values"].length; j++) {
-    bin_.push(json_data[zoneid]["Values"][j]["bin"]);
-    cnt_.push(parseFloat(json_data[zoneid]["Values"][j]["cnt"]));
+  for (j = 0; j < json_data[regionid]["Values"].length; j++) {
+    bin_.push(json_data[regionid]["Values"][j]["bin"]);
+    cnt_.push(parseFloat(json_data[regionid]["Values"][j]["cnt"]));
   }
 
   const datasets_ = [];
@@ -157,7 +181,7 @@ function horizontal_charts(json_data, zoneid, canvasname, colouramp) {
   }
 
   const data = {
-    labels: [json_data[zoneid]["zone"]],
+    labels: [json_data[regionid]["region"]],
     datasets: datasets_,
   };
 
@@ -223,9 +247,10 @@ function create_charts(
   vpd_data,
   vpd_data_daily,
   stratification,
-  hourly_data
+  hourly_data,
+  recent_minmax_data
 ) {
-  set_hourly_values(hourly_data);
+  set_meanminmax_values(hourly_data, recent_minmax_data);
   // blue to red, and grey for missing
   const colouramp_redbluegrey = [
     "rgba(63,103,126,1)",
@@ -243,16 +268,16 @@ function create_charts(
   ];
 
   // main farm
-  let zone0_name = temperature_data[0]["zone"];
-  document.getElementById("zone0_name").innerHTML = zone0_name;
+  let region0_name = temperature_data[0]["region"];
+  document.getElementById("region0_name").innerHTML = region0_name;
   roundcharts(temperature_data, 0, "roundchart0", colouramp_redbluegrey);
 
-  let zone1_name = temperature_data[1]["zone"];
-  document.getElementById("zone1_name").innerHTML = zone1_name;
+  let region1_name = temperature_data[1]["region"];
+  document.getElementById("region1_name").innerHTML = region1_name;
   roundcharts(temperature_data, 1, "roundchart1", colouramp_redbluegrey);
 
-  let zone2_name = temperature_data[2]["zone"];
-  document.getElementById("zone2_name").innerHTML = zone2_name;
+  let region2_name = temperature_data[2]["region"];
+  document.getElementById("region2_name").innerHTML = region2_name;
   roundcharts(temperature_data, 2, "roundchart2", colouramp_redbluegrey);
 
   roundcharts(temperature_data_daily, 0, "roundchart10", colouramp_redbluegrey);
@@ -353,8 +378,8 @@ function create_charts(
   ]);
 
   // Propagation
-  let zone3_name = temperature_data[3]["zone"];
-  document.getElementById("zone3_name").innerHTML = zone3_name;
+  let region3_name = temperature_data[3]["region"];
+  document.getElementById("region3_name").innerHTML = region3_name;
   roundcharts(temperature_data, 3, "roundchart3", colouramp_redbluegrey);
   roundcharts(temperature_data_daily, 3, "roundchart13", colouramp_redbluegrey);
 
@@ -365,8 +390,8 @@ function create_charts(
   roundcharts(vpd_data_daily, 3, "vpd_roundchart13", colouramp_bluegrey);
 
   // R&D
-  let zone4_name = temperature_data[4]["zone"];
-  document.getElementById("zone4_name").innerHTML = zone4_name;
+  let region4_name = temperature_data[4]["region"];
+  document.getElementById("region4_name").innerHTML = region4_name;
   roundcharts(temperature_data, 4, "roundchart4", colouramp_redbluegrey);
   roundcharts(temperature_data_daily, 4, "roundchart14", colouramp_redbluegrey);
 

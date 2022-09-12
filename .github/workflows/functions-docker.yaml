@@ -2,7 +2,7 @@ name: "Build and push functions to DockerHub"
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, test-actions]
   workflow_dispatch:
 
 jobs:
@@ -17,15 +17,16 @@ jobs:
       - uses: actions/checkout@v3
       - name: 'Build main'
         if: ${{ github.ref == 'refs/heads/main' }}
-        working-directory: __app__
         run: |
-          docker build -f Dockerfile -t turingcropapp/functions:prod . ;
+          docker build -f Dockerfile_ingress_functions -t turingcropapp/functions:prod . ;
           docker push turingcropapp/functions:prod ;
       - name: 'Build dev'
         if: ${{ github.ref == 'refs/heads/develop' }}
-        working-directory: __app__
         run: |
-          docker build -f Dockerfile -t turingcropapp/functions:dev . ;
+          docker build -f Dockerfile_ingress_functions -t turingcropapp/functions:dev . ;
           docker push turingcropapp/functions:dev ;
-
-
+      - name: 'Build test-actions'
+        if: ${{ github.ref == 'refs/heads/test-actions' }}
+        run: |
+          docker build -f Dockerfile_ingress_functions -t turingcropapp/functions:test-actions . ;
+          docker push turingcropapp/functions:test-actions ;
