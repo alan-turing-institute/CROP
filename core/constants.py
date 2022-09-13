@@ -219,6 +219,7 @@ SQL_CONNECTION_STRING = make_conn_string(
 
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
 SQL_CONNECTION_STRING_CROP = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DBNAME)
+
 # SQL Table names
 SENSOR_TABLE_NAME = "sensors"
 SENSOR_TYPE_TABLE_NAME = "sensor_types"
@@ -245,6 +246,7 @@ ARANET_AIRVELOCITY_TABLE_NAME = "aranet_airvelocity_data"
 AEGIS_IRRIGATION_TABLE_NAME = "aegis_irrigation_data"
 
 WEATHER_TABLE_NAME = "iweather"
+WEATHER_FORECAST_TABLE_NAME = "weather_forecast"
 
 # SQL Column names
 ID_COL_NAME = "id"
