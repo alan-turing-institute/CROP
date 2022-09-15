@@ -35,7 +35,7 @@ The digital twin:
 The Unity 3D model is found in [this repo](http://github.com/alan-turing-institute/CROP_unity)
 <br/>
 <p align="center">
-  <img src="media/infrastructure.png" width="600">
+  <img src="media/infrastructure.svg" width="600">
 </p>
 
 ## Implementation
