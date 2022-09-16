@@ -20,7 +20,12 @@ from .constants import (
 )
 from .sensors import get_db_weather_data
 
-CONST_OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=51.45&lon=0.14&appid="
+# see https://openweathermap.org/api/one-call-3
+lat = 51.45
+lon = 0.14
+units = "metric" # returns temperature in Celsius and wind speed in meter/sec
+CONST_OPENWEATHERMAP_URL = f"https://api.openweathermap.org/data/3.0/onecall?"\
+f"lat={lat}&lon={lon}&units={units}&appid="
 
 
 def upload_openweathermap_data(
