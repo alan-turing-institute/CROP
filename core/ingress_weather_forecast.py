@@ -4,20 +4,17 @@ Python module to import data using Openweatherdata API
 
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 import requests
 import pandas as pd
 
-from sqlalchemy import and_
 
 from .db import connect_db, session_open, session_close
 from .structure import (
     ReadingsWeatherClass,
 )
-from .utils import query_result_to_array, log_upload_event
+from .utils import log_upload_event
 from .constants import (
-    SQL_CONNECTION_STRING,
-    SQL_DBNAME,
     CONST_API_WEATHER_TYPE,
     CONST_OPENWEATHERMAP_APIKEY,
 )
