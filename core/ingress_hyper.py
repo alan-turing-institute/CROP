@@ -31,7 +31,7 @@ from .utils import log_upload_event
 from .sensors import get_sensor_readings_db_timestamps
 
 
-CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/1/analytics/v3/device_metrics"
+CONST_CHECK_URL_PATH = "https://zcf.hyper.systems/api/sites/1/analytics/v3/device_metrics"
 
 READINGS_DICTS = [
     {
