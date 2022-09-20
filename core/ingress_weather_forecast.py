@@ -8,7 +8,6 @@ from datetime import datetime
 import requests
 import pandas as pd
 
-
 from .db import connect_db, session_open, session_close
 from .structure import (
     ReadingsWeatherClass,
@@ -107,63 +106,63 @@ def upload_openweathermap_data(
     return True, None
 
 
-def get_openweathermap_data(dt_from, dt_to):
+def get_openweathermap_data(dt_to):
     """
-    Retrieve weather data from the openweathermap API.
-    Note that each API call returns the hourly data from 00:00 to 23:59 on
-    the date specified by the 'dt' timestamp, so we need to make 2 calls
-    in order to get the full set of data for the last 24 hours.
+    Retrieve hourly weather forecast for up to 48 hours from the openweathermap API.
 
     Parameters
     ----------
-    dt_from: datetime, earliest time for returned records
-    dt_to: datetime, latest time for returned records
-
+    dt_to: datetime, latest time for returned records.
+    Requests beyond 48h into the future will return a maximum of 48h of forecast data.
+    
     Returns
     -------
     success: bool, True if everything OK
     error: str, empty string if everything OK
-    df: pd.DataFrame, contains 1 row per hours data.
+    weather_df: pd.DataFrame, contains 1 row per hours data
     """
-    base_url = CONST_OPENWEATHERMAP_URL
-    base_url += CONST_OPENWEATHERMAP_APIKEY
-    # get unix timestamps for start and end times
-    timestamp_from = int(dt_from.timestamp())
-    timestamp_to = int(dt_to.timestamp())
-    hourly_records = []
+    url = CONST_OPENWEATHERMAP_URL
+    url += CONST_OPENWEATHERMAP_APIKEY
+
+    hourly_records = [] # list keeping track of records for all hours
     error = ""
-    # do API call and get data in right format for both dates.
-    for ts in [timestamp_from, timestamp_to]:
-        url = base_url + "&dt={}".format(ts)
-        response = requests.get(url)
 
-        if response.status_code != 200:
-            error = "Request's [%s] status code: %d" % (
-                url[: min(70, len(url))],
-                response.status_code,
-            )
-            success = False
-            return success, error, None
-        hourly_data = response.json()["hourly"]
+    # do API call and get data in right format
+    response = requests.get(url)
 
-        for hour in hourly_data:
-            if hour["dt"] < timestamp_from or hour["dt"] > timestamp_to:
-                continue
-            record = {}
-            record["timestamp"] = datetime.fromtimestamp(hour["dt"])
-            record["temperature"] = hour["temp"] - 273.15  # convert from Kelvin
-            record["air_pressure"] = hour["pressure"]
-            record["relative_humidity"] = hour["humidity"]
-            record["wind_speed"] = hour["wind_speed"]
-            record["wind_direction"] = hour["wind_deg"]
-            record["icon"] = hour["weather"][0]["icon"]
-            record["source"] = "openweatherdata"
-            record["rain"] = 0.0
-            if "rain" in hour.keys():
-                record["rain"] += hour["rain"]["1h"]
-            hourly_records.append(record)
-    weather_df = pd.DataFrame(hourly_records)
-    weather_df.set_index("timestamp", inplace=True)
+    # check for success of the request
+    if response.status_code != 200:
+        error = "Request's [%s] status code: %d" % (
+            url[: min(70, len(url))],
+            response.status_code,
+        )
+        sucess = False
+        return sucess, error, None
+    # keep only hourly data from the API response
+    hourly_data = response.json()["hourly"]
+
+    # loop through every hour in hourly data
+    for hour in hourly_data:
+        record = {} # dict keeping track of this hour's records
+        record["timestamp"] = datetime.fromtimestamp(hour["dt"])
+        record["temperature"] = hour["temp"] # returned in Celsius
+        record["air_pressure"] = hour["pressure"] # sea level atmos pressure (hPa)
+        record["relative_humidity"] = hour["humidity"] # (%)
+        record["wind_speed"] = hour["wind_speed"] # (meter/sec)
+        record["wind_direction"] = hour["wind_deg"] # (degrees)
+        record["icon"] = hour["weather"][0]["icon"] # descriptive weather icon
+        record["source"] = "openweatherdata"
+        record["rain"] = 0.0
+        # note rain data only returned where available
+        if "rain" in hour.keys():
+            record["rain"] += hour["rain"]["1h"]
+        hourly_records.append(record)
+    weather_df = pd.DataFrame(hourly_records) # create a pandas dataframe
+    weather_df.set_index("timestamp", inplace=True) # set the index to become "timestamp" column
+    df_index = weather_df.index # get the indices, i.e. all the timestamps in the dataframe
+    timestamp_max = min(df_index, key=lambda x:abs(x-dt_to)) # find timestamp closest to requested end timestamp
+    weather_df = weather_df[:timestamp_max] # crop the dataframe at that timestamp
+
     success = True
     log = "\nSuccess: Weather dataframe \n{}".format(weather_df)
     logging.info(log)
