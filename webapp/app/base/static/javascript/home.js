@@ -365,7 +365,7 @@ function create_charts(
     horizontal_series,
     vpd_limits,
     "vpd",
-    "Vpd (Pa)",
+    "VPD (Pa)",
     "horizontal_vpd_stratification"
   );
   createStratificationZoomListeners([
