@@ -16,14 +16,8 @@ from .utils import log_upload_event
 from .constants import (
     CONST_API_WEATHER_TYPE,
     CONST_OPENWEATHERMAP_APIKEY,
+    CONST_OPENWEATHERMAP_FORECAST_URL,
 )
-
-# see https://openweathermap.org/api/one-call-3
-lat = 51.45
-lon = 0.14
-units = "metric" # returns temperature in Celsius and wind speed in meter/sec
-CONST_OPENWEATHERMAP_URL = f"https://api.openweathermap.org/data/3.0/onecall?"\
-f"lat={lat}&lon={lon}&units={units}&appid="
 
 
 def upload_openweathermap_data(
@@ -119,7 +113,7 @@ def get_openweathermap_data(dt_to):
     error: str, empty string if everything OK
     weather_df: pd.DataFrame, contains 1 row per hours data
     """
-    url = CONST_OPENWEATHERMAP_URL
+    url = CONST_OPENWEATHERMAP_FORECAST_URL
     url += CONST_OPENWEATHERMAP_APIKEY
 
     hourly_records = [] # list keeping track of records for all hours
