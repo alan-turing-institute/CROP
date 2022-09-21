@@ -43,8 +43,6 @@ HUM_BINS = {
     "BackFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
     "R&D": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
 }
-# TODO The below numbers are just a guess, we need to ask the farm people what would
-# actually make sense.
 VPD_BINS = {
     "Propagation": [0.0, 300.0, 600.0, 1000.0, 10000.0],
     "FrontFarm": [0.0, 300.0, 600.0, 1000.0, 10000.0],
@@ -380,23 +378,29 @@ def get_warnings(time_from):
     # TODO This query is wrong: It leaves out any rows in WarningsClass that don't
     # have a non-null sensor_id. There should be a way to fix it using some sort of of
     # outerjoin or somesuch, but my sqlalchemy skills failed me in a rush.
-    query = db.session.query(
-        WarningClass.sensor_id,
-        WarningClass.batch_id,
-        WarningClass.time,
-        WarningClass.other_data,
-        WarningClass.priority,
-        WarningClass.time_created,
-        WarningTypeClass.id.label("type_id"),
-        WarningTypeClass.name.label("type_name"),
-        WarningTypeClass.short_description,
-        WarningTypeClass.long_description,
-        SensorClass.name.label("sensor_name"),
-    ).filter(
-        and_(
-            WarningTypeClass.id == WarningClass.warning_type_id,
-            WarningClass.time_created > time_from,
+    query = (
+        db.session.query(
+            WarningClass.sensor_id,
+            WarningClass.batch_id,
+            WarningClass.time,
+            WarningClass.other_data,
+            WarningClass.priority,
+            WarningClass.time_created,
+            WarningTypeClass.id.label("type_id"),
+            WarningTypeClass.name.label("type_name"),
+            WarningTypeClass.short_description,
+            WarningTypeClass.long_description,
+            SensorClass.name.label("sensor_name"),
+        )
+        .outerjoin(
+            SensorClass,
             SensorClass.id == WarningClass.sensor_id,
+        )
+        .filter(
+            and_(
+                WarningTypeClass.id == WarningClass.warning_type_id,
+                WarningClass.time_created > time_from,
+            )
         )
     )
     warnings = pd.read_sql(query.statement, query.session.bind)
