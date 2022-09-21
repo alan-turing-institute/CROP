@@ -1,5 +1,5 @@
 """
-Python module to import data using Openweatherdata API
+Python module to import weather forecast data using Openweatherdata API
 """
 
 import logging
@@ -10,14 +10,13 @@ import pandas as pd
 
 from .db import connect_db, session_open, session_close
 from .structure import (
-    ReadingsWeatherClass,
+    WeatherForecastsClass,
 )
 from .utils import log_upload_event
 from .constants import (
     CONST_API_WEATHER_TYPE,
     CONST_OPENWEATHERMAP_APIKEY,
 )
-from .sensors import get_db_weather_data
 
 # see https://openweathermap.org/api/one-call-3
 lat = 51.45
@@ -28,42 +27,40 @@ f"lat={lat}&lon={lon}&units={units}&appid="
 
 
 def upload_openweathermap_data(
-    conn_string: str, database: str, dt_from: datetime, dt_to: datetime
+    conn_string: str, database: str, dt_to: datetime
 ):
     """
-    Uploads openweathermap data to the CROP database.
+    Uploads hourly openweathermap weather forecast
+    (up to 48h into the future) to the CROP database (DB).
+    Note that the DB table may contain multiple weather forecasts for the same datetime.
+    The latest table entry should be used for most accurate forecast.
 
     Arguments:
         conn_string: connection string
         database: the name of the database
-        dt_from: date range from
         dt_to: date range to
     Returns:
         status, error
     """
-    # connect to the DB to get weather data already there, so we don't duplicate
+    # connect to the DB
     success, log, engine = connect_db(conn_string, database)
     if not success:
         logging.error(log)
         return success, log
     session = session_open(engine)
-    df_db = get_db_weather_data(session, dt_from, dt_to)
 
     # now get the Openweathermap API data
-    success, error, df_api = get_openweathermap_data(dt_from, dt_to)
+    success, error, new_data_df = get_openweathermap_data(dt_to)
     if not success:
         return success, error
 
-    # filter out the rows that are already in the db data
-    new_data_df = df_api[~df_api.index.isin(df_db.index)]
-
     logging.info("new data with size len(new_data_df): {}\n\n".format(len(new_data_df)))
+    # check that the API request contains at least one entry and upload to the DB
     if len(new_data_df) > 0:
-        # this is the current time in seconds since epoch
-        start_time: float = time.time()
+        start_time: float = time.time() # this is the current time in seconds since epoch
         session = session_open(engine)
         for idx, row in new_data_df.iterrows():
-            data = ReadingsWeatherClass(
+            data = WeatherForecastsClass(
                 sensor_id=0,
                 timestamp=idx,
                 temperature=row["temperature"],
@@ -96,6 +93,7 @@ def upload_openweathermap_data(
         )
 
     else:
+        error = "Openweathermap API request does not contain any data"
         log_upload_event(
             CONST_API_WEATHER_TYPE,
             "Openweathermap API",
