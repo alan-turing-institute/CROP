@@ -534,7 +534,7 @@
           <div class="dashboard-widget-content">
             <ul id="warningsUl" class="list-unstyled timeline widget">
               {% for warning in warnings %}
-              <li class="warning_{{warning.type_id}}">
+              <li class="warning_type_{{warning.type_id}} warning_priority_{{warning.priority}}">
                 <div class="block">
                   <div class="block_content">
                     <h2 class="title">{{warning.description}}</h2>

@@ -422,9 +422,11 @@ def get_warnings(time_from):
         warnings["description"] = []
     # Drop all the columns we don't need, and pick the latest version of each warning
     # only
-    warnings = warnings.loc[:, ["description", "time_created", "type_id", "type_name"]]
+    warnings = warnings.loc[
+        :, ["description", "time_created", "type_id", "type_name", "priority"]
+    ]
     warnings = (
-        warnings.groupby(["type_id", "type_name", "description"])
+        warnings.groupby(["type_id", "type_name", "description", "priority"])
         .max()
         .reset_index()
         .sort_values("time_created", ascending=False)
