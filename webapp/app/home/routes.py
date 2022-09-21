@@ -368,6 +368,13 @@ def regional_minmax_json(df):
     return return_value
 
 
+def get_warning_types():
+    """Get the all the warning types from the CROP database as a pandas DataFrame."""
+    query = db.session.query(WarningTypeClass.id, WarningTypeClass.name)
+    warning_types = pd.read_sql(query.statement, query.session.bind)
+    return warning_types
+
+
 def get_warnings(time_from):
     """Get the latest alerts from the CROP database as a pandas DataFrame."""
     # TODO This query is wrong: It leaves out any rows in WarningsClass that don't
@@ -380,6 +387,8 @@ def get_warnings(time_from):
         WarningClass.other_data,
         WarningClass.priority,
         WarningClass.time_created,
+        WarningTypeClass.id.label("type_id"),
+        WarningTypeClass.name.label("type_name"),
         WarningTypeClass.short_description,
         WarningTypeClass.long_description,
         SensorClass.name.label("sensor_name"),
@@ -407,15 +416,16 @@ def get_warnings(time_from):
         )
     else:
         warnings["description"] = []
-    descriptions_with_times = warnings.loc[:, ["description", "time_created"]]
-    # Pick the latest version of each warning only
-    descriptions_with_times = (
-        descriptions_with_times.groupby("description")
+    # Drop all the columns we don't need, and pick the latest version of each warning
+    # only
+    warnings = warnings.loc[:, ["description", "time_created", "type_id", "type_name"]]
+    warnings = (
+        warnings.groupby(["type_id", "type_name", "description"])
         .max()
         .reset_index()
         .sort_values("time_created", ascending=False)
     )
-    return descriptions_with_times
+    return warnings
 
 
 def format_warnings_json(warnings):
@@ -502,6 +512,9 @@ def index():
     else:
         json_strat = {}
 
+    warning_types = get_warning_types()
+    warning_types_json = json.loads(warning_types.to_json(orient="records"))
+
     warnings = get_warnings(dt_from_daily)
     warnings_json = format_warnings_json(warnings)
 
@@ -518,6 +531,7 @@ def index():
         stratification=json_strat,
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
+        warning_types=warning_types_json,
         warnings=warnings_json,
     )
 

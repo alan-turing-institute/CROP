@@ -432,3 +432,45 @@ function createStratificationZoomListeners(charts) {
   // To set the initial values when the page is first loaded.
   onChangeMinTime(vertTimeRange.value);
 }
+
+function setUpWarningTypeCheckboxListeners() {
+  // Set up event listeners, so that when a checkbox for a warning type is
+  // checked/unchecked, the warnings of that type are made visible/hidden.
+  const warningsUl = document.getElementById("warningsUl");
+  const checkboxesDiv = document.getElementById("warningTypeCheckboxesDiv");
+  // Pick the <input> element from each checkbox div.
+  const checkboxes = [...checkboxesDiv.children].map(
+    (childDiv) => childDiv.childNodes[1]
+  );
+  const allCheckbox = document.getElementById("warning_type_checkbox_all");
+
+  function onChange(e) {
+    const checkbox = e.target;
+    const value = checkbox.value;
+    const checked = checkbox.checked;
+    // Note that setting the checked status of a checkbox does not trigger an onChange
+    // event. Which is good, otherwise the bit ~20 lines below would cause an infinite
+    // loop.
+    if (!checked) allCheckbox.checked = false;
+    // Find all the warnings that are of this type. They can be identified by having a
+    // particular CSS class. Set their display either to "none" to hide them or to the
+    // browser default, as appropriate.
+    warningsUl.querySelectorAll(".warning_" + value).forEach((warning) => {
+      warning.style.display = checked ? "revert" : "none";
+    });
+  }
+
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", onChange);
+    // Call the onChange function once to set the warning visibilities to their correct
+    // initial values.
+    onChange({ target: checkbox });
+  });
+
+  allCheckbox.addEventListener("change", () => {
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = allCheckbox.checked;
+      onChange({ target: checkbox });
+    });
+  });
+}
