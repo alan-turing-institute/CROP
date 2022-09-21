@@ -394,19 +394,19 @@ def get_warnings(time_from):
     warnings["time_created"] = warnings["time_created"].apply(
         lambda x: x.tz_localize(dt.timezone.utc)
     )
-    warnings["template_values"] = warnings.apply(
-        lambda row: {
-            "sensor_id": row["sensor_id"],
-            "sensor_name": row["sensor_name"],
-            "batch_id": row["batch_id"],
-            "time": row["time"],
-            **({} if row["other_data"] is None else row["other_data"]),
-        },
-        axis=1,
-    )
-    warnings["description"] = warnings.apply(
-        lambda row: row["short_description"].format(**row["template_values"]), axis=1
-    )
+    if len(warnings) > 0:
+        warnings["description"] = warnings.apply(
+            lambda row: row["short_description"].format(
+                sensor_id=row["sensor_id"],
+                sensor_name=row["sensor_name"],
+                batch_id=row["batch_id"],
+                time=row["time"],
+                **({} if row["other_data"] is None else row["other_data"]),
+            ),
+            axis=1,
+        )
+    else:
+        warnings["description"] = []
     descriptions_with_times = warnings.loc[:, ["description", "time_created"]]
     # Pick the latest version of each warning only
     descriptions_with_times = (
