@@ -455,7 +455,7 @@ function setUpWarningTypeCheckboxListeners() {
     // Find all the warnings that are of this type. They can be identified by having a
     // particular CSS class. Set their display either to "none" to hide them or to the
     // browser default, as appropriate.
-    warningsUl.querySelectorAll(".warning_" + value).forEach((warning) => {
+    warningsUl.querySelectorAll(".warning_type_" + value).forEach((warning) => {
       warning.style.display = checked ? "revert" : "none";
     });
   }
