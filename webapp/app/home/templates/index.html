@@ -496,11 +496,43 @@
           </ul>
           <div class="clearfix"></div>
         </div>
+
+        <!-- Checkboxes for warning types -->
+        <div id="warningTypeCheckboxesDiv"class="x_content">
+          <div class="checkbox-inline" id="warningTypeCheckboxAll">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                id="warning_type_checkbox_all"
+                value="all">
+            <label
+                class="form-check-label"
+                for="warning_type_checkbox_all">
+              All
+            </label>
+          </div>
+          {% for wt in warning_types %}
+          <div class="checkbox-inline" id="warningTypeCheckbox{{wt.id}}">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                id="warning_type_checkbox_{{wt.id}}"
+                value={{wt.id}}>
+            <label
+                class="form-check-label"
+                for="warning_type_checkbox_{{wt.id}}">
+              {{wt.name}}
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Warning entries -->
         <div class="x_content">
           <div class="dashboard-widget-content">
-            <ul class="list-unstyled timeline widget">
+            <ul id="warningsUl" class="list-unstyled timeline widget">
               {% for warning in warnings %}
-              <li>
+              <li class="warning_{{warning.type_id}}">
                 <div class="block">
                   <div class="block_content">
                     <h2 class="title">{{warning.description}}</h2>
@@ -512,19 +544,10 @@
             </ul>
           </div>
         </div>
+
       </div>
     </div>
   </div>
-
-
-
-
-  <br />
-
-  <br />
-
-
-
 </div>
 
 {% endblock content %}
@@ -572,6 +595,8 @@
       hourly_data_json,
       recent_minmax_data_json
     );
+
+  setUpWarningTypeCheckboxListeners();
 </script>
 
 {% endblock javascripts %}
