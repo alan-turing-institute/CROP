@@ -146,7 +146,7 @@ def get_openweathermap_data(dt_from, dt_to):
                 continue
             record = {}
             record["timestamp"] = datetime.fromtimestamp(hour["dt"])
-            record["temperature"] = hour["temp"] - 273.15  # convert from Kelvin
+            record["temperature"] = hour["temp"]
             record["air_pressure"] = hour["pressure"]
             record["relative_humidity"] = hour["humidity"]
             record["wind_speed"] = hour["wind_speed"]
