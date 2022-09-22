@@ -19,19 +19,21 @@ from .structure import (
     ReadingsAranetTRHClass,
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
+    ReadingsAegisIrrigationClass,
 )
 from .constants import (
     CONST_CROP_HYPER_APIKEY,
     CONST_ARANET_TRH_SENSOR_TYPE,
     CONST_ARANET_CO2_SENSOR_TYPE,
     CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
+    CONST_AEGIS_IRRIGATION_SENSOR_TYPE,
 )
 
 from .utils import log_upload_event
 from .sensors import get_sensor_readings_db_timestamps
 
 
-CONST_CHECK_URL_PATH = "https://zcf.hyper.ag/api/sites/1/analytics/v3/device_metrics"
+CONST_CHECK_URL_PATH = "https://zcf.hyper.systems/api/sites/1/analytics/v3/device_metrics"
 
 READINGS_DICTS = [
     {
@@ -69,6 +71,37 @@ READINGS_DICTS = [
             },
         ],
     },
+    {
+        "readings_class": ReadingsAegisIrrigationClass,
+        "sensor_type": CONST_AEGIS_IRRIGATION_SENSOR_TYPE,
+        "columns": [
+            {
+                "api_name": "aegis_ii_temperature",
+                "df_name": "WaterTemperature",
+                "db_name": "temperature"
+            },
+            {
+                "api_name": "aegis_ii_ph",
+                "df_name": "WaterPH",
+                "db_name": "pH",
+            },
+            {
+                "api_name": "aegis_ii_conductivity",
+                "df_name": "WaterConductivity",
+                "db_name": "conductivity",
+            },
+            {
+                "api_name": "aegis_ii_disolved_oxygen",
+                "df_name": "WaterOxygen",
+                "db_name": "dissolved_oxygen",
+            },
+            {
+                "api_name": "aegis_ii_turbidity_ntu",
+                "df_name": "WaterTurbidity",
+                "db_name": "turbidity",
+            },
+        ],
+    }
 ]
 
 
@@ -125,15 +158,21 @@ def get_api_sensor_data(api_key, dt_from, dt_to, columns):
     device_mapping = data["metadata"]["devices"]
     timestamps = data["labels"]
     value_dicts = data["series"]
-
+#    if True:
+#        return data
     for value_dict in value_dicts:
         hyper_id = value_dict["device_id"]
         aranet_pro_id = device_mapping[hyper_id]["vendor_device_id"]
+        metric_name = value_dict["metric"]
         # what if we don't have an aranet_pro_id for this sensor?
         if not aranet_pro_id:
-            logging.info(f"No aranet pro id for sensor {hyper_id}")
-            continue
-        metric_name = value_dict["metric"]
+            # it could be AegisII irrigation data
+            if "aegis" in metric_name:
+                aranet_pro_id = "AegisII"
+            else:
+                logging.info(f"No aranet pro id for sensor {hyper_id}")
+                continue
+
         df_name = next(c["df_name"] for c in columns if c["api_name"] == metric_name)
         if aranet_pro_id not in data_df_dict:
             data_df = pd.DataFrame({"Timestamp": pd.to_datetime(timestamps)})

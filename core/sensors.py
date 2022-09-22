@@ -9,6 +9,7 @@ from .constants import (
     CONST_ARANET_TRH_SENSOR_TYPE,
     CONST_ARANET_CO2_SENSOR_TYPE,
     CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
+    CONST_AEGIS_IRRIGATION_SENSOR_TYPE
 )
 
 
@@ -18,6 +19,7 @@ from .structure import (
     ReadingsAranetTRHClass,
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
+    ReadingsAegisIrrigationClass,
     ReadingsWeatherClass,
 )
 
@@ -92,6 +94,7 @@ def get_sensor_readings_db_timestamps(session, sensor_id, date_from, date_to):
         CONST_ARANET_TRH_SENSOR_TYPE: ReadingsAranetTRHClass,
         CONST_ARANET_CO2_SENSOR_TYPE: ReadingsAranetCO2Class,
         CONST_ARANET_AIRVELOCITY_SENSOR_TYPE: ReadingsAranetAirVelocityClass,
+        CONST_AEGIS_IRRIGATION_SENSOR_TYPE: ReadingsAegisIrrigationClass,
     }
     # get the sensor type
     success, sensor_type = find_sensor_type_from_id(session, sensor_id)
