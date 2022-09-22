@@ -45,6 +45,7 @@ from .constants import (
     ARANET_TRH_TABLE_NAME,
     ARANET_CO2_TABLE_NAME,
     ARANET_AIRVELOCITY_TABLE_NAME,
+    AEGIS_IRRIGATION_TABLE_NAME,
     WEATHER_TABLE_NAME,
     MODEL_TABLE_NAME,
     MODEL_MEASURE_TABLE_NAME,
@@ -430,6 +431,36 @@ class ReadingsAranetAirVelocityClass(BASE):
     timestamp = Column(DateTime, nullable=False)
     current = Column(Float, nullable=True)  # raw current, in Amps
     air_velocity = Column(Float, nullable=False)  # m/s ?
+
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+
+    # arguments
+    __table_args__ = (UniqueConstraint("sensor_id", "timestamp"),)
+
+
+class ReadingsAegisIrrigationClass(BASE):
+    """
+    Base class for the Aegis II irrigation readings.
+    Record temperature, pH, dissolved oxygen, conductivity,
+    and turbidity, of the water in the farm.
+    """
+
+    __tablename__ = AEGIS_IRRIGATION_TABLE_NAME
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+
+    timestamp = Column(DateTime, nullable=False)
+    temperature = Column(Float, nullable=True)  # in degrees Celsius
+    pH = Column(Float, nullable=False)
+    dissolved_oxygen = Column(Float, nullable=False)
+    conductivity = Column(Float, nullable=False)
+    turbidity = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
