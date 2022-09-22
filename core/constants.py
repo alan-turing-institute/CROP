@@ -286,7 +286,7 @@ CONST_OPENWEATHERMAP_LON = 0.14 # Clapham farm longitude
 CONST_OPENWEATHERMAP_UNITS = "metric" # in API request, temperature returned in Celsius and wind speed in meter/sec
 
 # see https://openweathermap.org/api/one-call-3
-CONST_OPENWEATHERMAP_HISTORICAL_URL = "https://api.openweathermap.org/data/3.0/onecall/timemachine?"\
+CONST_OPENWEATHERMAP_HISTORICAL_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?"\
 f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid=" # historical weather URL without API key and requested timestamp
 CONST_OPENWEATHERMAP_FORECAST_URL = f"https://api.openweathermap.org/data/3.0/onecall?"\
 f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid=" # weather forecast URL withouth API key
