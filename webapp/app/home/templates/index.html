@@ -509,7 +509,7 @@
             <label
                 class="form-check-label"
                 for="warning_type_checkbox_all">
-              All
+              All <span id="warning_type_all_count"></span>
             </label>
           </div>
           {% for wt in warning_types %}
@@ -523,7 +523,7 @@
             <label
                 class="form-check-label"
                 for="warning_type_checkbox_{{wt.id}}">
-              {{wt.name}}
+              {{wt.name}} <span id="warning_type_{{wt.id}}_count"></span>
             </label>
           </div>
           {% endfor %}

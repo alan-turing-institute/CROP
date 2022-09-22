@@ -461,12 +461,21 @@ function setUpWarningTypeCheckboxListeners() {
   }
 
   checkboxes.forEach((checkbox) => {
+    const value = checkbox.value;
+    const num_warnings_this_type = warningsUl.querySelectorAll(
+      ".warning_type_" + value
+    ).length;
+    const count_span = document.getElementById(`warning_type_${value}_count`);
+    count_span.innerHTML = `(${num_warnings_this_type})`;
     checkbox.addEventListener("change", onChange);
     // Call the onChange function once to set the warning visibilities to their correct
     // initial values.
     onChange({ target: checkbox });
   });
 
+  const num_all_warnings = warningsUl.querySelectorAll("li").length;
+  const all_count_span = document.getElementById("warning_type_all_count");
+  all_count_span.innerHTML = `(${num_all_warnings})`;
   allCheckbox.addEventListener("change", () => {
     checkboxes.forEach((checkbox) => {
       checkbox.checked = allCheckbox.checked;
