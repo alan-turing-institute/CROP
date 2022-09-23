@@ -46,6 +46,7 @@ from .constants import (
     ARANET_AIRVELOCITY_TABLE_NAME,
     AEGIS_IRRIGATION_TABLE_NAME,
     WEATHER_TABLE_NAME,
+    WEATHER_FORECAST_TABLE_NAME,
     MODEL_TABLE_NAME,
     MODEL_MEASURE_TABLE_NAME,
     MODEL_RUN_TABLE_NAME,
@@ -605,29 +606,6 @@ class SensorLocationClass(BASE):
     __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
 
 
-class WeatherClass(BASE):
-    """
-    Class for reading the Met Weather API
-    """
-
-    # TODO: connect to met weather api
-
-    __tablename__ = "weather"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-
-    temperature = Column(Float, nullable=False)
-    rainfall = Column(Float)
-    humidity = Column(Float)
-    wind_speed = Column(Float)
-    wind_direction = Column(Float)
-    weather_type = Column(String)
-    forecast = Column(Float)
-
-    time_created = Column(DateTime(), server_default=func.now())
-    time_updated = Column(DateTime(), onupdate=func.now())
-
-
 class UserClass(BASE, UserMixin):
     """
     Class for storing user credentials.
@@ -853,3 +831,33 @@ class HarvestClass(BASE):
         self.waste_disease = waste_disease
         self.waste_defect = waste_defect
         self.over_production = over_production
+
+
+class WeatherForecastsClass(BASE):
+    """
+    Base class for the External weather forecast readings
+    """
+
+    __tablename__ = WEATHER_FORECAST_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(
+        Integer,
+        nullable=False,
+    )
+
+    timestamp = Column(DateTime, nullable=False)
+    temperature = Column(Float, nullable=False)
+    rain_probability = Column(Float, nullable=True)
+    rain = Column(Float, nullable=True)
+    relative_humidity = Column(Float, nullable=True)
+    wind_speed = Column(Float, nullable=True)
+    wind_direction = Column(Float, nullable=True)
+    air_pressure = Column(Float, nullable=True)
+    radiation = Column(Float, nullable=True)
+    icon = Column(String(10), nullable=True)
+    source = Column(String(50), nullable=True)
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())
+

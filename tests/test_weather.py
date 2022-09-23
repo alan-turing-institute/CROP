@@ -7,7 +7,6 @@ import requests
 import requests_mock
 from core.ingress_weather import (
     get_openweathermap_data,
-    CONST_OPENWEATHERMAP_URL,
 )
 
 
