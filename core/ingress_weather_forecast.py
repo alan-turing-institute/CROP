@@ -18,6 +18,7 @@ from .constants import (
     CONST_OPENWEATHERMAP_APIKEY,
     CONST_OPENWEATHERMAP_FORECAST_URL,
 )
+from .create_table import create_table
 
 
 def upload_openweathermap_data(
@@ -43,6 +44,11 @@ def upload_openweathermap_data(
         return success, log
     session = session_open(engine)
 
+    # check that DB table exists, otherwise create new table
+    success, msg = create_table(engine, WeatherForecastsClass)
+    if success:
+        logging.info(msg)
+    
     # now get the Openweathermap API data
     success, error, new_data_df = get_openweathermap_data(dt_to)
     if not success:
