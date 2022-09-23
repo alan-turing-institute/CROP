@@ -15,7 +15,11 @@ Fetches data from the [hyper.ag](https://hyper.ag/) API, and fills the table "ar
 
 ### weather_func
 
-Fetches data from [openweathermap](https://openweathermap.org/) API and fills the table "iweather".  Runs every 12 hours.
+Fetches historical weather data from [openweathermap](https://openweathermap.org/) API and fills the table "iweather".  Runs every 12 hours.
+
+### weather_forecast_func
+
+Fetches forecast weather data from [openweathermap](https://openweathermap.org/) API and fills the table "weather_forecast".  Runs every 12 hours.
 
 ### electricity_func
 

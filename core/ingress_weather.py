@@ -16,14 +16,11 @@ from .structure import (
 )
 from .utils import query_result_to_array, log_upload_event
 from .constants import (
-    SQL_CONNECTION_STRING,
-    SQL_DBNAME,
     CONST_API_WEATHER_TYPE,
     CONST_OPENWEATHERMAP_APIKEY,
+    CONST_OPENWEATHERMAP_HISTORICAL_URL,
 )
 from .sensors import get_db_weather_data
-
-CONST_OPENWEATHERMAP_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=51.45&lon=0.14&appid="
 
 
 def upload_openweathermap_data(
@@ -123,7 +120,7 @@ def get_openweathermap_data(dt_from, dt_to):
     error: str, empty string if everything OK
     df: pd.DataFrame, contains 1 row per hours data.
     """
-    base_url = CONST_OPENWEATHERMAP_URL
+    base_url = CONST_OPENWEATHERMAP_HISTORICAL_URL
     base_url += CONST_OPENWEATHERMAP_APIKEY
     # get unix timestamps for start and end times
     timestamp_from = int(dt_from.timestamp())
@@ -149,7 +146,7 @@ def get_openweathermap_data(dt_from, dt_to):
                 continue
             record = {}
             record["timestamp"] = datetime.fromtimestamp(hour["dt"])
-            record["temperature"] = hour["temp"] - 273.15  # convert from Kelvin
+            record["temperature"] = hour["temp"]
             record["air_pressure"] = hour["pressure"]
             record["relative_humidity"] = hour["humidity"]
             record["wind_speed"] = hour["wind_speed"]
