@@ -434,15 +434,15 @@ function createStratificationZoomListeners(charts) {
 }
 
 function setUpWarningTypeCheckboxListeners() {
-  // Set up event listeners, so that when a checkbox for a warning type is
-  // checked/unchecked, the warnings of that type are made visible/hidden.
+  // Set up event listeners, so that when a checkbox for a warning category is
+  // checked/unchecked, the warnings of that category are made visible/hidden.
   const warningsUl = document.getElementById("warningsUl");
   const checkboxesDiv = document.getElementById("warningTypeCheckboxesDiv");
   // Pick the <input> element from each checkbox div.
   const checkboxes = [...checkboxesDiv.children].map(
     (childDiv) => childDiv.childNodes[1]
   );
-  const allCheckbox = document.getElementById("warning_type_checkbox_all");
+  const allCheckbox = document.getElementById("warning_cat_checkbox_all");
 
   function onChange(e) {
     const checkbox = e.target;
@@ -452,21 +452,21 @@ function setUpWarningTypeCheckboxListeners() {
     // event. Which is good, otherwise the bit ~20 lines below would cause an infinite
     // loop.
     if (!checked) allCheckbox.checked = false;
-    // Find all the warnings that are of this type. They can be identified by having a
-    // particular CSS class. Set their display either to "none" to hide them or to the
+    // Find all the warnings that are of this category. They can be identified by having
+    // a particular CSS class. Set their display either to "none" to hide them or to the
     // browser default, as appropriate.
-    warningsUl.querySelectorAll(".warning_type_" + value).forEach((warning) => {
+    warningsUl.querySelectorAll(".warning_cat_" + value).forEach((warning) => {
       warning.style.display = checked ? "revert" : "none";
     });
   }
 
   checkboxes.forEach((checkbox) => {
     const value = checkbox.value;
-    const num_warnings_this_type = warningsUl.querySelectorAll(
-      ".warning_type_" + value
+    const num_warnings_this_cat = warningsUl.querySelectorAll(
+      ".warning_cat_" + value
     ).length;
-    const count_span = document.getElementById(`warning_type_${value}_count`);
-    count_span.innerHTML = `(${num_warnings_this_type})`;
+    const count_span = document.getElementById(`warning_cat_${value}_count`);
+    count_span.innerHTML = `(${num_warnings_this_cat})`;
     checkbox.addEventListener("change", onChange);
     // Call the onChange function once to set the warning visibilities to their correct
     // initial values.
@@ -474,7 +474,7 @@ function setUpWarningTypeCheckboxListeners() {
   });
 
   const num_all_warnings = warningsUl.querySelectorAll("li").length;
-  const all_count_span = document.getElementById("warning_type_all_count");
+  const all_count_span = document.getElementById("warning_cat_all_count");
   all_count_span.innerHTML = `(${num_all_warnings})`;
   allCheckbox.addEventListener("change", () => {
     checkboxes.forEach((checkbox) => {

@@ -497,33 +497,33 @@
           <div class="clearfix"></div>
         </div>
 
-        <!-- Checkboxes for warning types -->
+        <!-- Checkboxes for warning categories -->
         <div id="warningTypeCheckboxesDiv"class="x_content">
           <div class="checkbox-inline" id="warningTypeCheckboxAll">
             <input
                 class="form-check-input"
                 type="checkbox"
-                id="warning_type_checkbox_all"
+                id="warning_cat_checkbox_all"
                 checked
                 value="all">
             <label
                 class="form-check-label"
-                for="warning_type_checkbox_all">
-              All <span id="warning_type_all_count"></span>
+                for="warning_cat_checkbox_all">
+              All <span id="warning_cat_all_count"></span>
             </label>
           </div>
-          {% for wt in warning_types %}
-          <div class="checkbox-inline" id="warningTypeCheckbox{{wt.id}}">
+          {% for wt in warning_categories %}
+          <div class="checkbox-inline" id="warningTypeCheckbox{{wt.cat_id}}">
             <input
                 class="form-check-input"
                 type="checkbox"
-                id="warning_type_checkbox_{{wt.id}}"
+                id="warning_cat_checkbox_{{wt.cat_id}}"
                 checked
-                value={{wt.id}}>
+                value={{wt.cat_id}}>
             <label
                 class="form-check-label"
-                for="warning_type_checkbox_{{wt.id}}">
-              {{wt.name}} <span id="warning_type_{{wt.id}}_count"></span>
+                for="warning_cat_checkbox_{{wt.cat_id}}">
+              {{wt.cat_name}} <span id="warning_cat_{{wt.cat_id}}_count"></span>
             </label>
           </div>
           {% endfor %}
@@ -534,7 +534,7 @@
           <div class="dashboard-widget-content">
             <ul id="warningsUl" class="list-unstyled timeline widget">
               {% for warning in warnings %}
-              <li class="warning_type_{{warning.type_id}} warning_priority_{{warning.priority}}">
+              <li class="warning_cat_{{warning.category_id}} warning_priority_{{warning.priority}}">
                 <div class="block">
                   <div class="block_content">
                     <h2 class="title">{{warning.description}}</h2>

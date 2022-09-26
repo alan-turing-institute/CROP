@@ -46,9 +46,18 @@ PRIORITIES = {
     REPORTING_LITTLE_DATA_NAME: 2,
     REPORTING_SOME_DATA_NAME: 1,
     NO_LOCATION_NAME: 1,
-    TOO_COLD_NAME: 2,
+    TOO_COLD_NAME: 3,
     TOO_HUMID_NAME: 3,
     OUTSIDE_TOO_HUMID_NAME: 4,
+}
+CATEGORIES = {
+    REPORTING_NO_DATA_NAME: "Missing data",
+    REPORTING_LITTLE_DATA_NAME: "Missing data",
+    REPORTING_SOME_DATA_NAME: "Missing data",
+    NO_LOCATION_NAME: "Missing data",
+    TOO_COLD_NAME: "Farm conditions",
+    TOO_HUMID_NAME: "Farm conditions",
+    OUTSIDE_TOO_HUMID_NAME: "Farm conditions",
 }
 
 # TODO Should this rather be in the database?
@@ -86,13 +95,16 @@ def write_warning_types(session):
         if warning_type is None:
             # This row doesn't exist yet, so add it.
             warning_type = WarningTypeClass(
-                name=name, short_description=short_description
+                name=name,
+                short_description=short_description,
+                category=CATEGORIES[name],
             )
             session.add(warning_type)
         else:
             # This row exists, so update it.
             warning_type = warning_type[0]
             warning_type.short_description = short_description
+            warning_type.category = CATEGORIES[name]
     session.commit()
 
 
