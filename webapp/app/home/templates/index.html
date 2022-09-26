@@ -496,63 +496,60 @@
           </ul>
           <div class="clearfix"></div>
         </div>
+
+        <!-- Checkboxes for warning categories -->
+        <div id="warningTypeCheckboxesDiv"class="x_content">
+          <div class="checkbox-inline" id="warningTypeCheckboxAll">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                id="warning_cat_checkbox_all"
+                checked
+                value="all">
+            <label
+                class="form-check-label"
+                for="warning_cat_checkbox_all">
+              All <span id="warning_cat_all_count"></span>
+            </label>
+          </div>
+          {% for wt in warning_categories %}
+          <div class="checkbox-inline" id="warningTypeCheckbox{{wt.cat_id}}">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                id="warning_cat_checkbox_{{wt.cat_id}}"
+                checked
+                value={{wt.cat_id}}>
+            <label
+                class="form-check-label"
+                for="warning_cat_checkbox_{{wt.cat_id}}">
+              {{wt.cat_name}} <span id="warning_cat_{{wt.cat_id}}_count"></span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Warning entries -->
         <div class="x_content">
           <div class="dashboard-widget-content">
-            <ul class="list-unstyled timeline widget">
-              <li>
+            <ul id="warningsUl" class="list-unstyled timeline widget">
+              {% for warning in warnings %}
+              <li class="warning_cat_{{warning.category_id}} warning_priority_{{warning.priority}}">
                 <div class="block">
                   <div class="block_content">
-                    <h2 class="title">
-                      <a>Sensor in R&D not producing any data</a>
-                    </h2>
-                    <div class="byline">
-                      <span>1 hours ago</span> by <a>Zenzie</a>
-                    </div>
+                    <h2 class="title">{{warning.description}}</h2>
+                    <div class="byline">{{warning.time_string}}</div>
                   </div>
                 </div>
               </li>
-
-              <li>
-                <div class="block">
-                  <div class="block_content">
-                    <h2 class="title">
-                      <a>High Humidity Back of Farm</a>
-                    </h2>
-                    <div class="byline">
-                      <span>8 hours ago</span> by <a>Zenzie</a>
-                    </div>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div class="block">
-                  <div class="block_content">
-                    <h2 class="title">
-                      <a>High Temperature in Mid Farm</a>
-                    </h2>
-                    <div class="byline">
-                      <span>13 hours ago</span> by <a>Zenzie</a>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
+              {% endfor %}
             </ul>
           </div>
         </div>
+
       </div>
     </div>
   </div>
-
-
-
-
-  <br />
-
-  <br />
-
-
-
 </div>
 
 {% endblock content %}
@@ -600,6 +597,8 @@
       hourly_data_json,
       recent_minmax_data_json
     );
+
+  setUpWarningTypeCheckboxListeners();
 </script>
 
 {% endblock javascripts %}

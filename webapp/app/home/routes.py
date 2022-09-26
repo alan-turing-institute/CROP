@@ -5,6 +5,8 @@ import logging
 import copy
 import datetime as dt
 import pandas as pd
+import json
+import pytz
 
 from flask import render_template, request
 from flask_login import login_required
@@ -19,6 +21,8 @@ from core.structure import (
     SensorClass,
     SensorLocationClass,
     TypeClass,
+    WarningClass,
+    WarningTypeClass,
 )
 from core.constants import CONST_TIMESTAMP_FORMAT
 from core.utils import filter_latest_sensor_location, vapour_pressure_deficit
@@ -39,8 +43,6 @@ HUM_BINS = {
     "BackFarm": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
     "R&D": [0.0, 50.0, 65.0, 85.0, 100.0],  # optimal 70,
 }
-# TODO The below numbers are just a guess, we need to ask the farm people what would
-# actually make sense.
 VPD_BINS = {
     "Propagation": [0.0, 300.0, 600.0, 1000.0, 10000.0],
     "FrontFarm": [0.0, 300.0, 600.0, 1000.0, 10000.0],
@@ -360,6 +362,118 @@ def regional_minmax_json(df):
     return return_value
 
 
+def get_warning_categories():
+    """Get the all the warning categories from the CROP database.
+
+    Return
+    a) a list of dictionaries, one for each category, with keys "name" and "id".
+    The ids are integers we generate in this function, the names are the category values
+    in the database.
+    b) Dictionary mapping warning_type IDs to category IDs.
+    """
+    query = db.session.query(
+        WarningTypeClass.id, WarningTypeClass.name, WarningTypeClass.category
+    )
+    warning_types = pd.read_sql(query.statement, query.session.bind)
+    category_names = warning_types["category"].unique()
+    categories = [
+        {"cat_id": index, "cat_name": cat_name}
+        for index, cat_name in enumerate(category_names)
+    ]
+    cat_ids_by_name = {cat["cat_name"]: cat["cat_id"] for cat in categories}
+    categories_by_type = {
+        warning_type["id"]: cat_ids_by_name[warning_type["category"]]
+        for _, warning_type in warning_types.iterrows()
+    }
+    return categories, categories_by_type
+
+
+def get_warnings(time_from):
+    """Get the latest alerts from the CROP database as a pandas DataFrame."""
+    query = (
+        db.session.query(
+            WarningClass.sensor_id,
+            WarningClass.batch_id,
+            WarningClass.time,
+            WarningClass.other_data,
+            WarningClass.priority,
+            WarningClass.time_created,
+            WarningTypeClass.id.label("type_id"),
+            WarningTypeClass.name.label("type_name"),
+            WarningTypeClass.short_description,
+            WarningTypeClass.long_description,
+            SensorClass.name.label("sensor_name"),
+        )
+        .outerjoin(
+            SensorClass,
+            SensorClass.id == WarningClass.sensor_id,
+        )
+        .filter(
+            and_(
+                WarningTypeClass.id == WarningClass.warning_type_id,
+                WarningClass.time_created > time_from,
+            )
+        )
+    )
+    warnings = pd.read_sql(query.statement, query.session.bind)
+    warnings["time_created"] = warnings["time_created"].apply(
+        lambda x: x.tz_localize(dt.timezone.utc)
+    )
+    if len(warnings) > 0:
+        warnings["description"] = warnings.apply(
+            lambda row: row["short_description"].format(
+                sensor_id=row["sensor_id"],
+                sensor_name=row["sensor_name"],
+                batch_id=row["batch_id"],
+                time=row["time"],
+                **({} if row["other_data"] is None else row["other_data"]),
+            ),
+            axis=1,
+        )
+    else:
+        warnings["description"] = []
+    # Drop all the columns we don't need, and pick the latest version of each warning
+    # only.
+    # Why include sensor_id, batch_id, and other_data in this groupby, since
+    # they've already done their job in filling in the fields for description? Because
+    # e.g. two sensors may have the same name, and thus the same description string, but
+    # they should still produce distinct warnings. We have to turn other_data into a
+    # string though, because otherwise its not hashable.
+    columns_to_group_by = [
+        "type_id",
+        "type_name",
+        "sensor_id",
+        "batch_id",
+        "other_data",
+        "description",
+        "priority",
+    ]
+    warnings = warnings.loc[:, columns_to_group_by + ["time_created"]]
+    warnings["other_data"] = warnings["other_data"].apply(repr)
+    warnings = (
+        warnings.groupby(columns_to_group_by, dropna=False)
+        .max()
+        .reset_index()
+        .sort_values(["time_created", "priority"], ascending=False)
+    )
+    return warnings
+
+
+def format_warnings_json(warnings):
+    """Convert a DataFrame of warnings into a list of dictionaries ready to be jsonified
+    for Jinja.
+    """
+    warnings["time_string"] = warnings["time_created"].apply(
+        lambda x: x.tz_convert(pytz.timezone("Europe/London")).strftime(
+            "%a %d %b %y, %H:%M"
+        )
+    )
+    # Converting to and from JSON ensures that we have a Python object that can be
+    # cleanly converted to JSON by render_template.
+    warnings_json = json.loads(warnings.to_json(orient="records"))
+    return warnings_json
+
+
 @blueprint.route("/index")
 @login_required
 def index():
@@ -429,6 +543,12 @@ def index():
     else:
         json_strat = {}
 
+    warning_categories, warning_categories_by_type = get_warning_categories()
+
+    warnings = get_warnings(dt_from_daily)
+    warnings["category_id"] = warnings["type_id"].apply(warning_categories_by_type.get)
+    warnings_json = format_warnings_json(warnings)
+
     return render_template(
         "index.html",
         hourly_data=hourly_json,
@@ -442,6 +562,8 @@ def index():
         stratification=json_strat,
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
+        warning_categories=warning_categories,
+        warnings=warnings_json,
     )
 
 
@@ -449,6 +571,4 @@ def index():
 @login_required
 def model():
     """Unity model page."""
-    return render_template(
-        "model.html",
-    )
+    return render_template("model.html")
