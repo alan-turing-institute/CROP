@@ -73,15 +73,11 @@ def resample(df_, bins):
     # resamples with 0 if there are no data in a bin
     for temp_range in bins_list:
         if len(df_[(df_["bin"] == temp_range)].index) == 0:
-
             df2 = pd.DataFrame({"bin": [temp_range], "cnt": [0]})
-
-            df_ = df_.append(df2)
+            df_ = pd.concat([df_, df2])
 
     df_out = df_.sort_values(by=["bin"], ascending=True)
-
     df_out.reset_index(inplace=True, drop=True)
-
     return df_out
 
 
@@ -224,7 +220,7 @@ def stratification(temp_df, sensor_ids):
     df["date"] = pd.to_datetime(df["timestamp"].dt.date)
 
     # Reseting index
-    df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
+    df = df.sort_values(by=["timestamp"], ascending=True).reset_index()
 
     df_ = df.loc[df["sensor_id"].isin(sensor_ids)]
     json_strat = (
@@ -333,7 +329,7 @@ def regional_mean_json(df_hourly):
     for i in range(len(LOCATION_REGIONS)):
         if not df_mean["region"].str.contains(LOCATION_REGIONS[i]).any():
             df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]})
-            df_mean = df_mean.append(df2)
+            df_mean = pd.concat([df_mean, df2])
 
     return_value = df_mean.to_json(orient="records")
     return return_value
