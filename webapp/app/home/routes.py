@@ -366,18 +366,34 @@ def regional_minmax_json(df):
     return return_value
 
 
-def get_warning_types():
-    """Get the all the warning types from the CROP database as a pandas DataFrame."""
-    query = db.session.query(WarningTypeClass.id, WarningTypeClass.name)
+def get_warning_categories():
+    """Get the all the warning categories from the CROP database.
+
+    Return
+    a) a list of dictionaries, one for each category, with keys "name" and "id".
+    The ids are integers we generate in this function, the names are the category values
+    in the database.
+    b) Dictionary mapping warning_type IDs to category IDs.
+    """
+    query = db.session.query(
+        WarningTypeClass.id, WarningTypeClass.name, WarningTypeClass.category
+    )
     warning_types = pd.read_sql(query.statement, query.session.bind)
-    return warning_types
+    category_names = warning_types["category"].unique()
+    categories = [
+        {"cat_id": index, "cat_name": cat_name}
+        for index, cat_name in enumerate(category_names)
+    ]
+    cat_ids_by_name = {cat["cat_name"]: cat["cat_id"] for cat in categories}
+    categories_by_type = {
+        warning_type["id"]: cat_ids_by_name[warning_type["category"]]
+        for _, warning_type in warning_types.iterrows()
+    }
+    return categories, categories_by_type
 
 
 def get_warnings(time_from):
     """Get the latest alerts from the CROP database as a pandas DataFrame."""
-    # TODO This query is wrong: It leaves out any rows in WarningsClass that don't
-    # have a non-null sensor_id. There should be a way to fix it using some sort of of
-    # outerjoin or somesuch, but my sqlalchemy skills failed me in a rush.
     query = (
         db.session.query(
             WarningClass.sensor_id,
@@ -423,13 +439,13 @@ def get_warnings(time_from):
     # Drop all the columns we don't need, and pick the latest version of each warning
     # only
     warnings = warnings.loc[
-        :, ["description", "time_created", "type_id", "type_name", "priority"]
+        :, ["type_id", "type_name", "description", "priority", "time_created"]
     ]
     warnings = (
         warnings.groupby(["type_id", "type_name", "description", "priority"])
         .max()
         .reset_index()
-        .sort_values("time_created", ascending=False)
+        .sort_values(["time_created", "priority"], ascending=False)
     )
     return warnings
 
@@ -518,10 +534,10 @@ def index():
     else:
         json_strat = {}
 
-    warning_types = get_warning_types()
-    warning_types_json = json.loads(warning_types.to_json(orient="records"))
+    warning_categories, warning_categories_by_type = get_warning_categories()
 
     warnings = get_warnings(dt_from_daily)
+    warnings["category_id"] = warnings["type_id"].apply(warning_categories_by_type.get)
     warnings_json = format_warnings_json(warnings)
 
     return render_template(
@@ -537,7 +553,7 @@ def index():
         stratification=json_strat,
         dt_from=dt_from_weekly.strftime("%B %d, %Y"),
         dt_to=dt_to.strftime("%B %d, %Y"),
-        warning_types=warning_types_json,
+        warning_categories=warning_categories,
         warnings=warnings_json,
     )
 

@@ -868,6 +868,10 @@ class WarningTypeClass(BASE):
     extra data for each particular error. How these placeholders are specified and how
     they are to be filled in is not specified by the database schema, but is the
     responsibility of the logging/reporting code.
+
+    Category is a string that groups the rows of this table into broader classes, such
+    as "Farm condition warnings" or "Forecasting model warnings". The front end displays
+    warnings grouped by these categories.
     """
 
     __tablename__ = WARNING_TYPES_TABLE_NAME
@@ -876,6 +880,7 @@ class WarningTypeClass(BASE):
     short_description = Column(Unicode(256), nullable=False)
     long_description = Column(Unicode(2048), nullable=True)
     time_created = Column(DateTime(), nullable=True, server_default=func.now())
+    category = Column(Unicode(256), nullable=True)
 
 
 class WarningClass(BASE):
