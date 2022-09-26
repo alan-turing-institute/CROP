@@ -433,12 +433,25 @@ def get_warnings(time_from):
     else:
         warnings["description"] = []
     # Drop all the columns we don't need, and pick the latest version of each warning
-    # only
-    warnings = warnings.loc[
-        :, ["type_id", "type_name", "description", "priority", "time_created"]
+    # only.
+    # Why include sensor_id, batch_id, and other_data in this groupby, since
+    # they've already done their job in filling in the fields for description? Because
+    # e.g. two sensors may have the same name, and thus the same description string, but
+    # they should still produce distinct warnings. We have to turn other_data into a
+    # string though, because otherwise its not hashable.
+    columns_to_group_by = [
+        "type_id",
+        "type_name",
+        "sensor_id",
+        "batch_id",
+        "other_data",
+        "description",
+        "priority",
     ]
+    warnings = warnings.loc[:, columns_to_group_by + ["time_created"]]
+    warnings["other_data"] = warnings["other_data"].apply(repr)
     warnings = (
-        warnings.groupby(["type_id", "type_name", "description", "priority"])
+        warnings.groupby(columns_to_group_by, dropna=False)
         .max()
         .reset_index()
         .sort_values(["time_created", "priority"], ascending=False)
