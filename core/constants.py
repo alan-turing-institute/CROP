@@ -239,6 +239,8 @@ TEST_MODEL_MEASURE_TABLE_NAME = "test_model_measure"
 TEST_MODEL_RUN_TABLE_NAME = "test_model_run"
 TEST_MODEL_PRODUCT_TABLE_NAME = "test_model_product"
 TEST_MODEL_VALUE_TABLE_NAME = "test_model_value"
+WARNING_TYPES_TABLE_NAME = "warning_types"
+WARNINGS_TABLE_NAME = "warnings"
 
 ARANET_TRH_TABLE_NAME = "aranet_trh_data"
 ARANET_CO2_TABLE_NAME = "aranet_co2_data"
@@ -254,11 +256,6 @@ ID_COL_NAME = "id"
 CONST_MAX_RECORDS = 50000
 
 CONST_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-# Warnings log
-
-WARNING_PROP_LOW_TEMPR = "Temperature is low in propagation, add heater"
-WARNING_NO_DATA_PROP = "Missing data in propagation - check sensor battery"
 
 #
 CROP_TYPE_TABLE_NAME = "crop_types"
