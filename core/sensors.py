@@ -21,6 +21,7 @@ from .structure import (
     ReadingsAranetAirVelocityClass,
     ReadingsAegisIrrigationClass,
     ReadingsWeatherClass,
+    WeatherForecastsClass,
 )
 
 
@@ -127,7 +128,7 @@ def get_sensor_readings_db_timestamps(session, sensor_id, date_from, date_to):
 
 def get_db_weather_data(session, date_from, date_to):
     """
-    Returns weather data for specific period of time as pandas data frame.
+    Returns weather data (stored in the DB) for specific period of time as pandas data frame.
 
     Arguments:
         session: sqlalchemy active session object
@@ -147,6 +148,33 @@ def get_db_weather_data(session, date_from, date_to):
     result_df = DataFrame(session.execute(query).fetchall())
 
     if len(result_df.index) > 0:
-        result_df.set_index("timestamp", inplace=True)
+        result_df.set_index("timestamp", inplace=True) # set the index to become "timestamp" column
+
+    return result_df
+
+
+def get_db_weather_forecast(session, date_from, date_to):
+    """
+    Returns weather forecast data (stored in the DB) for specific period of time as pandas data frame.
+
+    Arguments:
+        session: sqlalchemy active session object
+        date_from: date range from
+        date_to: date range to
+    Returns:
+        result_df: data frame containing sensor data for specific period of time
+    """
+
+    query = session.query(WeatherForecastsClass.timestamp,).filter(
+        and_(
+            WeatherForecastsClass.timestamp >= date_from,
+            WeatherForecastsClass.timestamp <= date_to,
+        )
+    )
+
+    result_df = DataFrame(session.execute(query).fetchall())
+
+    if len(result_df.index) > 0:
+        result_df.set_index("timestamp", inplace=True) # set the index to become "timestamp" column
 
     return result_df
