@@ -26,7 +26,7 @@ from core.structure import (
 )
 
 
-@blueprint.route("/batch_list", methods=["GET"])
+@blueprint.route("/batch_list", methods=["GET", "POST"])
 @login_required
 def batch_list():
     """Render the batch_list page.
@@ -160,9 +160,12 @@ def batch_list():
         df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
     results_arr = df.to_dict("records")
 
-    return render_template(
-        "batch_list.html",
-        batches=results_arr,
-        dt_from=dt_from.strftime("%B %d, %Y"),
-        dt_to=dt_to.strftime("%B %d, %Y"),
-    )
+    if request.method == "POST":
+        return download_csv(results_arr, "batch_list")
+    else:
+        return render_template(
+            "batch_list.html",
+            batches=results_arr,
+            dt_from=dt_from.strftime("%B %d, %Y"),
+            dt_to=dt_to.strftime("%B %d, %Y"),
+        )
