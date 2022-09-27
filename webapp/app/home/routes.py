@@ -131,6 +131,7 @@ def aranet_query(dt_from, dt_to):
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
+    df["timestamp"] = df["timestamp"].dt.tz_localize(dt.timezone.utc)
     df.loc[:, "vpd"] = vapour_pressure_deficit(
         df.loc[:, "temperature"], df.loc[:, "humidity"]
     )
@@ -416,9 +417,7 @@ def get_warnings(time_from):
         )
     )
     warnings = pd.read_sql(query.statement, query.session.bind)
-    warnings["time_created"] = warnings["time_created"].apply(
-        lambda x: x.tz_localize(dt.timezone.utc)
-    )
+    warnings["time_created"] = warnings["time_created"].dt.tz_localize(dt.timezone.utc)
     if len(warnings) > 0:
         warnings["description"] = warnings.apply(
             lambda row: row["short_description"].format(
@@ -490,8 +489,15 @@ def index():
     dt_from_6h = dt_to - dt.timedelta(hours=6)
     dt_from_hourly = dt_to - dt.timedelta(hours=2)
 
+    # Get the largest timespan we need from the database. We can get the others by
+    # slicing this, saving database queries.
+    dt_from_min = min(
+        dt_from_fortnightly, dt_from_weekly, dt_from_daily, dt_from_6h, dt_from_hourly
+    )
+    df_all = aranet_query(dt_from_min, dt_to)
+
     # weekly
-    df_weekly = aranet_query(dt_from_weekly, dt_to)
+    df_weekly = df_all.loc[df_all["timestamp"] >= dt_from_weekly, :]
     df_mean_hr_weekly = grp_per_hr_region(df_weekly)
     df_temp_weekly = bin_trh_data(
         df_mean_hr_weekly, TEMP_BINS, "temperature", expected_total=24 * 7
@@ -507,7 +513,7 @@ def index():
     weekly_vpd_json = json_bin_counts(df_vpd_weekly)
 
     # daily
-    df_daily = aranet_query(dt_from_daily, dt_to)
+    df_daily = df_weekly.loc[df_weekly["timestamp"] >= dt_from_daily, :]
     df_mean_hr_daily = grp_per_hr_region(df_daily)
     df_temp_daily = bin_trh_data(
         df_mean_hr_daily, TEMP_BINS, "temperature", expected_total=24
@@ -521,21 +527,21 @@ def index():
     daily_vpd_json = json_bin_counts(df_vpd_daily)
 
     # hourly
-    df_hourly = aranet_query(dt_from_hourly, dt_to)
+    df_hourly = df_daily.loc[df_daily["timestamp"] >= dt_from_hourly, :]
     if not df_hourly.empty:
         hourly_json = regional_mean_json(df_hourly)
     else:
         hourly_json = {}
 
     # 6h
-    df_6h = aranet_query(dt_from_6h, dt_to)
+    df_6h = df_daily.loc[df_daily["timestamp"] >= dt_from_6h, :]
     if not df_6h.empty:
         recent_minmax_json = regional_minmax_json(df_6h)
     else:
         recent_minmax_json = {}
 
     # fortnightly
-    df_fortnightly = aranet_query(dt_from_fortnightly, dt_to)
+    df_fortnightly = df_all.loc[df_all["timestamp"] >= dt_from_fortnightly, :]
     if not df_fortnightly.empty:
         # Sensor id locations:
         # 18: 16B1, 21: 1B2, 22: 29B2, 23: 16B4
