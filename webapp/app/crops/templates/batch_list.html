@@ -123,7 +123,7 @@
     });
 
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        var request_url = "/readings/aranet_trh?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
+        var request_url = "/crops/batch_list?range=" + picker.startDate.format('YYYYMMDD') + "-" + picker.endDate.format('YYYYMMDD')
 
         location.replace(request_url)
     });
