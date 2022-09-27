@@ -378,7 +378,7 @@ class ReadingsAranetTRHClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
     humidity = Column(Float, nullable=False)
 
@@ -403,7 +403,7 @@ class ReadingsAranetCO2Class(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     co2 = Column(Float, nullable=False)  # units of parts-per-million
 
     time_created = Column(DateTime(), server_default=func.now())
@@ -429,7 +429,7 @@ class ReadingsAranetAirVelocityClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     current = Column(Float, nullable=True)  # raw current, in Amps
     air_velocity = Column(Float, nullable=False)  # m/s ?
 
@@ -456,7 +456,7 @@ class ReadingsAegisIrrigationClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=True)  # in degrees Celsius
     pH = Column(Float, nullable=False)
     dissolved_oxygen = Column(Float, nullable=False)
@@ -485,7 +485,7 @@ class ReadingsWeatherClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
     rain_probability = Column(Float, nullable=True)
     rain = Column(Float, nullable=True)
@@ -518,7 +518,7 @@ class ReadingsAdvanticsysClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
     humidity = Column(Float, nullable=False)
     co2 = Column(Float, nullable=False)
@@ -545,7 +545,7 @@ class ReadingsTinyTagClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
@@ -568,7 +568,7 @@ class ReadingsEnergyClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     electricity_consumption = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
@@ -770,7 +770,7 @@ class BatchEventClass(BASE):
     )
     growapp_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
     event_type = Column(Enum(EventType), nullable=False)
-    event_time = Column(DateTime, nullable=False)
+    event_time = Column(DateTime, nullable=False, index=True)
     next_action_time = Column(DateTime, nullable=True)
 
     # constructor
@@ -915,7 +915,7 @@ class WeatherForecastsClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
     rain_probability = Column(Float, nullable=True)
     rain = Column(Float, nullable=True)
