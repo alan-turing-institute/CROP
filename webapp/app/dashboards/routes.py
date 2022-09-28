@@ -103,6 +103,7 @@ DATA_COLUMNS_BY_SENSOR_TYPE = {
         {"column_name": "dissolved_oxygen", "ui_name": "Dissolved oxygen (%)"},
         {"column_name": "conductivity", "ui_name": "Conductivity (μS)"},
         {"column_name": "turbidity", "ui_name": "Turbidity"},
+        {"column_name": "peroxide", "ui_name": "Peroxide (ppm)"},
     ],
 }
 

@@ -462,6 +462,7 @@ class ReadingsAegisIrrigationClass(BASE):
     dissolved_oxygen = Column(Float, nullable=False)
     conductivity = Column(Float, nullable=False)
     turbidity = Column(Float, nullable=False)
+    peroxide = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
