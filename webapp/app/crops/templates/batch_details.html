@@ -79,6 +79,22 @@
                     <td>{{ details.over_production }}</td>
                   </tr>
                   <tr>
+                    <td class="text-alignright">Closest sensor</td>
+                    {% if not trh_summary|length == 0 %}
+                    <td>{{ trh_summary.sensor_name }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Sensor location</td>
+                    {% if not trh_summary|length == 0 %}
+                    <td>{{ trh_summary.sensor_location }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
                     <td class="text-alignright">Mean temperature</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ '%0.1f'|format(trh_summary.mean_temperature|float) }}°C</td>

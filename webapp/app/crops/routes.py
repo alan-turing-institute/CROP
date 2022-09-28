@@ -17,9 +17,13 @@ from core.structure import (
     LocationClass,
     HarvestClass,
     ReadingsAranetTRHClass,
+    SensorClass,
+    SensorLocationClass,
+    TypeClass,
 )
 from core.utils import (
     download_csv,
+    filter_latest_sensor_location,
     parse_date_range_argument,
     vapour_pressure_deficit,
 )
@@ -198,12 +202,75 @@ def batch_list():
         )
 
 
-def find_closest_sensor(zone, aisle, column, shelf):
-    """Return the sensor ID of the sensor closest to this location."""
+def distance_metric(location1, location2):
+    """Compute a custom notion distance between two locations.
+
+    The two locations should be tuples of (zone, aisle, column, shelf).
+
+    The return value is a float.
+    """
+    zone1, aisle1, column1, shelf1 = location1
+    zone2, aisle2, column2, shelf2 = location2
+    distance = 0.0
+    # TODO Improve this metric.
+    if zone1 != zone2:
+        distance += 1000.0
+    if aisle1 != aisle2:
+        distance += 1
+    distance += abs(column1 - column2)
+    distance += abs(shelf1 - shelf2)
+    return distance
+
+
+def find_closest_trh_sensor(zone, aisle, column, shelf):
+    """Return the Aranet TRH sensor ID of the sensor closest to this location."""
     # TODO Move this to utils?
-    # TODO Implement this. Currently just returning a constant to test the rest of the
-    # pipeline.
-    return 19
+    query = (
+        db.session.query(
+            SensorClass.id,
+            SensorClass.name,
+            TypeClass.sensor_type,
+            SensorLocationClass.sensor_id,
+            SensorLocationClass.location_id,
+            SensorLocationClass.installation_date,
+            LocationClass.id.label("location_id"),
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf,
+        )
+        .filter(SensorClass.type_id == TypeClass.id)
+        .filter(TypeClass.sensor_type == "Aranet T&RH")
+        .join(
+            SensorLocationClass,
+            SensorClass.id == SensorLocationClass.sensor_id,
+            isouter=True,
+        )
+        .join(
+            LocationClass,
+            LocationClass.id == SensorLocationClass.location_id,
+            isouter=True,
+        )
+        .filter(filter_latest_sensor_location(db))
+    )
+    df_sensors = pd.read_sql(query.statement, query.session.bind)
+    df_sensors["distance"] = df_sensors.apply(
+        lambda row: distance_metric(
+            (zone, aisle, column, shelf),
+            (row["zone"], row["aisle"], row["column"], row["shelf"]),
+        ),
+        axis=1,
+    )
+    min_idx = np.argmin(df_sensors["distance"])
+    closest_row = df_sensors.loc[min_idx, :]
+    return (
+        int(closest_row["id"]),
+        closest_row["name"],
+        closest_row["zone"],
+        closest_row["aisle"],
+        int(closest_row["column"]),
+        int(closest_row["shelf"]),
+    )
 
 
 def query_trh_data(sensor_id, dt_from, dt_to):
@@ -280,12 +347,26 @@ def batch_details():
     dt_from = details["transfer_time"]
     dt_to = details["harvest_time"]
     if dt_from and dt_to:
-        sensor_id = find_closest_sensor(
+        (
+            sensor_id,
+            sensor_name,
+            sensor_zone,
+            sensor_aisle,
+            sensor_column,
+            sensor_shelf,
+        ) = find_closest_trh_sensor(
             details["zone"], details["aisle"], details["column"], details["shelf"]
         )
         trh_df = query_trh_data(sensor_id, dt_from, dt_to)
         trh_json = trh_df.to_json(orient="records")
         trh_summary = {
+            "sensor_id": sensor_id,
+            "sensor_name": sensor_name,
+            "sensor_zone": sensor_zone,
+            "sensor_aisle": sensor_aisle,
+            "sensor_column": sensor_column,
+            "sensor_shelf": sensor_shelf,
+            "sensor_location": f"{sensor_zone} {sensor_column}{sensor_aisle}{sensor_shelf}",
             "mean_temperature": np.mean(trh_df.loc[:, "temperature"]),
             "mean_humidity": np.mean(trh_df.loc[:, "humidity"]),
             "mean_vpd": np.mean(trh_df.loc[:, "vpd"]),
@@ -299,6 +380,8 @@ def batch_details():
         if details[column] is not None:
             details[column] = pd.to_datetime(details[column]).strftime("%Y-%m-%d %H:%M")
 
+    # TODO Implement comparing some of the data in `details` to averages for the same
+    # crop type. See https://github.com/alan-turing-institute/CROP/issues/284
     return render_template(
         "batch_details.html",
         details=details,
