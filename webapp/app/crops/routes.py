@@ -1,21 +1,13 @@
 """
 Module for sensor data.
 """
-
 from flask import render_template, request
 from flask_login import login_required
-from sqlalchemy import and_, desc
+import numpy as np
 import pandas as pd
-import io
+from sqlalchemy import and_
 
 from app.crops import blueprint
-from core.utils import (
-    download_csv,
-    parse_date_range_argument,
-    query_result_to_array,
-    vapour_pressure_deficit,
-)
-
 from core.structure import SQLA as db
 from core.structure import (
     BatchClass,
@@ -25,6 +17,11 @@ from core.structure import (
     LocationClass,
     HarvestClass,
     ReadingsAranetTRHClass,
+)
+from core.utils import (
+    download_csv,
+    parse_date_range_argument,
+    vapour_pressure_deficit,
 )
 
 
@@ -48,28 +45,38 @@ def collect_batch_details(df_batch):
         details["crop_type_name"] = row_weigh["crop_type_name"]
         details["weigh_time"] = row_weigh["event_time"]
         details["last_event"] = "weigh"
-        # At this point we have enough data to at least have some kind of row in the
-        # table. The following parts modify `row` in-place.
     else:
-        # If we don't have the weighing event for this batch, we don't want to
-        # process any of the others either. This is to avoid confusing cases where
-        # e.g. the harvest event was in the time range provided but the weighing
-        # wasn't and thus there would be a row with data missing.
-        return details
+        # If there's no weighing event, we don't want to process this batch at all,
+        # since we clearly lack meaningful data for it.
+        return None
 
     if len(row_propagate) > 0:
         row_propagate = row_propagate.iloc[0]
         details["propagate_time"] = row_propagate["event_time"]
         details["last_event"] = "propagate"
+    else:
+        details["propagate_time"] = None
 
     if len(row_transfer) > 0:
         row_transfer = row_transfer.iloc[0]
         details["location_id"] = row_transfer["location_id"]
         details["zone"] = row_transfer["zone"]
         details["aisle"] = row_transfer["aisle"]
-        details["shelf"] = row_transfer["shelf"]
+        details["column"] = int(row_transfer["column"])
+        details["shelf"] = int(row_transfer["shelf"])
         details["transfer_time"] = row_transfer["event_time"]
+        details[
+            "location"
+        ] = f"{details['zone']} {details['column']}{details['aisle']}{details['shelf']}"
         details["last_event"] = "transfer"
+    else:
+        details["location_id"] = None
+        details["zone"] = None
+        details["aisle"] = None
+        details["column"] = None
+        details["shelf"] = None
+        details["location"] = None
+        details["transfer_time"] = None
 
     if len(row_harvest) > 0:
         row_harvest = row_harvest.iloc[0]
@@ -79,6 +86,12 @@ def collect_batch_details(df_batch):
         details["over_production"] = row_harvest["over_production"]
         details["harvest_time"] = row_harvest["event_time"]
         details["last_event"] = "harvest"
+    else:
+        details["crop_yield"] = None
+        details["waste_disease"] = None
+        details["waste_defect"] = None
+        details["over_production"] = None
+        details["harvest_time"] = None
     return details
 
 
@@ -140,8 +153,9 @@ def batch_list():
     rows = []
     for batch_id, group in grouped:
         details = collect_batch_details(group)
-        details["batch_id"] = batch_id
-        rows.append(details)
+        if details is not None:
+            details["batch_id"] = batch_id
+            rows.append(details)
 
     df = pd.DataFrame(
         rows,
@@ -159,7 +173,9 @@ def batch_list():
             "location_id",
             "zone",
             "aisle",
+            "column",
             "shelf",
+            "location",
             "crop_yield",
             "waste_disease",
             "waste_defect",
@@ -215,7 +231,9 @@ def query_trh_data(sensor_id, dt_from, dt_to):
 @login_required
 def batch_details():
     """Render the details of a batch."""
-    batch_id = int(request.args.get("id"))
+    batch_id = request.args.get("query")
+    if batch_id is not None:
+        batch_id = int(batch_id)
     query = (
         db.session.query(
             BatchClass.id.label("batch_id"),
@@ -249,8 +267,15 @@ def batch_details():
     )
     df_raw = pd.read_sql(query.statement, query.session.bind)
     details = collect_batch_details(df_raw)
-    details["grow_time"] = details["harvest_time"] - details["transfer_time"]
-    details["yield_per_tray"] = details["yield"] / details["number_of_trays"]
+    details["batch_id"] = batch_id
+    if details["harvest_time"] is not None and details["transfer_time"] is not None:
+        details["grow_time"] = details["harvest_time"] - details["transfer_time"]
+    else:
+        details["grow_time"] = None
+    if details["crop_yield"] is not None and details["number_of_trays"] is not None:
+        details["yield_per_tray"] = details["crop_yield"] / details["number_of_trays"]
+    else:
+        details["yield_per_tray"] = None
 
     dt_from = details["transfer_time"]
     dt_to = details["harvest_time"]
@@ -259,24 +284,24 @@ def batch_details():
             details["zone"], details["aisle"], details["column"], details["shelf"]
         )
         trh_df = query_trh_data(sensor_id, dt_from, dt_to)
-        trh_data = trh_df.to_dict("records")
+        trh_json = trh_df.to_json(orient="records")
         trh_summary = {
-            "mean_temperature": pd.mean(trh_df.loc[:, "temperature"]),
-            "mean_humidity": pd.mean(trh_df.loc[:, "humidity"]),
-            "mean_vpd": pd.mean(trh_df.loc[:, "vpd"]),
+            "mean_temperature": np.mean(trh_df.loc[:, "temperature"]),
+            "mean_humidity": np.mean(trh_df.loc[:, "humidity"]),
+            "mean_vpd": np.mean(trh_df.loc[:, "vpd"]),
         }
     else:
-        trh_data = {}
-        trh_summary = {
-            "mean_temperature": None,
-            "mean_humidity": None,
-            "mean_vpd": None,
-        }
+        trh_json = "{}"
+        trh_summary = {}
 
     # Format the time strings. Easier to do here than in the Jinja template.
     for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
-        details[column] = pd.to_datetime(details[column]).dt.strftime("%Y-%m-%d %H:%M")
+        if details[column] is not None:
+            details[column] = pd.to_datetime(details[column]).strftime("%Y-%m-%d %H:%M")
 
     return render_template(
-        "batch_details.html", details=details, trh=trh_data, trh_summary=trh_summary
+        "batch_details.html",
+        details=details,
+        trh_json=trh_json,
+        trh_summary=trh_summary,
     )
