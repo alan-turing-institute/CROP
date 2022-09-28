@@ -1,6 +1,6 @@
 {% extends "base_site.html" %}
 
-{% block title %} Crop batches {% endblock title %}
+{% block title %} CROP BATCHES {% endblock title %}
 
 {% block stylesheets %}
   {{ super() }}
@@ -42,7 +42,7 @@
                   <th>Last event</th>
                   <th>Crop type</th>
                   <th>Tray size</th>
-                  <th>Number of trays</th>
+                  <th>Trays</th>
                   <th>Weigh time</th>
                   <th>Propagate time</th>
                   <th>Transfer time</th>
@@ -52,6 +52,7 @@
                   <th>Disease</th>
                   <th>Defect</th>
                   <th>Over-production</th>
+                  <th>Details</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -74,7 +75,9 @@
                   <td>{{ batch.waste_disease }}</td>
                   <td>{{ batch.waste_defect }}</td>
                   <td>{{ batch.over_production }}</td>
-                </tr>
+                  <td class="last">
+                    <a href="/crops/batch_details?query={{ batch.batch_id }}">View</a>
+                  </td>
                 {%
                     endfor
                 %}
