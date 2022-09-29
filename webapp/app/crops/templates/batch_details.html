@@ -1,0 +1,157 @@
+{% extends "base_site.html" %}
+
+{% block title %} CROP BATCH DETAILS {% endblock title %}
+
+{% block content %}
+<div class="right_col" role="main">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_content">
+            <h3>Batch details</h3>
+
+            <div class="col-md-3 col-sm-4 col-xs-6">
+              <table class="table table-borderless">
+                <tbody>
+                  <tr>
+                    <td class="text-alignright">Batch ID</td>
+                    <td>{{ details.batch_id }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Last event</td>
+                    <td>{{ details.last_event }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Crop type</td>
+                    <td>{{ details.crop_type_name }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Tray size</td>
+                    <td>{{ details.tray_size }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Trays</td>
+                    <td>{{ details.number_of_trays }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Weigh time</td>
+                    <td>{{ details.weigh_time }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Propagate time</td>
+                    <td>{{ details.propagate_time }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Transfer time</td>
+                    <td>{{ details.transfer_time }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Harvest time</td>
+                    <td>{{ details.harvest_time }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Grow time</td>
+                    <td>{{ details.grow_time }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Location</td>
+                    <td>{{ details.location }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Yield</td>
+                    <td>{{ details.crop_yield }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Yield per tray</td>
+                    <td>{{ details.yield_per_tray }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Disease</td>
+                    <td>{{ details.waste_disease }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Defect</td>
+                    <td>{{ details.waste_defect }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Over-production</td>
+                    <td>{{ details.over_production }}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Closest sensor</td>
+                    {% if not trh_summary|length == 0 %}
+                    <td>{{ trh_summary.sensor_name }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Sensor location</td>
+                    {% if not trh_summary|length == 0 %}
+                    <td>{{ trh_summary.sensor_location }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Mean temperature</td>
+                    {% if not trh_summary|length == 0 %}
+                    <td>{{ '%0.1f'|format(trh_summary.mean_temperature|float) }}°C</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Mean humidity</td>
+                    {% if not trh_summary|length == 0 %}
+                    <td>{{ '%0.1f'|format(trh_summary.mean_humidity|float) }}%</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Mean VPD</td>
+                    {% if not trh_summary|length == 0 %}
+                    <td>{{ '%0.0f'|format(trh_summary.mean_vpd|float) }} Pa</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="col-md-6 col-sm-6 col-xs-6">
+              <canvas id="temperatureCanvas"></canvas>
+              <canvas id="humidityCanvas"></canvas>
+              <canvas id="vpdCanvas"></canvas>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+{{ super()}}
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js" integrity="sha512-sW/w8s4RWTdFFSduOTGtk4isV1+190E/GghVffMA9XczdJ2MDzSzLEubKAs5h0wzgSJOQTRYyaz73L3d6RtJSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+
+<script src="{{ url_for('static', filename='javascript/batch_details.js') }}"></script>
+
+<script>
+  const trh_data = JSON.parse('{{trh_json | safe}}');
+  if (trh_data.length > 0) {
+    makePlots(trh_data, "temperature", "temperatureCanvas", "Temperature", "green")
+    makePlots(trh_data, "humidity", "humidityCanvas", "Humidity", "blue")
+    makePlots(trh_data, "vpd", "vpdCanvas", "VPD", "red")
+  }
+</script>
+{% endblock javascripts %}
