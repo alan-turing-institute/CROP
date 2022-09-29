@@ -33,7 +33,9 @@ from .utils import log_upload_event
 from .sensors import get_sensor_readings_db_timestamps
 
 
-CONST_CHECK_URL_PATH = "https://zcf.hyper.systems/api/sites/1/analytics/v3/device_metrics"
+CONST_CHECK_URL_PATH = (
+    "https://zcf.hyper.systems/api/sites/1/analytics/v3/device_metrics"
+)
 
 READINGS_DICTS = [
     {
@@ -78,7 +80,7 @@ READINGS_DICTS = [
             {
                 "api_name": "aegis_ii_temperature",
                 "df_name": "WaterTemperature",
-                "db_name": "temperature"
+                "db_name": "temperature",
             },
             {
                 "api_name": "aegis_ii_ph",
@@ -100,8 +102,13 @@ READINGS_DICTS = [
                 "df_name": "WaterTurbidity",
                 "db_name": "turbidity",
             },
+            {
+                "api_name": "aegis_ii_peroxide",
+                "df_name": "WaterPeroxide",
+                "db_name": "peroxide",
+            },
         ],
-    }
+    },
 ]
 
 
@@ -158,8 +165,6 @@ def get_api_sensor_data(api_key, dt_from, dt_to, columns):
     device_mapping = data["metadata"]["devices"]
     timestamps = data["labels"]
     value_dicts = data["series"]
-#    if True:
-#        return data
     for value_dict in value_dicts:
         hyper_id = value_dict["device_id"]
         aranet_pro_id = device_mapping[hyper_id]["vendor_device_id"]

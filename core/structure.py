@@ -8,17 +8,18 @@ Module to define the structure of the database. Each Class, defines a table in t
 import enum
 from sqlalchemy import (
     Boolean,
-    ForeignKey,
     Column,
-    Enum,
-    Integer,
-    Float,
-    String,
     DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    JSON,
+    LargeBinary,
+    String,
     Text,
     Unicode,
     UniqueConstraint,
-    LargeBinary,
 )
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -46,6 +47,7 @@ from .constants import (
     ARANET_AIRVELOCITY_TABLE_NAME,
     AEGIS_IRRIGATION_TABLE_NAME,
     WEATHER_TABLE_NAME,
+    WEATHER_FORECAST_TABLE_NAME,
     MODEL_TABLE_NAME,
     MODEL_MEASURE_TABLE_NAME,
     MODEL_RUN_TABLE_NAME,
@@ -60,6 +62,8 @@ from .constants import (
     BATCH_TABLE_NAME,
     BATCH_EVENT_TABLE_NAME,
     HARVEST_TABLE_NAME,
+    WARNING_TYPES_TABLE_NAME,
+    WARNINGS_TABLE_NAME,
 )
 
 SQLA = SQLAlchemy()
@@ -341,9 +345,9 @@ class LocationClass(BASE):
     id = Column(Integer, primary_key=True, autoincrement=True)  # e
 
     zone = Column(String(50), nullable=False)
-    aisle = Column(String(50), nullable=False)
-    column = Column(Integer, nullable=False)
-    shelf = Column(Integer, nullable=False)
+    aisle = Column(String(50), nullable=True)
+    column = Column(Integer, nullable=True)
+    shelf = Column(Integer, nullable=True)
 
     # relationshionships (One-To-Many)
     sensor_locations_relationship = relationship("SensorLocationClass")
@@ -374,7 +378,7 @@ class ReadingsAranetTRHClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
     humidity = Column(Float, nullable=False)
 
@@ -399,7 +403,7 @@ class ReadingsAranetCO2Class(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     co2 = Column(Float, nullable=False)  # units of parts-per-million
 
     time_created = Column(DateTime(), server_default=func.now())
@@ -425,7 +429,7 @@ class ReadingsAranetAirVelocityClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     current = Column(Float, nullable=True)  # raw current, in Amps
     air_velocity = Column(Float, nullable=False)  # m/s ?
 
@@ -452,12 +456,13 @@ class ReadingsAegisIrrigationClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=True)  # in degrees Celsius
     pH = Column(Float, nullable=False)
     dissolved_oxygen = Column(Float, nullable=False)
     conductivity = Column(Float, nullable=False)
     turbidity = Column(Float, nullable=False)
+    peroxide = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
@@ -481,7 +486,7 @@ class ReadingsWeatherClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
     rain_probability = Column(Float, nullable=True)
     rain = Column(Float, nullable=True)
@@ -514,7 +519,7 @@ class ReadingsAdvanticsysClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
     humidity = Column(Float, nullable=False)
     co2 = Column(Float, nullable=False)
@@ -541,7 +546,7 @@ class ReadingsTinyTagClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     temperature = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
@@ -564,7 +569,7 @@ class ReadingsEnergyClass(BASE):
         nullable=False,
     )
 
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
     electricity_consumption = Column(Float, nullable=False)
 
     time_created = Column(DateTime(), server_default=func.now())
@@ -603,29 +608,6 @@ class SensorLocationClass(BASE):
 
     # arguments
     __table_args__ = (UniqueConstraint("sensor_id", "installation_date"),)
-
-
-class WeatherClass(BASE):
-    """
-    Class for reading the Met Weather API
-    """
-
-    # TODO: connect to met weather api
-
-    __tablename__ = "weather"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-
-    temperature = Column(Float, nullable=False)
-    rainfall = Column(Float)
-    humidity = Column(Float)
-    wind_speed = Column(Float)
-    wind_direction = Column(Float)
-    weather_type = Column(String)
-    forecast = Column(Float)
-
-    time_created = Column(DateTime(), server_default=func.now())
-    time_updated = Column(DateTime(), onupdate=func.now())
 
 
 class UserClass(BASE, UserMixin):
@@ -789,7 +771,7 @@ class BatchEventClass(BASE):
     )
     growapp_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
     event_type = Column(Enum(EventType), nullable=False)
-    event_time = Column(DateTime, nullable=False)
+    event_time = Column(DateTime, nullable=False, index=True)
     next_action_time = Column(DateTime, nullable=True)
 
     # constructor
@@ -853,3 +835,97 @@ class HarvestClass(BASE):
         self.waste_disease = waste_disease
         self.waste_defect = waste_defect
         self.over_production = over_production
+
+
+class WarningTypeClass(BASE):
+    """
+    Table for different types of warnings CROP may report.
+
+    The short_description and long_description columns should be either strings that are
+    shown in any logging/reporting interface for warnings of this type, or templates for
+    such strings. A template can hold various placeholders that are to be filled in with
+    extra data for each particular error. How these placeholders are specified and how
+    they are to be filled in is not specified by the database schema, but is the
+    responsibility of the logging/reporting code.
+
+    Category is a string that groups the rows of this table into broader classes, such
+    as "Farm condition warnings" or "Forecasting model warnings". The front end displays
+    warnings grouped by these categories.
+    """
+
+    __tablename__ = WARNING_TYPES_TABLE_NAME
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(64), nullable=False, unique=True)
+    short_description = Column(Unicode(256), nullable=False)
+    long_description = Column(Unicode(2048), nullable=True)
+    time_created = Column(DateTime(), nullable=True, server_default=func.now())
+    category = Column(Unicode(256), nullable=True)
+
+
+class WarningClass(BASE):
+    """
+    Table for warnings CROP reports.
+
+    time_created is for when this warning was created, time is for any other time
+    variable that may be relevant for the warning.
+
+    The sensor_id, batch_id, and time columns are nullable because many warning types
+    may have no use for them. Any extra data other than an attached sensor, batch, or
+    timestamp should be recorded in the other_data column. How the data in that column
+    is to be interpreted depends on the warning type, and is something the code
+    processing the warnings needs to take care of.
+
+    Priority should be a positive integer, with higher values meaning higher priority.
+    """
+
+    __tablename__ = WARNINGS_TABLE_NAME
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    warning_type_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(WARNING_TYPES_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    sensor_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
+        nullable=True,
+    )
+    batch_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(BATCH_TABLE_NAME, ID_COL_NAME)),
+        nullable=True,
+    )
+    time = Column(DateTime(), nullable=True, server_default=func.now())
+    other_data = Column(JSON, nullable=True)
+    priority = Column(Integer, nullable=True)
+    time_created = Column(DateTime(), nullable=False, server_default=func.now())
+
+
+class WeatherForecastsClass(BASE):
+    """
+    Base class for the External weather forecast readings
+    """
+
+    __tablename__ = WEATHER_FORECAST_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sensor_id = Column(
+        Integer,
+        nullable=False,
+    )
+
+    timestamp = Column(DateTime, nullable=False, index=True)
+    temperature = Column(Float, nullable=False)
+    rain_probability = Column(Float, nullable=True)
+    rain = Column(Float, nullable=True)
+    relative_humidity = Column(Float, nullable=True)
+    wind_speed = Column(Float, nullable=True)
+    wind_direction = Column(Float, nullable=True)
+    air_pressure = Column(Float, nullable=True)
+    radiation = Column(Float, nullable=True)
+    icon = Column(String(10), nullable=True)
+    source = Column(String(50), nullable=True)
+    time_created = Column(DateTime(), server_default=func.now())
+    time_updated = Column(DateTime(), onupdate=func.now())

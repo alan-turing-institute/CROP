@@ -33,6 +33,7 @@ from core.structure import (
     SensorClass,
     TypeClass,
     ReadingsAdvanticsysClass,
+    ReadingsAegisIrrigationClass,
     ReadingsEnergyClass,
     ReadingsAranetCO2Class,
     ReadingsAranetTRHClass,
@@ -79,6 +80,7 @@ DATA_TABLES_BY_SENSOR_TYPE = {
     "Aranet T&RH": ReadingsAranetTRHClass,
     "Aranet CO2": ReadingsAranetCO2Class,
     "Aranet Air Velocity": ReadingsAranetAirVelocityClass,
+    "Aegis II": ReadingsAegisIrrigationClass,
 }
 # DATA_COLUMNS_BY_SENSOR_TYPE names the columns of that table that we want to plot as
 # data, and gives them human friendly names to display on the UI.
@@ -94,6 +96,14 @@ DATA_COLUMNS_BY_SENSOR_TYPE = {
     ],
     "Aranet Air Velocity": [
         {"column_name": "air_velocity", "ui_name": "Air velocity (m/s)"},
+    ],
+    "Aegis II": [
+        {"column_name": "temperature", "ui_name": "Temperature (°C)"},
+        {"column_name": "pH", "ui_name": "pH"},
+        {"column_name": "dissolved_oxygen", "ui_name": "Dissolved oxygen (%)"},
+        {"column_name": "conductivity", "ui_name": "Conductivity (μS)"},
+        {"column_name": "turbidity", "ui_name": "Turbidity"},
+        {"column_name": "peroxide", "ui_name": "Peroxide (ppm)"},
     ],
 }
 

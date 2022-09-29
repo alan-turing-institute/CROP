@@ -3,6 +3,8 @@ name: "Unit tests"
 on:
   push:
     branches: [main, develop, test-actions]
+  pull_request:
+    branches: [main, develop, test-actions]
   workflow_dispatch:
 
 jobs:

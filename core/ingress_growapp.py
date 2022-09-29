@@ -38,7 +38,7 @@ from .growapp_structure import (
     BatchClass as GrowAppBatchClass,
     BatchEventClass as GrowAppBatchEventClass,
 )
-from .utils import query_result_to_array, log_upload_event
+from .utils import get_crop_db_session, query_result_to_array, log_upload_event
 from .constants import (
     GROWAPP_IP,
     GROWAPP_DB,
@@ -90,30 +90,6 @@ def get_growapp_db_session(return_engine=False):
         return session
 
 
-def get_cropapp_db_session(return_engine=False):
-    """
-    Get an SQLAlchemy session on the CROP database.
-
-    Parameters
-    ==========
-    return_engine: bool, if True return the sqlalchmy engine as well as session
-
-    Returns
-    =======
-    session: SQLAlchemy session object
-    engine (optional): SQLAlchemy engine
-    """
-    success, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_DBNAME)
-    if not success:
-        logging.info(log)
-        return None
-    session = session_open(engine)
-    if return_engine:
-        return session, engine
-    else:
-        return session
-
-
 def convert_growapp_foreign_key(growapp_df, growapp_column_name, CropDbClass):
     """Convert a foreign key column of data from a GrowApp table, and convert its values
     to the corresponding foreign key ids in the given Crop db table.
@@ -136,7 +112,7 @@ def convert_growapp_foreign_key(growapp_df, growapp_column_name, CropDbClass):
     A copy of growapp_df, with values in growapp_column_name replaced with values from
     CropDbClass's id column
     """
-    crop_session = get_cropapp_db_session()
+    crop_session = get_crop_db_session()
     query = crop_session.query(CropDbClass.id, CropDbClass.growapp_id)
     crop_id_pairs = crop_session.execute(query).fetchall()
     session_close(crop_session)
@@ -166,7 +142,7 @@ def add_new_location(zone, aisle, stack, shelf):
     =======
     location_id: int, PK of the newly created location in the CROP DB.
     """
-    session = get_cropapp_db_session()
+    session = get_crop_db_session()
     location = LocationClass(zone=zone, aisle=aisle, column=stack, shelf=shelf)
     session.add(location)
     session.commit()
@@ -270,7 +246,7 @@ def get_location_id(growapp_batch_id):
         else:
             growapp_location["zone"] = "N/A"
     # Query the Crop Location table to find the corresponding location ID.
-    crop_session = get_cropapp_db_session()
+    crop_session = get_crop_db_session()
     query = crop_session.query(LocationClass.id).filter(
         and_(
             LocationClass.zone == growapp_location["zone"],
@@ -504,7 +480,7 @@ def write_new_data(data_df, DbClass):
     if len(data_df) == 0:
         logging.info(f"==> No new data to write for {DbClass.__tablename__}")
         return True
-    session, engine = get_cropapp_db_session(return_engine=True)
+    session, engine = get_crop_db_session(return_engine=True)
     try:
         DbClass.__table__.create(bind=engine)
     except ProgrammingError:
