@@ -32,16 +32,17 @@ def register_extensions(app):
 def register_blueprints(app):
     module_list = (
         "base",
+        "crops",
         "dashboards",
         "home",
         "locations",
         "logs",
+        "predictions",
         "queries",
         "readings",
         "sensors",
         "types",
         "users",
-        "predictions",
     )
 
     for module_name in module_list:

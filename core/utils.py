@@ -1,10 +1,10 @@
 """
 Utilities (miscellaneous routines) module
-
 """
 from datetime import datetime, timedelta
 import io
 import json
+import logging
 import uuid
 
 from flask import send_file
@@ -13,10 +13,35 @@ import pandas as pd
 from sqlalchemy import and_, func
 
 from .db import connect_db, session_open, session_close
-from .constants import SQL_DBNAME
+from .constants import SQL_CONNECTION_STRING, SQL_DBNAME
 from .structure import DataUploadLogClass, SensorLocationClass
 from .sensors import find_sensor_type_id
 
+
+def get_crop_db_session(return_engine=False):
+    """
+    Get an SQLAlchemy session on the CROP database.
+
+    Log an error message an return None if the connection fails.
+
+    Parameters
+    ==========
+    return_engine: bool, if True return the sqlalchmy engine as well as session
+
+    Returns
+    =======
+    session: SQLAlchemy session object
+    engine (optional): SQLAlchemy engine
+    """
+    success, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_DBNAME)
+    if not success:
+        logging.error(log)
+        return None
+    session = session_open(engine)
+    if return_engine:
+        return session, engine
+    else:
+        return session
 
 
 def query_result_to_array(query_result, date_iso=True):
@@ -197,12 +222,16 @@ def filter_latest_sensor_location(db):
     This should be used to filter a query that involves the SensorLocationClass.
 
     Args:
-        db: A database connection.
+        db: A database connection or session.
     Returns:
         An object that can be given as an argument to sqlalchemy.filter.
     """
+    if hasattr(db, "session"):
+        session = db.session
+    else:
+        session = db
     query = (
-        db.session.query(
+        session.query(
             SensorLocationClass.sensor_id,
             func.max(SensorLocationClass.installation_date).label("installation_date"),
         )
@@ -234,6 +263,7 @@ def vapour_pressure_deficit(temperature, relative_humidity):
         temperature / (temperature + 237.3) * 17.2694
     )
     return saturation_vapour_pressure * (1.0 - relative_humidity / 100.0)
+
 
 def log_upload_event(sensor_type, filename, status, log, connection_string):
     """

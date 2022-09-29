@@ -2514,6 +2514,40 @@ ul.timeline li {
 .timeline .byline {
     padding: .25em 0
 }
+
+/*The following colours for the different priority warnings have been generated with
+https://coolors.co/gradient-palette/06a355-ff0000?number=10*/
+.warning_priority_0 h2.title:before {
+    border-color: #06A355;
+}
+.warning_priority_1 h2.title:before {
+    border-color: #22914C;
+}
+.warning_priority_2 h2.title:before {
+    border-color: #3D7F42;
+}
+.warning_priority_3 h2.title:before {
+    border-color: #596D39;
+}
+.warning_priority_4 h2.title:before {
+    border-color: #755B2F;
+}
+.warning_priority_5 h2.title:before {
+    border-color: #904826;
+}
+.warning_priority_6 h2.title:before {
+    border-color: #AC361C;
+}
+.warning_priority_7 h2.title:before {
+    border-color: #C82413;
+}
+.warning_priority_8 h2.title:before {
+    border-color: #E31209;
+}
+.warning_priority_9 h2.title:before {
+    border-color: #FF0000;
+}
+
 .byline {
     -webkit-font-smoothing: antialiased;
     font-style: italic;
@@ -3968,3 +4002,16 @@ ul.notifications {
     background-color: #ffff !important;
 }
 /** /bootstrap-datetimepicker **/
+
+.text-alignright {
+  text-align: right;
+}
+
+.table-borderless > tbody > tr > td,
+.table-borderless > tbody > tr > th,
+.table-borderless > tfoot > tr > td,
+.table-borderless > tfoot > tr > th,
+.table-borderless > thead > tr > td,
+.table-borderless > thead > tr > th {
+    border: none
+}
