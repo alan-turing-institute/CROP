@@ -1,5 +1,18 @@
 {% extends "base_site.html" %}
 
+{% block head %}
+{{ super() }}
+<style>
+.conditionPlotPlaceholder {
+  border: 1px solid;
+  padding: 40px;
+  margin: 30px;
+  text-align: center;
+  font-size: 1.2em;
+}
+</style>
+{% endblock head %}
+
 {% block title %} CROP BATCH DETAILS {% endblock title %}
 
 {% block content %}
@@ -123,6 +136,15 @@
             </div>
 
             <div class="col-md-6 col-sm-6 col-xs-6">
+              <div id="temperaturePlotPlaceholder" class="conditionPlotPlaceholder">
+                Temperature plot will be displayed once the batch is transferred.
+              </div>
+              <div id="humidityPlotPlaceholder" class="conditionPlotPlaceholder">
+                Humidity plot will be displayed once the batch is transferred.
+              </div>
+              <div id="vpdPlotPlaceholder" class="conditionPlotPlaceholder">
+                VPD plot will be displayed once the batch is transferred.
+              </div>
               <canvas id="temperatureCanvas"></canvas>
               <canvas id="humidityCanvas"></canvas>
               <canvas id="vpdCanvas"></canvas>
@@ -149,9 +171,30 @@
 <script>
   const trh_data = JSON.parse('{{trh_json | safe}}');
   if (trh_data.length > 0) {
-    makePlots(trh_data, "temperature", "temperatureCanvas", "Temperature", "green")
-    makePlots(trh_data, "humidity", "humidityCanvas", "Humidity", "blue")
-    makePlots(trh_data, "vpd", "vpdCanvas", "VPD", "red")
+    makePlots(
+      trh_data,
+      "temperature",
+      "temperatureCanvas",
+      "Temperature",
+      "green",
+      "temperaturePlotPlaceholder",
+    )
+    makePlots(
+      trh_data,
+      "humidity",
+      "humidityCanvas",
+      "Humidity",
+      "blue",
+      "humidityPlotPlaceholder",
+    )
+    makePlots(
+      trh_data,
+      "vpd",
+      "vpdCanvas",
+      "VPD",
+      "red",
+      "vpdPlotPlaceholder",
+    )
   }
 </script>
 {% endblock javascripts %}
