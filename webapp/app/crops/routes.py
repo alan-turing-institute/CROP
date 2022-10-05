@@ -1,6 +1,7 @@
 """
 Module for sensor data.
 """
+from datetime import datetime
 from flask import render_template, request
 from flask_login import login_required
 import numpy as np
@@ -345,7 +346,13 @@ def batch_details():
         details["yield_per_tray"] = None
 
     dt_from = details["transfer_time"]
-    dt_to = details["harvest_time"]
+    dt_to = (
+        details["harvest_time"]
+        if details["last_event"] == "harvest"
+        else datetime.utcnow()
+        if details["last_event"] == "transfer"
+        else None
+    )
     if dt_from and dt_to:
         (
             sensor_id,
