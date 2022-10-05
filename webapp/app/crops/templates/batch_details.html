@@ -92,7 +92,31 @@
                     <td>{{ details.over_production }}</td>
                   </tr>
                   <tr>
-                    <td class="text-alignright">Closest sensor</td>
+                    <td class="text-alignright">Mean propagation temperature</td>
+                    {% if not prop_trh_summary|length == 0 %}
+                    <td>{{ '%0.1f'|format(prop_trh_summary.mean_temperature|float) }}°C</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Mean propagation humidity</td>
+                    {% if not prop_trh_summary|length == 0 %}
+                    <td>{{ '%0.1f'|format(prop_trh_summary.mean_humidity|float) }}%</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Mean propagation VPD</td>
+                    {% if not prop_trh_summary|length == 0 %}
+                    <td>{{ '%0.0f'|format(prop_trh_summary.mean_vpd|float) }} Pa</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Closest farm sensor</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ trh_summary.sensor_name }}</td>
                     {% else %}
@@ -108,7 +132,7 @@
                     {% endif %}
                   </tr>
                   <tr>
-                    <td class="text-alignright">Mean temperature</td>
+                    <td class="text-alignright">Mean farm temperature</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ '%0.1f'|format(trh_summary.mean_temperature|float) }}°C</td>
                     {% else %}
@@ -116,7 +140,7 @@
                     {% endif %}
                   </tr>
                   <tr>
-                    <td class="text-alignright">Mean humidity</td>
+                    <td class="text-alignright">Mean farm humidity</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ '%0.1f'|format(trh_summary.mean_humidity|float) }}%</td>
                     {% else %}
@@ -124,7 +148,7 @@
                     {% endif %}
                   </tr>
                   <tr>
-                    <td class="text-alignright">Mean VPD</td>
+                    <td class="text-alignright">Mean farm VPD</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ '%0.0f'|format(trh_summary.mean_vpd|float) }} Pa</td>
                     {% else %}
