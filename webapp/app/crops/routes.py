@@ -295,6 +295,110 @@ def query_trh_data(sensor_id, dt_from, dt_to):
     return df
 
 
+def query_propagation_trh_data(dt_from, dt_to):
+    query = (
+        db.session.query(
+            ReadingsAranetTRHClass.timestamp,
+            ReadingsAranetTRHClass.sensor_id,
+            ReadingsAranetTRHClass.temperature,
+            ReadingsAranetTRHClass.humidity,
+            SensorClass.id,
+            SensorLocationClass.sensor_id,
+            SensorLocationClass.location_id,
+            SensorLocationClass.installation_date,
+            LocationClass.zone,
+        )
+        .filter(
+            and_(
+                ReadingsAranetTRHClass.sensor_id == SensorClass.id,
+                ReadingsAranetTRHClass.timestamp >= dt_from,
+                ReadingsAranetTRHClass.timestamp <= dt_to,
+            )
+        )
+        .join(
+            SensorLocationClass,
+            SensorClass.id == SensorLocationClass.sensor_id,
+            isouter=True,
+        )
+        .join(
+            LocationClass,
+            LocationClass.id == SensorLocationClass.location_id,
+            isouter=True,
+        )
+        .filter(filter_latest_sensor_location(db))
+        .filter(LocationClass.zone == "Propagation")
+    )
+
+    df = pd.read_sql(query.statement, query.session.bind)
+    df.loc[:, "vpd"] = vapour_pressure_deficit(
+        df.loc[:, "temperature"], df.loc[:, "humidity"]
+    )
+    return df
+
+
+def batch_details_trh(details):
+    """Get data from the nearest T&RH sensor, for the relevant time period."""
+    dt_from = details["transfer_time"]
+    dt_to = (
+        details["harvest_time"]
+        if details["last_event"] == "harvest"
+        else datetime.utcnow()
+        if details["last_event"] == "transfer"
+        else None
+    )
+    if dt_from and dt_to:
+        (
+            sensor_id,
+            sensor_name,
+            sensor_zone,
+            sensor_aisle,
+            sensor_column,
+            sensor_shelf,
+        ) = find_closest_trh_sensor(
+            details["zone"], details["aisle"], details["column"], details["shelf"]
+        )
+        trh_df = query_trh_data(sensor_id, dt_from, dt_to)
+        trh_json = trh_df.to_json(orient="records")
+        trh_summary = {
+            "sensor_id": sensor_id,
+            "sensor_name": sensor_name,
+            "sensor_zone": sensor_zone,
+            "sensor_aisle": sensor_aisle,
+            "sensor_column": sensor_column,
+            "sensor_shelf": sensor_shelf,
+            "sensor_location": f"{sensor_zone} {sensor_column}{sensor_aisle}{sensor_shelf}",
+            "mean_temperature": np.mean(trh_df.loc[:, "temperature"]),
+            "mean_humidity": np.mean(trh_df.loc[:, "humidity"]),
+            "mean_vpd": np.mean(trh_df.loc[:, "vpd"]),
+        }
+    else:
+        trh_json = "{}"
+        trh_summary = {}
+    return trh_json, trh_summary
+
+
+def batch_details_prop_trh(details):
+    """Get data from the propagation T&RH sensors for the propagation time period."""
+    prop_dt_from = details["propagate_time"]
+    prop_dt_to = (
+        details["transfer_time"]
+        if details["last_event"] in ("transfer", "harvest")
+        else datetime.utcnow()
+        if details["last_event"] == "propagate"
+        else None
+    )
+    if prop_dt_from and prop_dt_to:
+        prop_trh_df = query_propagation_trh_data(prop_dt_from, prop_dt_to)
+        prop_trh_summary = {
+            "mean_temperature": np.mean(prop_trh_df.loc[:, "temperature"]),
+            "mean_humidity": np.mean(prop_trh_df.loc[:, "humidity"]),
+            "mean_vpd": np.mean(prop_trh_df.loc[:, "vpd"]),
+        }
+    else:
+        prop_trh_summary = {}
+    return prop_trh_summary
+
+
 @blueprint.route("/batch_details", methods=["GET"])
 @login_required
 def batch_details():
@@ -345,42 +449,9 @@ def batch_details():
     else:
         details["yield_per_tray"] = None
 
-    dt_from = details["transfer_time"]
-    dt_to = (
-        details["harvest_time"]
-        if details["last_event"] == "harvest"
-        else datetime.utcnow()
-        if details["last_event"] == "transfer"
-        else None
-    )
-    if dt_from and dt_to:
-        (
-            sensor_id,
-            sensor_name,
-            sensor_zone,
-            sensor_aisle,
-            sensor_column,
-            sensor_shelf,
-        ) = find_closest_trh_sensor(
-            details["zone"], details["aisle"], details["column"], details["shelf"]
-        )
-        trh_df = query_trh_data(sensor_id, dt_from, dt_to)
-        trh_json = trh_df.to_json(orient="records")
-        trh_summary = {
-            "sensor_id": sensor_id,
-            "sensor_name": sensor_name,
-            "sensor_zone": sensor_zone,
-            "sensor_aisle": sensor_aisle,
-            "sensor_column": sensor_column,
-            "sensor_shelf": sensor_shelf,
-            "sensor_location": f"{sensor_zone} {sensor_column}{sensor_aisle}{sensor_shelf}",
-            "mean_temperature": np.mean(trh_df.loc[:, "temperature"]),
-            "mean_humidity": np.mean(trh_df.loc[:, "humidity"]),
-            "mean_vpd": np.mean(trh_df.loc[:, "vpd"]),
-        }
-    else:
-        trh_json = "{}"
-        trh_summary = {}
+    # Get T&RH sensor data relevant for this batch.
+    trh_json, trh_summary = batch_details_trh(details)
+    prop_trh_summary = batch_details_prop_trh(details)
 
     # Format the time strings. Easier to do here than in the Jinja template.
     for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
@@ -394,4 +465,5 @@ def batch_details():
         details=details,
         trh_json=trh_json,
         trh_summary=trh_summary,
+        prop_trh_summary=prop_trh_summary,
     )
