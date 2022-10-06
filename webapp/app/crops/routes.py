@@ -445,18 +445,27 @@ def batch_details():
     else:
         details["grow_time"] = None
     if details["crop_yield"] is not None and details["number_of_trays"] is not None:
-        details["yield_per_tray"] = details["crop_yield"] / details["number_of_trays"]
+        # I don't understand meaning of the GrowApp field called tray_size, but it
+        # identifies the two different types of trays, and we know from Jakob how many
+        # square metres each one is.
+        tray_size = details["tray_size"]
+        tray_sqm = 0.25 if tray_size == 7.0 else 0.24 if tray_size == 3.0 else np.nan
+        details["yield_per_sqm"] = details["crop_yield"] / (
+            details["number_of_trays"] * tray_sqm
+        )
     else:
-        details["yield_per_tray"] = None
+        details["yield_per_sqm"] = None
 
     # Get T&RH sensor data relevant for this batch.
     trh_json, trh_summary = batch_details_trh(details)
     prop_trh_summary = batch_details_prop_trh(details)
 
-    # Format the time strings. Easier to do here than in the Jinja template.
+    # Format some of the fields to be strings. Easier to do here than in the Jinja
+    # template.
     for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
         if details[column] is not None:
             details[column] = pd.to_datetime(details[column]).strftime("%Y-%m-%d %H:%M")
+    details["yield_per_sqm"] = f"{details['yield_per_sqm']:.1f}"
 
     # TODO Implement comparing some of the data in `details` to averages for the same
     # crop type. See https://github.com/alan-turing-institute/CROP/issues/284
