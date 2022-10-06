@@ -10,6 +10,13 @@
   text-align: center;
   font-size: 1.2em;
 }
+
+.conditionPlotCanvas {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.2em;
+}
 </style>
 {% endblock head %}
 
@@ -160,6 +167,15 @@
             </div>
 
             <div class="col-md-6 col-sm-6 col-xs-6">
+              <form method="post">
+                <input
+                    id="downloadTRHDataButton"
+                    style="margin-top: 5px; display: none"
+                    type="submit"
+                    value="Download T&RH data"
+                    name="download"
+                    />
+              </form>
               <div id="temperaturePlotPlaceholder" class="conditionPlotPlaceholder">
                 Temperature plot will be displayed once the batch is transferred.
               </div>
@@ -169,9 +185,9 @@
               <div id="vpdPlotPlaceholder" class="conditionPlotPlaceholder">
                 VPD plot will be displayed once the batch is transferred.
               </div>
-              <canvas id="temperatureCanvas"></canvas>
-              <canvas id="humidityCanvas"></canvas>
-              <canvas id="vpdCanvas"></canvas>
+              <canvas id="temperatureCanvas" class="conditionPlotCanvas"></canvas>
+              <canvas id="humidityCanvas" class="conditionPlotCanvas"></canvas>
+              <canvas id="vpdCanvas" class="conditionPlotCanvas"></canvas>
             </div>
 
           </div>
@@ -219,6 +235,8 @@
       "red",
       "vpdPlotPlaceholder",
     )
+    const downloadButton = document.getElementById("downloadTRHDataButton");
+    downloadButton.style.display = "block";
   }
 </script>
 {% endblock javascripts %}
