@@ -358,7 +358,6 @@ def batch_details_trh(details):
             details["zone"], details["aisle"], details["column"], details["shelf"]
         )
         trh_df = query_trh_data(sensor_id, dt_from, dt_to)
-        trh_json = trh_df.to_json(orient="records")
         trh_summary = {
             "sensor_id": sensor_id,
             "sensor_name": sensor_name,
@@ -372,9 +371,9 @@ def batch_details_trh(details):
             "mean_vpd": np.mean(trh_df.loc[:, "vpd"]),
         }
     else:
-        trh_json = "{}"
+        trh_df = pd.DataFrame()
         trh_summary = {}
-    return trh_json, trh_summary
+    return trh_df, trh_summary
 
 
 def batch_details_prop_trh(details):
@@ -399,7 +398,7 @@ def batch_details_prop_trh(details):
     return prop_trh_summary
 
 
-@blueprint.route("/batch_details", methods=["GET"])
+@blueprint.route("/batch_details", methods=["GET", "POST"])
 @login_required
 def batch_details():
     """Render the details of a batch."""
@@ -457,7 +456,7 @@ def batch_details():
         details["yield_per_sqm"] = None
 
     # Get T&RH sensor data relevant for this batch.
-    trh_json, trh_summary = batch_details_trh(details)
+    trh_df, trh_summary = batch_details_trh(details)
     prop_trh_summary = batch_details_prop_trh(details)
 
     # Format some of the fields to be strings. Easier to do here than in the Jinja
@@ -465,12 +464,17 @@ def batch_details():
     for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
         if details[column] is not None:
             details[column] = pd.to_datetime(details[column]).strftime("%Y-%m-%d %H:%M")
-    details["yield_per_sqm"] = f"{details['yield_per_sqm']:.1f}"
+    if details["yield_per_sqm"] is not None:
+        details["yield_per_sqm"] = f"{details['yield_per_sqm']:.1f}"
 
+    template = "batch_details"
+    if request.method == "POST":
+        return download_csv(trh_df, template)
+    trh_json = trh_df.to_json(orient="records")
     # TODO Implement comparing some of the data in `details` to averages for the same
     # crop type. See https://github.com/alan-turing-institute/CROP/issues/284
     return render_template(
-        "batch_details.html",
+        f"{template}.html",
         details=details,
         trh_json=trh_json,
         trh_summary=trh_summary,
