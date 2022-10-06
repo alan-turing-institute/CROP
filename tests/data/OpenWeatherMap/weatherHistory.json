@@ -8,7 +8,7 @@
             "wind_speed": 4.44,
             "wind_deg": 259,
             "rain": {"1h": 0.33},
-            "weather": [{"icon": "02d"}],
+            "weather": [{"icon": "02d"}]
         }
     ]
 }

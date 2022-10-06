@@ -1,7 +1,10 @@
 """
 Test ingress_weather.py module
 """
+import os
 import re
+import json
+
 from datetime import datetime, timedelta
 import requests
 import requests_mock
@@ -12,9 +15,14 @@ from core.ingress_weather import (
 from core.ingress_weather_forecast import (
     get_openweathermap_data as get_openweathermap_forecast,
 )
-from tests.data.example_api_responses import (
-    OPENWEATHERMAP_HISTORY,
-    OPENWEATHERMAP_FORECAST
+
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+MOCK_OPENWEATHERMAP_HISTORY = json.load(
+    open(os.path.join(THIS_DIR, "data", "OpenWeatherMap", "weatherHistory.json"))
+)
+
+MOCK_OPENWEATHERMAP_FORECAST = json.load(
+    open(os.path.join(THIS_DIR, "data", "OpenWeatherMap", "weatherForecast.json"))
 )
 
 def test_get_weather_history_data():
@@ -26,7 +34,7 @@ def test_get_weather_history_data():
     timestamp_avg = int((timestamp_from + timestamp_to) / 2)
     # mock the API response
 
-    mock_response = OPENWEATHERMAP_HISTORY
+    mock_response = MOCK_OPENWEATHERMAP_HISTORY
     with requests_mock.Mocker() as m:
         m.get(requests_mock.ANY, json=mock_response)
         success, error, df = get_openweathermap_history(dt_from, dt_to)
@@ -41,7 +49,7 @@ def test_get_weather_forecast_data():
     dt_to = datetime.utcnow() + timedelta(days=1)
     timestamp_now = int(dt_now.timestamp())
     timestamp_to = int(dt_to.timestamp())
-    mock_response = OPENWEATHERMAP_FORECAST
+    mock_response = MOCK_OPENWEATHERMAP_FORECAST
     with requests_mock.Mocker() as m:
         m.get(requests_mock.ANY, json=mock_response)
         success, error, df = get_openweathermap_forecast(dt_to)
