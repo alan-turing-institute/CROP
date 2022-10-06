@@ -1,18 +1,4 @@
-OPENWEATHERMAP_HISTORY = {
-    "hourly": [
-        {
-            "dt": 1665054000,
-            "temp": 291.5,
-            "pressure": 1016,
-            "humidity": 57,
-            "wind_speed": 4.44,
-            "wind_deg": 259,
-            "rain": {"1h": 0.33},
-            "weather": [{"icon": "02d"}],
-        }
-    ]
-}
-OPENWEATHERMAP_FORECAST = {
+{
     "lat":51.45,
     "lon":0.14,
     "timezone":"Europe/London",
