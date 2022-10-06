@@ -39,20 +39,13 @@
                 <thead>
                   <tr>
                   <th>Details</th>
-                  <th>Batch id</th>
-                  <th>Last event</th>
                   <th>Crop type</th>
-                  <th>Tray size</th>
-                  <th>Trays</th>
+                  <th>Last event</th>
                   <th>Weigh time</th>
                   <th>Propagate time</th>
                   <th>Transfer time</th>
                   <th>Harvest time</th>
                   <th>Location</th>
-                  <th>Yield</th>
-                  <th>Disease</th>
-                  <th>Defect</th>
-                  <th>Over-production</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -62,22 +55,17 @@
                 %}
                 <tr>
                   <td>
-                    <a class="dark" style="font-weight: 500;" href="/crops/batch_details?query={{ batch.batch_id }}">View</a>
+                   <a href="/crops/batch_details?query={{ batch.batch_id }}">
+                     <i class="fa fa-info-circle"></i>
+                   </a>
                   </td>
-                  <td>{{ batch.batch_id }}</td>
-                  <td>{{ batch.last_event }}</td>
                   <td>{{ batch.crop_type_name }}</td>
-                  <td>{{ batch.tray_size }}</td>
-                  <td>{{ batch.number_of_trays }}</td>
+                  <td>{{ batch.last_event }}</td>
                   <td>{{ batch.weigh_time }}</td>
                   <td>{{ batch.propagate_time }}</td>
                   <td>{{ batch.transfer_time }}</td>
                   <td>{{ batch.harvest_time }}</td>
-                  <td>{{ batch.location }}</td>
-                  <td>{{ batch.crop_yield }}</td>
-                  <td>{{ batch.waste_disease }}</td>
-                  <td>{{ batch.waste_defect }}</td>
-                  <td class="last">{{ batch.over_production }}</td>
+                  <td class="last">{{ batch.location }}</td>
                 {%
                     endfor
                 %}
