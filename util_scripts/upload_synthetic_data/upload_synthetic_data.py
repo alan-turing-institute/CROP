@@ -19,8 +19,6 @@ from core.structure import (
 
 from core.constants import (
     CONST_COREDATA_DIR,
-    CONST_ADVANTICSYS_DIR,
-    CONST_ADVANTICSYS_TEST_1,
     SQL_CONNECTION_STRING,
     CONST_TEST_DIR_DATA,
     CONST_SENSOR_LOCATION_TESTS,
@@ -32,8 +30,6 @@ from core.db import (
     session_open,
     session_close,
 )
-
-from core.ingress_adv import advanticsys_import, insert_advanticsys_data
 
 
 def error_message(message):
@@ -134,29 +130,6 @@ def insert_sensor_data(engine):
         session_close(session)
 
         assert session.query(SensorClass).count() == len(sensor_df.index)
-
-
-def insert_adv_data(engine):
-    """
-    Bulk inserts test advanticsys data
-
-    Arguments:
-        engine: SQL engine object
-    """
-
-    file_path = os.path.join(CONST_ADVANTICSYS_DIR, CONST_ADVANTICSYS_TEST_1)
-    success, log, test_ingress_df = advanticsys_import(file_path)
-
-    assert success, log
-    assert isinstance(test_ingress_df, pd.DataFrame)
-
-    # Creates/Opens a new connection to the db and binds the engine
-    session = session_open(engine)
-
-    # tests loading sensor data to db
-    success, log = insert_advanticsys_data(session, test_ingress_df)
-    session_close(session)
-    assert success, log
 
 
 def import_sensor_location(engine):
@@ -284,8 +257,6 @@ def main(db_name):
 
     insert_sensor_data(engine)
 
-    insert_adv_data(engine)
-
     import_sensor_location(engine)
 
 
@@ -293,7 +264,7 @@ if __name__ == "__main__":
 
     # Command line arguments
     PARSER = argparse.ArgumentParser(
-        description="Uploads syntetic data to a PostgreSQL database."
+        description="Uploads synthetic data to a PostgreSQL database."
     )
     PARSER.add_argument("dbname", default=None, help="Database name")
 
