@@ -83,9 +83,9 @@
 <script
   src="{{ url_for('static', filename='node_modules/datatables.net-scroller/js/dataTables.scroller.js') }}"></script>
 <!-- Chart.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js" integrity="sha512-sW/w8s4RWTdFFSduOTGtk4isV1+190E/GghVffMA9XczdJ2MDzSzLEubKAs5h0wzgSJOQTRYyaz73L3d6RtJSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+<script src="{{ url_for('static', filename='node_modules/chart.js/dist/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='node_modules/moment/moment.js') }}"></script>
+<script src="{{ url_for('static', filename='node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js') }}"></script>
 
 <script>
   const ges_json = JSON.parse('{{json_ges_f | safe}}');
