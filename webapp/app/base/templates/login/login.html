@@ -5,8 +5,8 @@
 {% block stylesheets %}
   {{ super() }}
   <!-- Alertify -->
-  <link href="{{ url_for('static', filename='vendors/alertifyjs/css/alertify.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='vendors/alertifyjs/css/custom.alertify.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='node_modules/alertifyjs/build/css/alertify.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
 {% endblock stylesheets %}
 
 {% block body_class %}login{% endblock body_class %}
@@ -14,8 +14,6 @@
 {% block body %}
   <!-- jQuery -->
   <script src="{{ url_for('static', filename='vendors/jquery/dist/jquery.min.js') }}"></script>
-  <!-- Alertify -->
-  <script src="{{ url_for('static', filename='vendors/alertifyjs/alertify.min.js') }}"></script>
   <!-- Parsley -->
   <script src="{{ url_for('static', filename='vendors/parsleyjs/dist/parsley.min.js') }}"></script>
   <!-- Login -->

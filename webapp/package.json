@@ -7,6 +7,9 @@
   "scripts": {
     "lint": "eslint ."
   },
+  "dependencies": {
+    "alertifyjs": "1.11.0"
+  },
   "devDependencies": {
     "prettier": "^2.6.2"
   }
