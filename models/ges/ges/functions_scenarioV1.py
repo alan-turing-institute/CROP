@@ -8,6 +8,8 @@ import logging
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import datetime
+import calendar
 from .parameters import T_k, deltaT
 from .parameters import R, M_w, M_a, atm, H_fg, N_A, heat_phot, Le
 from .parameters import V, A_c, A_f, A_v, A_m, A_p, A_l
@@ -25,7 +27,7 @@ from scipy.integrate import solve_ivp
 from .config import config
 
 from inversion import *
-from .dataAccess import getDaysWeather
+from .dataAccess import getDaysWeather, getDaysWeatherForecast
 
 path_conf = config(section="paths")
 
@@ -36,6 +38,18 @@ FILEPATH_IAS = DATA_DIR / path_conf["filename_ias"]
 FILEPATH_LEN = DATA_DIR / path_conf["filename_length"]
 
 CAL_CONF = config(section="calibration")
+
+def toTimestamp(d):
+    """
+    Uses calendar module to convert Python datetime to epoch
+    """
+    return calendar.timegm(d.timetuple())
+
+def toDatetime(d):
+    """
+    Uses datetime module to convert epoch to Python datetime (UTC)
+    """
+    return datetime.datetime.utcfromtimestamp(d)
 
 
 def climterp_linear(h1, h2, numDays, filepath_weather=None):
@@ -55,6 +69,9 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
         ExternalWeather = np.asarray(
             getDaysWeather(numDays + 1, numRows=(numDays + 1) * 24)
         )
+        timestamp = ExternalWeather[:, 0]
+        # convert Python datetime to epoch
+        timestamp = np.array([toTimestamp(timestamp[d]) for d in range(0, timestamp.shape[0])]) 
         temp_in = ExternalWeather[:, 1].astype(
             np.float64
         )  # +1 to ensure correct end point
@@ -70,15 +87,18 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
     # rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
 
     ind = h2 - h1 + 1
-    seconds_in_hspan = (h2 - h1) * 3600
+    seconds_in_hour = 3600
+    seconds_in_hspan = (h2 - h1) * seconds_in_hour
     # `t` corresponds to the time vector for the hourly weather data pulled from the DB
     t = np.linspace(0, seconds_in_hspan, ind)  # TODO This is really just a range.
     # `mult` corresponds to the resampling time vector (at frequency corresponding to period `deltaT`)
     mult = np.linspace(0, seconds_in_hspan, int(1 + seconds_in_hspan / deltaT))
     # perform linear interpolation
+    clim_timestamp = np.interp(mult, t, timestamp[-ind:])
+    clim_timestamp = np.array([toDatetime(clim_timestamp[d]) for d in range(0, clim_timestamp.shape[0])]) 
     clim_t = np.interp(mult, t, temp_in[-ind:])
     clim_rh = np.interp(mult, t, rh_in[-ind:])
-    climate = np.vstack((clim_t, clim_rh))
+    climate = np.vstack((clim_timestamp, clim_t, clim_rh))
     return climate
 
 
