@@ -8,7 +8,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "alertifyjs": "1.11.0"
+    "alertifyjs": "1.11.0",
+    "bootstrap": "3.3.6",
+    "bootstrap-daterangepicker": "2.1.24"
   },
   "devDependencies": {
     "prettier": "^2.6.2"
