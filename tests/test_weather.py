@@ -25,6 +25,7 @@ MOCK_OPENWEATHERMAP_FORECAST = json.load(
     open(os.path.join(THIS_DIR, "data", "OpenWeatherMap", "weatherForecast.json"))
 )
 
+
 def test_get_weather_history_data():
 
     dt_from = datetime.utcnow() + timedelta(days=-1)

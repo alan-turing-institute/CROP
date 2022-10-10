@@ -21,9 +21,7 @@ from .constants import (
 from .create_table import create_table
 
 
-def upload_openweathermap_data(
-    conn_string: str, database: str, dt_to: datetime
-):
+def upload_openweathermap_data(conn_string: str, database: str, dt_to: datetime):
     """
     Uploads hourly openweathermap weather forecast
     (up to 48h into the future) to the CROP database (DB).
@@ -48,7 +46,7 @@ def upload_openweathermap_data(
     success, msg = create_table(engine, WeatherForecastsClass)
     if success:
         logging.info(msg)
-    
+
     # now get the Openweathermap API data
     success, error, new_data_df = get_openweathermap_data(dt_to)
     if not success:
@@ -57,7 +55,9 @@ def upload_openweathermap_data(
     logging.info("new data with size len(new_data_df): {}\n\n".format(len(new_data_df)))
     # check that the API request contains at least one entry and upload to the DB
     if len(new_data_df) > 0:
-        start_time: float = time.time() # this is the current time in seconds since epoch
+        start_time: float = (
+            time.time()
+        )  # this is the current time in seconds since epoch
         session = session_open(engine)
         for idx, row in new_data_df.iterrows():
             data = WeatherForecastsClass(
@@ -112,7 +112,7 @@ def get_openweathermap_data(dt_to):
     ----------
     dt_to: datetime, latest time for returned records.
     Requests beyond 48h into the future will return a maximum of 48h of forecast data.
-    
+
     Returns
     -------
     success: bool, True if everything OK
@@ -122,7 +122,7 @@ def get_openweathermap_data(dt_to):
     url = CONST_OPENWEATHERMAP_FORECAST_URL
     url += CONST_OPENWEATHERMAP_APIKEY
 
-    hourly_records = [] # list keeping track of records for all hours
+    hourly_records = []  # list keeping track of records for all hours
     error = ""
 
     # do API call and get data in right format
@@ -141,25 +141,31 @@ def get_openweathermap_data(dt_to):
 
     # loop through every hour in hourly data
     for hour in hourly_data:
-        record = {} # dict keeping track of this hour's records
+        record = {}  # dict keeping track of this hour's records
         record["timestamp"] = datetime.fromtimestamp(hour["dt"])
-        record["temperature"] = hour["temp"] # returned in Celsius
-        record["air_pressure"] = hour["pressure"] # sea level atmos pressure (hPa)
-        record["relative_humidity"] = hour["humidity"] # (%)
-        record["wind_speed"] = hour["wind_speed"] # (meter/sec)
-        record["wind_direction"] = hour["wind_deg"] # (degrees)
-        record["icon"] = hour["weather"][0]["icon"] # descriptive weather icon
+        record["temperature"] = hour["temp"]  # returned in Celsius
+        record["air_pressure"] = hour["pressure"]  # sea level atmos pressure (hPa)
+        record["relative_humidity"] = hour["humidity"]  # (%)
+        record["wind_speed"] = hour["wind_speed"]  # (meter/sec)
+        record["wind_direction"] = hour["wind_deg"]  # (degrees)
+        record["icon"] = hour["weather"][0]["icon"]  # descriptive weather icon
         record["source"] = "openweatherdata"
         record["rain"] = 0.0
         # note rain data only returned where available
         if "rain" in hour.keys():
             record["rain"] += hour["rain"]["1h"]
         hourly_records.append(record)
-    weather_df = pd.DataFrame(hourly_records) # create a pandas dataframe
-    weather_df.set_index("timestamp", inplace=True) # set the index to become "timestamp" column
-    df_index = weather_df.index # get the indices, i.e. all the timestamps in the dataframe
-    timestamp_max = min(df_index, key=lambda x:abs(x-dt_to)) # find timestamp closest to requested end timestamp
-    weather_df = weather_df[:timestamp_max] # crop the dataframe at that timestamp
+    weather_df = pd.DataFrame(hourly_records)  # create a pandas dataframe
+    weather_df.set_index(
+        "timestamp", inplace=True
+    )  # set the index to become "timestamp" column
+    df_index = (
+        weather_df.index
+    )  # get the indices, i.e. all the timestamps in the dataframe
+    timestamp_max = min(
+        df_index, key=lambda x: abs(x - dt_to)
+    )  # find timestamp closest to requested end timestamp
+    weather_df = weather_df[:timestamp_max]  # crop the dataframe at that timestamp
 
     success = True
     log = "\nSuccess: Weather dataframe \n{}".format(weather_df)

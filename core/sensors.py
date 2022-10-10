@@ -9,7 +9,7 @@ from .constants import (
     CONST_ARANET_TRH_SENSOR_TYPE,
     CONST_ARANET_CO2_SENSOR_TYPE,
     CONST_ARANET_AIRVELOCITY_SENSOR_TYPE,
-    CONST_AEGIS_IRRIGATION_SENSOR_TYPE
+    CONST_AEGIS_IRRIGATION_SENSOR_TYPE,
 )
 
 
@@ -148,7 +148,9 @@ def get_db_weather_data(session, date_from, date_to):
     result_df = DataFrame(session.execute(query).fetchall())
 
     if len(result_df.index) > 0:
-        result_df.set_index("timestamp", inplace=True) # set the index to become "timestamp" column
+        result_df.set_index(
+            "timestamp", inplace=True
+        )  # set the index to become "timestamp" column
 
     return result_df
 
@@ -175,6 +177,8 @@ def get_db_weather_forecast(session, date_from, date_to):
     result_df = DataFrame(session.execute(query).fetchall())
 
     if len(result_df.index) > 0:
-        result_df.set_index("timestamp", inplace=True) # set the index to become "timestamp" column
+        result_df.set_index(
+            "timestamp", inplace=True
+        )  # set the index to become "timestamp" column
 
     return result_df

@@ -89,7 +89,9 @@ def main():
     Monitored_10_minutes = pd.DataFrame(
         Monitored_data, columns=["DateTime", "T_i", "RH_i"]
     ).set_index("DateTime")
-    logging.info(f"Got Monitored_10_minutes dataframe, length {len(Monitored_10_minutes)}")
+    logging.info(
+        f"Got Monitored_10_minutes dataframe, length {len(Monitored_10_minutes)}"
+    )
     Monitored_hour = Monitored_10_minutes.resample("H").mean()
     try:
         Monitored_hour.index = Monitored_hour.index.tz_convert(
@@ -101,7 +103,9 @@ def main():
     logging.info(f"Got Monitored_hour dataframe, length {len(Monitored_hour)}")
     # Check final timestamps for RH_hour and Weather
 
-    logging.info(f"Is last monitored_hour index equal to weather_hour index? {Monitored_hour[-1:].index == Weather_hour[-1:].index}")
+    logging.info(
+        f"Is last monitored_hour index equal to weather_hour index? {Monitored_hour[-1:].index == Weather_hour[-1:].index}"
+    )
 
     # Select oldest of the two final timestamps (or most recent 3am/3pm time
     # which occurs in both)
