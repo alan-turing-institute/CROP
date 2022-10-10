@@ -1,9 +1,13 @@
 {
   "name": "CROP",
+  "description": "This is the web front-end of the CROP Research Observation Platform. It is not meant to be installed as a package, we only use npm to manage dependencies and development configurations.",
+  "homepage": "https://github.com/alan-turing-institute/CROP",
+  "license": "MIT",
+  "author": "Research Engineering Group @ The Alan Turing Institute",
   "scripts": {
     "lint": "eslint ."
   },
-  "dependencies": {
+  "devDependencies": {
     "prettier": "^2.6.2"
   }
 }
