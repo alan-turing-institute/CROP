@@ -141,7 +141,6 @@ def main():
     df_resultsT = pd.DataFrame(result["T_air"])
     df_resultsT.to_csv(filepath_resultsT, header=False)
 
-    deleteResults()
     run_id = insertModelRun(
         sensor_id=SENSOR_RH_16B2_DATABASE_ID,
         model_id=MODEL_GES_DATABASE_ID,
