@@ -11,9 +11,9 @@
     "jquery": true
   },
   "rules": {
-    "no-invalid-this": 0,
-    "linebreak-style": 0,
     "require-jsdoc": 0,
+    "no-unused-vars": 0,
+    "no-undef": 0,
     "camelcase": 0
   },
   "extends": ["eslint:recommended", "google", "prettier"]

@@ -9,12 +9,12 @@
 (function ($, sr) {
   // debouncing function from John Hann
   // http://unscriptable.com/index.php/2009/03/20/debouncing-javascript-methods/
-  var debounce = function (func, threshold, execAsap) {
-    var timeout;
+  const debounce = function (func, threshold, execAsap) {
+    let timeout;
 
     return function debounced() {
-      var obj = this,
-        args = arguments;
+      const obj = this;
+      const args = arguments;
       function delayed() {
         if (!execAsap) func.apply(obj, args);
         timeout = null;
@@ -38,27 +38,29 @@
  * and open the template in the editor.
  */
 
-var CURRENT_URL = window.location.href.split("#")[0].split("?")[0],
-  $BODY = $("body"),
-  $MENU_TOGGLE = $("#menu_toggle"),
-  $SIDEBAR_MENU = $("#sidebar-menu"),
-  $SIDEBAR_FOOTER = $(".sidebar-footer"),
-  $LEFT_COL = $(".left_col"),
-  $RIGHT_COL = $(".right_col"),
-  $NAV_MENU = $(".nav_menu"),
-  $FOOTER = $("footer");
+const CURRENT_URL = window.location.href.split("#")[0].split("?")[0];
+const $BODY = $("body");
+const $MENU_TOGGLE = $("#menu_toggle");
+const $SIDEBAR_MENU = $("#sidebar-menu");
+const $SIDEBAR_FOOTER = $(".sidebar-footer");
+const $LEFT_COL = $(".left_col");
+const $RIGHT_COL = $(".right_col");
+const $NAV_MENU = $(".nav_menu");
+const $FOOTER = $("footer");
 
 // Sidebar
 function init_sidebar() {
   // TODO: This is some kind of easy fix, maybe we can improve this
-  var setContentHeight = function () {
+  const setContentHeight = function () {
     // reset height
     $RIGHT_COL.css("min-height", $(window).height());
 
-    var bodyHeight = $BODY.outerHeight(),
-      footerHeight = $BODY.hasClass("footer_fixed") ? -10 : $FOOTER.height(),
-      leftColHeight = $LEFT_COL.eq(1).height() + $SIDEBAR_FOOTER.height(),
-      contentHeight = bodyHeight < leftColHeight ? leftColHeight : bodyHeight;
+    const bodyHeight = $BODY.outerHeight();
+    const footerHeight = $BODY.hasClass("footer_fixed")
+      ? -10
+      : $FOOTER.height();
+    const leftColHeight = $LEFT_COL.eq(1).height() + $SIDEBAR_FOOTER.height();
+    let contentHeight = bodyHeight < leftColHeight ? leftColHeight : bodyHeight;
 
     // normalize content
     contentHeight -= $NAV_MENU.height() + footerHeight;
@@ -68,7 +70,7 @@ function init_sidebar() {
 
   $SIDEBAR_MENU.find("a").on("click", function (ev) {
     console.log("clicked - sidebar_menu");
-    var $li = $(this).parent();
+    const $li = $(this).parent();
 
     if ($li.is(".active")) {
       $li.removeClass("active active-sm");
@@ -150,16 +152,16 @@ function init_sidebar() {
 }
 // /Sidebar
 
-var randNum = function () {
+const randNum = function () {
   return Math.floor(Math.random() * (1 + 40 - 20)) + 20;
 };
 
 // Panel toolbox
 $(document).ready(function () {
   $(".collapse-link").on("click", function () {
-    var $BOX_PANEL = $(this).closest(".x_panel"),
-      $ICON = $(this).find("i"),
-      $BOX_CONTENT = $BOX_PANEL.find(".x_content");
+    const $BOX_PANEL = $(this).closest(".x_panel");
+    const $ICON = $(this).find("i");
+    const $BOX_CONTENT = $BOX_PANEL.find(".x_content");
 
     // fix for some div with hardcoded fix class
     if ($BOX_PANEL.attr("style")) {
@@ -175,7 +177,7 @@ $(document).ready(function () {
   });
 
   $(".close-link").click(function () {
-    var $BOX_PANEL = $(this).closest(".x_panel");
+    const $BOX_PANEL = $(this).closest(".x_panel");
 
     $BOX_PANEL.remove();
   });
@@ -204,26 +206,25 @@ $(document).ready(function () {
   });
 });
 
-//hover and retain popover when on popover content
-var originalLeave = $.fn.popover.Constructor.prototype.leave;
+// hover and retain popover when on popover content
+const originalLeave = $.fn.popover.Constructor.prototype.leave;
 $.fn.popover.Constructor.prototype.leave = function (obj) {
-  var self =
+  const self =
     obj instanceof this.constructor
       ? obj
       : $(obj.currentTarget)
           [this.type](this.getDelegateOptions())
           .data("bs." + this.type);
-  var container, timeout;
 
   originalLeave.call(this, obj);
 
   if (obj.currentTarget) {
-    container = $(obj.currentTarget).siblings(".popover");
-    timeout = self.timeout;
+    const container = $(obj.currentTarget).siblings(".popover");
+    const timeout = self.timeout;
     container.one("mouseenter", function () {
-      //We entered the actual popover – call off the dogs
+      // We entered the actual popover – call off the dogs
       clearTimeout(timeout);
-      //Let's monitor popover content instead
+      // Let's monitor popover content instead
       container.one("mouseleave", function () {
         $.fn.popover.Constructor.prototype.leave.call(self, self);
       });
@@ -385,14 +386,14 @@ function init_parsley() {
   }
   console.log("init_parsley");
 
-  $(/*.listen*/ "parsley:field:validate", function () {
+  $(/* .listen */ "parsley:field:validate", function () {
     validateFront();
   });
   $("#demo-form .btn").on("click", function () {
     $("#demo-form").parsley().validate();
     validateFront();
   });
-  var validateFront = function () {
+  let validateFront = function () {
     if (true === $("#demo-form").parsley().isValid()) {
       $(".bs-callout-info").removeClass("hidden");
       $(".bs-callout-warning").addClass("hidden");
@@ -402,14 +403,14 @@ function init_parsley() {
     }
   };
 
-  $(/*.listen*/ "parsley:field:validate", function () {
+  $(/* .listen */ "parsley:field:validate", function () {
     validateFront();
   });
   $("#demo-form2 .btn").on("click", function () {
     $("#demo-form2").parsley().validate();
     validateFront();
   });
-  var validateFront = function () {
+  validateFront = function () {
     if (true === $("#demo-form2").parsley().isValid()) {
       $(".bs-callout-info").removeClass("hidden");
       $(".bs-callout-warning").addClass("hidden");
@@ -432,16 +433,16 @@ function init_cropper() {
   }
   console.log("init_cropper");
 
-  var $image = $("#image");
-  var $download = $("#download");
-  var $dataX = $("#dataX");
-  var $dataY = $("#dataY");
-  var $dataHeight = $("#dataHeight");
-  var $dataWidth = $("#dataWidth");
-  var $dataRotate = $("#dataRotate");
-  var $dataScaleX = $("#dataScaleX");
-  var $dataScaleY = $("#dataScaleY");
-  var options = {
+  const $image = $("#image");
+  const $download = $("#download");
+  const $dataX = $("#dataX");
+  const $dataY = $("#dataY");
+  const $dataHeight = $("#dataHeight");
+  const $dataWidth = $("#dataWidth");
+  const $dataRotate = $("#dataRotate");
+  const $dataScaleX = $("#dataScaleX");
+  const $dataScaleY = $("#dataScaleY");
+  const options = {
     aspectRatio: 16 / 9,
     preview: ".img-preview",
     crop: function (e) {
@@ -513,11 +514,9 @@ function init_cropper() {
 
   // Options
   $(".docs-toggles").on("change", "input", function () {
-    var $this = $(this);
-    var name = $this.attr("name");
-    var type = $this.prop("type");
-    var cropBoxData;
-    var canvasData;
+    const $this = $(this);
+    const name = $this.attr("name");
+    const type = $this.prop("type");
 
     if (!$image.data("cropper")) {
       return;
@@ -525,8 +524,8 @@ function init_cropper() {
 
     if (type === "checkbox") {
       options[name] = $this.prop("checked");
-      cropBoxData = $image.cropper("getCropBoxData");
-      canvasData = $image.cropper("getCanvasData");
+      const cropBoxData = $image.cropper("getCropBoxData");
+      const canvasData = $image.cropper("getCanvasData");
 
       options.built = function () {
         $image.cropper("setCropBoxData", cropBoxData);
@@ -541,10 +540,8 @@ function init_cropper() {
 
   // Methods
   $(".docs-buttons").on("click", "[data-method]", function () {
-    var $this = $(this);
-    var data = $this.data();
-    var $target;
-    var result;
+    const $this = $(this);
+    let data = $this.data();
 
     if ($this.prop("disabled") || $this.hasClass("disabled")) {
       return;
@@ -554,7 +551,7 @@ function init_cropper() {
       data = $.extend({}, data); // Clone a new one
 
       if (typeof data.target !== "undefined") {
-        $target = $(data.target);
+        const $target = $(data.target);
 
         if (typeof data.option === "undefined") {
           try {
@@ -565,7 +562,11 @@ function init_cropper() {
         }
       }
 
-      result = $image.cropper(data.method, data.option, data.secondOption);
+      const result = $image.cropper(
+        data.method,
+        data.option,
+        data.secondOption
+      );
 
       switch (data.method) {
         case "scaleX":
@@ -629,24 +630,22 @@ function init_cropper() {
   });
 
   // Import image
-  var $inputImage = $("#inputImage");
-  var URL = window.URL || window.webkitURL;
-  var blobURL;
+  const $inputImage = $("#inputImage");
+  const URL = window.URL || window.webkitURL;
 
   if (URL) {
     $inputImage.change(function () {
-      var files = this.files;
-      var file;
+      const files = this.files;
 
       if (!$image.data("cropper")) {
         return;
       }
 
       if (files && files.length) {
-        file = files[0];
+        const file = files[0];
 
         if (/^image\/\w+$/.test(file.type)) {
-          blobURL = URL.createObjectURL(file);
+          const blobURL = URL.createObjectURL(file);
           $image
             .one("built.cropper", function () {
               // Revoke when load complete
@@ -676,32 +675,25 @@ function init_knob() {
   console.log("init_knob");
 
   $(".knob").knob({
-    change: function (value) {
-      //console.log("change : " + value);
-    },
+    change: function (value) {},
     release: function (value) {
-      //console.log(this.$.attr('value'));
       console.log("release : " + value);
     },
     cancel: function () {
       console.log("cancel : ", this);
     },
-    /*format : function (value) {
-				   return value + '%';
-				   },*/
     draw: function () {
       // "tron" case
       if (this.$.data("skin") == "tron") {
         this.cursorExt = 0.3;
 
-        var a = this.arc(this.cv), // Arc
-          pa, // Previous arc
-          r = 1;
+        const a = this.arc(this.cv); // Arc
+        const r = 1;
 
         this.g.lineWidth = this.lineWidth;
 
         if (this.o.displayPrevious) {
-          pa = this.arc(this.v);
+          const pa = this.arc(this.v);
           this.g.beginPath();
           this.g.strokeStyle = this.pColor;
           this.g.arc(
@@ -746,22 +738,22 @@ function init_knob() {
   });
 
   // Example of infinite knob, iPod click wheel
-  var v,
-    up = 0,
-    down = 0,
-    i = 0,
-    $idir = $("div.idir"),
-    $ival = $("div.ival"),
-    incr = function () {
-      i++;
-      $idir.show().html("+").fadeOut();
-      $ival.html(i);
-    },
-    decr = function () {
-      i--;
-      $idir.show().html("-").fadeOut();
-      $ival.html(i);
-    };
+  let v;
+  let up = 0;
+  let down = 0;
+  let i = 0;
+  const $idir = $("div.idir");
+  const $ival = $("div.ival");
+  const incr = function () {
+    i++;
+    $idir.show().html("+").fadeOut();
+    $ival.html(i);
+  };
+  const decr = function () {
+    i--;
+    $idir.show().html("-").fadeOut();
+    $ival.html(i);
+  };
   $("input.infinite").knob({
     min: 0,
     max: 20,
@@ -889,7 +881,7 @@ function init_IonRangeSlider() {
     grid: true,
     force_edges: true,
     prettify: function (num) {
-      var m = moment(num, "X");
+      const m = moment(num, "X");
       return m.format("Do MMMM, HH:mm");
     },
   });
@@ -903,14 +895,14 @@ function init_daterangepicker() {
   }
   console.log("init_daterangepicker");
 
-  var cb = function (start, end, label) {
+  const cb = function (start, end, label) {
     console.log(start.toISOString(), end.toISOString(), label);
     $("#reportrange span").html(
       start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY")
     );
   };
 
-  var optionSet1 = {
+  const optionSet1 = {
     startDate: moment().subtract(29, "days"),
     endDate: moment(),
     minDate: "01/01/2010",
@@ -1005,14 +997,14 @@ function init_daterangepicker_right() {
   }
   console.log("init_daterangepicker_right");
 
-  var cb = function (start, end, label) {
+  const cb = function (start, end, label) {
     console.log(start.toISOString(), end.toISOString(), label);
     $("#reportrange_right span").html(
       start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY")
     );
   };
 
-  var optionSet1 = {
+  const optionSet1 = {
     startDate: moment().subtract(29, "days"),
     endDate: moment(),
     minDate: "01/01/2010",
@@ -1196,7 +1188,7 @@ function init_validator() {
 
   $("form").submit(function (e) {
     e.preventDefault();
-    var submit = true;
+    let submit = true;
 
     // evaluate the form using generic validaing
     if (!validator.checkAll($(this))) {
@@ -1219,7 +1211,7 @@ function init_DataTables() {
   }
   console.log("init_DataTables");
 
-  var handleDataTableButtons = function () {
+  const handleDataTableButtons = function () {
     if ($("#datatable-buttons").length) {
       $("#datatable-buttons").DataTable({
         dom: "Bfrtip",
@@ -1279,7 +1271,7 @@ function init_DataTables() {
     fixedHeader: true,
   });
 
-  var $datatable = $("#datatable-checkbox");
+  const $datatable = $("#datatable-checkbox");
 
   $datatable.dataTable({
     order: [[1, "asc"]],
