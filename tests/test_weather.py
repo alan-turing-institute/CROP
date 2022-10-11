@@ -33,8 +33,9 @@ def test_get_weather_history_data():
     timestamp_to = int(dt_to.timestamp())
     timestamp_avg = int((timestamp_from + timestamp_to) / 2)
     # mock the API response
-
     mock_response = MOCK_OPENWEATHERMAP_HISTORY
+    # replace the timestamp in the mock response with timestamp_avg
+    mock_response["hourly"][0]["dt"] = timestamp_avg
     with requests_mock.Mocker() as m:
         m.get(requests_mock.ANY, json=mock_response)
         success, error, df = get_openweathermap_history(dt_from, dt_to)
