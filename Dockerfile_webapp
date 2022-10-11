@@ -9,6 +9,11 @@ RUN ls -l /usr/bin | grep python
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install -r /requirements.txt && rm -rf ~/.cache/pip /requirements.txt
 
+# install nodejs/npm (requires first installing CURL
+RUN apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt-get install -y nodejs
+
 RUN mkdir CROP
 WORKDIR CROP
 
@@ -23,6 +28,9 @@ ADD .secrets .secrets
 
 # launch the webapp
 WORKDIR /CROP/webapp
+
+# Install the Javascript dependencies
+RUN npm install
 
 EXPOSE 5000
 
