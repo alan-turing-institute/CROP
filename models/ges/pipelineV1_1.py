@@ -5,7 +5,6 @@ from TestScenarioV1_1 import testScenario, FILEPATH_WEATHER
 import pandas as pd
 from pathlib import Path
 from ges.dataAccess import (
-    deleteResults,
     insertModelRun,
     insertModelProduct,
     insertModelPrediction,
