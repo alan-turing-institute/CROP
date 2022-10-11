@@ -220,7 +220,7 @@ function horizontal_charts(json_data, regionid, canvasname, colouramp) {
   };
 
   // var ctx = document.getElementById('stackedbarchart'.concat(0));
-  let ctx = document.getElementById(canvasname);
+  const ctx = document.getElementById(canvasname);
   new Chart(ctx, config);
 }
 
@@ -268,15 +268,15 @@ function create_charts(
   ];
 
   // main farm
-  let region0_name = temperature_data[0]["region"];
+  const region0_name = temperature_data[0]["region"];
   document.getElementById("region0_name").innerHTML = region0_name;
   roundcharts(temperature_data, 0, "roundchart0", colouramp_redbluegrey);
 
-  let region1_name = temperature_data[1]["region"];
+  const region1_name = temperature_data[1]["region"];
   document.getElementById("region1_name").innerHTML = region1_name;
   roundcharts(temperature_data, 1, "roundchart1", colouramp_redbluegrey);
 
-  let region2_name = temperature_data[2]["region"];
+  const region2_name = temperature_data[2]["region"];
   document.getElementById("region2_name").innerHTML = region2_name;
   roundcharts(temperature_data, 2, "roundchart2", colouramp_redbluegrey);
 
@@ -378,7 +378,7 @@ function create_charts(
   ]);
 
   // Propagation
-  let region3_name = temperature_data[3]["region"];
+  const region3_name = temperature_data[3]["region"];
   document.getElementById("region3_name").innerHTML = region3_name;
   roundcharts(temperature_data, 3, "roundchart3", colouramp_redbluegrey);
   roundcharts(temperature_data_daily, 3, "roundchart13", colouramp_redbluegrey);
@@ -390,7 +390,7 @@ function create_charts(
   roundcharts(vpd_data_daily, 3, "vpd_roundchart13", colouramp_bluegrey);
 
   // R&D
-  let region4_name = temperature_data[4]["region"];
+  const region4_name = temperature_data[4]["region"];
   document.getElementById("region4_name").innerHTML = region4_name;
   roundcharts(temperature_data, 4, "roundchart4", colouramp_redbluegrey);
   roundcharts(temperature_data_daily, 4, "roundchart14", colouramp_redbluegrey);
