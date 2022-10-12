@@ -337,14 +337,6 @@ def insertModelPrediction(parameters=None):
     return num_rows_inserted
 
 
-def deleteResults():
-    num_delete_id = deleteData("delete from test_model_value returning id;")
-    logging.info("Delete from test_model_value: {0}".format(num_delete_id))
-    num_delete_id = deleteData("delete from test_model_product returning id;")
-    logging.info("Delete from test_model_product: {0}".format(num_delete_id))
-    num_delete_id = deleteData("delete from test_model_run returning id;")
-    logging.info("Delete from test_model_run: {0}".format(num_delete_id))
-
 
 # if __name__ == '__main__':
 # testInsert()
