@@ -521,18 +521,32 @@ def derivatives(
     h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHourValue
 ):
 
-    # Get weather data
-    clim = np.transpose(climterp_linear(h1, h2, numDays, filePathWeather))
+    # Get historical weather data
+    clim_historical = np.transpose(climterp_linear(h1, h2, numDays, filePathWeather))
+    # Get forecast weather data for the next two days
+    clim_forecast = np.transpose( climterp_forecast_linear(numDays=2, filepath_weather_forecast=filePathWeather) )
+    # Concatenate into single array - organised in ascending order of timestamp
+    clim = np.concatenate((clim_historical, clim_forecast), axis=0)
+    # Convert to pandas DataFrame
+    clim = pd.DataFrame(clim, columns=["timestamp", "temperature", "relative_humidity"])
+    # find duplicated timestamps. If two duplicated timestamps are found, keep historical over forecast
+    is_duplicate = clim.duplicated("timestamp", keep="first")
+    clim = clim[~is_duplicate]
+    # drop the "timestamp" column
+    clim = clim.drop("timestamp", axis=1)
+    clim = clim.to_numpy()
 
     # Add extra weather if scenario evaluation
 
     # if switch1 == 1: # Testing scenario
+    seconds_in_hour = 3600
+    samples_in_hour = int(seconds_in_hour/deltaT)
     LastDayData = clim[
-        -24 * 6 :,
+        -24 * samples_in_hour :,
     ]
 
     ## Create extended weather file
-    extend_by_days = 3
+    extend_by_days = 1 # 2 days of forecasts plus 1 day of extension
     ExtendClimate = np.concatenate((clim,) + (LastDayData,) * extend_by_days)
     h2 = h2 + extend_by_days * 24
 
