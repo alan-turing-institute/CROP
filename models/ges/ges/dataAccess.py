@@ -172,10 +172,10 @@ def getDaysWeatherForecast(numDays=2):
     today = datetime.datetime.now()
     delta = datetime.timedelta(days=numDays)
     dateNumDaysForecast = today + delta
-    # allow for a delay of 12 hours from current time to ensure that there are
+    # allow for a delay of 24 hours from current time to ensure that there are
     # no gaps between historical weather data (retrieved from table iweather)
     # and forecast weather data (retrieved from table weather_forecast)
-    today = today - datetime.timedelta(hours=12)
+    today = today - datetime.timedelta(hours=24)
     params = {
         "timeStampStart": today.strftime("%Y-%m-%d %H:%M:%S"),
         "timeStampEnd": dateNumDaysForecast.strftime("%Y-%m-%d %H:%M:%S"),
