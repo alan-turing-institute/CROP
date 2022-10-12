@@ -28,6 +28,12 @@ def config(
 
     # If the same variable is defined also as an environment variable, have that
     # override the value in the file.
+    for key in conf_dict.keys():
+        env_var = "CROP_{}".format(key).upper()
+        if env_var in os.environ:
+            conf_dict[key] = os.environ[env_var]
+
+    # special treatment for SQL environment variables
     env_var1 = "CROP_SQL_HOST"
     env_var2 = "CROP_SQL_USERNAME"
     if env_var1 in os.environ:
