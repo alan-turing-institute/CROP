@@ -19,4 +19,5 @@ else
     bport=5000
 fi
 
+npm install
 flask run --host=0.0.0.0 --port $bport
