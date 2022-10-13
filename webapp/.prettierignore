@@ -1,4 +1,3 @@
 node_modules
-app/base/static/vendors/
 app/base/static/structures/CROP_unity_js
-app/base/static/build
+*templates*
