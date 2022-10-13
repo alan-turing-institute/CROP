@@ -17,8 +17,8 @@ date_dataStarts_3 = date_Forecast_3-historyLength*SECONDS.PERDAY
 date_Forecast_4 = date_Forecast_1 - (3*periodBetweenPredictions)
 date_dataStarts_4 = date_Forecast_4-historyLength*SECONDS.PERDAY
 
-date_Forecast = list(first=date_Forecast_1, second=date_Forecast_2, third=date_Forecast_3, fourth=date_Forecast_4) 
-data_Starts = list(first=date_dataStarts_1, second=date_dataStarts_2, third=date_dataStarts_3, fourth=date_dataStarts_4) 
+date_Forecast = list(first=date_Forecast_1, second=date_Forecast_2, third=date_Forecast_3, fourth=date_Forecast_4)
+data_Starts = list(first=date_dataStarts_1, second=date_dataStarts_2, third=date_dataStarts_3, fourth=date_dataStarts_4)
 
 date_DataStarts = as.POSIXct('2020-04-27 12:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
 date_DataEnds = as.POSIXct('2021-11-06 12:00:00', format="%Y-%m-%d %H:%M:%S", tz="UTC")
@@ -30,4 +30,3 @@ for (quarter in names(date_Forecast)){
                    data_Starts[[quarter]][1])
   cat(report)
 }
-
