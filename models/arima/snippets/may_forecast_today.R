@@ -1,5 +1,5 @@
 # This script contains all the info to run the basic model
-# 
+#
 
 
 
@@ -55,10 +55,10 @@ if (hour(max(t_ee$FarmTimestamp))>16){
   forecast_timestamp <- as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 16,":00:00"), tz="GMT")
 } else if  (hour(max(t_ee$FarmTimestamp))<=4) {
   forecast_timestamp <- as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))-1," ", 16,":00:00"), tz="GMT")
-  
+
 }else  {
   forecast_timestamp <- as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 4,":00:00"), tz="GMT")
-  
+
 }
 
 # Load the model functions ----------------
@@ -99,7 +99,7 @@ tobj2 <- tobj2[,c("EnergyCP", "FarmTime", "Sensor_temp", "DateFarm")]
 
 sum(is.na(tobj2$EnergyCP)) #1362
 
-tobj2<-fill_data(tobj2) 
+tobj2<-fill_data(tobj2)
 
 
 # Forecasting the bottom bench:
@@ -134,19 +134,19 @@ tobj_list <- list(tobj1,tobj2,tobj3)
 list_forecasts <- vector("list", length(tobj_list))
 names(list_forecasts) <- sensor_loc
 for(mm in 1:length(sensor_loc)){
-  
+
   sensor_name <-sensor_loc[mm]
   print(sensor_name)
   testtm <- forecast_timestamp
   print(testtm)
   starttm  <-forecast_timestamp- 200*1*24*3600
-  
+
   tobj_mm <- tobj_list[[mm]]
-  
+
   # runs model and outputs list containing three forecasts, probabilities and warning message
   list_forecasts[[mm]] <- runbsts_live(starttm, testtm, tobj_mm,sensor_name)
-  
-  
+
+
 }
 
 setwd(paste0(liverun_folder,"/Data"))
@@ -159,43 +159,40 @@ setwd(paste0(liverun_folder,"/Figs"))
 
 # sensor 16 B1
 for(mm in 1:length(sensor_loc)){
-  
+
   sensor_name <-sensor_loc[mm]
   print(sensor_name)
   testtm <- forecast_timestamp
   print(testtm)
-  
+
   # select sensor data
   tobj_mm <- tobj_list[[mm]]
-  
+
   # plot two days earlier
   tobj_mm <- tobj_mm[tobj_mm$FarmTime>(forecast_timestamp- 2*1*24*3600),]
-  
+
   f_for <- data.frame(
     FarmTime = seq(from=(forecast_timestamp+1*3600), to= (forecast_timestamp+48*3600), by="1 hour"),
     Dyn_For =  list_forecasts[[mm]][[1]]$mean,
     Stat_lights = list_forecasts[[mm]][[2]]$mean)
-  
-  f_for <- melt(f_for, id.vars = "FarmTime",value.name = "Sensor_temp",variable.name = "Model") 
-  
-  tobj_mm$Model <- "observed" 
-  
+
+  f_for <- melt(f_for, id.vars = "FarmTime",value.name = "Sensor_temp",variable.name = "Model")
+
+  tobj_mm$Model <- "observed"
+
   # data frame to plot:
   tp <- rbind(tobj_mm[, names(f_for)],f_for)
-  
+
   # extract probility stats for dynamic model
   stats_save <-round(sim_stats_bsts(list_forecasts[[mm]][[1]]),2)
   # print warning message based on stats_save
   return_message<- print_warning_message(stats_save)
-  
+
   ggplot(tp, aes(FarmTime, Sensor_temp, colour=Model))+
     geom_point()+geom_line()+
     geom_vline(xintercept = forecast_timestamp)+
     labs(title =paste0("temperature forecast from ",forecast_timestamp," - sensor " , sensor_name), subtitle = return_message)
   ggsave(paste0("Forecast_",sensor_name,"_",as.Date(testtm),".png"))
-  
-  
+
+
 }
-
-
-
