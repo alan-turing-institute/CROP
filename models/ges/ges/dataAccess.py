@@ -356,19 +356,13 @@ def insertRows(query, parameters):
         return len(new_row_ids)
 
 
-# def testInsert():
-#   sql = """INSERT INTO test_model(model_name, author)
-#   VALUES (%s,%s) RETURNING id;"""
-#   parameters = ("amodel","anauthor")
-#   logging.info(insertRow(sql,parameters=parameters))
-
 
 def insertModelRun(sensor_id=None, model_id=None, time_forecast=None):
     if sensor_id is not None:
         if model_id is not None:
             if time_forecast is not None:
                 parameters = (sensor_id, model_id, time_forecast)
-                sql = """INSERT INTO test_model_run(sensor_id, model_id, time_forecast)
+                sql = """INSERT INTO model_run(sensor_id, model_id, time_forecast)
         VALUES (%s,%s,%s) RETURNING id;"""
                 return insertRow(sql, parameters)
     return None
@@ -377,7 +371,7 @@ def insertModelRun(sensor_id=None, model_id=None, time_forecast=None):
 def insertModelProduct(run_id=None, measure_id=None):
     if run_id is not None:
         if measure_id is not None:
-            sql = """INSERT INTO test_model_product(run_id, measure_id)
+            sql = """INSERT INTO model_product(run_id, measure_id)
             VALUES (%s,%s) RETURNING id;"""
             product_id = insertRow(sql, (run_id, measure_id))
             logging.info("Product inserted, logged as ID: {0}".format(product_id))
@@ -389,20 +383,12 @@ def insertModelPrediction(parameters=None):
     num_rows_inserted = 0
     if parameters is not None:
         if len(parameters) > 0:
-            sql = """INSERT INTO test_model_value(product_id,prediction_value, prediction_index)
+            sql = """INSERT INTO model_value(product_id,prediction_value, prediction_index)
         VALUES %s RETURNING id"""
             num_rows_inserted = insertRows(sql, parameters)
             return num_rows_inserted
     return num_rows_inserted
 
-
-def deleteResults():
-    num_delete_id = deleteData("delete from test_model_value returning id;")
-    logging.info("Delete from test_model_value: {0}".format(num_delete_id))
-    num_delete_id = deleteData("delete from test_model_product returning id;")
-    logging.info("Delete from test_model_product: {0}".format(num_delete_id))
-    num_delete_id = deleteData("delete from test_model_run returning id;")
-    logging.info("Delete from test_model_run: {0}".format(num_delete_id))
 
 
 # if __name__ == '__main__':

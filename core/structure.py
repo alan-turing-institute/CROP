@@ -53,11 +53,6 @@ from .constants import (
     MODEL_RUN_TABLE_NAME,
     MODEL_PRODUCT_TABLE_NAME,
     MODEL_VALUE_TABLE_NAME,
-    TEST_MODEL_TABLE_NAME,
-    TEST_MODEL_MEASURE_TABLE_NAME,
-    TEST_MODEL_RUN_TABLE_NAME,
-    TEST_MODEL_PRODUCT_TABLE_NAME,
-    TEST_MODEL_VALUE_TABLE_NAME,
     CROP_TYPE_TABLE_NAME,
     BATCH_TABLE_NAME,
     BATCH_EVENT_TABLE_NAME,
@@ -161,106 +156,6 @@ class ModelProductClass(BASE):
     measure_id = Column(
         Integer,
         ForeignKey("{}.{}".format(MODEL_MEASURE_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-
-    # arguments
-    __table_args__ = (UniqueConstraint("run_id", "measure_id"),)
-
-
-# TODO(mhauru): How to avoid silly duplication of the above classes for the
-# test case?
-class TestModelClass(BASE):
-    """
-    This class contains a list of all models running in CROP
-    """
-
-    __tablename__ = TEST_MODEL_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True)
-    model_name = Column(String(100), nullable=False, unique=True)
-    author = Column(String(100), nullable=False, unique=False)
-
-
-class TestModelMeasureClass(BASE):
-    """
-    This class contains the names of all columns in models
-    """
-
-    __tablename__ = TEST_MODEL_MEASURE_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True)
-    measure_name = Column(String(100), nullable=False, unique=True)
-    measure_description = Column(String(100), nullable=True, unique=False)
-
-
-class TestModelRunClass(BASE):
-    """
-    This class contains a list of the ids all model runs
-    """
-
-    __tablename__ = TEST_MODEL_RUN_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True)
-    sensor_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(SENSOR_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-    model_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(TEST_MODEL_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-    time_forecast = Column(DateTime())
-    time_created = Column(DateTime(), server_default=func.now())
-
-    # arguments
-    __table_args__ = (UniqueConstraint("sensor_id", "model_id"),)
-
-
-class TestModelValueClass(BASE):
-    """
-    This class contains the outputs of model runs
-    """
-
-    __tablename__ = TEST_MODEL_VALUE_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True)
-    product_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(TEST_MODEL_PRODUCT_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-    prediction_value = Column(Float, nullable=False)
-    prediction_index = Column(Integer, nullable=False)
-    measure_description = Column(String(100), nullable=True, unique=False)
-
-    # arguments
-    __table_args__ = (UniqueConstraint("product_id"),)
-
-
-class TestModelProductClass(BASE):
-    """
-    This class contains the relationships of all model outputs
-    """
-
-    __tablename__ = TEST_MODEL_PRODUCT_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True)
-    run_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(TEST_MODEL_RUN_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-    measure_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(TEST_MODEL_MEASURE_TABLE_NAME, ID_COL_NAME)),
         nullable=False,
     )
 
