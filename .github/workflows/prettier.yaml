@@ -1,9 +1,7 @@
 name: prettier-action
 
 # This action works with pull requests and pushes
-on:
-  [pull_request,
-  push]
+on: [pull_request, push]
 
 jobs:
   prettier:
@@ -19,5 +17,6 @@ jobs:
       - name: Prettify code
         uses: creyD/prettier_action@v4.2
         with:
+          dry: True
           working_directory: webapp/
           prettier_options: --check .
