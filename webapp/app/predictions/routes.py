@@ -21,11 +21,6 @@ from core.structure import (
     ModelRunClass,
     ModelValueClass,
     ModelProductClass,
-    TestModelClass,
-    TestModelMeasureClass,
-    TestModelRunClass,
-    TestModelValueClass,
-    TestModelProductClass,
     ReadingsAranetTRHClass,
     SensorLocationClass,
     LocationClass,
@@ -75,7 +70,7 @@ def aranet_trh_query(dt_from, dt_to):
     return df
 
 
-def model_query(dt_from, dt_to, model_id, sensor_id, test=False):
+def model_query(dt_from, dt_to, model_id, sensor_id):
     """
     Performs a query for a prediction model.
 
@@ -83,7 +78,6 @@ def model_query(dt_from, dt_to, model_id, sensor_id, test=False):
         dt_from_: date range from
         dt_to_: date range to
         model_id: id for a particular model
-        test: If True, use the test_model tables instead. False by default.
     Returns:
         df: a df with the queried data
     """
@@ -95,18 +89,11 @@ def model_query(dt_from, dt_to, model_id, sensor_id, test=False):
         )
     )
 
-    if test:
-        model_class = TestModelClass
-        model_measure_class = TestModelMeasureClass
-        model_run_class = TestModelRunClass
-        model_value_class = TestModelValueClass
-        model_product_class = TestModelProductClass
-    else:
-        model_class = ModelClass
-        model_measure_class = ModelMeasureClass
-        model_run_class = ModelRunClass
-        model_value_class = ModelValueClass
-        model_product_class = ModelProductClass
+    model_class = ModelClass
+    model_measure_class = ModelMeasureClass
+    model_run_class = ModelRunClass
+    model_value_class = ModelValueClass
+    model_product_class = ModelProductClass
 
     # subquery to get the last model run from a given model
     sbqr = (
@@ -333,7 +320,7 @@ def ges_template():
     # should be, not the time window that gets plotted.
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
-    df_ges = model_query(dt_from, dt_to, 3, 27, test=True)
+    df_ges = model_query(dt_from, dt_to, 3, 27)
     # TODO This is a hard coded constant for now, marking the length of the
     # calibration period, because this data is lacking in the DB.
     time_shift = 24 * 10 - 1

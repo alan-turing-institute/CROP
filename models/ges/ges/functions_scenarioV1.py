@@ -71,8 +71,11 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
 
     ind = h2 - h1 + 1
     seconds_in_hspan = (h2 - h1) * 3600
-    t = np.linspace(0, ind - 1, ind)  # TODO This is really just a range.
+    # `t` corresponds to the time vector for the hourly weather data pulled from the DB
+    t = np.linspace(0, seconds_in_hspan, ind)  # TODO This is really just a range.
+    # `mult` corresponds to the resampling time vector (at frequency corresponding to period `deltaT`)
     mult = np.linspace(0, seconds_in_hspan, int(1 + seconds_in_hspan / deltaT))
+    # perform linear interpolation
     clim_t = np.interp(mult, t, temp_in[-ind:])
     clim_rh = np.interp(mult, t, rh_in[-ind:])
     climate = np.vstack((clim_t, clim_rh))
