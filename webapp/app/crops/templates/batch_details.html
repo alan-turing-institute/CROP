@@ -1,5 +1,25 @@
 {% extends "base_site.html" %}
 
+{% block head %}
+{{ super() }}
+<style>
+.conditionPlotPlaceholder {
+  border: 1px solid;
+  padding: 40px;
+  margin: 30px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.conditionPlotCanvas {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.2em;
+}
+</style>
+{% endblock head %}
+
 {% block title %} CROP BATCH DETAILS {% endblock title %}
 
 {% block content %}
@@ -63,8 +83,8 @@
                     <td>{{ details.crop_yield }}</td>
                   </tr>
                   <tr>
-                    <td class="text-alignright">Yield per tray</td>
-                    <td>{{ details.yield_per_tray }}</td>
+                    <td class="text-alignright">Yield per square metre</td>
+                    <td>{{ details.yield_per_sqm }}</td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Disease</td>
@@ -79,7 +99,31 @@
                     <td>{{ details.over_production }}</td>
                   </tr>
                   <tr>
-                    <td class="text-alignright">Closest sensor</td>
+                    <td class="text-alignright">Mean propagation temperature</td>
+                    {% if not prop_trh_summary|length == 0 %}
+                    <td>{{ '%0.1f'|format(prop_trh_summary.mean_temperature|float) }}°C</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Mean propagation humidity</td>
+                    {% if not prop_trh_summary|length == 0 %}
+                    <td>{{ '%0.1f'|format(prop_trh_summary.mean_humidity|float) }}%</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Mean propagation VPD</td>
+                    {% if not prop_trh_summary|length == 0 %}
+                    <td>{{ '%0.0f'|format(prop_trh_summary.mean_vpd|float) }} Pa</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
+                  </tr>
+                  <tr>
+                    <td class="text-alignright">Closest farm sensor</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ trh_summary.sensor_name }}</td>
                     {% else %}
@@ -95,7 +139,7 @@
                     {% endif %}
                   </tr>
                   <tr>
-                    <td class="text-alignright">Mean temperature</td>
+                    <td class="text-alignright">Mean farm temperature</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ '%0.1f'|format(trh_summary.mean_temperature|float) }}°C</td>
                     {% else %}
@@ -103,7 +147,7 @@
                     {% endif %}
                   </tr>
                   <tr>
-                    <td class="text-alignright">Mean humidity</td>
+                    <td class="text-alignright">Mean farm humidity</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ '%0.1f'|format(trh_summary.mean_humidity|float) }}%</td>
                     {% else %}
@@ -111,7 +155,7 @@
                     {% endif %}
                   </tr>
                   <tr>
-                    <td class="text-alignright">Mean VPD</td>
+                    <td class="text-alignright">Mean farm VPD</td>
                     {% if not trh_summary|length == 0 %}
                     <td>{{ '%0.0f'|format(trh_summary.mean_vpd|float) }} Pa</td>
                     {% else %}
@@ -123,9 +167,27 @@
             </div>
 
             <div class="col-md-6 col-sm-6 col-xs-6">
-              <canvas id="temperatureCanvas"></canvas>
-              <canvas id="humidityCanvas"></canvas>
-              <canvas id="vpdCanvas"></canvas>
+              <form method="post">
+                <input
+                    id="downloadTRHDataButton"
+                    style="margin-top: 5px; display: none"
+                    type="submit"
+                    value="Download T&RH data"
+                    name="download"
+                    />
+              </form>
+              <div id="temperaturePlotPlaceholder" class="conditionPlotPlaceholder">
+                Temperature plot will be displayed once the batch is transferred.
+              </div>
+              <div id="humidityPlotPlaceholder" class="conditionPlotPlaceholder">
+                Humidity plot will be displayed once the batch is transferred.
+              </div>
+              <div id="vpdPlotPlaceholder" class="conditionPlotPlaceholder">
+                VPD plot will be displayed once the batch is transferred.
+              </div>
+              <canvas id="temperatureCanvas" class="conditionPlotCanvas"></canvas>
+              <canvas id="humidityCanvas" class="conditionPlotCanvas"></canvas>
+              <canvas id="vpdCanvas" class="conditionPlotCanvas"></canvas>
             </div>
 
           </div>
@@ -140,18 +202,41 @@
 {{ super()}}
 
 <!-- Chart.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js" integrity="sha512-sW/w8s4RWTdFFSduOTGtk4isV1+190E/GghVffMA9XczdJ2MDzSzLEubKAs5h0wzgSJOQTRYyaz73L3d6RtJSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+<script src="{{ url_for('static', filename='node_modules/chart.js/dist/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='node_modules/moment/moment.js') }}"></script>
+<script src="{{ url_for('static', filename='node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js') }}"></script>
 
 <script src="{{ url_for('static', filename='javascript/batch_details.js') }}"></script>
 
 <script>
   const trh_data = JSON.parse('{{trh_json | safe}}');
   if (trh_data.length > 0) {
-    makePlots(trh_data, "temperature", "temperatureCanvas", "Temperature", "green")
-    makePlots(trh_data, "humidity", "humidityCanvas", "Humidity", "blue")
-    makePlots(trh_data, "vpd", "vpdCanvas", "VPD", "red")
+    makePlots(
+      trh_data,
+      "temperature",
+      "temperatureCanvas",
+      "Temperature",
+      "green",
+      "temperaturePlotPlaceholder",
+    )
+    makePlots(
+      trh_data,
+      "humidity",
+      "humidityCanvas",
+      "Humidity",
+      "blue",
+      "humidityPlotPlaceholder",
+    )
+    makePlots(
+      trh_data,
+      "vpd",
+      "vpdCanvas",
+      "VPD",
+      "red",
+      "vpdPlotPlaceholder",
+    )
+    const downloadButton = document.getElementById("downloadTRHDataButton");
+    downloadButton.style.display = "block";
   }
 </script>
 {% endblock javascripts %}

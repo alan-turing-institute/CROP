@@ -190,12 +190,6 @@ $(document).ready(function () {
 });
 // /Tooltip
 
-// Progressbar
-if ($(".progress .progress-bar")[0]) {
-  $(".progress .progress-bar").progressbar();
-}
-// /Progressbar
-
 // Accordion
 $(document).ready(function () {
   $(".expand").on("click", function () {

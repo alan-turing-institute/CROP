@@ -880,6 +880,7 @@ def timeseries_dashboard():
 
     df = fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids)
     if request.method == "POST":
+        df = df.sort_values("timestamp")
         return download_csv(df, "timeseries")
 
     data_keys = list(sensor_ids)
