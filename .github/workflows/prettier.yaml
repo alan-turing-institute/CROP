@@ -18,5 +18,4 @@ jobs:
         uses: creyD/prettier_action@v4.2
         with:
           dry: True
-          working_directory: webapp/
-          prettier_options: --check .
+          prettier_options: --ignore-path=webapp/.prettierignore --check webapp
