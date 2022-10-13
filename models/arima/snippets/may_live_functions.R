@@ -1,12 +1,12 @@
 # all functions required to run model
-# 
+#
 constructLights <- function(tobj){
   # lights typically come on at 4pm. So a farm cycle starts at 4pm. This algortihm identifies the likely time that the lights came on in the farm.
   tobj$FarmDateNew <- as.Date(tobj$FarmTime - 16*60*60)
   tobjmean <- (tobj %>% group_by(FarmDateNew) %>% dplyr::summarise(meanE=mean(EnergyCP)))
   tobj$Lights <- rep(0, length(tobj$FarmDateNew))
-  
-  # identify rows where energyCP 
+
+  # identify rows where energyCP
   for(ii in 1:length(tobj$Lights)){
     if(tobj$EnergyCP[ii] > 0.9*tobjmean[which(tobjmean$FarmDateNew==tobj$FarmDateNew[ii]),2]){
       if(tobj$EnergyCP[ii] >15){
@@ -36,16 +36,16 @@ fill_data<-function(tobj){
   tobj$Hour <- hour(tobj$FarmTime)
   tobj$Month <- month(tobj$FarmTime)
   tobj$WeekDay <- weekdays(tobj$FarmTime)
-  
+
   tobj<-tobj %>% group_by(Month, Hour,WeekDay) %>%
     mutate(
       TypE= mean(EnergyCP,na.rm = T),
       TypT=mean(Sensor_temp, na.rm = T)
     )
-  
+
   tobj$EnergyCP<- ifelse(is.na(tobj$EnergyCP), tobj$TypE,tobj$EnergyCP )
   tobj$Sensor_temp<- ifelse(is.na(tobj$Sensor_temp), tobj$TypT,tobj$Sensor_temp )
-  
+
   tobj$Lights <- constructLights(tobj)
   return(tobj)
 }
@@ -54,7 +54,7 @@ fill_data<-function(tobj){
 runbsts_live <- function(starttm, testtm, tobj,sensor_name){
 
 
-  
+
   print("Selecting data")
 
   #tsel is selection from start to end of forecasting period
@@ -65,21 +65,21 @@ runbsts_live <- function(starttm, testtm, tobj,sensor_name){
   trainsel <- 1:(which(tsel$FarmTime==(testtm))-1)
   # indices for forecasting
   testsel <-rep((which(tsel$FarmTime==(testtm))-24):(which(tsel$FarmTime==(testtm))-1),2)
-  
+
   ## Dynamic model --
   print("Training the dynamic model")
-  
-  
+
+
   mc <- list()
   mc <- AddLocalLevel(mc, y=tsel$Sensor_temp[trainsel])
   mc <- AddDynamicRegression(mc, tsel$Sensor_temp[trainsel]~fullcov[trainsel,-c(26)]) #remove the hour that usually happens before the lights are on
   #this centres the mean towards the lower part of the day so the model is easier to explain
   dynamic_fit <<- bsts(tsel$Sensor_temp[trainsel], mc, niter=1000) #iter 1000
-  
-  
+
+
   filename <- paste("dynamic_fit_",sensor_name,"_",as.Date(testtm), ".RDS", sep="")
   save(dynamic_fit, file=filename)
-  
+
   ## Static model --
   print("Training the Static model")
 
@@ -89,13 +89,13 @@ runbsts_live <- function(starttm, testtm, tobj,sensor_name){
 
   # Making the forecasts
   print("Generating the 24hour forecast")
-  
+
   newcovtyp <- constructCovTyp(tsel$FarmTime[testsel])
   predtyp <- predict(dynamic_fit, burn=200, newdata=newcovtyp[,-c(26)],48) #burn 200
-  
+
   pred_412_L <- forecast(predarima3,xreg= tsel$Lights[testsel],h=48)
-  
-  
+
+
 save_pred <- list(predtyp, pred_412_L)
 return(save_pred)
 
@@ -106,12 +106,12 @@ print_warning_message <- function(stats_save){
   message(paste0("Based on the conditions yesterday, in the next 24 hours: \n \n",
                  "There is a ",stats_save$h24_p*100,"% probabibility that it will be over 25degC for ",stats_save$h24,"h. \n",
                  "There is a ",stats_save$h18_p*100,"% probabibility that it will be under 17degC for ",stats_save$h18,"h.\n"))
-  
+
   save_message<-paste("Based on the conditions yesterday, in the next 24 hours: \n \n",
                       "There is a ",stats_save$h24_p*100,"% probabibility that it will be over 25degC for ",stats_save$h24,"h. \n",
                       "There is a ",stats_save$h18_p*100,"% probabibility that it will be under 17degC for ",stats_save$h18,"h.\n")
   return(save_message)
-  
+
 }
 
 
@@ -125,7 +125,7 @@ sim_stats_bsts<- function(predct){
     h24_p = mean(apply(x12samplesbt>25, 2, max)),
     # for at least 3 hours
     h24_p2 = mean(ifelse(apply(x12samplesbt>25, 2, sum)>=3,1,0),na.rm=T ) ,
-    
+
     #average number of hours under 18degC if nothing changes
     h18 = mean(apply(x12samplesbt<18, 2, sum)),
     #prob of hitting 18degC
@@ -146,7 +146,7 @@ sim_stats_arima<- function(predct){
     h24_p = mean(apply(x12samplesbt>25, 2, max)),
     # for at least 3 hours
     h24_p2 = mean(ifelse(apply(x12samplesbt>25, 2, sum)>=3,1,0),na.rm=T ) ,
-    
+
     #average number of hours under 18degC if nothing changes
     h18 = mean(apply(x12samplesbt<18, 2, sum)),
     #prob of hitting 18degC
@@ -187,7 +187,7 @@ constructCov <- function(lights, times){
                           }
                         }
                       }
-                      
+
                     }else{#following 4 values are not all off
                       if(all(lights[tt+ii+1:2]==1)){#at least following two are on
                         covmatN[tt+ii,30] <- 1 #off during an on
@@ -199,15 +199,15 @@ constructCov <- function(lights, times){
                           }
                         }
                       }
-                      
+
                     }
                     #or could be an off on the middle of the on (dealt with before)
-                    
+
                   }
                 }
               }
             }
-            
+
           }
         }else{
           if(tt+2<=nrow(covmatN)){
@@ -226,9 +226,9 @@ constructCov <- function(lights, times){
               }
             }
           }
-          
+
         }
-        
+
       }else{#lights off
         if(all(c(lights[tt-1]==1, sum(lights[tt-(6:1)])>4))){#first hour lights are off following 4/6 hours on
           covmatN[tt,21] <- 1
@@ -244,9 +244,9 @@ constructCov <- function(lights, times){
         }
       }
     }
-    
+
   }
-  
+
   for(tt in c(25:nrow(covmatN))){
     if(sum(covmatN[tt,])==0){#only deal with time points not yet dealt with
       if(lights[tt]){
@@ -258,23 +258,23 @@ constructCov <- function(lights, times){
                 if(sum(lights[tt:(tt+ii)])==(ii+1)){#lights continually on since the start of on period
                   covmatN[tt+ii,46+ii] <- 1
                 }
-                
+
               }
             }
-            
+
           }
         }
       }
     }
   }
-  
+
   covmatN[,1:20] <- covmatN[,1:20] + covmatN[,46:65] #combine short off values with rest
   covmatN <- covmatN[,-c(46:65)]
   stt <- which(covmatN[,1]==1)[1]
   covmatN[1:(stt-1),] <- constructCovTyp(times[1:(stt-1)])
   covmatN[which(((rowSums(covmatN)==0)*(lights==0))==1),46] <- 1 #remaining lights off
   covmatN[which(((rowSums(covmatN)==0)*(lights==1))==1),47] <- 1 #remaining lights on
-  
+
   return(covmatN)
 }
 

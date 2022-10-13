@@ -100,7 +100,7 @@
       list_sensors.push(json_arima[i]["sensor_id"])
     }
     let unique_sensors = [...new Set(list_sensors)];
-    
+
     for (var i = 0; i < unique_sensors.length; i++) {
       json_arima_sensor = []
       for (var j = 0; j < json_arima.length; j++) {
