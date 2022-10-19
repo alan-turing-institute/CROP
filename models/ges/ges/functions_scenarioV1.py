@@ -33,6 +33,7 @@ path_conf = config(section="paths")
 
 DATA_DIR = Path(path_conf["data_dir"])
 FILEPATH_WEATHER = DATA_DIR / path_conf["filename_weather"]
+FILEPATH_WEATHER_FORECAST = DATA_DIR / path_conf["filename_weather_forecast"]
 FILEPATH_ACH = DATA_DIR / path_conf["filename_ach"]
 FILEPATH_IAS = DATA_DIR / path_conf["filename_ias"]
 FILEPATH_LEN = DATA_DIR / path_conf["filename_length"]
