@@ -39,17 +39,24 @@ FILEPATH_LEN = DATA_DIR / path_conf["filename_length"]
 
 CAL_CONF = config(section="calibration")
 
-def toTimestamp(d):
+def DatetimeToTimestamp(d):
     """
     Uses calendar module to convert Python datetime to epoch
     """
     return calendar.timegm(d.timetuple())
 
-def toDatetime(d):
+def TimestampToDatetime(d):
     """
     Uses datetime module to convert epoch to Python datetime (UTC)
     """
     return datetime.datetime.utcfromtimestamp(d)
+
+def StringToDatetime(d):
+    """
+    Uses datetime module to convert string to Python datetime
+    Note the string must be in the format: "%Y-%m-%d %H:%M:%S"
+    """
+    return datetime.datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
 
 
 def climterp_linear(h1, h2, numDays, filepath_weather=None):
@@ -63,15 +70,18 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
         # ExternalWeather = np.genfromtxt(filepath_weather, delimiter=',')
         # temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
         # rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
+        timestamp = ExternalWeather.DateTime
+        timestamp = timestamp.to_numpy()
+        timestamp = np.array([StringToDatetime(timestamp[d]) for d in range(0, timestamp.shape[0])])
         temp_in = ExternalWeather.T_e
+        temp_in = temp_in.to_numpy().astype(np.float64)
         rh_in = ExternalWeather.RH_e
+        rh_in = rh_in.to_numpy().astype(np.float64)
     else:
         ExternalWeather = np.asarray(
             getDaysWeather(numDays + 1, numRows=(numDays + 1) * 24)
         )
         timestamp = ExternalWeather[:, 0]
-        # convert Python datetime to epoch - this allows for linear interpolation of time
-        timestamp = np.array([toTimestamp(timestamp[d]) for d in range(0, timestamp.shape[0])]) 
         temp_in = ExternalWeather[:, 1].astype(
             np.float64
         )  # +1 to ensure correct end point
@@ -86,6 +96,8 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
     # nans, x= nan_helper(rh_in)
     # rh_in[nans]= np.interp(x(nans), x(~nans), rh_in[~nans])
 
+    # convert Python datetime to epoch - this allows for linear interpolation of time
+    timestamp = np.array([DatetimeToTimestamp(timestamp[d]) for d in range(0, timestamp.shape[0])])
     ind = h2 - h1 + 1
     seconds_in_hour = 3600
     seconds_in_hspan = (h2 - h1) * seconds_in_hour
@@ -95,7 +107,7 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
     mult = np.linspace(0, seconds_in_hspan, int(1 + seconds_in_hspan / deltaT))
     # perform linear interpolation
     clim_timestamp = np.interp(mult, t, timestamp[-ind:])
-    clim_timestamp = np.array([toDatetime(clim_timestamp[d]) for d in range(0, clim_timestamp.shape[0])]) # convert back to datetime
+    clim_timestamp = np.array([TimestampToDatetime(clim_timestamp[d]) for d in range(0, clim_timestamp.shape[0])]) # convert back to datetime
     clim_t = np.interp(mult, t, temp_in[-ind:])
     clim_rh = np.interp(mult, t, rh_in[-ind:])
     climate = np.vstack((clim_timestamp, clim_t, clim_rh))
@@ -111,7 +123,7 @@ def climterp_forecast_linear(numDays=2, filepath_weather_forecast=None):
             Default value is 2. Weather forecasts are available for a maximum of 2 days
             into the future.
         filepath_weather_forecast: path of csv file containing weather forecasts.
-            Note that this has not been tested.
+            If no path is provided, the function retrieves weather forecast data from the DB.
     Returns:
         climate: numpy array containing the linearly interpolated weather forecasts.
         The first row contains the timestamps, the second row contains temperature
@@ -120,14 +132,18 @@ def climterp_forecast_linear(numDays=2, filepath_weather_forecast=None):
     timestamp = None
     temp_in = None
     rh_in = None
-    if filepath_weather_forecast: #TODO this has not been tested
+    if filepath_weather_forecast:
         header_list = ["DateTime", "T_e", "RH_e"]
         ExternalWeather = pd.read_csv(
             filepath_weather_forecast, delimiter=",", names=header_list
         )
         timestamp = ExternalWeather.DateTime
+        timestamp = timestamp.to_numpy()
+        timestamp = np.array([StringToDatetime(timestamp[d]) for d in range(0, timestamp.shape[0])])
         temp_in = ExternalWeather.T_e
+        temp_in = temp_in.to_numpy().astype(np.float64)
         rh_in = ExternalWeather.RH_e
+        rh_in = rh_in.to_numpy().astype(np.float64)
     else:
         ExternalWeather = getDaysWeatherForecast(numDays)
         ExternalWeather = np.asarray(ExternalWeather)
@@ -145,10 +161,10 @@ def climterp_forecast_linear(numDays=2, filepath_weather_forecast=None):
     # `mult` corresponds to the resampling time vector (at frequency corresponding to period `deltaT`)
     mult = np.linspace(0, delta_in_secs, int(1 + delta_in_secs / deltaT))
     # convert Python datetime to epoch - this allows for linear interpolation of time
-    timestamp = np.array([toTimestamp(timestamp[d]) for d in range(0, timestamp.shape[0])])
+    timestamp = np.array([DatetimeToTimestamp(timestamp[d]) for d in range(0, timestamp.shape[0])])
     # perform linear interpolation
     clim_timestamp = np.interp(mult, t, timestamp)
-    clim_timestamp = np.array([toDatetime(clim_timestamp[d]) for d in range(0, clim_timestamp.shape[0])])
+    clim_timestamp = np.array([TimestampToDatetime(clim_timestamp[d]) for d in range(0, clim_timestamp.shape[0])])
     clim_t = np.interp(mult, t, temp_in)
     clim_rh = np.interp(mult, t, rh_in)
     climate = np.vstack((clim_timestamp, clim_t, clim_rh))
@@ -518,13 +534,13 @@ def model(
 
 
 def derivatives(
-    h1, h2, numDays, paramsinput, ndp, filePathWeather, LatestTimeHourValue
+    h1, h2, numDays, paramsinput, ndp, filePathWeather, filePathWeatherForecast, LatestTimeHourValue
 ):
 
     # Get historical weather data
     clim_historical = np.transpose(climterp_linear(h1, h2, numDays, filePathWeather))
     # Get forecast weather data for the next two days
-    clim_forecast = np.transpose( climterp_forecast_linear(numDays=2, filepath_weather_forecast=filePathWeather) )
+    clim_forecast = np.transpose( climterp_forecast_linear(numDays=2, filepath_weather_forecast=filePathWeatherForecast) )
     # Concatenate into single array - organised in ascending order of timestamp
     clim = np.concatenate((clim_historical, clim_forecast), axis=0)
     # Convert to pandas DataFrame
