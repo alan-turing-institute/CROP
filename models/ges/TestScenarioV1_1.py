@@ -4,6 +4,7 @@ from ges.functions_scenarioV1 import (
     derivatives,
     sat_conc,
     FILEPATH_WEATHER,
+    FILEPATH_WEATHER_FORECAST,
     FILEPATH_ACH,
     FILEPATH_IAS,
 )
@@ -179,6 +180,7 @@ def setScenario(
 def runModel(
     time_parameters: Dict,
     filepath_weather=None,
+    filepath_weather_forecast=None,
     params: np.ndarray = [],
     LatestTimeHourValue=LatestTimeHourValue,
 ) -> Dict:
@@ -190,6 +192,7 @@ def runModel(
         params,
         time_parameters["ndp"],
         filePathWeather=filepath_weather,
+        filePathWeatherForecast=filepath_weather_forecast,
         LatestTimeHourValue=LatestTimeHourValue,
     )  # runs GES model over ACH,IAS pairs
     T_air = results[1, :, :]
@@ -236,6 +239,7 @@ def testScenario():
     results = runModel(
         time_parameters=time_parameters,
         filepath_weather=None if USE_LIVE else FILEPATH_WEATHER,
+        filepath_weather_forecast=None if USE_LIVE else FILEPATH_WEATHER_FORECAST,
         params=params,
         LatestTimeHourValue=LatestTimeHourValue,
     )
