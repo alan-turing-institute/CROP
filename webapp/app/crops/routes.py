@@ -585,8 +585,10 @@ def harvest_list():
             harvest_events.event_time - transfer_events.event_time AS grow_time,
             grow_trh.avg_temp AS avg_grow_temperature,
             grow_trh.avg_rh AS avg_grow_humidity,
+            grow_trh.avg_vpd AS avg_grow_vpd,
             propagate_trh.avg_temp AS avg_propagation_temperature,
-            propagate_trh.avg_rh AS avg_propagation_humidity
+            propagate_trh.avg_rh AS avg_propagation_humidity,
+            propagate_trh.avg_vpd AS avg_propagation_vpd
         FROM batches
 
         INNER JOIN
@@ -635,7 +637,8 @@ def harvest_list():
             SELECT
                 batches.id AS batch_id,
                 avg(trh.temperature) AS avg_temp,
-                avg(trh.humidity) AS avg_rh
+                avg(trh.humidity) AS avg_rh,
+                avg(trh.vpd) AS avg_vpd
             FROM batches
             LEFT OUTER JOIN (
                 SELECT batch_id, event_time, location_id
@@ -655,7 +658,16 @@ def harvest_list():
             closests_trh_sensors
             ON transfer_events.location_id = closests_trh_sensors.location_id
             LEFT OUTER JOIN (
-                SELECT sensor_id, temperature, humidity, timestamp
+                SELECT
+                    sensor_id,
+                    temperature,
+                    humidity,
+                    (
+                        610.78
+                        * exp(17.2694 * temperature / (temperature + 237.3))
+                        * (1.0 - humidity / 100.0)
+                    ) AS vpd,
+                    timestamp
                 FROM aranet_trh_data
             )
             AS trh
@@ -681,7 +693,8 @@ def harvest_list():
             SELECT
                 batches.id AS batch_id,
                 avg(trh.temperature) AS avg_temp,
-                avg(trh.humidity) AS avg_rh
+                avg(trh.humidity) AS avg_rh,
+                avg(trh.vpd) AS avg_vpd
             FROM batches
             LEFT OUTER JOIN (
                 SELECT batch_id, event_time
@@ -696,9 +709,18 @@ def harvest_list():
             ) AS transfer_events
             ON (batches.id = transfer_events.batch_id)
             LEFT OUTER JOIN (
-                SELECT atrh.sensor_id, atrh.temperature, atrh.humidity, atrh.timestamp
-                FROM aranet_trh_data atrh
-                WHERE (atrh.sensor_id IN (SELECT id FROM propagation_trh_sensors))
+                SELECT
+                    sensor_id,
+                    temperature,
+                    humidity,
+                    (
+                        610.78
+                        * exp(17.2694 * temperature / (temperature + 237.3))
+                        * (1.0 - humidity / 100.0)
+                    ) AS vpd,
+                    timestamp
+                FROM aranet_trh_data
+                WHERE (sensor_id IN (SELECT id FROM propagation_trh_sensors))
             ) AS trh
             ON (
                 trh.timestamp
@@ -724,8 +746,10 @@ def harvest_list():
     for column in [
         "avg_propagation_temperature",
         "avg_propagation_humidity",
+        "avg_propagation_vpd",
         "avg_grow_temperature",
         "avg_grow_humidity",
+        "avg_grow_vpd",
     ]:
         if column in df:
             df[column] = df[column].apply(lambda x: f"{x:.2f}")
