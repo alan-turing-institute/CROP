@@ -52,8 +52,10 @@
                   <th>Shelf</th>
                   <th>Avg propagation temperature (°C)</th>
                   <th>Avg propagation humidity (%)</th>
+                  <th>Avg propagation vpd (Pa)</th>
                   <th>Avg grow temperature (°C)</th>
                   <th>Avg grow humidity (%)</th>
+                  <th>Avg grow vpd (Pa)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -80,8 +82,10 @@
                   <td>{{ batch.shelf }} </td>
                   <td>{{ batch.avg_propagation_temperature }} </td>
                   <td>{{ batch.avg_propagation_humidity }} </td>
+                  <td>{{ batch.avg_propagation_vpd }} </td>
                   <td>{{ batch.avg_grow_temperature }} </td>
-                  <td class="last">{{ batch.avg_grow_humidity }} </td>
+                  <td>{{ batch.avg_grow_humidity }} </td>
+                  <td class="last">{{ batch.avg_grow_vpd }} </td>
                   {%
                   endfor
                   %}
