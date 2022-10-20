@@ -502,45 +502,233 @@ def harvest_list():
     """
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
 
-    query = (
-        db.session.query(
-            BatchClass.id.label("batch_id"),
-            BatchClass.tray_size,
-            BatchClass.number_of_trays,
-            BatchClass.crop_type_id.label("batch_crop_type_id"),
-            CropTypeClass.id.label("crop_type_id"),
-            CropTypeClass.name.label("crop_type_name"),
-            BatchEventClass.batch_id.label("event_batch_id"),
-            BatchEventClass.id.label("batch_event_id"),
-            BatchEventClass.event_time.label("harvest_time"),
-            HarvestClass.batch_event_id.label("harvest_batch_event_id"),
-            HarvestClass.location_id.label("harvest_location_id"),
-            HarvestClass.crop_yield,
-            HarvestClass.waste_disease,
-            HarvestClass.waste_defect,
-            HarvestClass.over_production,
-            LocationClass.id.label("location_id"),
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf,
-        )
-        .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
-        .join(BatchEventClass, BatchEventClass.batch_id == BatchClass.id)
-        .join(HarvestClass, HarvestClass.batch_event_id == BatchEventClass.id)
-        .outerjoin(LocationClass, LocationClass.id == HarvestClass.location_id)
-        .filter(
-            and_(
-                BatchEventClass.event_time >= dt_from,
-                BatchEventClass.event_time <= dt_to,
-            )
-        )
-    )
-    df = pd.read_sql(query.statement, query.session.bind)
+    # TODO Convert all this into SQLAlchemy calls. Reuse those calls in batch_list and
+    # batch_details. Then tune performance.
+    sql_query_string = """
+        WITH latest_trh_locations AS (
+            SELECT ss.sensor_id, ss.location_id, ss.installation_date
+            FROM (
+                SELECT
+                    sensor_id,
+                    location_id,
+                    installation_date,
+                    max(installation_date) OVER (PARTITION BY sensor_id) AS max_date
+                FROM sensor_location
+            ) AS ss
+            JOIN sensors
+            ON (sensors.id = ss.sensor_id)
+            JOIN sensor_types
+            ON (sensors.type_id = sensor_types.id)
+            WHERE ss.installation_date = ss.max_date
+            AND sensor_types.sensor_type = 'Aranet T&RH'
+        ),
 
-    # Format the time strings. Easier to do here than in the Jinja template.
+        location_distances AS (
+            SELECT
+            l1.id AS id1,
+            l2.id AS id2,
+            (
+                (CASE WHEN l1.zone = l2.zone THEN 0 ELSE NULL END)
+                + (CASE WHEN l1.aisle = l2.aisle THEN 0 ELSE 1 END)
+                + abs(l1.column - l2.column)
+                + abs(l1.shelf - l2.shelf)
+            ) AS distance
+            FROM locations l1, locations l2
+        ),
+
+        sensor_distances AS (
+            SELECT
+                location_distances.id1 AS location_id,
+                latest_trh_locations.sensor_id,
+                location_distances.distance
+            FROM location_distances
+            JOIN latest_trh_locations
+            ON latest_trh_locations.location_id = location_distances.id2
+        ),
+
+        closests_trh_sensors AS (
+            SELECT ss.location_id, ss.sensor_id
+            FROM (
+                SELECT
+                    location_id,
+                    sensor_id,
+                    distance,
+                    min(distance) OVER (PARTITION BY location_id) AS min_distance
+                FROM sensor_distances
+                WHERE sensor_id IS NOT NULL
+            ) AS ss
+            WHERE ss.distance = ss.min_distance
+        ),
+
+        first_event_time AS (
+            SELECT min(event_time) as min_time
+            FROM batch_events
+        )
+
+        SELECT
+            batches.id AS batch_id,
+            crop_types.name AS crop_type_name,
+            batches.tray_size,
+            batches.number_of_trays,
+            weigh_events.event_time AS weigh_time,
+            propagate_events.event_time AS propagate_time,
+            transfer_events.event_time AS transfer_time,
+            locations.zone,
+            locations.aisle,
+            locations.column,
+            locations.shelf,
+            harvest_events.event_time AS harvest_time,
+            harvests.crop_yield,
+            harvests.waste_disease,
+            harvests.waste_defect,
+            harvests.over_production,
+            harvest_events.event_time - transfer_events.event_time AS grow_time,
+            grow_trh.avg_temp AS avg_grow_temperature,
+            grow_trh.avg_rh AS avg_grow_humidity,
+            propagate_trh.avg_temp AS avg_propagation_temperature,
+            propagate_trh.avg_rh AS avg_propagation_humidity
+        FROM batches
+
+        INNER JOIN
+        crop_types
+        ON (batches.crop_type_id = crop_types.id)
+
+        INNER JOIN (
+            SELECT batch_id, event_time
+            FROM batch_events
+            WHERE batch_events.event_type = 'weigh'
+        )
+        AS weigh_events
+        ON (batches.id = weigh_events.batch_id)
+
+        LEFT OUTER JOIN (
+            SELECT batch_id, event_time
+            FROM batch_events
+            WHERE batch_events.event_type = 'propagate'
+        )
+        AS propagate_events
+        ON (batches.id = propagate_events.batch_id)
+
+        LEFT OUTER JOIN (
+            SELECT batch_id, event_time, location_id
+            FROM batch_events
+            WHERE batch_events.event_type = 'transfer'
+        )
+        AS transfer_events
+        ON (batches.id = transfer_events.batch_id)
+
+        LEFT OUTER JOIN (
+            SELECT id, batch_id, event_time
+            FROM batch_events
+            WHERE batch_events.event_type = 'harvest'
+        )
+        AS harvest_events
+        ON (batches.id = harvest_events.batch_id)
+
+        LEFT OUTER JOIN
+        locations ON (locations.id = transfer_events.location_id)
+
+        LEFT OUTER JOIN
+        harvests ON (harvests.batch_event_id = harvest_events.id)
+
+        LEFT OUTER JOIN (
+            SELECT
+                batches.id AS batch_id,
+                avg(trh.temperature) AS avg_temp,
+                avg(trh.humidity) AS avg_rh
+            FROM batches
+            LEFT OUTER JOIN (
+                SELECT batch_id, event_time, location_id
+                FROM batch_events
+                WHERE batch_events.event_type = 'transfer'
+            )
+            AS transfer_events
+            ON (batches.id = transfer_events.batch_id)
+            LEFT OUTER JOIN (
+                SELECT id, batch_id, event_time
+                FROM batch_events
+                WHERE batch_events.event_type = 'harvest'
+            )
+            AS harvest_events
+            ON (batches.id = harvest_events.batch_id)
+            LEFT OUTER JOIN
+            closests_trh_sensors
+            ON transfer_events.location_id = closests_trh_sensors.location_id
+            LEFT OUTER JOIN (
+                SELECT sensor_id, temperature, humidity, timestamp
+                FROM aranet_trh_data
+            )
+            AS trh
+            ON (
+                trh.timestamp BETWEEN transfer_events.event_time
+                AND harvest_events.event_time
+                AND closests_trh_sensors.sensor_id = trh.sensor_id
+            )
+            GROUP BY batches.id
+        ) AS grow_trh
+        ON (grow_trh.batch_id = batches.id)
+
+        LEFT OUTER JOIN (
+            WITH propagation_trh_sensors AS (
+                SELECT sensors.id
+                FROM sensors
+                JOIN latest_trh_locations
+                ON latest_trh_locations.sensor_id = sensors.id
+                JOIN locations
+                ON locations.id = latest_trh_locations.location_id
+                WHERE (locations.zone = 'Propagation')
+            )
+            SELECT
+                batches.id AS batch_id,
+                avg(trh.temperature) AS avg_temp,
+                avg(trh.humidity) AS avg_rh
+            FROM batches
+            LEFT OUTER JOIN (
+                SELECT batch_id, event_time
+                FROM batch_events
+                WHERE batch_events.event_type = 'propagate'
+            ) AS propagate_events
+            ON (batches.id = propagate_events.batch_id)
+            LEFT OUTER JOIN (
+                SELECT id, batch_id, event_time
+                FROM batch_events
+                WHERE batch_events.event_type = 'transfer'
+            ) AS transfer_events
+            ON (batches.id = transfer_events.batch_id)
+            LEFT OUTER JOIN (
+                SELECT atrh.sensor_id, atrh.temperature, atrh.humidity, atrh.timestamp
+                FROM aranet_trh_data atrh
+                WHERE (atrh.sensor_id IN (SELECT id FROM propagation_trh_sensors))
+            ) AS trh
+            ON (
+                trh.timestamp
+                BETWEEN propagate_events.event_time
+                AND transfer_events.event_time
+            )
+            GROUP BY batches.id
+        ) AS propagate_trh
+        ON (propagate_trh.batch_id = batches.id)
+        ;
+        """
+
+    query_result = db.session.execute(sql_query_string)
+    df = pd.DataFrame(query_result.fetchall(), columns=query_result.keys())
+
+    # Format the time strings and some numerical fields. Easier to do here than in the
+    # Jinja template.
     for column in ["harvest_time"]:
-        df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
+        if column in df:
+            df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
+    if "grow_time" in df:
+        df["grow_time"] = df["grow_time"].round("s")
+    for column in [
+        "avg_propagation_temperature",
+        "avg_propagation_humidity",
+        "avg_grow_temperature",
+        "avg_grow_humidity",
+    ]:
+        if column in df:
+            df[column] = df[column].apply(lambda x: f"{x:.2f}")
     results_arr = df.to_dict("records")
 
     if request.method == "POST":
