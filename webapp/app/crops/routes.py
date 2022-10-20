@@ -158,7 +158,7 @@ def batch_list():
     rows = []
     for batch_id, group in grouped:
         details = collect_batch_details(group)
-        if details is not None:
+        if details:
             details["batch_id"] = batch_id
             rows.append(details)
 
