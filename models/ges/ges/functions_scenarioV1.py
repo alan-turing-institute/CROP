@@ -565,7 +565,7 @@ def derivatives(
     ## Create extended weather file
     extend_by_days = 1 # 2 days of forecasts plus 1 day of extension
     ExtendClimate = np.concatenate((clim,) + (LastDayData,) * extend_by_days)
-    h2 = h2 + extend_by_days * 24
+    h2 = int(np.floor(ExtendClimate.shape[0]/samples_in_hour))
 
     climate = ExtendClimate
 
