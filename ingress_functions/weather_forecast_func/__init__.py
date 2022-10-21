@@ -19,7 +19,9 @@ def weather_import(mytimer: func.TimerRequest):
 
     utc_timestamp = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
 
-    logging.info("Python weather forecast timer trigger function started at %s", utc_timestamp)
+    logging.info(
+        "Python weather forecast timer trigger function started at %s", utc_timestamp
+    )
 
     dt_to = datetime.utcnow() + timedelta(days=2)
 
@@ -27,4 +29,6 @@ def weather_import(mytimer: func.TimerRequest):
 
     utc_timestamp = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
 
-    logging.info("Python weather forecast timer trigger function finished at %s", utc_timestamp)
+    logging.info(
+        "Python weather forecast timer trigger function finished at %s", utc_timestamp
+    )

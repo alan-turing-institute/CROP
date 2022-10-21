@@ -54,7 +54,6 @@ def get_results_df(readings_class, date_from, date_to):
         readings_class.temperature,
         readings_class.humidity,
         readings_class.sensor_id,
-
     ).filter(
         and_(
             readings_class.timestamp >= date_from,
@@ -64,7 +63,7 @@ def get_results_df(readings_class, date_from, date_to):
 
     results = pd.DataFrame(session.execute(query).fetchall())
     print("Got results {}".format(len(results)))
-    results.columns=["timestamp","temperature","humidity","sensor_id"]
+    results.columns = ["timestamp", "temperature", "humidity", "sensor_id"]
     results.set_index("timestamp", inplace=True)
     return results
 
@@ -81,9 +80,10 @@ def plot_results(df, variable, sensor_id, axes=None):
     sensor_id: int, integer primary key from Sensors table in CROP db.
     axes: matplotlib.pylot axes object
     """
-    df = df[df.sensor_id==sensor_id]
+    df = df[df.sensor_id == sensor_id]
     p = df[variable].plot(ax=axes)
     return p
+
 
 def main(args):
     date_from = datetime.strptime(args.start_date, dt_format)
@@ -94,7 +94,7 @@ def main(args):
     zensie_df = get_results_df(ReadingsZensieTRHClass, date_from, date_to)
     print("Getting Aranet data")
     aranet_df = get_results_df(ReadingsAranetTRHClass, date_from, date_to)
-    fig, axes = plt.subplots(1,2)
+    fig, axes = plt.subplots(1, 2)
     plot_results(aranet_df, variable, sensor_id, axes[0])
     plot_results(zensie_df, variable, sensor_id, axes[1])
     plt.show()
@@ -105,9 +105,24 @@ if __name__ == "__main__":
     default_end = datetime.now().strftime(dt_format)
     default_start = (datetime.now() - timedelta(days=7)).strftime(dt_format)
     parser = argparse.ArgumentParser(description="compare data from aranet and zensie")
-    parser.add_argument("--start_date", type=str, default=default_start, help="starting date, format YYYY-MM-DDTHH:MM:SS")
-    parser.add_argument("--end_date", type=str, default=default_end, help="ending date, format YYYY-MM-DDTHH:MM:SS")
+    parser.add_argument(
+        "--start_date",
+        type=str,
+        default=default_start,
+        help="starting date, format YYYY-MM-DDTHH:MM:SS",
+    )
+    parser.add_argument(
+        "--end_date",
+        type=str,
+        default=default_end,
+        help="ending date, format YYYY-MM-DDTHH:MM:SS",
+    )
     parser.add_argument("--sensor_id", type=int, help="sensor_id in CROP db")
-    parser.add_argument("--variable", choices=["temperature","humidity"], help="temperature or humidity", default="temperature")
+    parser.add_argument(
+        "--variable",
+        choices=["temperature", "humidity"],
+        help="temperature or humidity",
+        default="temperature",
+    )
     args = parser.parse_args()
     main(args)

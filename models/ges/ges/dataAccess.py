@@ -356,7 +356,6 @@ def insertRows(query, parameters):
         return len(new_row_ids)
 
 
-
 def insertModelRun(sensor_id=None, model_id=None, time_forecast=None):
     if sensor_id is not None:
         if model_id is not None:
@@ -388,7 +387,6 @@ def insertModelPrediction(parameters=None):
             num_rows_inserted = insertRows(sql, parameters)
             return num_rows_inserted
     return num_rows_inserted
-
 
 
 # if __name__ == '__main__':
