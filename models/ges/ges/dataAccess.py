@@ -195,20 +195,30 @@ def getDaysWeatherForecast(numDays=2):
     query, bind_params = j.prepare_query(weather_transaction_template, params)
     data = getData(get_sql_from_template(query=query, bind_params=bind_params))
     # convert list to pandas DataFrame
-    data = pd.DataFrame(data, columns=['timestamp', 'temperature', 'relative_humidity', 'time_created'])
-    is_duplicate = data.duplicated('timestamp', keep='first') # find duplicated timestamps, keeping only latest forecast
+    data = pd.DataFrame(
+        data, columns=["timestamp", "temperature", "relative_humidity", "time_created"]
+    )
+    is_duplicate = data.duplicated(
+        "timestamp", keep="first"
+    )  # find duplicated timestamps, keeping only latest forecast
     data = data[~is_duplicate]
-    data = data.sort_values('timestamp', axis=0, ascending=True) # sort in ascending order of timestamp (i.e. forecasted time)
-    data = data.drop('time_created', axis=1) # remove time_created column
+    data = data.sort_values(
+        "timestamp", axis=0, ascending=True
+    )  # sort in ascending order of timestamp (i.e. forecasted time)
+    data = data.drop("time_created", axis=1)  # remove time_created column
     # the following is done to ensure that the output of this function is in the same format
     # as the output of `getDaysWeather`
-    timestamp = data['timestamp'].dt.to_pydatetime() # convert timestamp to python datetime
+    timestamp = data[
+        "timestamp"
+    ].dt.to_pydatetime()  # convert timestamp to python datetime
     temperature = data["temperature"].to_numpy()
     relative_humidity = data["relative_humidity"].to_numpy()
-    data = np.vstack([timestamp, temperature, relative_humidity]) # concatenate into a matrix
+    data = np.vstack(
+        [timestamp, temperature, relative_humidity]
+    )  # concatenate into a matrix
     data = data.transpose()
-    data = data.tolist() # convert numpy array to list of lists
-    data = list(map(tuple, data)) # convert list of lists to list of tuples
+    data = data.tolist()  # convert numpy array to list of lists
+    data = list(map(tuple, data))  # convert list of lists to list of tuples
     return data
 
 
