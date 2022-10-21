@@ -41,6 +41,7 @@ FILEPATH_LEN = DATA_DIR / path_conf["filename_length"]
 CAL_CONF = config(section="calibration")
 
 
+
 def DatetimeToTimestamp(d):
     """
     Uses calendar module to convert Python datetime to epoch
