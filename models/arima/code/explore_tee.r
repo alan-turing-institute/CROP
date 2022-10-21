@@ -9,7 +9,7 @@ report_print = function(report_Object) {
   report_Dimension = sprintf("Dimension: [%s,%s]", dim(report_Object$object)[1],dim(report_Object$object)[2])
   report_Timestamps = sprintf("FarmTimestamp %s - %s", report_Object$object$FarmTimestamp[1], report_Object$object$FarmTimestamp[length(report_Object$object$FarmTimestamp)])
   report_TOC = c(report_Source,report_Dimension,report_Timestamps)
-  
+
   for (content in report_TOC) {
     print(content)
   }
@@ -64,17 +64,17 @@ testDates = function(energy, env, t_ee) {
   tee_StartDate = as.POSIXct(t_ee$object$FarmTimestamp[1], format="%Y-%m-%d %H:%M:%S", tz="UTC")
   tee_EndDate = as.POSIXct(t_ee$object$FarmTimestamp[length(t_ee$object$FarmTimestamp)], format="%Y-%m-%d %H:%M:%S", tz="UTC")
   tee_Interval = lubridate::interval(startDate, endDate)
-  
+
   energyAvailabilityStart = as.POSIXct(energy$timestamp[1], format="%Y-%m-%d %H:%M:%S", tz="UTC")
   energyAvailabilityEnd = as.POSIXct(energy$timestamp[length(energy$timestamp)], format="%Y-%m-%d %H:%M:%S", tz="UTC")
   energy_Interval = lubridate::interval(energyAvailabilityStart, energyAvailabilityEnd)
-  
+
   # Checking start and end date
   assert(sprintf("FarmTimestamp %s",tee_Interval), {
     (t_ee$object$FarmTimestamp[1] == tee_StartDate)
     (t_ee$object$FarmTimestamp[length(t_ee$object$FarmTimestamp)] == tee_EndDate)
   })
-  
+
   assert(sprintf("Energy %s", energy_Interval), {
     cat (sprintf("Energy interval: %s\n",energy_Interval))
     cat (sprintf("Tee StartDate: %s\n",tee_StartDate))
@@ -82,12 +82,12 @@ testDates = function(energy, env, t_ee) {
     (energyAvailabilityStart %within% tee_Interval)
     (energyAvailabilityEnd %within% tee_Interval)
   })
-  
+
 }
 
 #testEnv = function(env_raw, tee208){
   #assert("env_raw$temperature[1:5] == tee208",{
-#  })  
+#  })
 #}
 
 #testDates(energy_raw, env_raw, tee208)
@@ -108,4 +108,3 @@ may_208$Temperature_FARM_16B1[12:20]
 [1] 15.920 15.765 14.585 14.980 16.570 23.665 26.720 26.605
 > may_208$EnergyCP[12:20]
 [1] 15.920 15.765 14.585 14.980 16.570 23.665 26.720 26.605 27.260
-

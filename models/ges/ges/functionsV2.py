@@ -396,7 +396,9 @@ def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
     Weather: pandas DataFrame
     """
 
-    logging.info(f"In derivatives, NP: {np.shape(paramsinput)[0]} h1:{h1} h2:{h2} len(Weather):{len(Weather)}")
+    logging.info(
+        f"In derivatives, NP: {np.shape(paramsinput)[0]} h1:{h1} h2:{h2} len(Weather):{len(Weather)}"
+    )
     # Get weather data
     climate = np.transpose(climterp_linear(h1, h2, Weather))
 
@@ -444,7 +446,9 @@ def derivatives(h1, h2, paramsinput, Weather, LatestTimeHourValue):
     tval = np.linspace(h1 * 3600, h2 * 3600, NOut)
 
     for i in range(NP):
-        logging.info(f"in derivatives, step {i + 1} LatestTimeHourValue is {LatestTimeHourValue} ")
+        logging.info(
+            f"in derivatives, step {i + 1} LatestTimeHourValue is {LatestTimeHourValue} "
+        )
         AirChangeHour = paramsinput[i, 0]
         IntAirSpeed = paramsinput[i, 1]
         ACH = AirChangeHour / 3600

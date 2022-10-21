@@ -19,10 +19,10 @@ CREATE TABLE test_model (
 -- INSERT INTO model(model_name, author)
 -- VALUES('arima', 'Melanie Singh');
 
--- INSERT INTO model(model_name, author)                            
+-- INSERT INTO model(model_name, author)
 -- values ('Bayesian Structural Time Series (BSTS)', 'Melanie Singh')
 
--- INSERT INTO model(model_name, author)                            
+-- INSERT INTO model(model_name, author)
 -- values ('Greenhouse Energy Simulation (GES)', 'Rebecca Ward')
 
 -- -- Measure:
@@ -41,7 +41,7 @@ CREATE TABLE model_measure (
 -- INSERT INTO model_measure(measure_name)
 -- VALUES('Lower Bound Temperature (Degree Celcius)');
 
--- insert into model_measure (measure_name) 
+-- insert into model_measure (measure_name)
 -- values ('Median Temperature (Degree Celcius)');
 
 insert into model_measure (measure_name)
@@ -137,17 +137,17 @@ CREATE TABLE model_parameter (
 );
 
 INSERT INTO model_parameter(parameter_id, parameter_value)
-VALUES (2, 0, 0.4594613726254301), 
-(2, 1, 0.763604572422916), 
-(2, 2, 0.7340651592924317), 
-(2, 3, 0.7047730309779485), 
+VALUES (2, 0, 0.4594613726254301),
+(2, 1, 0.763604572422916),
+(2, 2, 0.7340651592924317),
+(2, 3, 0.7047730309779485),
 (2, 4, 0.4595117250921914)
 
 
-SELECT model.id as m_id, 
-  model.model_name as m_name, 
-  model_run.id as run, 
-  model_run.sensor_id as sensor, 
+SELECT model.id as m_id,
+  model.model_name as m_name,
+  model_run.id as run,
+  model_run.sensor_id as sensor,
   model_run.time_forecast as forecast,
   model_product.id as product,
   model_value.product_id as value_product,
@@ -156,8 +156,8 @@ SELECT model.id as m_id,
   model_value.id as p_id,
   model_measure.measure_name
 FROM model, model_run, model_product, model_value, model_measure
-WHERE model.id = 1 
-  AND model_run.model_id = model.id 
+WHERE model.id = 1
+  AND model_run.model_id = model.id
   AND model_run.id=133
   AND model_product.run_id = model_run.id
   AND model_product.measure_id = 1

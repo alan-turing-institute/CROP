@@ -24,4 +24,3 @@ Fetches forecast weather data from [openweathermap](https://openweathermap.org/)
 ### electricity_func
 
 Gets data from Stark, and fills the table "utc_energy_data".  Runs once per day.
-

@@ -46,14 +46,18 @@ def get_connection_string(src_or_dest):
             SQL_SERVER = os.environ["CROP_SRC_SQL_SERVER"]
             SQL_PASSWORD = os.environ["CROP_SRC_SQL_PASS"]
         except:
-            print("Need to set environment variables CROP_SRC_SQL_SERVER, CROP_SRC_SQL_PASS")
+            print(
+                "Need to set environment variables CROP_SRC_SQL_SERVER, CROP_SRC_SQL_PASS"
+            )
             return None
     elif src_or_dest == "dest":
         try:
             SQL_SERVER = os.environ["CROP_DEST_SQL_SERVER"]
             SQL_PASSWORD = os.environ["CROP_DEST_SQL_PASS"]
         except:
-            print("Need to set environment variables CROP_DEST_SQL_SERVER, CROP_DEST_SQL_PASS")
+            print(
+                "Need to set environment variables CROP_DEST_SQL_SERVER, CROP_DEST_SQL_PASS"
+            )
             return None
     else:
         print("Error: need to specify 'src' or 'dest'")
@@ -105,14 +109,16 @@ def get_src_data(DbClass, date_from, date_to, columns_to_copy):
     all_results: list of dicts, one dict per row, keys of dict taken from columns_to_copy.
     """
     session = get_db_session("src")
-    results = session.query(
-        DbClass
-    ).filter(
-        and_(
-            DbClass.timestamp >= date_from,
-            DbClass.timestamp <= date_to,
+    results = (
+        session.query(DbClass)
+        .filter(
+            and_(
+                DbClass.timestamp >= date_from,
+                DbClass.timestamp <= date_to,
+            )
         )
-    ).all()
+        .all()
+    )
     all_results = []
     for r in results:
         result_dict = {}
@@ -138,16 +144,18 @@ def get_existing_dest_data(DbClass, date_from, date_to):
     timestamps: list of datetime objects
     """
     session = get_db_session("dest")
-    results = session.query(
-        DbClass.timestamp
-    ).filter(
-        and_(
-            DbClass.timestamp >= date_from,
-            DbClass.timestamp <= date_to,
+    results = (
+        session.query(DbClass.timestamp)
+        .filter(
+            and_(
+                DbClass.timestamp >= date_from,
+                DbClass.timestamp <= date_to,
+            )
         )
-    ).all()
+        .all()
+    )
 
-    timestamps = [ r.timestamp for r in results ]
+    timestamps = [r.timestamp for r in results]
     session_close(session)
     return timestamps
 
@@ -174,11 +182,15 @@ def categorize_columns(DbClass):
         # never copy the id
         if col == "id":
             continue
-        to_copy = input(f"Would you like to copy values of {col} to from src to dest DB? (y/n): ")
+        to_copy = input(
+            f"Would you like to copy values of {col} to from src to dest DB? (y/n): "
+        )
         if to_copy.lower() == "y":
             copy_vals.append(col)
         else:
-            set_val = input(f"Enter a value you would like to set {col} to in dest DB (or press return for null): ")
+            set_val = input(
+                f"Enter a value you would like to set {col} to in dest DB (or press return for null): "
+            )
             if len(set_val) > 0:
                 set_vals[col] = set_val
     return copy_vals, set_vals
@@ -207,10 +219,10 @@ def write_to_destination(DbClass, src_vals, dest_timestamps, set_cols):
             print(f"{sv['timestamp']} already in destination database")
             continue
         new_row = DbClass()
-        for k,v in sv.items():
-            setattr(new_row,k,v)
-        for k,v in set_cols.items():
-            setattr(new_row,k,v)
+        for k, v in sv.items():
+            setattr(new_row, k, v)
+        for k, v in set_cols.items():
+            setattr(new_row, k, v)
         print(f"adding data for {sv['timestamp']}")
         session.add(new_row)
         write_count += 1
@@ -225,7 +237,7 @@ def main(args):
     date_to = datetime.strptime(args.end_date, "%Y-%m-%d")
     try:
         DbClass = getattr(structure, args.dbclass)
-    except(AttributeError):
+    except (AttributeError):
         print(f"The class name {args.dbclass} was not found in structure.py")
         return
     if type(DbClass).__name__ != "DefaultMeta":
@@ -241,15 +253,26 @@ def main(args):
     print(f"Found {len(src_values)} entries in source db")
     existing_timestamps = get_existing_dest_data(DbClass, date_from, date_to)
     print(f"Found {len(existing_timestamps)} entries in destination db")
-    success = write_to_destination(DbClass, src_values, existing_timestamps, vals_set_by_hand)
+    success = write_to_destination(
+        DbClass, src_values, existing_timestamps, vals_set_by_hand
+    )
     if success:
         print("Finished OK")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="copy missing data from one db to another")
-    parser.add_argument("--start_date", type=str, help="format YYYY-MM-DD", required=True)
+    parser = argparse.ArgumentParser(
+        description="copy missing data from one db to another"
+    )
+    parser.add_argument(
+        "--start_date", type=str, help="format YYYY-MM-DD", required=True
+    )
     parser.add_argument("--end_date", type=str, help="format YYYY-MM-DD", required=True)
-    parser.add_argument("--dbclass", type=str, help="name of SQLAlchemy class from structure.py", required=True)
+    parser.add_argument(
+        "--dbclass",
+        type=str,
+        help="name of SQLAlchemy class from structure.py",
+        required=True,
+    )
     args = parser.parse_args()
     main(args)

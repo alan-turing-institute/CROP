@@ -50,8 +50,12 @@ def replace_sources(energy_df):
     Switch these back in the dataframe so we can keep a consistent set
     of data
     """
-    energy_df.replace("HH 1200062020440 - K17D04641","1a Carpenters Place", inplace=True)
-    energy_df.replace("HH 1200023857140 - E16D04555 - 216749138", "Clapham", inplace=True)
+    energy_df.replace(
+        "HH 1200062020440 - K17D04641", "1a Carpenters Place", inplace=True
+    )
+    energy_df.replace(
+        "HH 1200023857140 - E16D04555 - 216749138", "Clapham", inplace=True
+    )
     return energy_df
 
 
@@ -188,7 +192,9 @@ def scrape_data(hide=True):
         sleep(SLEEP_TIME)
 
     def openTree(client, index=0):
-        expand_toggles = client.find_element_by_id("groupTree").find_elements_by_class_name("treeToggleWrapper")
+        expand_toggles = client.find_element_by_id(
+            "groupTree"
+        ).find_elements_by_class_name("treeToggleWrapper")
         expand_toggles[index].click()
         sleep(SLEEP_TIME)
 
