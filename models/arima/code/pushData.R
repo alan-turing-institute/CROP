@@ -11,15 +11,15 @@ connectToDatabase = function(){
   crop_dbname = ""
   crop_user = ""
   crop_password = ""
-  
+
   # Connect to the MySQL database: con
-  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), 
-                   dbname = crop_dbname, 
-                   host = crop_host, 
+  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),
+                   dbname = crop_dbname,
+                   host = crop_host,
                    port = crop_port,
                    user = crop_user,
                    password = crop_password)
-  
+
 }
 
 disconnectFromDatabase = function(conn) {
@@ -37,14 +37,14 @@ getData = function(sql_command) {
   # connect
   print (sprintf("Running SQL: %s",sql_command))
   conn=connectToDatabase()
-  
-  data_query = DBI::dbSendQuery(conn=conn, sql_command) 
+
+  data_query = DBI::dbSendQuery(conn=conn, sql_command)
   data_result = DBI::dbFetch(data_query)
-  
+
   # clean up
   DBI::dbClearResult(data_query)
   disconnectFromDatabase(conn=conn)
-  
+
   print(data_result)
 }
 
@@ -52,14 +52,14 @@ writeData = function(sql_command) {
   # connect
   print (sprintf("Running SQL: %s",stringr::str_trunc(sql_command, 20, "right")))
   conn=connectToDatabase()
-  
-  data_query = DBI::dbSendQuery(conn=conn, sql_command) 
+
+  data_query = DBI::dbSendQuery(conn=conn, sql_command)
   data_result = DBI::dbFetch(data_query)
-  
+
   # clean up
   DBI::dbClearResult(data_query)
   disconnectFromDatabase(conn=conn)
-  
+
   data_result
 }
 
@@ -119,4 +119,3 @@ writePredictionTable = function(product_id, values){
     writeData(sql_command = sql_command)
   }
 }
-

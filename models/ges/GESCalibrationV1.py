@@ -6,7 +6,12 @@ Created on Mon Jun 14 09:32:23 2021
 """
 
 from ges.functionsV2 import derivatives, priorPPF, sat_conc
-from ges.dataAccess import getDaysWeather, getDaysHumidityTemp, getDataPointHumidity
+from ges.dataAccess import (
+    getDaysWeather,
+    getDaysWeatherForecast,
+    getDaysHumidityTemp,
+    getDataPointHumidity,
+)
 import pandas as pd
 from pandas import DataFrame
 import numpy as np
@@ -44,6 +49,7 @@ def main():
     path_conf = config(section="paths")
     data_dir = Path(path_conf["data_dir"])
     filepath_Weather = data_dir / path_conf["filename_weather"]
+    filepath_WeatherForecast = data_dir / path_conf["filename_weather_forecast"]
     filepath_Monitored = data_dir / path_conf["filename_monitored"]
     filepath_LastDataPoint = data_dir / path_conf["filename_lastdatapoint"]
     filepath_ACH = data_dir / path_conf["filename_ach"]
@@ -78,8 +84,18 @@ def main():
     Weather_hour = pd.DataFrame(
         Weather_data, columns=["DateTime", "T_e", "RH_e"]
     ).set_index("DateTime")
-
     logging.info(f"Got Weather_hour dataframe, length {len(Weather_hour)}")
+
+    # Weather forecast
+    logging.info("About to call getDaysWeatherForecast")
+    WeatherForecast_data = getDaysWeatherForecast(numDays=2)
+    WeatherForecast_hour = pd.DataFrame(
+        WeatherForecast_data, columns=["DateTime", "T_e", "RH_e"]
+    )
+    logging.info(
+        f"Got WeatherForecast_hour dataframe, length {len(WeatherForecast_hour)}"
+    )
+
     # Monitored Data
     logging.info(f"About to call getDaysHumidityTemp for {cal_conf['sensor_id']}")
     Monitored_data = getDaysHumidityTemp(
@@ -89,7 +105,9 @@ def main():
     Monitored_10_minutes = pd.DataFrame(
         Monitored_data, columns=["DateTime", "T_i", "RH_i"]
     ).set_index("DateTime")
-    logging.info(f"Got Monitored_10_minutes dataframe, length {len(Monitored_10_minutes)}")
+    logging.info(
+        f"Got Monitored_10_minutes dataframe, length {len(Monitored_10_minutes)}"
+    )
     Monitored_hour = Monitored_10_minutes.resample("H").mean()
     try:
         Monitored_hour.index = Monitored_hour.index.tz_convert(
@@ -101,7 +119,9 @@ def main():
     logging.info(f"Got Monitored_hour dataframe, length {len(Monitored_hour)}")
     # Check final timestamps for RH_hour and Weather
 
-    logging.info(f"Is last monitored_hour index equal to weather_hour index? {Monitored_hour[-1:].index == Weather_hour[-1:].index}")
+    logging.info(
+        f"Is last monitored_hour index equal to weather_hour index? {Monitored_hour[-1:].index == Weather_hour[-1:].index}"
+    )
 
     # Select oldest of the two final timestamps (or most recent 3am/3pm time
     # which occurs in both)
@@ -123,8 +143,12 @@ def main():
     Monitored = Monitored.reset_index()
     Weather = Weather.reset_index()
 
+    # Write data to csv files
     df_Weather = DataFrame(Weather)
     df_Weather.to_csv(filepath_Weather, index=None, header=False)
+
+    df_WeatherForecast = WeatherForecast_hour
+    df_WeatherForecast.to_csv(filepath_WeatherForecast, index=None, header=False)
 
     df_Monitored = DataFrame(Monitored)
     df_Monitored.to_csv(filepath_Monitored, index=None, header=False)

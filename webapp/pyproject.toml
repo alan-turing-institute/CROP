@@ -1,3 +1,0 @@
-# This pyproject.toml only exists to set the line width in Python code.
-[tool.black]
-line-length = 79

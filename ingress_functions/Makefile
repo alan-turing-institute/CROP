@@ -1,4 +1,4 @@
-.PHONY: build clean push 
+.PHONY: build clean push
 
 build:
 	docker build . -f Dockerfile -t turingcropapp/functions:local-build

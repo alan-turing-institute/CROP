@@ -153,6 +153,75 @@ def getDaysWeather(numDays=2, numRows=5):
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
+def getDaysWeatherForecast(numDays=2):
+    """
+    Gets hourly weather forecast data (temperature and relative humidity)
+    from the database table "weather_forecast".
+    The function retrieves the latest weather forecasts as these are likely
+    to be more accurate than older weather forecasts.
+
+    Parameters:
+        numDays: number of days into the future for which to retrieve hourly
+            weather forecasts. Default is 2 (only 48h forecasts are available
+            in the table).
+    Returns:
+        data: list of hourly weather forecasts (each entry corresponds to a
+            different forecasted time). The list contains: forcasted time,
+            temperature (in Celsius) and relative humidity (percentage)
+    """
+    today = datetime.datetime.now()
+    delta = datetime.timedelta(days=numDays)
+    dateNumDaysForecast = today + delta
+    # allow for a delay of 24 hours from current time to ensure that there are
+    # no gaps between historical weather data (retrieved from table iweather)
+    # and forecast weather data (retrieved from table weather_forecast)
+    today = today - datetime.timedelta(hours=24)
+    params = {
+        "timeStampStart": today.strftime("%Y-%m-%d %H:%M:%S"),
+        "timeStampEnd": dateNumDaysForecast.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    # retrieve timestamp (forecasted time), temperature, relative_humidity and time_created from database
+    # sort out data in descending order of time_created (i.e. when the forecast was made)
+    weather_transaction_template = """
+  select
+    timestamp, temperature, relative_humidity, time_created
+  from
+    weather_forecast
+  where timestamp >= {{ timeStampStart }} and timestamp <= {{ timeStampEnd }}
+  order by
+    time_created desc
+  """
+    j = JinjaSql(param_style="pyformat")
+    query, bind_params = j.prepare_query(weather_transaction_template, params)
+    data = getData(get_sql_from_template(query=query, bind_params=bind_params))
+    # convert list to pandas DataFrame
+    data = pd.DataFrame(
+        data, columns=["timestamp", "temperature", "relative_humidity", "time_created"]
+    )
+    is_duplicate = data.duplicated(
+        "timestamp", keep="first"
+    )  # find duplicated timestamps, keeping only latest forecast
+    data = data[~is_duplicate]
+    data = data.sort_values(
+        "timestamp", axis=0, ascending=True
+    )  # sort in ascending order of timestamp (i.e. forecasted time)
+    data = data.drop("time_created", axis=1)  # remove time_created column
+    # the following is done to ensure that the output of this function is in the same format
+    # as the output of `getDaysWeather`
+    timestamp = data[
+        "timestamp"
+    ].dt.to_pydatetime()  # convert timestamp to python datetime
+    temperature = data["temperature"].to_numpy()
+    relative_humidity = data["relative_humidity"].to_numpy()
+    data = np.vstack(
+        [timestamp, temperature, relative_humidity]
+    )  # concatenate into a matrix
+    data = data.transpose()
+    data = data.tolist()  # convert numpy array to list of lists
+    data = list(map(tuple, data))  # convert list of lists to list of tuples
+    return data
+
+
 def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
     # select * from aranet_trh_data where sensor_id=27 order by timestamp desc limit 10;
     today = datetime.datetime.now()
@@ -297,19 +366,12 @@ def insertRows(query, parameters):
         return len(new_row_ids)
 
 
-# def testInsert():
-#   sql = """INSERT INTO test_model(model_name, author)
-#   VALUES (%s,%s) RETURNING id;"""
-#   parameters = ("amodel","anauthor")
-#   logging.info(insertRow(sql,parameters=parameters))
-
-
 def insertModelRun(sensor_id=None, model_id=None, time_forecast=None):
     if sensor_id is not None:
         if model_id is not None:
             if time_forecast is not None:
                 parameters = (sensor_id, model_id, time_forecast)
-                sql = """INSERT INTO test_model_run(sensor_id, model_id, time_forecast)
+                sql = """INSERT INTO model_run(sensor_id, model_id, time_forecast)
         VALUES (%s,%s,%s) RETURNING id;"""
                 return insertRow(sql, parameters)
     return None
@@ -318,7 +380,7 @@ def insertModelRun(sensor_id=None, model_id=None, time_forecast=None):
 def insertModelProduct(run_id=None, measure_id=None):
     if run_id is not None:
         if measure_id is not None:
-            sql = """INSERT INTO test_model_product(run_id, measure_id)
+            sql = """INSERT INTO model_product(run_id, measure_id)
             VALUES (%s,%s) RETURNING id;"""
             product_id = insertRow(sql, (run_id, measure_id))
             logging.info("Product inserted, logged as ID: {0}".format(product_id))
@@ -330,12 +392,11 @@ def insertModelPrediction(parameters=None):
     num_rows_inserted = 0
     if parameters is not None:
         if len(parameters) > 0:
-            sql = """INSERT INTO test_model_value(product_id,prediction_value, prediction_index)
+            sql = """INSERT INTO model_value(product_id,prediction_value, prediction_index)
         VALUES %s RETURNING id"""
             num_rows_inserted = insertRows(sql, parameters)
             return num_rows_inserted
     return num_rows_inserted
-
 
 
 # if __name__ == '__main__':

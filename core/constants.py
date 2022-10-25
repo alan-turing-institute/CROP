@@ -189,11 +189,6 @@ MODEL_MEASURE_TABLE_NAME = "model_measure"
 MODEL_RUN_TABLE_NAME = "model_run"
 MODEL_PRODUCT_TABLE_NAME = "model_product"
 MODEL_VALUE_TABLE_NAME = "model_value"
-TEST_MODEL_TABLE_NAME = "test_model"
-TEST_MODEL_MEASURE_TABLE_NAME = "test_model_measure"
-TEST_MODEL_RUN_TABLE_NAME = "test_model_run"
-TEST_MODEL_PRODUCT_TABLE_NAME = "test_model_product"
-TEST_MODEL_VALUE_TABLE_NAME = "test_model_value"
 WARNING_TYPES_TABLE_NAME = "warning_types"
 WARNINGS_TABLE_NAME = "warnings"
 
@@ -233,12 +228,16 @@ GROWAPP_SCHEMA = (
 )
 
 # OPENWEATHERMAP API misc constants
-CONST_OPENWEATHERMAP_LAT = 51.45 # Clapham farm latitude
-CONST_OPENWEATHERMAP_LON = 0.14 # Clapham farm longitude
-CONST_OPENWEATHERMAP_UNITS = "metric" # in API request, temperature returned in Celsius and wind speed in meter/sec
+CONST_OPENWEATHERMAP_LAT = 51.45  # Clapham farm latitude
+CONST_OPENWEATHERMAP_LON = 0.14  # Clapham farm longitude
+CONST_OPENWEATHERMAP_UNITS = "metric"  # in API request, temperature returned in Celsius and wind speed in meter/sec
 
 # see https://openweathermap.org/api/one-call-3
-CONST_OPENWEATHERMAP_HISTORICAL_URL = "https://api.openweathermap.org/data/2.5/onecall/timemachine?"\
-f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid=" # historical weather URL without API key and requested timestamp
-CONST_OPENWEATHERMAP_FORECAST_URL = f"https://api.openweathermap.org/data/3.0/onecall?"\
-f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid=" # weather forecast URL withouth API key
+CONST_OPENWEATHERMAP_HISTORICAL_URL = (
+    "https://api.openweathermap.org/data/2.5/onecall/timemachine?"
+    f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid="
+)  # historical weather URL without API key and requested timestamp
+CONST_OPENWEATHERMAP_FORECAST_URL = (
+    f"https://api.openweathermap.org/data/3.0/onecall?"
+    f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid="
+)  # weather forecast URL withouth API key

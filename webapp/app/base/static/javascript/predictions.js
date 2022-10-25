@@ -47,7 +47,7 @@ function plot(
     if (trh_json[i]["sensor_id"] == top_json["sensor_id"]) {
       for (ii = 0; ii < trh_json[i]["Values"].length; ii++) {
         trh_values.push(parseFloat(trh_json[i]["Values"][ii][trh_measure]));
-        let date_z = new Date(trh_json[i]["Values"][ii]["timestamp"]);
+        const date_z = new Date(trh_json[i]["Values"][ii]["timestamp"]);
         trh_time.push(date_z);
       }
     }
@@ -147,7 +147,7 @@ function plot(
       },
     },
   };
-  let ctx = document.getElementById(canvasname);
-  let myChart = new Chart(ctx, config);
+  const ctx = document.getElementById(canvasname);
+  const myChart = new Chart(ctx, config);
   myChart.update();
 }
