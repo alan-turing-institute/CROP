@@ -6,11 +6,12 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.engine import Engine
 from .structure import BASE
 
+
 def create_table(engine: Engine, TableClass: BASE):
     """
     Create a new database table (corresponding to a SQLAlchemy class from structure.py)
     if it doesn't already exist
-    
+
     Arguments:
         engine: SQLAlchemy engine, connected to the database
         TableClass: the SQLAlchemy class (corresponding to a database table from structure.py)

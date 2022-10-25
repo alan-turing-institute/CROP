@@ -31,6 +31,9 @@
     "plotly.js-dist": "^2.15.0"
   },
   "devDependencies": {
+    "eslint": "^8.25.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^8.5.0",
     "prettier": "^2.6.2"
   }
 }

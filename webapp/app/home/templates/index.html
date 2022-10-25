@@ -261,30 +261,31 @@
                       <p style="font-weight:normal">daily</p>
                     </th>
                   </tr>
+                </table>
 
-                  <table style="table-layout: fixed;width:100%; overflow:visible">
-                    {% for region in ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"] %}
-                    {% if region in ["FrontFarm", "BackFarm", "R&D"] %}
-                    <th class="dashColumn dashColumnEven">
-                      {% else %}
-                      <th class="dashColumn dashColumnOdd">
-                        {% endif %}
-                        <span style="vertical-align: middle;" title="Average over latest readings">
-                          <!-- The comment makes sure there's no whitespace between the
-                            spans, which would render a space between them. -->
-                            <span id="vpd_{{region}}"></span><!--
-                            --><span class="dashMainUnit">Pa</span>
-                        </span>
-                        <div class="dashLimitDiv">
-                          <span id="vpd_{{region}}_max" title="6h max"></span><!--
-                          --><span class="dashLimitUnit">Pa</span>
-                          <br>
-                          <span id="vpd_{{region}}_min" title="6h min"></span><!--
-                          --><span class="dashLimitUnit">Pa</span>
-                        </div>
-                      </th>
-                      {% endfor %}
-                  </table>
+                <table style="table-layout: fixed;width:100%; overflow:visible">
+                  {% for region in ["FrontFarm", "MidFarm", "BackFarm", "Propagation", "R&D"] %}
+                  {% if region in ["FrontFarm", "BackFarm", "R&D"] %}
+                  <th class="dashColumn dashColumnEven">
+                    {% else %}
+                    <th class="dashColumn dashColumnOdd">
+                      {% endif %}
+                      <span style="vertical-align: middle;" title="Average over latest readings">
+                        <!-- The comment makes sure there's no whitespace between the
+                          spans, which would render a space between them. -->
+                          <span id="vpd_{{region}}"></span><!--
+                          --><span class="dashMainUnit">Pa</span>
+                      </span>
+                      <div class="dashLimitDiv">
+                        <span id="vpd_{{region}}_max" title="6h max"></span><!--
+                        --><span class="dashLimitUnit">Pa</span>
+                        <br>
+                        <span id="vpd_{{region}}_min" title="6h min"></span><!--
+                        --><span class="dashLimitUnit">Pa</span>
+                      </div>
+                    </th>
+                    {% endfor %}
+                </table>
 
                 <table style="table-layout: fixed;width:100%; overflow:visible">
                   <tr >

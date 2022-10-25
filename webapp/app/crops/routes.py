@@ -53,7 +53,7 @@ def collect_batch_details(df_batch):
     else:
         # If there's no weighing event, we don't want to process this batch at all,
         # since we clearly lack meaningful data for it.
-        return None
+        return details
 
     if len(row_propagate) > 0:
         row_propagate = row_propagate.iloc[0]
@@ -402,6 +402,7 @@ def batch_details_prop_trh(details):
 @login_required
 def batch_details():
     """Render the details of a batch."""
+    template = "batch_details"
     batch_id = request.args.get("query")
     if batch_id is not None:
         batch_id = int(batch_id)
@@ -439,6 +440,16 @@ def batch_details():
     df_raw = pd.read_sql(query.statement, query.session.bind)
     details = collect_batch_details(df_raw)
     details["batch_id"] = batch_id
+    if len(details) < 2:
+        # We know nothing but the batch_id, so render a mostly empty page.
+        return render_template(
+            f"{template}.html",
+            details=details,
+            trh_json={},
+            trh_summary={},
+            prop_trh_summary={},
+        )
+
     if details["harvest_time"] is not None and details["transfer_time"] is not None:
         details["grow_time"] = details["harvest_time"] - details["transfer_time"]
     else:
@@ -467,7 +478,6 @@ def batch_details():
     if details["yield_per_sqm"] is not None:
         details["yield_per_sqm"] = f"{details['yield_per_sqm']:.1f}"
 
-    template = "batch_details"
     if request.method == "POST":
         return download_csv(trh_df, template)
     trh_json = trh_df.to_json(orient="records")
@@ -480,3 +490,65 @@ def batch_details():
         trh_summary=trh_summary,
         prop_trh_summary=prop_trh_summary,
     )
+
+
+@blueprint.route("/harvest_list", methods=["GET", "POST"])
+@login_required
+def harvest_list():
+    """Render the harvest_list page.
+
+    A time range can be provided as a query parameter. For a batch to be included in the
+    page, its harvest-event must have happened in this range.
+    """
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+
+    query = (
+        db.session.query(
+            BatchClass.id.label("batch_id"),
+            BatchClass.tray_size,
+            BatchClass.number_of_trays,
+            BatchClass.crop_type_id.label("batch_crop_type_id"),
+            CropTypeClass.id.label("crop_type_id"),
+            CropTypeClass.name.label("crop_type_name"),
+            BatchEventClass.batch_id.label("event_batch_id"),
+            BatchEventClass.id.label("batch_event_id"),
+            BatchEventClass.event_time.label("harvest_time"),
+            HarvestClass.batch_event_id.label("harvest_batch_event_id"),
+            HarvestClass.location_id.label("harvest_location_id"),
+            HarvestClass.crop_yield,
+            HarvestClass.waste_disease,
+            HarvestClass.waste_defect,
+            HarvestClass.over_production,
+            LocationClass.id.label("location_id"),
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf,
+        )
+        .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
+        .join(BatchEventClass, BatchEventClass.batch_id == BatchClass.id)
+        .join(HarvestClass, HarvestClass.batch_event_id == BatchEventClass.id)
+        .outerjoin(LocationClass, LocationClass.id == HarvestClass.location_id)
+        .filter(
+            and_(
+                BatchEventClass.event_time >= dt_from,
+                BatchEventClass.event_time <= dt_to,
+            )
+        )
+    )
+    df = pd.read_sql(query.statement, query.session.bind)
+
+    # Format the time strings. Easier to do here than in the Jinja template.
+    for column in ["harvest_time"]:
+        df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
+    results_arr = df.to_dict("records")
+
+    if request.method == "POST":
+        return download_csv(results_arr, "harvest_list")
+    else:
+        return render_template(
+            "harvest_list.html",
+            batches=results_arr,
+            dt_from=dt_from.strftime("%B %d, %Y"),
+            dt_to=dt_to.strftime("%B %d, %Y"),
+        )

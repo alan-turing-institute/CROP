@@ -10,11 +10,11 @@ getConnection = function(){
   crop_dbname = ""
   crop_user = ""
   crop_password = ""
-  
+
   # Connect to the MySQL database: con
-  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), 
-                   dbname = crop_dbname, 
-                   host = crop_host, 
+  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),
+                   dbname = crop_dbname,
+                   host = crop_host,
                    port = crop_port,
                    user = crop_user,
                    password = crop_password)
@@ -34,6 +34,3 @@ printTables = function(con) {
 # Connect to the MySQL database: con
 con = getConnection()
 printTables(con=con)
-
-
-
