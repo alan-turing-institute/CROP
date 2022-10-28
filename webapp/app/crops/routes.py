@@ -733,6 +733,251 @@ def harvest_list():
         ;
         """
 
+    # DEBUG
+    from sqlalchemy import text, func, select, case
+    from sqlalchemy.orm import aliased
+
+    subquery = db.session.query(
+        SensorLocationClass.sensor_id,
+        SensorLocationClass.location_id,
+        SensorLocationClass.installation_date,
+        func.max(SensorLocationClass.installation_date)
+        .over(partition_by=SensorLocationClass.sensor_id)
+        .label("max_date"),
+    ).subquery()
+    latest_trh_locations = (
+        db.session.query(
+            subquery.c.sensor_id,
+            subquery.c.location_id,
+            subquery.c.installation_date,
+        )
+        .join(SensorClass, SensorClass.id == subquery.c.sensor_id)
+        .join(TypeClass, TypeClass.id == SensorClass.type_id)
+        .where(
+            and_(
+                subquery.c.installation_date == subquery.c.max_date,
+                TypeClass.sensor_type == "Aranet T&RH",
+            )
+        )
+    ).cte(name="latest_trh_locations")
+
+    l1 = aliased(LocationClass)
+    l2 = aliased(LocationClass)
+    location_distances = db.session.query(
+        l1.id.label("id1"),
+        l2.id.label("id2"),
+        (
+            case([(l1.zone == l2.zone, 0)], else_=None)
+            + case([(l1.aisle == l2.aisle, 0)], else_=1)
+            + func.abs(l1.column - l2.column)
+            + func.abs(l1.shelf - l2.shelf)
+        ).label("distance"),
+    ).cte(name="location_distances")
+
+    sensor_distances = (
+        db.session.query(
+            location_distances.c.id1.label("location_id"),
+            latest_trh_locations.c.sensor_id,
+            location_distances.c.distance,
+        )
+        .join(
+            latest_trh_locations,
+            latest_trh_locations.c.location_id == location_distances.c.id2,
+        )
+        .cte(name="sensor_distances")
+    )
+
+    subquery = (
+        db.session.query(
+            sensor_distances.c.location_id,
+            sensor_distances.c.sensor_id,
+            sensor_distances.c.distance,
+            func.min(sensor_distances.c.distance)
+            .over(partition_by=sensor_distances.c.location_id)
+            .label("min_distance"),
+        )
+        .filter(sensor_distances.c.sensor_id.is_not(None))
+        .subquery()
+    )
+    closest_trh_sensors = (
+        db.session.query(subquery.c.location_id, subquery.c.sensor_id)
+        .filter(subquery.c.distance == subquery.c.min_distance)
+        .cte(name="closest_trh_sensors")
+    )
+
+    first_event_time = db.session.query(
+        func.min(BatchEventClass.event_time).label("min_time")
+    ).cte("first_event_time")
+
+    weigh_events = (
+        db.session.query(
+            BatchEventClass.id, BatchEventClass.batch_id, BatchEventClass.event_time
+        )
+        .filter(BatchEventClass.event_type == "weigh")
+        .subquery("weigh_events")
+    )
+    propagate_events = (
+        db.session.query(
+            BatchEventClass.id, BatchEventClass.batch_id, BatchEventClass.event_time
+        )
+        .filter(BatchEventClass.event_type == "propagate")
+        .subquery("propagate_events")
+    )
+    transfer_events = (
+        db.session.query(
+            BatchEventClass.id,
+            BatchEventClass.batch_id,
+            BatchEventClass.location_id,
+            BatchEventClass.event_time,
+        )
+        .filter(BatchEventClass.event_type == "transfer")
+        .subquery("transfer_events")
+    )
+    harvest_events = (
+        db.session.query(
+            BatchEventClass.id, BatchEventClass.batch_id, BatchEventClass.event_time
+        )
+        .filter(BatchEventClass.event_type == "harvest")
+        .subquery("harvest_events")
+    )
+
+    trh = db.session.query(
+        ReadingsAranetTRHClass.sensor_id,
+        ReadingsAranetTRHClass.temperature,
+        ReadingsAranetTRHClass.humidity,
+        (
+            610.78
+            * func.exp(
+                17.2694
+                * ReadingsAranetTRHClass.temperature
+                / (ReadingsAranetTRHClass.temperature + 237.3)
+            )
+            * (1.0 - ReadingsAranetTRHClass.humidity / 100.0)
+        ).label("vpd"),
+        ReadingsAranetTRHClass.timestamp,
+    )
+    trh_sub = trh.subquery("trh")
+
+    grow_trh = (
+        db.session.query(
+            BatchClass.id.label("batch_id"),
+            func.avg(trh_sub.c.temperature).label("avg_temp"),
+            func.avg(trh_sub.c.humidity).label("avg_rh"),
+            func.avg(trh_sub.c.vpd).label("avg_vpd"),
+        )
+        .outerjoin(transfer_events, transfer_events.c.batch_id == BatchClass.id)
+        .outerjoin(harvest_events, harvest_events.c.batch_id == BatchClass.id)
+        .outerjoin(
+            closest_trh_sensors,
+            closest_trh_sensors.c.location_id == transfer_events.c.location_id,
+        )
+        .outerjoin(
+            trh_sub,
+            and_(
+                transfer_events.c.event_time < trh_sub.c.timestamp,
+                trh_sub.c.timestamp < harvest_events.c.event_time,
+                closest_trh_sensors.c.sensor_id == trh_sub.c.sensor_id,
+            ),
+        )
+        .group_by(BatchClass.id)
+    ).subquery("grow_trh")
+
+    propagation_trh_sensors = (
+        db.session.query(SensorClass.id)
+        .join(latest_trh_locations, latest_trh_locations.c.sensor_id == SensorClass.id)
+        .join(LocationClass, LocationClass.id == latest_trh_locations.c.location_id)
+        .filter(LocationClass.zone == "Propagation")
+    ).cte("propagation_trh_sensors")
+
+    trh_prop_sub = trh.filter(
+        ReadingsAranetTRHClass.sensor_id.in_(propagation_trh_sensors)
+    ).subquery("trh_prop_sub")
+    propagate_trh = (
+        db.session.query(
+            BatchClass.id.label("batch_id"),
+            func.avg(trh_prop_sub.c.temperature).label("avg_temp"),
+            func.avg(trh_prop_sub.c.humidity).label("avg_rh"),
+            func.avg(trh_prop_sub.c.vpd).label("avg_vpd"),
+        )
+        .outerjoin(propagate_events, propagate_events.c.batch_id == BatchClass.id)
+        .outerjoin(transfer_events, transfer_events.c.batch_id == BatchClass.id)
+        .outerjoin(
+            trh_prop_sub,
+            and_(
+                propagate_events.c.event_time < trh_prop_sub.c.timestamp,
+                trh_prop_sub.c.timestamp < transfer_events.c.event_time,
+            ),
+        )
+        .group_by(BatchClass.id)
+    ).subquery("propagate_trh")
+
+    query = (
+        db.session.query(
+            BatchClass.id.label("batch_id"),
+            CropTypeClass.name.label("crop_type_name"),
+            BatchClass.tray_size,
+            BatchClass.number_of_trays,
+            weigh_events.c.event_time.label("weigh_time"),
+            propagate_events.c.event_time.label("propagate_time"),
+            transfer_events.c.event_time.label("transfer_time"),
+            harvest_events.c.event_time.label("harvest_time"),
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf,
+            HarvestClass.crop_yield,
+            HarvestClass.waste_disease,
+            HarvestClass.waste_defect,
+            HarvestClass.over_production,
+            (harvest_events.c.event_time - transfer_events.c.event_time).label(
+                "grow_time"
+            ),
+            grow_trh.c.avg_temp.label("avg_grow_temperature"),
+            grow_trh.c.avg_rh.label("avg_grow_humidity"),
+            grow_trh.c.avg_vpd.label("avg_grow_vpd"),
+            propagate_trh.c.avg_temp.label("avg_propagate_temperature"),
+            propagate_trh.c.avg_rh.label("avg_propagate_humidity"),
+            propagate_trh.c.avg_vpd.label("avg_propagate_vpd"),
+        )
+        .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
+        # We inner join on weigh_events, because if the batch doesn't have a weigh event
+        # it doesn't really exist, but outer join on the others since they are optional.
+        .join(weigh_events, weigh_events.c.batch_id == BatchClass.id)
+        .outerjoin(propagate_events, propagate_events.c.batch_id == BatchClass.id)
+        .outerjoin(transfer_events, transfer_events.c.batch_id == BatchClass.id)
+        .outerjoin(harvest_events, harvest_events.c.batch_id == BatchClass.id)
+        .outerjoin(LocationClass, LocationClass.id == transfer_events.c.location_id)
+        .outerjoin(HarvestClass, HarvestClass.batch_event_id == harvest_events.c.id)
+        .outerjoin(grow_trh, grow_trh.c.batch_id == BatchClass.id)
+        .outerjoin(propagate_trh, propagate_trh.c.batch_id == BatchClass.id)
+    )
+    print("\n\n")
+    print(latest_trh_locations)
+    print("\n\n")
+    print(location_distances)
+    print("\n\n")
+    print(sensor_distances)
+    print("\n\n")
+    print(closest_trh_sensors)
+    print("\n\n")
+    print(first_event_time)
+    print("\n\n")
+    print(trh)
+    print("\n\n")
+    print(grow_trh)
+    print("\n\n")
+    print(trh_prop_sub)
+    print("\n\n")
+    print(propagation_trh_sensors)
+    print("\n\n")
+    print(propagate_trh)
+    print("\n\n")
+    print(query)
+    print("\n\n")
+
+    # df = pd.read_sql(query.statement, query.session.bind)
+    # END DEBUG
+
     query_result = db.session.execute(sql_query_string)
     df = pd.DataFrame(query_result.fetchall(), columns=query_result.keys())
 
