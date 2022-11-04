@@ -28,7 +28,11 @@ def create_database(conn_string, db_name):
         # try:
         # On postgres, the postgres database is normally present by default.
         # Connecting as a superuser (eg, postgres), allows to connect and create a new db.
-        def_engine = create_engine("{}/{}".format(conn_string, SQL_DEFAULT_DBNAME))
+        def_engine = create_engine(
+            "{}/{}".format(conn_string, SQL_DEFAULT_DBNAME),
+            pool_size=20,
+            max_overflow=-1,
+        )
 
         # You cannot use engine.execute() directly, because postgres does not allow to create
         # databases inside transactions, inside which sqlalchemy always tries to run queries.
@@ -68,7 +72,7 @@ def connect_db(conn_string, db_name):
     # Connect to an engine
     if database_exists(db_conn_string):
         try:
-            engine = create_engine(db_conn_string)
+            engine = create_engine(db_conn_string, pool_size=20, max_overflow=-1)
         except:
             return False, "Cannot connect to db: %s" % db_name, None
     else:
