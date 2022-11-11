@@ -11,6 +11,10 @@ def config(
     filename="./config.ini",
     section="postgresql",
 ):
+    # check that configuration file exists
+    if not os.path.isfile(filename):
+        raise Exception(f"File {filename} does not exist")
+
     # create a parser
     parser = ConfigParser()
     # read config file
