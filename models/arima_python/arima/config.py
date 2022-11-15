@@ -1,8 +1,22 @@
+"""
+Python module to read the parameters specified in the configuration file,
+including parameters required to connect to the PostgreSQL database server
+"""
+
 from configparser import ConfigParser
 import os
+import json
 
 
-def config(filename="./config.ini", section="postgresql"):
+def config(
+    filename="./config.ini",
+    section="postgresql",
+):
+
+    # check that configuration file exists
+    if not os.path.isfile(filename):
+        raise Exception(f"File {filename} does not exist")
+
     # create a parser
     parser = ConfigParser()
     # read config file
@@ -13,7 +27,7 @@ def config(filename="./config.ini", section="postgresql"):
     if parser.has_section(section):
         params = parser.items(section)  # returns a list with item name and item value
         for param in params:
-            conf_dict[param[0]] = param[1]
+            conf_dict[param[0]] = json.loads(parser.get(section, param[0]))
     else:
         raise Exception(
             "Section {0} not found in the {1} file".format(section, filename)
