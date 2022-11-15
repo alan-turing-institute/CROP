@@ -1,4 +1,8 @@
-"""Functions for building various database queries."""
+"""Functions for building various database queries.
+
+Each function return a SQLAlchemy Query object. Turning these into subqueries or CTEs is
+the responsibility of the caller.
+"""
 from sqlalchemy import and_, case, func
 from sqlalchemy.orm import aliased
 
@@ -38,7 +42,7 @@ def latest_trh_locations_query(session):
                 TypeClass.sensor_type == "Aranet T&RH",
             )
         )
-    ).cte(name="latest_trh_locations")
+    )
     return latest_trh_locations
 
 
@@ -93,32 +97,26 @@ def closest_trh_sensors_query(session, latest_trh_locations=None):
         .filter(sensor_distances.c.sensor_id.is_not(None))
         .subquery()
     )
-    closest_trh_sensors = (
-        session.query(subquery.c.location_id, subquery.c.sensor_id)
-        .filter(subquery.c.distance == subquery.c.min_distance)
-        .cte(name="closest_trh_sensors")
-    )
+    closest_trh_sensors = session.query(
+        subquery.c.location_id, subquery.c.sensor_id
+    ).filter(subquery.c.distance == subquery.c.min_distance)
     return closest_trh_sensors
 
 
 def first_batch_event_time_query(session):
     first_event_time = session.query(
         func.min(BatchEventClass.event_time).label("min_time")
-    ).cte("first_event_time")
+    )
     return first_event_time
 
 
 def batch_events_by_type_query(session, type_name):
-    events = (
-        session.query(
-            BatchEventClass.id,
-            BatchEventClass.batch_id,
-            BatchEventClass.location_id,
-            BatchEventClass.event_time,
-        )
-        .filter(BatchEventClass.event_type == type_name)
-        .subquery(f"{type_name}_events")
-    )
+    events = session.query(
+        BatchEventClass.id,
+        BatchEventClass.batch_id,
+        BatchEventClass.location_id,
+        BatchEventClass.event_time,
+    ).filter(BatchEventClass.event_type == type_name)
     return events
 
 
@@ -149,24 +147,41 @@ def trh_sensors_by_zone_query(session, zone_name, latest_trh_locations=None):
         .join(latest_trh_locations, latest_trh_locations.c.sensor_id == SensorClass.id)
         .join(LocationClass, LocationClass.id == latest_trh_locations.c.location_id)
         .filter(LocationClass.zone == zone_name)
-    ).cte(f"{zone_name}_trh_sensors")
+    )
     return propagation_trh_sensors
 
 
 def harvest_table_query(session):
-    latest_trh_locations = latest_trh_locations_query(session)
+    latest_trh_locations = latest_trh_locations_query(session).cte(
+        name="latest_trh_locations"
+    )
     trh = trh_data_with_vpd_query(session)
     trh_sub = trh.subquery("trh")
-    weigh_events = batch_events_by_type_query(session, "weigh")
-    propagate_events = batch_events_by_type_query(session, "propagate")
-    transfer_events = batch_events_by_type_query(session, "transfer")
-    harvest_events = batch_events_by_type_query(session, "harvest")
+    weigh_events = batch_events_by_type_query(session, "weigh").subquery("weigh_events")
+    propagate_events = batch_events_by_type_query(session, "propagate").subquery(
+        "propagate_events"
+    )
+    transfer_events = batch_events_by_type_query(session, "transfer").subquery(
+        "transfer_events"
+    )
+    harvest_events = batch_events_by_type_query(session, "harvest").subquery(
+        "harvest_events"
+    )
     closest_trh_sensors = closest_trh_sensors_query(
         session, latest_trh_locations=latest_trh_locations
-    )
+    ).cte(name="closest_trh_sensors")
     propagation_trh_sensors = trh_sensors_by_zone_query(
         session, "Propagation", latest_trh_locations=latest_trh_locations
+    ).cte("propagation_trh_sensors")
+
+    # Drop all the TRH data from before the first batch event, to make the following
+    # queries faster.
+    first_event_time = first_batch_event_time_query(session).subquery(
+        "first_event_time"
     )
+    trh = trh.filter(ReadingsAranetTRHClass.timestamp >= first_event_time.c.min_time)
+    trh_sub = trh.subquery("trh")
+
     grow_trh = (
         session.query(
             BatchClass.id.label("batch_id"),
