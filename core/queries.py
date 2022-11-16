@@ -19,6 +19,11 @@ from core.structure import (
 )
 
 
+def crop_types_query(session):
+    query = session.query(CropTypeClass.name)
+    return query
+
+
 def latest_trh_locations_query(session):
     subquery = session.query(
         SensorLocationClass.sensor_id,

@@ -2,6 +2,9 @@
 Module for sensor data.
 """
 from datetime import datetime
+import json
+import urllib.parse
+
 from flask import render_template, request
 from flask_login import login_required
 import numpy as np
@@ -9,7 +12,7 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.crops import blueprint
-from core.queries import harvest_table_query
+from core.queries import harvest_table_query, crop_types_query
 from core.structure import SQLA as db
 from core.structure import (
     BatchClass,
@@ -505,9 +508,6 @@ def harvest_list():
     query = harvest_table_query(db.session)
     df = pd.read_sql(query.statement, query.session.bind)
 
-    # query_result = db.session.execute(sql_query_string)
-    # df = pd.DataFrame(query_result.fetchall(), columns=query_result.keys())
-
     # Format the time strings and some numerical fields. Easier to do here than in the
     # Jinja template.
     for column in ["harvest_time"]:
@@ -536,3 +536,70 @@ def harvest_list():
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
+
+
+"""This dictionary defines which columns from the harvest_table query will be used in
+the parallel axes plot, and what they'll be called in the plot.
+"""
+parallel_axes_dict = {
+    "crop_yield": "Crop yield (g)",
+    "waste_disease": "Waste disease (g)",
+    "waste_defect": "Waste defect (g)",
+    "over_production": "Over-production (g)",
+    "grow_time": "Grow time (days)",
+    "avg_propagate_temperature": "Avg. prop. temperature (°C)",
+    "avg_propagate_humidity": "Avg. prop. humidity (%)",
+    "avg_propagate_vpd": "Avg. prop. VPD (Pa)",
+    "avg_grow_temperature": "Avg. grow temperature (°C)",
+    "avg_grow_humidity": "Avg. grow humidity (%)",
+    "avg_grow_vpd": "Avg. grow VPD (Pa)",
+    "column": "Column",
+    "shelf": "Shelf",
+}
+
+
+@blueprint.route("/parallel_axes", methods=["GET"])
+@login_required
+def parallel_axes():
+    """Render the parallel axes crop visualisation."""
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    crop_type = request.args.get("crop_type")
+    if crop_type is None:
+        crop_type = "all"
+    else:
+        crop_type = urllib.parse.unquote(crop_type)
+
+    squery = harvest_table_query(db.session).subquery()
+    query = db.session.query(squery).filter(
+        and_(
+            squery.c.crop_type_name == crop_type if crop_type != "all" else True,
+            squery.c.crop_yield.is_not(None),
+            squery.c.harvest_time >= dt_from,
+            squery.c.harvest_time <= dt_to,
+        )
+    )
+    df = pd.read_sql(query.statement, query.session.bind)
+    # Convert some of the timedelta columns to a float of number of days.
+    for column_name in ["grow_time"]:
+        df[column_name] = df[column_name].dt.total_seconds() / 3600 / 24
+
+    ct_query = crop_types_query(db.session)
+    crop_types = pd.read_sql(ct_query.statement, ct_query.session.bind).to_dict(
+        orient="records"
+    )
+    crop_types = [{"name": "all"}] + crop_types
+
+    for axis in parallel_axes_dict.keys():
+        assert axis in df.columns
+
+    data_json = df.to_json(orient="columns")
+    return render_template(
+        "parallel_axes.html",
+        data_json=data_json,
+        crop_type=crop_type,
+        crop_types=crop_types,
+        axes=parallel_axes_dict,
+        axes_json=json.dumps(parallel_axes_dict),
+        dt_from=dt_from,
+        dt_to=dt_to,
+    )
