@@ -1,0 +1,104 @@
+{% extends "base_site.html" %}
+
+{% block title %} YIELD VISUALISATION {% endblock title %}
+
+{% block stylesheets %}
+  {{ super() }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+            <div class="x_content">
+
+              <div class="row x_title">
+                <div class="col-md-12">
+                  <h3>Yield visualisation</h3>
+                  <form>
+
+                  <div>
+                    Crop type:
+                    <select
+                        id="cropTypeSelector"
+                        class="selectpicker"
+                        name="cropTypeSelector">
+                      {% for ct in crop_types %}
+                      <option
+                          value="{{ ct.name }}"
+                          {% if crop_type and ct.name == crop_type %} selected {% endif %}
+                          >
+                          {{ct.name}}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <div>
+                    Time period:
+                    <div id="reportrange" style="width: fit-content; background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
+                      <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                      <span></span>
+                      <b class="caret"></b>
+                    </div>
+                  </div>
+
+                  <button style="margin-top: 5px" type="button" onclick="reloadPage()">
+                    Plot
+                  </button>
+                  </form>
+                </form>
+                </div>
+              </div>
+
+              <div class="col-md-12">
+                <div>
+                  Colour by:
+                  <select
+                      id="colourAxisSelector"
+                      class="selectpicker"
+                      name="colourAxisSelector"
+                      // The following line relies on the global variable data to be set.
+                      onchange="rerender(data)"
+                    >
+                    {% for axis in axes %}
+                    <option value="{{ axis }}" >
+                        {{axes[axis]}}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div id="parallelAxesPlotDiv"></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endblock content %}
+
+{% block javascripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='node_modules/plotly.js-dist/plotly.js') }}"></script>
+  <script src="{{ url_for('static', filename='javascript/parallel_axes.js') }}"></script>
+  <script>
+    const dateFormatIn = "YYYY-MM-DD hh:mm:ss";
+    const dtFrom = moment("{{ dt_from }}", dateFormatIn);
+    const dtTo = moment("{{ dt_to }}", dateFormatIn);
+    const dateFormatOut = "MMM DD, YYYY";
+    $(window).load(function () {
+      $("#reportrange span").html(dtFrom.format(dateFormatOut) + " - " + dtTo.format(dateFormatOut));
+    });
+    setDateRange(dtFrom, dtTo);
+
+    const data = JSON.parse('{{data_json | safe}}');
+    const axes = JSON.parse('{{axes_json | safe}}');
+    makeParAxesPlot(data, axes);
+</script>
+{% endblock javascripts %}
