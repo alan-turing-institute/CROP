@@ -4,6 +4,7 @@ A module for the main dashboard actions
 import logging
 import copy
 import datetime as dt
+import numpy as np
 import pandas as pd
 import json
 import pytz
@@ -347,8 +348,16 @@ def regional_minmax_json(df):
     # Add empty rows for regions that are missing.
     for i in range(len(LOCATION_REGIONS)):
         if not df_minmax["region"].str.contains(LOCATION_REGIONS[i]).any():
-            df2 = pd.DataFrame({"region": [LOCATION_REGIONS[i]]})
-            df_minmax = pd.concat([df_minmax, df2])
+            new_row = {
+                column: [np.nan]
+                for column in df_minmax.columns
+                if column != ("region", "")
+            }
+            new_row[("region", "")] = [LOCATION_REGIONS[i]]
+            df2 = pd.DataFrame(
+                data=new_row, columns=pd.MultiIndex.from_tuples(df_minmax.columns)
+            )
+            df_minmax = pd.concat([df_minmax, df2], ignore_index=True)
 
     df_minmax = pd.melt(df_minmax, id_vars=["region"])
     df_minmax["timestamp"] = df_minmax.apply(
