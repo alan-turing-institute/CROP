@@ -581,7 +581,8 @@ def parallel_axes():
     df = pd.read_sql(query.statement, query.session.bind)
     # Convert some of the timedelta columns to a float of number of days.
     for column_name in ["grow_time"]:
-        df[column_name] = df[column_name].dt.total_seconds() / 3600 / 24
+        if len(df[column_name]) > 0:
+            df[column_name] = df[column_name].dt.total_seconds() / 3600 / 24
 
     ct_query = crop_types_query(db.session)
     crop_types = pd.read_sql(ct_query.statement, ct_query.session.bind).to_dict(
