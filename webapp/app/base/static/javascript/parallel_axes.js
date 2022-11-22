@@ -52,15 +52,21 @@ function makeParAxesPlot(data, axes) {
       showscale: true,
       colorscale: "Jet",
       color: Object.values(data[colourAxis]),
-      width: 5, // TODO Why doesn't this have an effect?
+      // TODO I would like to increase the line width. That's currently unsupported by
+      // Plotly, but support is on the way:
+      // https://github.com/plotly/plotly.js/issues/2573
+      // Once that's available, try adjusting the line width.
     },
     dimensions: [],
   };
 
   Object.keys(axes).forEach((columnName) => {
+    const checkbox = document.getElementById("column_checkbox_" + columnName);
     trace.dimensions.push({
+      name: columnName,
       label: axes[columnName],
       values: Object.values(data[columnName]),
+      visible: checkbox.checked,
     });
   });
 
@@ -70,6 +76,12 @@ function makeParAxesPlot(data, axes) {
 
 function rerender(data) {
   const colourAxis = getColourAxisName();
-  plotInput[0]["line"]["color"] = Object.values(data[colourAxis]); // Modify the global
+  // Modify the global data dictionary, that the plot holds a reference to.
+  plotInput[0]["line"]["color"] = Object.values(data[colourAxis]);
+  plotInput[0]["dimensions"].forEach((dimension) => {
+    const columnName = dimension["name"];
+    const checkbox = document.getElementById("column_checkbox_" + columnName);
+    dimension["visible"] = checkbox.checked;
+  });
   Plotly.redraw(plotName);
 }
