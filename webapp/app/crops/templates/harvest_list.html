@@ -41,6 +41,7 @@
                   <th>Details</th>
                   <th>Crop type</th>
                   <th>Harvest time</th>
+                  <th>Grow time</th>
                   <th>Crop yield</th>
                   <th>Waste disease</th>
                   <th>Waste defect</th>
@@ -49,6 +50,12 @@
                   <th>Aisle</th>
                   <th>Column</th>
                   <th>Shelf</th>
+                  <th>Avg propagation temperature (°C)</th>
+                  <th>Avg propagation humidity (%)</th>
+                  <th>Avg propagation vpd (Pa)</th>
+                  <th>Avg grow temperature (°C)</th>
+                  <th>Avg grow humidity (%)</th>
+                  <th>Avg grow vpd (Pa)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -64,6 +71,7 @@
                   </td>
                   <td>{{ batch.crop_type_name }}</td>
                   <td>{{ batch.harvest_time }}</td>
+                  <td>{{ batch.grow_time }}</td>
                   <td>{{ batch.crop_yield }}</td>
                   <td>{{ batch.waste_disease }}</td>
                   <td>{{ batch.waste_defect }}</td>
@@ -71,7 +79,13 @@
                   <td>{{ batch.zone }} </td>
                   <td>{{ batch.aisle }} </td>
                   <td>{{ batch.column }} </td>
-                  <td class="last">{{ batch.shelf }} </td>
+                  <td>{{ batch.shelf }} </td>
+                  <td>{{ batch.avg_propagation_temperature }} </td>
+                  <td>{{ batch.avg_propagation_humidity }} </td>
+                  <td>{{ batch.avg_propagation_vpd }} </td>
+                  <td>{{ batch.avg_grow_temperature }} </td>
+                  <td>{{ batch.avg_grow_humidity }} </td>
+                  <td class="last">{{ batch.avg_grow_vpd }} </td>
                   {%
                   endfor
                   %}
