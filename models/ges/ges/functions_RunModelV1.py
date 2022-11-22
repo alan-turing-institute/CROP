@@ -26,6 +26,8 @@ from .config import config
 
 cal_conf = config(section="calibration")
 
+lighting_factor = float(cal_conf["lighting_factor"])
+
 INVERSION_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "Inversion")
 sys.path.append(INVERSION_DIR)
 
@@ -254,7 +256,7 @@ def model(
 
     T_l = L_on * T_al + (1 - L_on) * T_i
 
-    QV_l_i = f_heat * P_al * L_on + P_ambient_al * AL_on + ndh * P_dh
+    QV_l_i = f_heat * P_al * lighting_factor * L_on + P_ambient_al * AL_on + ndh * P_dh
 
     ## Convection
     # Convection internal air -> cover
@@ -368,7 +370,7 @@ def model(
     QD_m_p = (A_m * lam_p / l_m) * (T_m - T_p)
 
     ## Transpiration
-    QS_int = f_light * P_al * L_on / A_p
+    QS_int = f_light * P_al * lighting_factor * L_on / A_p
 
     PPFD = QS_int / 1e-6 / N_A / heat_phot
     r_aG = 100
