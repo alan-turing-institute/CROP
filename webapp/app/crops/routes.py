@@ -516,6 +516,7 @@ def harvest_list():
     if "grow_time" in df:
         df["grow_time"] = df["grow_time"].round("s")
     for column in [
+        "yield_per_sqm",
         "avg_propagation_temperature",
         "avg_propagation_humidity",
         "avg_propagation_vpd",
@@ -543,8 +544,9 @@ the parallel axes plot, and what they'll be called in the plot.
 """
 parallel_axes_dict = {
     "crop_yield": "Crop yield (g)",
-    "waste_disease": "Waste disease (g)",
-    "waste_defect": "Waste defect (g)",
+    "yield_per_sqm": "Unit yield (g/sqm)",
+    "waste_disease": "Waste disease (%)",
+    "waste_defect": "Waste defect (%)",
     "over_production": "Over-production (g)",
     "grow_time": "Grow time (days)",
     "avg_propagate_temperature": "Avg. prop. temperature (°C)",

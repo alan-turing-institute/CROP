@@ -239,6 +239,23 @@ def harvest_table_query(session):
             CropTypeClass.name.label("crop_type_name"),
             BatchClass.tray_size,
             BatchClass.number_of_trays,
+            # Crop yield divided by number of trays * tray size.
+            (
+                HarvestClass.crop_yield
+                / (
+                    BatchClass.number_of_trays
+                    * case(
+                        [
+                            # Tray size in square metres.
+                            # TODO This information is very non-obvious, and should
+                            # probably be stored somewhere other than hardcoded here.
+                            (BatchClass.tray_size == 7.0, 0.25),
+                            (BatchClass.tray_size == 3.0, 0.24),
+                        ],
+                        else_=None,
+                    )
+                )
+            ).label("yield_per_sqm"),
             weigh_events.c.event_time.label("weigh_time"),
             propagate_events.c.event_time.label("propagate_time"),
             transfer_events.c.event_time.label("transfer_time"),
