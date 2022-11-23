@@ -54,11 +54,12 @@ def getData(query):
         cur.close()  # close the communication with the PostgreSQL
 
         logging.info(f"Got data from {query} - returning {len(rows)} rows")
-        return rows
+        print(f"Got data from {query} - returning {len(rows)} rows")
     except (Exception, psycopg2.DatabaseError) as error:
         logging.info(error)
     finally:
         closeConnection(conn=conn)
+    return rows
 
 
 def quote_sql_string(value):
@@ -82,7 +83,7 @@ def get_sql_from_template(query, bind_params):
     return query % params
 
 
-def getTemperatureHumidityData(deltaDays, numRows):
+def getTemperatureHumidityData(deltaDays, numRows=None):
     """
     Fetch temperature and humidity data from the aranet_trh_data
     table over the specified time period, limited by the specified
@@ -95,30 +96,80 @@ def getTemperatureHumidityData(deltaDays, numRows):
         "timestamp": dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"),
         "numRows": numRows,
     }
-    temperature_humidity_transaction_template = """
-    select
-        sensors.name, aranet_trh_data.*
-    from
-        sensors, aranet_trh_data
-    where
-        (sensors.id = aranet_trh_data.sensor_id AND aranet_trh_data.timestamp >= {{ timestamp }})
-    order by
-        aranet_trh_data.timestamp asc
-    limit
-        {{ numRows }}
-    """
-
+    if numRows:
+        transaction_template = """
+        select
+            sensors.name, aranet_trh_data.*
+        from
+            sensors, aranet_trh_data
+        where
+            (sensors.id = aranet_trh_data.sensor_id AND aranet_trh_data.timestamp >= {{ timestamp }})
+        order by
+            aranet_trh_data.timestamp asc
+        limit
+            {{ numRows }}
+        """
+    else:
+        transaction_template = """
+        select
+            sensors.name, aranet_trh_data.*
+        from
+            sensors, aranet_trh_data
+        where
+            (sensors.id = aranet_trh_data.sensor_id AND aranet_trh_data.timestamp >= {{ timestamp }})
+        order by
+            aranet_trh_data.timestamp asc
+        """
     j = JinjaSql(param_style="pyformat")
-    query, bind_params = j.prepare_query(
-        temperature_humidity_transaction_template, params
-    )
+    query, bind_params = j.prepare_query(transaction_template, params)
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
-# def createGivenDateData(forecastDate, numDays):
-#     """Fetch weather and energy data over specified time period"""
-#     startDate = forecastDate - datetime.timedelta(days=numDays)
-#     timePeriod = {"startDate": startDate, "forecastDate": forecastDate}
-#     energyData = getEnergyData(timePeriod)
-#     weatherData = getWeatherData(timePeriod)
-#     return energyData, weatherData
+def getEnergyData(deltaDays, numRows=None):
+    """
+    Fetch energy data from the utc_energy_data table
+    over the specified time period, limited by the specified
+    number of rows.
+    """
+    today = datetime.datetime.now()
+    delta = datetime.timedelta(days=deltaDays)
+    dateNumDaysAgo = today - delta
+    params = {
+        "timestamp": dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"),
+        "numRows": numRows,
+    }
+    if numRows:
+        transaction_template = """
+        select
+            *
+        from
+            utc_energy_data
+        where
+            utc_energy_data.timestamp >= {{ timestamp }}
+        order by
+            utc_energy_data.timestamp asc
+        limit
+            {{ numRows }}
+    """
+    else:
+        transaction_template = """
+        select
+            *
+        from
+            utc_energy_data
+        where
+            utc_energy_data.timestamp >= {{ timestamp }}
+        order by
+            utc_energy_data.timestamp asc
+    """
+    j = JinjaSql(param_style="pyformat")
+    query, bind_params = j.prepare_query(transaction_template, params)
+    return getData(get_sql_from_template(query=query, bind_params=bind_params))
+
+
+def getTrainingData(numRows=None):
+    params = config(section="constants")
+    num_days_training = params["num_days_training"]
+    env_data = getTemperatureHumidityData(deltaDays=num_days_training, numRows=numRows)
+    energy_data = getEnergyData(deltaDays=num_days_training, numRows=numRows)
+    return env_data, energy_data
