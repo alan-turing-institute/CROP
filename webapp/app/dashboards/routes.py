@@ -32,7 +32,6 @@ from core.structure import SQLA as db
 from core.structure import (
     SensorClass,
     TypeClass,
-    ReadingsAdvanticsysClass,
     ReadingsAegisIrrigationClass,
     ReadingsEnergyClass,
     ReadingsAranetCO2Class,
@@ -509,8 +508,6 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
         sensor_names: a list of sensor names
         sensor_temp_ranges: json data with temperate ranges
     """
-    sensor_temp_ranges = {}
-
     df = copy.deepcopy(temp_df)
 
     df_unique_sensors = df[["sensor_id", "name"]].drop_duplicates(["sensor_id", "name"])
@@ -575,111 +572,6 @@ def temperature_range_analysis(temp_df, dt_from, dt_to):
             ],
         }
     return len(data_by_sensor_id.keys()), json.dumps(data_by_sensor_id)
-
-
-@blueprint.route("/advanticsys_dashboard")
-@login_required
-def advanticsys_dashboard():
-    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-    adv_sensors_temp = {}
-
-    # advanticsys
-    query = db.session.query(
-        ReadingsAdvanticsysClass.timestamp,
-        ReadingsAdvanticsysClass.sensor_id,
-        SensorClass.id,
-        ReadingsAdvanticsysClass.temperature,
-        ReadingsAdvanticsysClass.humidity,
-        ReadingsAdvanticsysClass.co2,
-    ).filter(
-        and_(
-            ReadingsAdvanticsysClass.sensor_id == SensorClass.id,
-            ReadingsAdvanticsysClass.timestamp >= dt_from,
-            ReadingsAdvanticsysClass.timestamp <= dt_to,
-        )
-    )
-
-    df = pd.read_sql(query.statement, query.session.bind)
-
-    if not df.empty:
-
-        # unique sensors
-        adv_sensors = df.sensor_id.unique()
-        print("advant", adv_sensors)
-        adv_sensors_modbus_ids = df.id.unique()
-
-        # extracting date from datetime
-        df["date"] = pd.to_datetime(df["timestamp"].dt.date)
-
-        # Reseting index
-        df.sort_values(by=["timestamp"], ascending=True).reset_index(inplace=True)
-
-        # grouping data by date-hour and sensor id
-        adv_grp = df.groupby(
-            by=[
-                df.timestamp.map(
-                    lambda x: "%04d-%02d-%02d-%02d" % (x.year, x.month, x.day, x.hour)
-                ),
-                "sensor_id",
-                "date",
-            ]
-        )
-
-        # estimating hourly temperature mean values
-        adv_grp_temp = adv_grp["temperature"].mean().reset_index()
-
-        # binning temperature values
-        adv_grp_temp["temp_bin"] = pd.cut(adv_grp_temp["temperature"], TEMP_BINS)
-
-        # converting bins to str
-        adv_grp_temp["temp_bin"] = adv_grp_temp["temp_bin"].astype(str)
-
-        # get bin counts for each sensor-day combination
-        adv_grp_date = adv_grp_temp.groupby(by=["sensor_id", "date", "temp_bin"])
-        adv_cnt = adv_grp_date["temperature"].count().reset_index()
-        adv_cnt.rename(columns={"temperature": "temp_cnt"}, inplace=True)
-
-        json_data = []
-        for adv_sensor_id in adv_sensors:
-
-            adv_cnt_sensor = adv_cnt[adv_cnt["sensor_id"] == adv_sensor_id]
-
-            del adv_cnt_sensor["sensor_id"]
-
-            # Adding missing date/temp_bin combos
-            bins_list, df_list = resample(adv_cnt_sensor, TEMP_BINS, dt_from, dt_to)
-
-            bins_json = []
-
-            for i, bin_range in enumerate(bins_list):
-                temp_bin_df = df_list[i]
-                temp_bin_df["date"] = pd.to_datetime(
-                    temp_bin_df["date"], format="%Y-%m-%d"
-                ).dt.strftime("%Y-%m-%d")
-
-                bins_json.append(
-                    '["'
-                    + bin_range
-                    + '",'
-                    + temp_bin_df.to_json(orient="records")
-                    + "]"
-                )
-
-            json_data.append("[" + ",".join(bins_json) + "]")
-
-        adv_sensors_temp["data"] = "[" + ",".join(json_data) + "]"
-
-    else:
-        adv_sensors_modbus_ids = []
-
-    return render_template(
-        "advanticsys_dashboard.html",
-        num_adv_sensors=len(adv_sensors_modbus_ids),
-        adv_sensors=adv_sensors_modbus_ids,
-        adv_sensors_temp=adv_sensors_temp,
-        dt_from=dt_from.strftime("%B %d, %Y"),
-        dt_to=dt_to.strftime("%B %d, %Y"),
-    )
 
 
 def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
