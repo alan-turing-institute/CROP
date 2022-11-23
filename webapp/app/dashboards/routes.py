@@ -708,11 +708,12 @@ def fetch_all_sensors(sensor_type):
     """
     query = db.session.query(
         SensorClass.id,
+        SensorClass.aranet_code,
         SensorClass.name,
     ).filter(SensorClass.type_id == sensor_type)
     sensors = db.session.execute(query).fetchall()
     sensors = query_result_to_array(sensors)
-    sensors = list(sorted(sensors, key=lambda x: x["id"]))
+    sensors = {s["id"]: s for s in sorted(sensors, key=lambda x: x["id"])}
     return sensors
 
 
