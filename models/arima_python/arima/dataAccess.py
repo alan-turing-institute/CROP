@@ -5,6 +5,7 @@ from .config import config
 from jinjasql import JinjaSql
 from six import string_types
 from copy import deepcopy
+import pandas as pd
 
 
 def openConnection():
@@ -53,23 +54,26 @@ def getData(query):
     Parameters:
         query: JinjaSql.prepare_query object
     Returns:
-        rows: a list where each entry corresponds to a
-            different row of the DB table
+        data: a pandas DataFrame where each row corresponds
+            to a different row of the DB table
     """
     conn = None
     try:
         conn = openConnection()
         cur = conn.cursor()  # create a cursor
         cur.execute(query)
-        rows = cur.fetchall()
-        printRowsHead(rows, numrows=10)
+        data = cur.fetchall()
+        colnames = [desc[0] for desc in cur.description]  # get column names
+        printRowsHead(data, numrows=10)
         cur.close()  # close the communication with the PostgreSQL
-        logging.info(f"Got data from {query} - returning {len(rows)} rows")
+        logging.info(f"Got data from {query} - returning {len(data)} rows")
+        # convert the fetched list to a pandas dataframe
+        data = pd.DataFrame(data, columns=colnames)
     except (Exception, psycopg2.DatabaseError) as error:
         logging.error(error)
     finally:
         closeConnection(conn=conn)
-    return rows
+    return data
 
 
 def quote_sql_string(value):
@@ -104,7 +108,7 @@ def getTemperatureHumidityData(deltaDays, numRows=None):
         numRows: upper limit of number of rows to retrieve. Default is None (no
             upper limit is set).
     Returns:
-        data: a list where each entry corresponds to a different row of the DB
+        data: a pandas DataFrame where each row corresponds to a different row of the DB
             table, organised by the timestamp column of the aranet_trh_data table.
     """
     today = datetime.datetime.now()
@@ -140,7 +144,8 @@ def getTemperatureHumidityData(deltaDays, numRows=None):
         """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(transaction_template, params)
-    return getData(get_sql_from_template(query=query, bind_params=bind_params))
+    data = getData(get_sql_from_template(query=query, bind_params=bind_params))
+    return data
 
 
 def getEnergyData(deltaDays, numRows=None):
@@ -154,7 +159,7 @@ def getEnergyData(deltaDays, numRows=None):
         numRows: upper limit of number of rows to retrieve. Default is None (no
             upper limit is set).
     Returns:
-        data: a list where each entry corresponds to a different row of the DB
+        data: a pandas DataFrame where each row corresponds to a different row of the DB
             table, organised by the timestamp column of the utc_energy_data table.
     """
     today = datetime.datetime.now()
@@ -190,7 +195,8 @@ def getEnergyData(deltaDays, numRows=None):
     """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(transaction_template, params)
-    return getData(get_sql_from_template(query=query, bind_params=bind_params))
+    data = getData(get_sql_from_template(query=query, bind_params=bind_params))
+    return data
 
 
 def getTrainingData(numRows=None):
@@ -205,10 +211,10 @@ def getTrainingData(numRows=None):
         numRows: upper limit of number of rows to retrieve. Default is None (no
             upper limit is set).
     Returns:
-        env_data: list containing the temperature and humidity data. Each entry
+        env_data: pandas DataFrame containing the temperature and humidity data. Each row
             corresponds to a different row in the aranet_trh_data table. Organised
             by the timestamp column of the aranet_trh_data table.
-        energy_data: list containing the energy data. Each entry corresponds
+        energy_data: pandas DataFrame containing the energy data. Each row corresponds
             to a different row in the utc_energy_data table. Organised
             by the timestamp column of the utc_energy_data table.
     """
