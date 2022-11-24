@@ -122,6 +122,7 @@ getEnergyData = function (limitRows, datesToGetData) {
 }
 
 createHistoryData = function() {
+  # THIS FUNCTION IS NOT USED
   daysIntoPast = c(30, 60, 170) #c: combine values into a vector or list
   #daysIntoPast = c(1)
   limitRows = 0
@@ -149,6 +150,7 @@ createHistoryData = function() {
 }
 
 createLatestData = function(numDays) {
+  # THIS FUNCTION IS NOT USED
   # fetch weather and energy data since "numDays" ago
   limitRows = 0
   datesToGetData = getStartEndDate(numDays)
