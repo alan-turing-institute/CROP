@@ -23,7 +23,7 @@ def openConnection():
         conn = psycopg2.connect(**params)
 
     except (Exception, psycopg2.DatabaseError) as error:
-        logging.info(error)
+        logging.error(error)
     finally:
         return conn
 
@@ -66,7 +66,7 @@ def getData(query):
         cur.close()  # close the communication with the PostgreSQL
         logging.info(f"Got data from {query} - returning {len(rows)} rows")
     except (Exception, psycopg2.DatabaseError) as error:
-        logging.info(error)
+        logging.error(error)
     finally:
         closeConnection(conn=conn)
     return rows
