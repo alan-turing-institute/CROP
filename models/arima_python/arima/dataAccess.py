@@ -69,6 +69,7 @@ def getData(query):
         logging.info(f"Got data from {query} - returning {len(data)} rows")
         # convert the fetched list to a pandas dataframe
         data = pd.DataFrame(data, columns=colnames)
+        removeTimeZone(data)
     except (Exception, psycopg2.DatabaseError) as error:
         logging.error(error)
     finally:
@@ -197,6 +198,20 @@ def getEnergyData(deltaDays, numRows=None):
     query, bind_params = j.prepare_query(transaction_template, params)
     data = getData(get_sql_from_template(query=query, bind_params=bind_params))
     return data
+
+
+def removeTimeZone(dataframe: pd.DataFrame):
+    """
+    Remove timezone information from datetime columns.
+
+    Parameters:
+        dataframe: pandas DataFrame
+    """
+    new_dataframe = dataframe.select_dtypes("datetimetz")
+    if not new_dataframe.empty:
+        colnames = new_dataframe.columns.to_list()
+        for column in colnames:
+            dataframe[column] = pd.to_datetime(dataframe[column]).dt.tz_localize(None)
 
 
 def getTrainingData(numRows=None):
