@@ -24,7 +24,7 @@ def crop_types_query(session):
     return query
 
 
-def latest_trh_locations_query(session):
+def latest_sensor_locations_query(session):
     subquery = session.query(
         SensorLocationClass.sensor_id,
         SensorLocationClass.location_id,
@@ -33,20 +33,25 @@ def latest_trh_locations_query(session):
         .over(partition_by=SensorLocationClass.sensor_id)
         .label("max_date"),
     ).subquery()
+    latest_sensor_locations = session.query(
+        subquery.c.sensor_id,
+        subquery.c.location_id,
+        subquery.c.installation_date,
+    ).where(subquery.c.installation_date == subquery.c.max_date)
+    return latest_sensor_locations
+
+
+def latest_trh_locations_query(session):
+    latest_locations = latest_sensor_locations_query(session).subquery()
     latest_trh_locations = (
         session.query(
-            subquery.c.sensor_id,
-            subquery.c.location_id,
-            subquery.c.installation_date,
+            latest_locations.c.sensor_id,
+            latest_locations.c.location_id,
+            latest_locations.c.installation_date,
         )
-        .join(SensorClass, SensorClass.id == subquery.c.sensor_id)
+        .join(SensorClass, SensorClass.id == latest_locations.c.sensor_id)
         .join(TypeClass, TypeClass.id == SensorClass.type_id)
-        .where(
-            and_(
-                subquery.c.installation_date == subquery.c.max_date,
-                TypeClass.sensor_type == "Aranet T&RH",
-            )
-        )
+        .where(TypeClass.sensor_type == "Aranet T&RH")
     )
     return latest_trh_locations
 
