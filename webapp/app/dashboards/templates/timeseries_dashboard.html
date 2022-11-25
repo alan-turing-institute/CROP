@@ -67,13 +67,18 @@
                           <input
                               class="form-check-input"
                               type="checkbox"
-                              id="sensor_checkbox_{{s.id}}"
-                              {% if sensor_ids and s.id in sensor_ids %} checked {% endif %}
-                              value={{s.id}}>
+                              id="sensor_checkbox_{{s}}"
+                              {% if sensor_ids and s in sensor_ids %} checked {% endif %}
+                              value={{s}}>
                           <label
                               class="form-check-label"
-                              for="sensor_checkbox_{{s.id}}">
-                            {{s.id}}: {{s.name}}
+                              for="sensor_checkbox_{{s}}">
+                              {% if all_sensors[s].aranet_code %}
+                                {{all_sensors[s].aranet_code}}:
+                              {% else %}
+                                {{s}}:
+                              {% endif %}
+                              {{all_sensors[s].name}}
                           </label>
                         </div>
                         {% endfor %}
@@ -107,7 +112,13 @@
           %}
           <div style="margin-top: 3em" class="row x_content">
             <div class="col-lg-12">
-              <h4>Data for sensor {{sensorId}}</h4>
+              <h4>Data for sensor
+                {% if all_sensors[sensorId] and all_sensors[sensorId].aranet_code %}
+                  {{all_sensors[sensorId].aranet_code}}
+                {% else %}
+                  {{sensorId}}
+                {% endif %}
+              </h4>
               <h5>Summary statistics</h5>
               <div id="summary-div-{{sensorId}}" class="data-summary"></div>
               <table id="summary-table-{{sensorId}}" class="table table-sm nowrap" cellspacing="0" width="100%">
@@ -225,11 +236,10 @@
           responsive: true
         });
     });
-</script>
 
-<script>
+  const allSensors = {{all_sensors | safe }}
   {% for dc in data_columns %}
-  makePlot(data, "{{dc.column_name}}", "{{dc.ui_name}}",
+  makePlot(data, allSensors, "{{dc.column_name}}", "{{dc.ui_name}}",
       "{{dc.column_name}}Canvas");
   {% endfor %}
 </script>

@@ -2,6 +2,9 @@
 Module for sensor data.
 """
 from datetime import datetime
+import json
+import urllib.parse
+
 from flask import render_template, request
 from flask_login import login_required
 import numpy as np
@@ -9,6 +12,7 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.crops import blueprint
+from core.queries import harvest_table_query, crop_types_query
 from core.structure import SQLA as db
 from core.structure import (
     BatchClass,
@@ -158,7 +162,7 @@ def batch_list():
     rows = []
     for batch_id, group in grouped:
         details = collect_batch_details(group)
-        if details is not None:
+        if details:
             details["batch_id"] = batch_id
             rows.append(details)
 
@@ -501,46 +505,27 @@ def harvest_list():
     page, its harvest-event must have happened in this range.
     """
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-
-    query = (
-        db.session.query(
-            BatchClass.id.label("batch_id"),
-            BatchClass.tray_size,
-            BatchClass.number_of_trays,
-            BatchClass.crop_type_id.label("batch_crop_type_id"),
-            CropTypeClass.id.label("crop_type_id"),
-            CropTypeClass.name.label("crop_type_name"),
-            BatchEventClass.batch_id.label("event_batch_id"),
-            BatchEventClass.id.label("batch_event_id"),
-            BatchEventClass.event_time.label("harvest_time"),
-            HarvestClass.batch_event_id.label("harvest_batch_event_id"),
-            HarvestClass.location_id.label("harvest_location_id"),
-            HarvestClass.crop_yield,
-            HarvestClass.waste_disease,
-            HarvestClass.waste_defect,
-            HarvestClass.over_production,
-            LocationClass.id.label("location_id"),
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf,
-        )
-        .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
-        .join(BatchEventClass, BatchEventClass.batch_id == BatchClass.id)
-        .join(HarvestClass, HarvestClass.batch_event_id == BatchEventClass.id)
-        .outerjoin(LocationClass, LocationClass.id == HarvestClass.location_id)
-        .filter(
-            and_(
-                BatchEventClass.event_time >= dt_from,
-                BatchEventClass.event_time <= dt_to,
-            )
-        )
-    )
+    query = harvest_table_query(db.session)
     df = pd.read_sql(query.statement, query.session.bind)
 
-    # Format the time strings. Easier to do here than in the Jinja template.
+    # Format the time strings and some numerical fields. Easier to do here than in the
+    # Jinja template.
     for column in ["harvest_time"]:
-        df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
+        if column in df:
+            df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
+    if "grow_time" in df:
+        df["grow_time"] = df["grow_time"].round("s")
+    for column in [
+        "yield_per_sqm",
+        "avg_propagation_temperature",
+        "avg_propagation_humidity",
+        "avg_propagation_vpd",
+        "avg_grow_temperature",
+        "avg_grow_humidity",
+        "avg_grow_vpd",
+    ]:
+        if column in df:
+            df[column] = df[column].apply(lambda x: f"{x:.2f}")
     results_arr = df.to_dict("records")
 
     if request.method == "POST":
@@ -552,3 +537,72 @@ def harvest_list():
             dt_from=dt_from.strftime("%B %d, %Y"),
             dt_to=dt_to.strftime("%B %d, %Y"),
         )
+
+
+"""This dictionary defines which columns from the harvest_table query will be used in
+the parallel axes plot, and what they'll be called in the plot.
+"""
+parallel_axes_dict = {
+    "crop_yield": "Crop yield (g)",
+    "yield_per_sqm": "Unit yield (g/sqm)",
+    "waste_disease": "Waste disease (%)",
+    "waste_defect": "Waste defect (%)",
+    "over_production": "Over-production (g)",
+    "grow_time": "Grow time (days)",
+    "avg_propagate_temperature": "Avg. prop. temperature (°C)",
+    "avg_propagate_humidity": "Avg. prop. humidity (%)",
+    "avg_propagate_vpd": "Avg. prop. VPD (Pa)",
+    "avg_grow_temperature": "Avg. grow temperature (°C)",
+    "avg_grow_humidity": "Avg. grow humidity (%)",
+    "avg_grow_vpd": "Avg. grow VPD (Pa)",
+    "column": "Column",
+    "shelf": "Shelf",
+}
+
+
+@blueprint.route("/parallel_axes", methods=["GET"])
+@login_required
+def parallel_axes():
+    """Render the parallel axes crop visualisation."""
+    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
+    crop_type = request.args.get("crop_type")
+    if crop_type is None:
+        crop_type = "all"
+    else:
+        crop_type = urllib.parse.unquote(crop_type)
+
+    squery = harvest_table_query(db.session).subquery()
+    query = db.session.query(squery).filter(
+        and_(
+            squery.c.crop_type_name == crop_type if crop_type != "all" else True,
+            squery.c.crop_yield.is_not(None),
+            squery.c.harvest_time >= dt_from,
+            squery.c.harvest_time <= dt_to,
+        )
+    )
+    df = pd.read_sql(query.statement, query.session.bind)
+    # Convert some of the timedelta columns to a float of number of days.
+    for column_name in ["grow_time"]:
+        if len(df[column_name]) > 0:
+            df[column_name] = df[column_name].dt.total_seconds() / 3600 / 24
+
+    ct_query = crop_types_query(db.session)
+    crop_types = pd.read_sql(ct_query.statement, ct_query.session.bind).to_dict(
+        orient="records"
+    )
+    crop_types = [{"name": "all"}] + crop_types
+
+    for axis in parallel_axes_dict.keys():
+        assert axis in df.columns
+
+    data_json = df.to_json(orient="columns")
+    return render_template(
+        "parallel_axes.html",
+        data_json=data_json,
+        crop_type=crop_type,
+        crop_types=crop_types,
+        axes=parallel_axes_dict,
+        axes_json=json.dumps(parallel_axes_dict),
+        dt_from=dt_from,
+        dt_to=dt_to,
+    )
