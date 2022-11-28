@@ -21,7 +21,7 @@ from sqlalchemy import and_
 
 from app.dashboards import blueprint
 
-from core.queries import trh_data_with_vpd_query
+from core import queries
 from core.utils import (
     download_csv,
     parse_date_range_argument,
@@ -76,7 +76,7 @@ DEFAULT_SENSOR_TYPE = "Aranet T&RH"
 # Some data that varies based on sensor type.
 # DATA_COLUMNS_BY_SENSOR_TYPE names the class for the readings table.
 DATA_TABLES_BY_SENSOR_TYPE = {
-    "Aranet T&RH": lambda: trh_data_with_vpd_query(db.session).subquery().c,
+    "Aranet T&RH": lambda: queries.trh_with_vpd(db.session).subquery().c,
     "Aranet CO2": lambda: ReadingsAranetCO2Class,
     "Aranet Air Velocity": lambda: ReadingsAranetAirVelocityClass,
     "Aegis II": lambda: ReadingsAegisIrrigationClass,

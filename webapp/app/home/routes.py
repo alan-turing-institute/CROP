@@ -99,10 +99,8 @@ def aranet_query(dt_from, dt_to):
         )
     )
 
-    trh_query = queries.trh_data_with_vpd_query(db.session).subquery()
-    latest_locations_query = queries.latest_sensor_locations_query(
-        db.session
-    ).subquery()
+    trh_query = queries.trh_with_vpd(db.session).subquery()
+    latest_locations_query = queries.latest_sensor_locations(db.session).subquery()
     locations_query = queries.locations_with_regions(db.session).subquery()
 
     query = db.session.query(
