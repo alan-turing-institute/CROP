@@ -252,8 +252,23 @@ def json_temp_ges(df):
     return json_str
 
 
-def arima_template(sensor_ids=(18, 23, 27)):
-    # arima data
+def recent_arima_sensors(timerange=dt.timedelta(days=5)):
+    """Get the IDs of sensors for which there has been an Ariam run in the last some
+    time.
+    """
+    dt_from = dt.datetime.now() - timerange
+    query = (
+        db.session.query(ModelRunClass.sensor_id)
+        .filter(ModelRunClass.time_created >= dt_from)
+        .distinct()
+    )
+    ids = db.session.execute(query).fetchall()
+    ids = [i[0] for i in ids]
+    return ids
+
+
+def arima_template():
+    sensor_ids = recent_arima_sensors()
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
 
@@ -265,9 +280,9 @@ def arima_template(sensor_ids=(18, 23, 27)):
         if len(df_arima) > 0:
             json_arima = json_temp_arima(df_arima)
             # Get TRH data for the relevant period
-            unique_time_forecast = df_arima["time_forecast"].unique()
-            first_arima_time = pd.to_datetime(unique_time_forecast).min()
-            last_arima_time = pd.to_datetime(unique_time_forecast).max()
+            times = pd.to_datetime(df_arima["timestamp"])
+            first_arima_time = times.min()
+            last_arima_time = times.max()
             dt_from_z = first_arima_time - dt.timedelta(days=2)
             dt_to_z = last_arima_time
             json_trh = json_temp_trh(dt_from_z, dt_to_z)
