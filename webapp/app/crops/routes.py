@@ -26,11 +26,11 @@ from core.structure import (
     SensorLocationClass,
     TypeClass,
 )
+from core.queries import trh_data_with_vpd_query
 from core.utils import (
     download_csv,
     filter_latest_sensor_location,
     parse_date_range_argument,
-    vapour_pressure_deficit,
 )
 
 
@@ -279,12 +279,7 @@ def find_closest_trh_sensor(zone, aisle, column, shelf):
 
 
 def query_trh_data(sensor_id, dt_from, dt_to):
-    query = db.session.query(
-        ReadingsAranetTRHClass.timestamp,
-        ReadingsAranetTRHClass.sensor_id,
-        ReadingsAranetTRHClass.temperature,
-        ReadingsAranetTRHClass.humidity,
-    ).filter(
+    query = trh_data_with_vpd_query(db.session).filter(
         and_(
             ReadingsAranetTRHClass.sensor_id == sensor_id,
             ReadingsAranetTRHClass.timestamp >= dt_from,
@@ -293,19 +288,18 @@ def query_trh_data(sensor_id, dt_from, dt_to):
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
-    df.loc[:, "vpd"] = vapour_pressure_deficit(
-        df.loc[:, "temperature"], df.loc[:, "humidity"]
-    )
     return df
 
 
 def query_propagation_trh_data(dt_from, dt_to):
+    trh_query = trh_data_with_vpd_query(db.session).subquery()
     query = (
         db.session.query(
-            ReadingsAranetTRHClass.timestamp,
-            ReadingsAranetTRHClass.sensor_id,
-            ReadingsAranetTRHClass.temperature,
-            ReadingsAranetTRHClass.humidity,
+            trh_query.c.timestamp,
+            trh_query.c.sensor_id,
+            trh_query.c.temperature,
+            trh_query.c.humidity,
+            trh_query.c.vpd,
             SensorClass.id,
             SensorLocationClass.sensor_id,
             SensorLocationClass.location_id,
@@ -314,9 +308,9 @@ def query_propagation_trh_data(dt_from, dt_to):
         )
         .filter(
             and_(
-                ReadingsAranetTRHClass.sensor_id == SensorClass.id,
-                ReadingsAranetTRHClass.timestamp >= dt_from,
-                ReadingsAranetTRHClass.timestamp <= dt_to,
+                trh_query.c.sensor_id == SensorClass.id,
+                trh_query.c.timestamp >= dt_from,
+                trh_query.c.timestamp <= dt_to,
             )
         )
         .join(
@@ -334,9 +328,6 @@ def query_propagation_trh_data(dt_from, dt_to):
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
-    df.loc[:, "vpd"] = vapour_pressure_deficit(
-        df.loc[:, "temperature"], df.loc[:, "humidity"]
-    )
     return df
 
 

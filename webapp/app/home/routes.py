@@ -26,7 +26,8 @@ from core.structure import (
     WarningTypeClass,
 )
 from core.constants import CONST_TIMESTAMP_FORMAT
-from core.utils import filter_latest_sensor_location, vapour_pressure_deficit
+from core import queries
+from core.utils import filter_latest_sensor_location
 
 TEMP_BINS = {
     "Propagation": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
@@ -53,9 +54,6 @@ VPD_BINS = {
     "R&D": [0.0, 300.0, 600.0, 1000.0, 10000.0],
 }
 LOCATION_REGIONS = ["Propagation", "FrontFarm", "MidFarm", "BackFarm", "R&D"]
-# The last columns considered to be in FrontFarm and MidFarm, respectively.
-REGION_SPLIT_FRONT_MID = 10
-REGION_SPLIT_MID_BACK = 23
 
 
 def resample(df_, bins):
@@ -82,22 +80,6 @@ def resample(df_, bins):
     return df_out
 
 
-def farm_region(zone, aisle, column, shelf):
-    """Given the exact location of a sensor, return what we call the "region", which
-    distinguishes between front, back, and mid parts of tunnel 3. Propagation and R&D
-    are regions by themselves, other tunnels have region "N/A".
-    """
-    if zone in ("R&D", "Propagation"):
-        return zone
-    if zone != "Tunnel3":
-        return "N/A"
-    if column <= REGION_SPLIT_FRONT_MID:
-        return "FrontFarm"
-    if column <= REGION_SPLIT_MID_BACK:
-        return "MidFarm"
-    return "BackFarm"
-
-
 def aranet_query(dt_from, dt_to):
     """
     Performs a query for Aranet T/RH sensors.
@@ -117,54 +99,30 @@ def aranet_query(dt_from, dt_to):
         )
     )
 
+    trh_query = queries.trh_data_with_vpd_query(db.session).subquery()
+    latest_locations_query = queries.latest_sensor_locations_query(
+        db.session
+    ).subquery()
+    locations_query = queries.locations_with_regions(db.session).subquery()
+
     query = db.session.query(
-        ReadingsAranetTRHClass.timestamp,
-        ReadingsAranetTRHClass.sensor_id,
-        ReadingsAranetTRHClass.temperature,
-        ReadingsAranetTRHClass.humidity,
-        SensorClass.id,
+        trh_query.c.temperature,
+        trh_query.c.humidity,
+        trh_query.c.vpd,
+        trh_query.c.timestamp,
+        trh_query.c.sensor_id,
+        locations_query.c.region,
     ).filter(
         and_(
-            ReadingsAranetTRHClass.sensor_id == SensorClass.id,
-            ReadingsAranetTRHClass.timestamp >= dt_from,
-            ReadingsAranetTRHClass.timestamp <= dt_to,
+            trh_query.c.timestamp >= dt_from,
+            trh_query.c.timestamp <= dt_to,
+            trh_query.c.sensor_id == latest_locations_query.c.sensor_id,
+            latest_locations_query.c.location_id == locations_query.c.id,
         )
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
     df["timestamp"] = df["timestamp"].dt.tz_localize(dt.timezone.utc)
-    df.loc[:, "vpd"] = vapour_pressure_deficit(
-        df.loc[:, "temperature"], df.loc[:, "humidity"]
-    )
-
-    query = db.session.query(
-        SensorClass.id,
-        LocationClass.zone,
-        LocationClass.aisle,
-        LocationClass.column,
-        LocationClass.shelf,
-    ).filter(
-        and_(
-            TypeClass.sensor_type == "Aranet T&RH",
-            SensorClass.type_id == TypeClass.id,
-            SensorClass.id == SensorLocationClass.sensor_id,
-            SensorLocationClass.location_id == LocationClass.id,
-            filter_latest_sensor_location(db),
-        )
-    )
-    df_location = pd.read_sql(query.statement, query.session.bind).set_index("id")
-    df_location.loc[:, "region"] = df_location.apply(
-        lambda row: farm_region(row["zone"], row["aisle"], row["column"], row["shelf"]),
-        axis=1,
-    )
-    df["region"] = "N/A"
-    # TODO I think the following is essentially a join.
-    for sensor_id in df["id"].unique():
-        try:
-            region = df_location.loc[sensor_id, "region"]
-        except KeyError:
-            region = "Unknown"
-        df.loc[df["id"] == sensor_id, "region"] = region
 
     logging.info("Total number of records found: %d" % (len(df.index)))
     if df.empty:
