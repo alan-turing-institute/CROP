@@ -38,18 +38,12 @@
               <div id="myTabContent" class="tab-content">
                 <div role="tabpanel" class="tab-pane fade active in" id="tab_content0">
                   <div class="x_content">
-                    <h4> <p id="arima_model0title"></p></h4>
+                    {% for sensor_id in sensor_ids %}
+                    <h4> <p id="arima_model_{{sensor_id}}_title"></p></h4>
                     <div class="canvas_wrapper">
-                      <canvas id="arima_model0"></canvas>
+                      <canvas id="arima_model_{{sensor_id}}"></canvas>
                     </div>
-                    <h4> <p id="arima_model1title"></p></h4>
-                    <div class="canvas_wrapper">
-                      <canvas id="arima_model1"></canvas>
-                    </div>
-                    <h4> <p id="arima_model2title"></p></h4>
-                    <div class="canvas_wrapper">
-                      <canvas id="arima_model2"></canvas>
-                    </div>
+                    {% endfor %}
                     <p class="text-muted font-13 m-b-30"></p>
                   </div>
                 </div>
@@ -93,43 +87,38 @@
 <script src="{{ url_for('static', filename='node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js') }}"></script>
 
 <script>
-  function sensor_loop(json_arima, trh_data_dict ) {
-    //get unique sensor ids
-    list_sensors = []
-    for (var i = 0; i < json_arima.length; i++){
-      list_sensors.push(json_arima[i]["sensor_id"])
-    }
-    let unique_sensors = [...new Set(list_sensors)];
+  function sensor_loop(data) {
+    const unique_sensors = [...new Set(Object.keys(data))];
 
-    for (var i = 0; i < unique_sensors.length; i++) {
-      json_arima_sensor = []
-      for (var j = 0; j < json_arima.length; j++) {
-        if (json_arima[j]["sensor_id"] == unique_sensors[i])
-        {
-          var current_sensor =  unique_sensors[i]
-          json_arima_sensor.push(json_arima[j]);
-        }
-      }
+    for (let i = 0; i < unique_sensors.length; i++) {
+      const current_sensor =  unique_sensors[i];
+      const json_arima_sensor = data[current_sensor]["arima"];
+      const json_trh_sensor = data[current_sensor]["trh"];
+      const run_id = json_arima_sensor[0]["run_id"];
       //title
-      const canvasname = "arima_model"+[i]
-      const title = "sensor id: " + current_sensor + "     |   " + "run id: " + json_arima[i]["Values"][0]["run_id"];
-      document.getElementById(canvasname+"title").innerHTML = title
+      const canvasname = "arima_model_" + current_sensor;
+      const title = "sensor id: " + current_sensor + "     |   " + "run id: " + run_id;
+      document.getElementById(canvasname+"_title").innerHTML = title;
       // See static/javascript/predictions.js for the plot function.
-      const show_legend = i == 0
-      const axis_title = "Temperature (°C)"
-      plot(json_arima_sensor[2], json_arima_sensor[1], json_arima_sensor[0], null, trh_data_dict[String(current_sensor)], "temperature", canvasname, axis_title, show_legend, null);
+      const show_legend = i == 0;
+      const axis_title = "Temperature (°C)";
+      plot(
+        json_arima_sensor[2],
+        json_arima_sensor[1],
+        json_arima_sensor[0],
+        null,
+        json_trh_sensor,
+        "temperature",
+        canvasname,
+        axis_title,
+        show_legend,
+        null,
+      );
     }
   }
 
-  var arima_data = JSON.parse('{{json_arima_f | safe}}');
-  var trh_data = JSON.parse('{{json_trh_f | safe}}');
-  var trh_data_18 = JSON.parse('{{json_trh_18_f | safe}}');
-  var trh_data_23 = JSON.parse('{{json_trh_23_f | safe}}');
-  var trh_data_27 = JSON.parse('{{json_trh_27_f | safe}}');
-  // TODO The trh data format is a redundant, all the three elements
-  //  actually hold all the data. Sort this out.
-  const trh_data_dict = {18: trh_data_18, 23: trh_data_23, 27:trh_data_27}
-  sensor_loop(arima_data, trh_data_dict)
+  const data = JSON.parse('{{data | safe}}');
+  sensor_loop(data);
 </script>
 
 
