@@ -62,7 +62,7 @@ def route_template(template):
 
         elif template == "aranet_trh":
 
-            trh_query = queries.trh_data_with_vpd_query(db.session).subquery()
+            trh_query = queries.trh_with_vpd(db.session).subquery()
             query = (
                 db.session.query(
                     trh_query.c.timestamp,

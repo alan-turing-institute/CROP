@@ -23,12 +23,12 @@ REGION_SPLIT_FRONT_MID = 10
 REGION_SPLIT_MID_BACK = 23
 
 
-def crop_types_query(session):
+def crop_types(session):
     query = session.query(CropTypeClass.name)
     return query
 
 
-def latest_sensor_locations_query(session):
+def latest_sensor_locations(session):
     subquery = session.query(
         SensorLocationClass.sensor_id,
         SensorLocationClass.location_id,
@@ -37,33 +37,33 @@ def latest_sensor_locations_query(session):
         .over(partition_by=SensorLocationClass.sensor_id)
         .label("max_date"),
     ).subquery()
-    latest_sensor_locations = session.query(
+    query = session.query(
         subquery.c.sensor_id,
         subquery.c.location_id,
         subquery.c.installation_date,
     ).where(subquery.c.installation_date == subquery.c.max_date)
-    return latest_sensor_locations
+    return query
 
 
-def latest_trh_locations_query(session):
-    latest_locations = latest_sensor_locations_query(session).subquery()
-    latest_trh_locations = (
+def latest_trh_locations(session):
+    subquery = latest_sensor_locations(session).subquery()
+    query = (
         session.query(
-            latest_locations.c.sensor_id,
-            latest_locations.c.location_id,
-            latest_locations.c.installation_date,
+            subquery.c.sensor_id,
+            subquery.c.location_id,
+            subquery.c.installation_date,
         )
-        .join(SensorClass, SensorClass.id == latest_locations.c.sensor_id)
+        .join(SensorClass, SensorClass.id == subquery.c.sensor_id)
         .join(TypeClass, TypeClass.id == SensorClass.type_id)
         .where(TypeClass.sensor_type == "Aranet T&RH")
     )
-    return latest_trh_locations
+    return query
 
 
-def location_distances_query(session):
+def location_distances(session):
     l1 = aliased(LocationClass)
     l2 = aliased(LocationClass)
-    location_distances = session.query(
+    query = session.query(
         l1.id.label("id1"),
         l2.id.label("id2"),
         (
@@ -75,70 +75,66 @@ def location_distances_query(session):
             + func.abs(l1.shelf - l2.shelf)
         ).label("distance"),
     )
-    return location_distances
+    return query
 
 
-def sensor_distances_query(session, latest_trh_locations=None):
-    if latest_trh_locations is None:
-        latest_trh_locations = latest_trh_locations_query(session)
-    location_distances = location_distances_query(session).cte(
-        name="location_distances"
-    )
-    sensor_distances = session.query(
-        location_distances.c.id1.label("location_id"),
-        latest_trh_locations.c.sensor_id,
-        location_distances.c.distance,
+def sensor_distances(session, latest_trh_locations_q=None):
+    if latest_trh_locations_q is None:
+        latest_trh_locations_q = latest_trh_locations(session)
+    location_distances_cte = location_distances(session).cte(name="location_distances")
+    query = session.query(
+        location_distances_cte.c.id1.label("location_id"),
+        latest_trh_locations_q.c.sensor_id,
+        location_distances_cte.c.distance,
     ).join(
-        latest_trh_locations,
-        latest_trh_locations.c.location_id == location_distances.c.id2,
+        latest_trh_locations_q,
+        latest_trh_locations_q.c.location_id == location_distances_cte.c.id2,
     )
-    return sensor_distances
+    return query
 
 
-def closest_trh_sensors_query(session, latest_trh_locations=None):
-    sensor_distances = sensor_distances_query(
-        session, latest_trh_locations=latest_trh_locations
+def closest_trh_sensors(session, latest_trh_locations_q=None):
+    sensor_distances_cte = sensor_distances(
+        session, latest_trh_locations_q=latest_trh_locations_q
     ).cte(name="sensor_distances")
     subquery = (
         session.query(
-            sensor_distances.c.location_id,
-            sensor_distances.c.sensor_id,
-            sensor_distances.c.distance,
-            func.min(sensor_distances.c.distance)
-            .over(partition_by=sensor_distances.c.location_id)
+            sensor_distances_cte.c.location_id,
+            sensor_distances_cte.c.sensor_id,
+            sensor_distances_cte.c.distance,
+            func.min(sensor_distances_cte.c.distance)
+            .over(partition_by=sensor_distances_cte.c.location_id)
             .label("min_distance"),
         )
-        .filter(sensor_distances.c.sensor_id.is_not(None))
+        .filter(sensor_distances_cte.c.sensor_id.is_not(None))
         .subquery()
     )
-    closest_trh_sensors = session.query(
-        subquery.c.location_id, subquery.c.sensor_id
-    ).filter(subquery.c.distance == subquery.c.min_distance)
-    return closest_trh_sensors
-
-
-def first_batch_event_time_query(session):
-    first_event_time = session.query(
-        func.min(BatchEventClass.event_time).label("min_time")
+    query = session.query(subquery.c.location_id, subquery.c.sensor_id).filter(
+        subquery.c.distance == subquery.c.min_distance
     )
-    return first_event_time
+    return query
 
 
-def batch_events_by_type_query(session, type_name):
-    events = session.query(
+def first_batch_event_time(session):
+    query = session.query(func.min(BatchEventClass.event_time).label("min_time"))
+    return query
+
+
+def batch_events_by_type(session, type_name):
+    query = session.query(
         BatchEventClass.id,
         BatchEventClass.batch_id,
         BatchEventClass.location_id,
         BatchEventClass.event_time,
     ).filter(BatchEventClass.event_type == type_name)
-    return events
+    return query
 
 
-def trh_data_with_vpd_query(session):
+def trh_with_vpd(session):
     """Query that is like the ReadingsAranetTRHClass, except it has the extra column
     "vpd" for vapour pressure deficit.
     """
-    trh = session.query(
+    query = session.query(
         ReadingsAranetTRHClass.sensor_id,
         ReadingsAranetTRHClass.temperature,
         ReadingsAranetTRHClass.humidity,
@@ -159,93 +155,94 @@ def trh_data_with_vpd_query(session):
         ReadingsAranetTRHClass.time_created,
         ReadingsAranetTRHClass.time_updated,
     )
-    return trh
+    return query
 
 
-def trh_sensors_by_zone_query(session, zone_name, latest_trh_locations=None):
-    if latest_trh_locations is None:
-        latest_trh_locations = latest_trh_locations_query(session)
-    propagation_trh_sensors = (
+def trh_sensors_by_zone(session, zone_name, latest_trh_locations_q=None):
+    if latest_trh_locations_q is None:
+        latest_trh_locations_q = latest_trh_locations(session)
+    query = (
         session.query(SensorClass.id)
-        .join(latest_trh_locations, latest_trh_locations.c.sensor_id == SensorClass.id)
-        .join(LocationClass, LocationClass.id == latest_trh_locations.c.location_id)
+        .join(
+            latest_trh_locations_q,
+            latest_trh_locations_q.c.sensor_id == SensorClass.id,
+        )
+        .join(LocationClass, LocationClass.id == latest_trh_locations_q.c.location_id)
         .filter(LocationClass.zone == zone_name)
     )
-    return propagation_trh_sensors
+    return query
 
 
-def harvest_table_query(session):
-    latest_trh_locations = latest_trh_locations_query(session).cte(
+def harvest_table(session):
+    latest_trh_locations_cte = latest_trh_locations(session).cte(
         name="latest_trh_locations"
     )
-    trh = trh_data_with_vpd_query(session)
-    trh_sub = trh.subquery("trh")
-    weigh_events = batch_events_by_type_query(session, "weigh").subquery("weigh_events")
-    propagate_events = batch_events_by_type_query(session, "propagate").subquery(
+    weigh_events_sq = batch_events_by_type(session, "weigh").subquery("weigh_events")
+    propagate_events_sq = batch_events_by_type(session, "propagate").subquery(
         "propagate_events"
     )
-    transfer_events = batch_events_by_type_query(session, "transfer").subquery(
+    transfer_events_sq = batch_events_by_type(session, "transfer").subquery(
         "transfer_events"
     )
-    harvest_events = batch_events_by_type_query(session, "harvest").subquery(
+    harvest_events_sq = batch_events_by_type(session, "harvest").subquery(
         "harvest_events"
     )
-    closest_trh_sensors = closest_trh_sensors_query(
-        session, latest_trh_locations=latest_trh_locations
+    closest_trh_sensors_cte = closest_trh_sensors(
+        session, latest_trh_locations_q=latest_trh_locations_cte
     ).cte(name="closest_trh_sensors")
-    propagation_trh_sensors = trh_sensors_by_zone_query(
-        session, "Propagation", latest_trh_locations=latest_trh_locations
+    propagation_trh_sensors_cte = trh_sensors_by_zone(
+        session, "Propagation", latest_trh_locations_q=latest_trh_locations_cte
     ).cte("propagation_trh_sensors")
 
     # Drop all the TRH data from before the first batch event, to make the following
     # queries faster.
-    first_event_time = first_batch_event_time_query(session).subquery(
-        "first_event_time"
+    first_event_time_sq = first_batch_event_time(session).subquery("first_event_time")
+    trh_q = trh_with_vpd(session).filter(
+        ReadingsAranetTRHClass.timestamp >= first_event_time_sq.c.min_time
     )
-    trh = trh.filter(ReadingsAranetTRHClass.timestamp >= first_event_time.c.min_time)
-    trh_sub = trh.subquery("trh")
+    trh_sq = trh_q.subquery("trh")
 
-    grow_trh = (
+    grow_trh_sq = (
         session.query(
             BatchClass.id.label("batch_id"),
-            func.avg(trh_sub.c.temperature).label("avg_temp"),
-            func.avg(trh_sub.c.humidity).label("avg_rh"),
-            func.avg(trh_sub.c.vpd).label("avg_vpd"),
+            func.avg(trh_sq.c.temperature).label("avg_temp"),
+            func.avg(trh_sq.c.humidity).label("avg_rh"),
+            func.avg(trh_sq.c.vpd).label("avg_vpd"),
         )
-        .outerjoin(transfer_events, transfer_events.c.batch_id == BatchClass.id)
-        .outerjoin(harvest_events, harvest_events.c.batch_id == BatchClass.id)
+        .outerjoin(transfer_events_sq, transfer_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(harvest_events_sq, harvest_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(
-            closest_trh_sensors,
-            closest_trh_sensors.c.location_id == transfer_events.c.location_id,
+            closest_trh_sensors_cte,
+            closest_trh_sensors_cte.c.location_id == transfer_events_sq.c.location_id,
         )
         .outerjoin(
-            trh_sub,
+            trh_sq,
             and_(
-                transfer_events.c.event_time < trh_sub.c.timestamp,
-                trh_sub.c.timestamp < harvest_events.c.event_time,
-                closest_trh_sensors.c.sensor_id == trh_sub.c.sensor_id,
+                transfer_events_sq.c.event_time < trh_sq.c.timestamp,
+                trh_sq.c.timestamp < harvest_events_sq.c.event_time,
+                closest_trh_sensors_cte.c.sensor_id == trh_sq.c.sensor_id,
             ),
         )
         .group_by(BatchClass.id)
     ).subquery("grow_trh")
 
-    trh_prop_sub = trh.filter(
-        ReadingsAranetTRHClass.sensor_id.in_(propagation_trh_sensors)
-    ).subquery("trh_prop_sub")
-    propagate_trh = (
+    trh_prop_sq = trh_q.filter(
+        ReadingsAranetTRHClass.sensor_id.in_(propagation_trh_sensors_cte)
+    ).subquery("trh_prop_sq")
+    propagate_trh_sq = (
         session.query(
             BatchClass.id.label("batch_id"),
-            func.avg(trh_prop_sub.c.temperature).label("avg_temp"),
-            func.avg(trh_prop_sub.c.humidity).label("avg_rh"),
-            func.avg(trh_prop_sub.c.vpd).label("avg_vpd"),
+            func.avg(trh_prop_sq.c.temperature).label("avg_temp"),
+            func.avg(trh_prop_sq.c.humidity).label("avg_rh"),
+            func.avg(trh_prop_sq.c.vpd).label("avg_vpd"),
         )
-        .outerjoin(propagate_events, propagate_events.c.batch_id == BatchClass.id)
-        .outerjoin(transfer_events, transfer_events.c.batch_id == BatchClass.id)
+        .outerjoin(propagate_events_sq, propagate_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(transfer_events_sq, transfer_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(
-            trh_prop_sub,
+            trh_prop_sq,
             and_(
-                propagate_events.c.event_time < trh_prop_sub.c.timestamp,
-                trh_prop_sub.c.timestamp < transfer_events.c.event_time,
+                propagate_events_sq.c.event_time < trh_prop_sq.c.timestamp,
+                trh_prop_sq.c.timestamp < transfer_events_sq.c.event_time,
             ),
         )
         .group_by(BatchClass.id)
@@ -274,10 +271,10 @@ def harvest_table_query(session):
                     )
                 )
             ).label("yield_per_sqm"),
-            weigh_events.c.event_time.label("weigh_time"),
-            propagate_events.c.event_time.label("propagate_time"),
-            transfer_events.c.event_time.label("transfer_time"),
-            harvest_events.c.event_time.label("harvest_time"),
+            weigh_events_sq.c.event_time.label("weigh_time"),
+            propagate_events_sq.c.event_time.label("propagate_time"),
+            transfer_events_sq.c.event_time.label("transfer_time"),
+            harvest_events_sq.c.event_time.label("harvest_time"),
             LocationClass.zone,
             LocationClass.aisle,
             LocationClass.column,
@@ -286,27 +283,27 @@ def harvest_table_query(session):
             HarvestClass.waste_disease,
             HarvestClass.waste_defect,
             HarvestClass.over_production,
-            (harvest_events.c.event_time - transfer_events.c.event_time).label(
+            (harvest_events_sq.c.event_time - transfer_events_sq.c.event_time).label(
                 "grow_time"
             ),
-            grow_trh.c.avg_temp.label("avg_grow_temperature"),
-            grow_trh.c.avg_rh.label("avg_grow_humidity"),
-            grow_trh.c.avg_vpd.label("avg_grow_vpd"),
-            propagate_trh.c.avg_temp.label("avg_propagate_temperature"),
-            propagate_trh.c.avg_rh.label("avg_propagate_humidity"),
-            propagate_trh.c.avg_vpd.label("avg_propagate_vpd"),
+            grow_trh_sq.c.avg_temp.label("avg_grow_temperature"),
+            grow_trh_sq.c.avg_rh.label("avg_grow_humidity"),
+            grow_trh_sq.c.avg_vpd.label("avg_grow_vpd"),
+            propagate_trh_sq.c.avg_temp.label("avg_propagate_temperature"),
+            propagate_trh_sq.c.avg_rh.label("avg_propagate_humidity"),
+            propagate_trh_sq.c.avg_vpd.label("avg_propagate_vpd"),
         )
         .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
         # We inner join on weigh_events, because if the batch doesn't have a weigh event
         # it doesn't really exist, but outer join on the others since they are optional.
-        .join(weigh_events, weigh_events.c.batch_id == BatchClass.id)
-        .outerjoin(propagate_events, propagate_events.c.batch_id == BatchClass.id)
-        .outerjoin(transfer_events, transfer_events.c.batch_id == BatchClass.id)
-        .outerjoin(harvest_events, harvest_events.c.batch_id == BatchClass.id)
-        .outerjoin(LocationClass, LocationClass.id == transfer_events.c.location_id)
-        .outerjoin(HarvestClass, HarvestClass.batch_event_id == harvest_events.c.id)
-        .outerjoin(grow_trh, grow_trh.c.batch_id == BatchClass.id)
-        .outerjoin(propagate_trh, propagate_trh.c.batch_id == BatchClass.id)
+        .join(weigh_events_sq, weigh_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(propagate_events_sq, propagate_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(transfer_events_sq, transfer_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(harvest_events_sq, harvest_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(LocationClass, LocationClass.id == transfer_events_sq.c.location_id)
+        .outerjoin(HarvestClass, HarvestClass.batch_event_id == harvest_events_sq.c.id)
+        .outerjoin(grow_trh_sq, grow_trh_sq.c.batch_id == BatchClass.id)
+        .outerjoin(propagate_trh_sq, propagate_trh_sq.c.batch_id == BatchClass.id)
     )
     return query
 

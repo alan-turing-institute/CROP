@@ -12,7 +12,7 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.crops import blueprint
-from core.queries import harvest_table_query, crop_types_query
+from core import queries
 from core.structure import SQLA as db
 from core.structure import (
     BatchClass,
@@ -26,7 +26,6 @@ from core.structure import (
     SensorLocationClass,
     TypeClass,
 )
-from core.queries import trh_data_with_vpd_query
 from core.utils import (
     download_csv,
     filter_latest_sensor_location,
@@ -279,7 +278,7 @@ def find_closest_trh_sensor(zone, aisle, column, shelf):
 
 
 def query_trh_data(sensor_id, dt_from, dt_to):
-    query = trh_data_with_vpd_query(db.session).filter(
+    query = queries.trh_with_vpd(db.session).filter(
         and_(
             ReadingsAranetTRHClass.sensor_id == sensor_id,
             ReadingsAranetTRHClass.timestamp >= dt_from,
@@ -292,7 +291,7 @@ def query_trh_data(sensor_id, dt_from, dt_to):
 
 
 def query_propagation_trh_data(dt_from, dt_to):
-    trh_query = trh_data_with_vpd_query(db.session).subquery()
+    trh_query = queries.trh_with_vpd(db.session).subquery()
     query = (
         db.session.query(
             trh_query.c.timestamp,
@@ -496,7 +495,7 @@ def harvest_list():
     page, its harvest-event must have happened in this range.
     """
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-    query = harvest_table_query(db.session)
+    query = queries.harvest_table(db.session)
     df = pd.read_sql(query.statement, query.session.bind)
 
     # Format the time strings and some numerical fields. Easier to do here than in the
@@ -562,7 +561,7 @@ def parallel_axes():
     else:
         crop_type = urllib.parse.unquote(crop_type)
 
-    squery = harvest_table_query(db.session).subquery()
+    squery = queries.harvest_table(db.session).subquery()
     query = db.session.query(squery).filter(
         and_(
             squery.c.crop_type_name == crop_type if crop_type != "all" else True,
@@ -577,7 +576,7 @@ def parallel_axes():
         if len(df[column_name]) > 0:
             df[column_name] = df[column_name].dt.total_seconds() / 3600 / 24
 
-    ct_query = crop_types_query(db.session)
+    ct_query = queries.crop_types(db.session)
     crop_types = pd.read_sql(ct_query.statement, ct_query.session.bind).to_dict(
         orient="records"
     )
