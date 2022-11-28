@@ -507,9 +507,9 @@ def harvest_list():
         df["grow_time"] = df["grow_time"].round("s")
     for column in [
         "yield_per_sqm",
-        "avg_propagation_temperature",
-        "avg_propagation_humidity",
-        "avg_propagation_vpd",
+        "avg_propagate_temperature",
+        "avg_propagate_humidity",
+        "avg_propagate_vpd",
         "avg_grow_temperature",
         "avg_grow_humidity",
         "avg_grow_vpd",
