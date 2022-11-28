@@ -18,6 +18,10 @@ from core.structure import (
     TypeClass,
 )
 
+# The last columns considered to be in FrontFarm and MidFarm, respectively.
+REGION_SPLIT_FRONT_MID = 10
+REGION_SPLIT_MID_BACK = 23
+
 
 def crop_types_query(session):
     query = session.query(CropTypeClass.name)
@@ -131,10 +135,17 @@ def batch_events_by_type_query(session, type_name):
 
 
 def trh_data_with_vpd_query(session):
+    """Query that is like the ReadingsAranetTRHClass, except it has the extra column
+    "vpd" for vapour pressure deficit.
+    """
     trh = session.query(
         ReadingsAranetTRHClass.sensor_id,
         ReadingsAranetTRHClass.temperature,
         ReadingsAranetTRHClass.humidity,
+        # This called the Tetens equations, see
+        # https://en.wikipedia.org/wiki/Tetens_equation and
+        # https://pulsegrow.com/blogs/learn/vpd.
+        # The outcome is the vapour pressure deficit in Pascals.
         (
             610.78
             * func.exp(
@@ -145,6 +156,8 @@ def trh_data_with_vpd_query(session):
             * (1.0 - ReadingsAranetTRHClass.humidity / 100.0)
         ).label("vpd"),
         ReadingsAranetTRHClass.timestamp,
+        ReadingsAranetTRHClass.time_created,
+        ReadingsAranetTRHClass.time_updated,
     )
     return trh
 
@@ -294,5 +307,50 @@ def harvest_table_query(session):
         .outerjoin(HarvestClass, HarvestClass.batch_event_id == harvest_events.c.id)
         .outerjoin(grow_trh, grow_trh.c.batch_id == BatchClass.id)
         .outerjoin(propagate_trh, propagate_trh.c.batch_id == BatchClass.id)
+    )
+    return query
+
+
+def locations_with_regions(session):
+    """Return the locations table but with a an extra column for what we call "region".
+
+    Region distinguishes between front, back, and mid parts of tunnel 3. Propagation and
+    R&D are regions by themselves, other tunnels have region "N/A".
+    """
+    query = session.query(
+        LocationClass.id,
+        LocationClass.zone,
+        LocationClass.aisle,
+        LocationClass.column,
+        LocationClass.shelf,
+        case(
+            [
+                (LocationClass.zone == "R&D", "R&D"),
+                (LocationClass.zone == "Propagation", "Propagation"),
+                (
+                    LocationClass.zone == "Tunnel3",
+                    case(
+                        [
+                            (
+                                LocationClass.column <= REGION_SPLIT_FRONT_MID,
+                                "FrontFarm",
+                            ),
+                            (
+                                and_(
+                                    REGION_SPLIT_FRONT_MID < LocationClass.column,
+                                    LocationClass.column <= REGION_SPLIT_MID_BACK,
+                                ),
+                                "MidFarm",
+                            ),
+                            (
+                                REGION_SPLIT_MID_BACK < LocationClass.column,
+                                "BackFarm",
+                            ),
+                        ]
+                    ),
+                ),
+            ],
+            else_="N/A",
+        ).label("region"),
     )
     return query
