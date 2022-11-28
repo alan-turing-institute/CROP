@@ -2,19 +2,16 @@
 A module for the prediction page actions
 """
 
-import logging
-import copy
 import datetime as dt
-import pandas as pd
-from pandas.core.frame import DataFrame
+import json
+import logging
 
+from flask import render_template
+from flask_login import login_required
+import pandas as pd
+from sqlalchemy import and_
 
 from app.predictions import blueprint
-from flask import request, render_template
-from flask_login import login_required
-
-from sqlalchemy import and_, func
-
 from core.structure import (
     ModelClass,
     ModelMeasureClass,
@@ -26,10 +23,8 @@ from core.structure import (
     LocationClass,
     SensorClass,
 )
-
 from core.structure import SQLA as db
 from core.constants import CONST_TIMESTAMP_FORMAT
-
 from core.utils import filter_latest_sensor_location
 
 
@@ -89,44 +84,38 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
         )
     )
 
-    model_class = ModelClass
-    model_measure_class = ModelMeasureClass
-    model_run_class = ModelRunClass
-    model_value_class = ModelValueClass
-    model_product_class = ModelProductClass
-
     # subquery to get the last model run from a given model
     sbqr = (
-        db.session.query(model_run_class)
+        db.session.query(ModelRunClass)
         .filter(
-            model_run_class.model_id == model_id,
-            model_run_class.sensor_id == sensor_id,
+            ModelRunClass.model_id == model_id,
+            ModelRunClass.sensor_id == sensor_id,
         )
         .all()[-1]
     )
 
     # query to get all the results from the model run in the subquery
     query = db.session.query(
-        model_class.id,
-        model_class.model_name,
-        model_run_class.sensor_id,
-        model_measure_class.measure_name,
-        model_value_class.prediction_value,
-        model_value_class.prediction_index,
-        model_product_class.run_id,
-        model_run_class.time_created,
-        model_run_class.time_forecast,
+        ModelClass.id,
+        ModelClass.model_name,
+        ModelRunClass.sensor_id,
+        ModelMeasureClass.measure_name,
+        ModelValueClass.prediction_value,
+        ModelValueClass.prediction_index,
+        ModelProductClass.run_id,
+        ModelRunClass.time_created,
+        ModelRunClass.time_forecast,
     ).filter(
         and_(
-            model_class.id == model_id,
-            model_run_class.model_id == model_class.id,
-            model_run_class.id == sbqr.id,
-            model_product_class.run_id == model_run_class.id,
-            model_product_class.measure_id == model_measure_class.id,
-            model_value_class.product_id == model_product_class.id,
-            model_run_class.sensor_id == sensor_id,
-            model_run_class.time_created >= dt_from,
-            model_run_class.time_created <= dt_to,
+            ModelClass.id == model_id,
+            ModelRunClass.model_id == ModelClass.id,
+            ModelRunClass.id == sbqr.id,
+            ModelProductClass.run_id == ModelRunClass.id,
+            ModelProductClass.measure_id == ModelMeasureClass.id,
+            ModelValueClass.product_id == ModelProductClass.id,
+            ModelRunClass.sensor_id == sensor_id,
+            ModelRunClass.time_created >= dt_from,
+            ModelRunClass.time_created <= dt_to,
         )
     )
 
@@ -180,17 +169,15 @@ def add_time_columns(df, shift_hours=0):
 
 def json_temp_arima(df_arima):
     """
-    Function to return the JSON for the temperature related
-    charts in the model run
-
+    Function to return the JSON for the temperature related charts in the model run
     """
     # The shift_hours=1 accounts for df_arima starting its indexing from 1
     # instead of 0.
     df_arima = add_time_columns(df_arima, shift_hours=1)
+    if len(df_arima) < 1:
+        return "{}"
     json_str = (
-        df_arima.groupby(
-            ["sensor_id", "measure_name", "run_id"], as_index=True
-        )  # "measure_name"
+        df_arima.groupby(["sensor_id", "measure_name", "run_id"], as_index=True)
         .apply(
             lambda x: x[
                 [
@@ -265,53 +252,35 @@ def json_temp_ges(df):
     return json_str
 
 
-def arima_template():
+def arima_template(sensor_ids=(18, 23, 27)):
     # arima data
-    # dt_to = dt.datetime(2021, 12, 4, 00, 00)  # dt.datetime.now()
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
 
-    # Model number 1 is Arima, 2 is BSTS, 3 is for GES.
-    df_arima_18 = model_query(dt_from, dt_to, 1, 18)
-    df_arima_23 = model_query(dt_from, dt_to, 1, 23)
-    df_arima_27 = model_query(dt_from, dt_to, 1, 27)
+    data = {}
 
-    df_arima_ = df_arima_23.append(df_arima_18, ignore_index=True)
-    df_arima = df_arima_.append(df_arima_27, ignore_index=True)
+    for sensor_id in sensor_ids:
+        # Model number 1 is Arima, 2 is BSTS, 3 is for GES.
+        df_arima = model_query(dt_from, dt_to, 1, sensor_id)
+        if len(df_arima) > 0:
+            json_arima = json_temp_arima(df_arima)
+            # Get TRH data for the relevant period
+            unique_time_forecast = df_arima["time_forecast"].unique()
+            first_arima_time = pd.to_datetime(unique_time_forecast).min()
+            last_arima_time = pd.to_datetime(unique_time_forecast).max()
+            dt_from_z = first_arima_time - dt.timedelta(days=2)
+            dt_to_z = last_arima_time
+            json_trh = json_temp_trh(dt_from_z, dt_to_z)
+            data[sensor_id] = {
+                "arima": json.loads(json_arima),
+                "trh": json.loads(json_trh),
+            }
+        else:
+            logging.warn(f"No Arima forecast available for sensor {sensor_id}")
 
-    json_arima = json_temp_arima(df_arima)
-
-    unique_time_forecast = df_arima["time_forecast"].unique()
-    date_time = pd.to_datetime(unique_time_forecast[0])
-    dt_to_z = date_time + dt.timedelta(days=+3)
-    dt_from_z = dt_to_z + dt.timedelta(days=-5)
-    json_trh = json_temp_trh(dt_from_z, dt_to_z)
-
-    unique_time_forecast_18 = df_arima_18["time_forecast"].unique()
-    date_time_18 = pd.to_datetime(unique_time_forecast_18[0])
-    dt_to_z_18 = date_time_18 + dt.timedelta(days=+3)
-    dt_from_z_18 = dt_to_z_18 + dt.timedelta(days=-5)
-    json_trh_18 = json_temp_trh(dt_from_z_18, dt_to_z_18)
-
-    unique_time_forecast_23 = df_arima_23["time_forecast"].unique()
-    date_time_23 = pd.to_datetime(unique_time_forecast_23[0])
-    dt_to_z_23 = date_time_23 + dt.timedelta(days=+3)
-    dt_from_z_23 = dt_to_z_23 + dt.timedelta(days=-5)
-    json_trh_23 = json_temp_trh(dt_from_z_23, dt_to_z_23)
-
-    unique_time_forecast_27 = df_arima_27["time_forecast"].unique()
-    date_time_27 = pd.to_datetime(unique_time_forecast_27[0])
-    dt_to_z_27 = date_time_27 + dt.timedelta(days=+3)
-    dt_from_z_27 = dt_to_z_27 + dt.timedelta(days=-5)
-    json_trh_27 = json_temp_trh(dt_from_z_27, dt_to_z_27)
-
+    valid_sensor_ids = tuple(data.keys())
     return render_template(
-        "arima.html",
-        json_arima_f=json_arima,
-        json_trh_f=json_trh,
-        json_trh_18_f=json_trh_18,
-        json_trh_23_f=json_trh_23,
-        json_trh_27_f=json_trh_27,
+        "arima.html", data=json.dumps(data), sensor_ids=valid_sensor_ids
     )
 
 
