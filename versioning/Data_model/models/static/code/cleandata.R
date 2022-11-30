@@ -92,7 +92,7 @@ cleanEnvData = function() {
   # Identify each unique sensor
   sensor_names_from_database <- unique(trh$name)
   sensor_names = c()
-  SENSOR_ID = list("FARM_T/RH_16B1"=18, "Farm_T/RH_16B2"=27, "Farm_T/RH_16B4"=23)
+  SENSOR_ID = list("Farm_T/RH_16B1"=18, "Farm_T/RH_16B2"=27, "Farm_T/RH_16B4"=23)
   for (n in sensor_names_from_database)
   {
     #print (n)

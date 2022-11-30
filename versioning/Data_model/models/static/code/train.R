@@ -7,7 +7,7 @@ SECONDS.PERMINUTE = 60
 MINS.PERHOUR = 60
 HOURS.PERDAY = 24
 SECONDS.PERDAY = HOURS.PERDAY * MINS.PERHOUR * SECONDS.PERMINUTE
-SENSOR_ID = list(Temperature_FARM_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
+SENSOR_ID = list(Temperature_Farm_16B1=18, Temperature_Farm_16B2=27, Temperature_Farm_16B4=23)
 #SENSOR_ID = list(Temperature_Farm_16B4=23)
 MEASURE_ID = list(Temperature_Mean = 1, Temperature_Upper = 2, Temperature_Lower = 3, Temperature_Median = 4)
 MODEL_ID = list(ARIMA = 1, BSTS = 2)
@@ -21,7 +21,7 @@ if (exists("RUN_BSTS")==FALSE)
 
 standardiseLatestTimestamp = function (latestTimeStamp = ? Date) {
   # Identify time to forecast based on latest day
-  if (hour(latestTimeStamp) > 16){
+  if (hour(latestTimeStamp) >= 16){
     as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))," ", 16,":00:00"), tz="UTC")
   } else if  (hour(latestTimeStamp)<=4){
     as.POSIXct(paste0(as.Date(max(t_ee$FarmTimestamp))-1," ", 16,":00:00"), tz="UTC")
@@ -196,9 +196,9 @@ reportStats = function(a_t_ee, label="Source") {
   if (label == "Today"){
     stats.temperature.numNA.a_t_ee = sprintf("%s Temperature NumNA/Rows: %i/%i = %f\n", 
                                            label,
-                                           sum(is.na(a_t_ee$Temperature_FARM_16B1)),
-                                           length(a_t_ee$Temperature_FARM_16B1),
-                                           sum(is.na(a_t_ee$Temperature_FARM_16B1))/length(a_t_ee$Temperature_FARM_16B1))
+                                           sum(is.na(a_t_ee$Temperature_Farm_16B1)),
+                                           length(a_t_ee$Temperature_Farm_16B1),
+                                           sum(is.na(a_t_ee$Temperature_Farm_16B1))/length(a_t_ee$Temperature_Farm_16B1))
     cat(stats.temperature.numNA.a_t_ee)
   }
   
