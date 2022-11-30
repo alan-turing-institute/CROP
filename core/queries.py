@@ -30,29 +30,21 @@ def crop_types(session):
 
 def latest_sensor_locations(session):
     subquery = session.query(
-        SensorLocationClass.sensor_id,
-        SensorLocationClass.location_id,
-        SensorLocationClass.installation_date,
+        SensorLocationClass,
         func.max(SensorLocationClass.installation_date)
         .over(partition_by=SensorLocationClass.sensor_id)
         .label("max_date"),
     ).subquery()
-    query = session.query(
-        subquery.c.sensor_id,
-        subquery.c.location_id,
-        subquery.c.installation_date,
-    ).where(subquery.c.installation_date == subquery.c.max_date)
+    query = session.query(subquery).where(
+        subquery.c.installation_date == subquery.c.max_date
+    )
     return query
 
 
 def latest_trh_locations(session):
     subquery = latest_sensor_locations(session).subquery()
     query = (
-        session.query(
-            subquery.c.sensor_id,
-            subquery.c.location_id,
-            subquery.c.installation_date,
-        )
+        session.query(subquery)
         .join(SensorClass, SensorClass.id == subquery.c.sensor_id)
         .join(TypeClass, TypeClass.id == SensorClass.type_id)
         .where(TypeClass.sensor_type == "Aranet T&RH")
@@ -99,9 +91,7 @@ def closest_trh_sensors(session, latest_trh_locations_q=None):
     ).cte(name="sensor_distances")
     subquery = (
         session.query(
-            sensor_distances_cte.c.location_id,
-            sensor_distances_cte.c.sensor_id,
-            sensor_distances_cte.c.distance,
+            sensor_distances_cte,
             func.min(sensor_distances_cte.c.distance)
             .over(partition_by=sensor_distances_cte.c.location_id)
             .label("min_distance"),
@@ -122,12 +112,7 @@ def first_batch_event_time(session):
 
 def batch_events_by_type(session, type_name):
     subquery = latest_batch_events(session).subquery()
-    query = session.query(
-        subquery.c.id,
-        subquery.c.batch_id,
-        subquery.c.location_id,
-        subquery.c.event_time,
-    ).filter(subquery.c.event_type == type_name)
+    query = session.query(subquery).filter(subquery.c.event_type == type_name)
     return query
 
 
@@ -136,9 +121,7 @@ def trh_with_vpd(session):
     "vpd" for vapour pressure deficit.
     """
     query = session.query(
-        ReadingsAranetTRHClass.sensor_id,
-        ReadingsAranetTRHClass.temperature,
-        ReadingsAranetTRHClass.humidity,
+        ReadingsAranetTRHClass,
         # This called the Tetens equations, see
         # https://en.wikipedia.org/wiki/Tetens_equation and
         # https://pulsegrow.com/blogs/learn/vpd.
@@ -152,9 +135,6 @@ def trh_with_vpd(session):
             )
             * (1.0 - ReadingsAranetTRHClass.humidity / 100.0)
         ).label("vpd"),
-        ReadingsAranetTRHClass.timestamp,
-        ReadingsAranetTRHClass.time_created,
-        ReadingsAranetTRHClass.time_updated,
     )
     return query
 
@@ -421,11 +401,7 @@ def locations_with_regions(session):
     R&D are regions by themselves, other tunnels have region "N/A".
     """
     query = session.query(
-        LocationClass.id,
-        LocationClass.zone,
-        LocationClass.aisle,
-        LocationClass.column,
-        LocationClass.shelf,
+        LocationClass,
         case(
             [
                 (LocationClass.zone == "R&D", "R&D"),
