@@ -23,12 +23,10 @@ from core.structure import (
     HarvestClass,
     ReadingsAranetTRHClass,
     SensorClass,
-    SensorLocationClass,
     TypeClass,
 )
 from core.utils import (
     download_csv,
-    filter_latest_sensor_location,
     parse_date_range_argument,
 )
 
@@ -229,14 +227,15 @@ def distance_metric(location1, location2):
 def find_closest_trh_sensor(zone, aisle, column, shelf):
     """Return the Aranet TRH sensor ID of the sensor closest to this location."""
     # TODO Move this to utils?
+    locations_query = queries.latest_sensor_locations(db.session).subquery()
     query = (
         db.session.query(
             SensorClass.id,
             SensorClass.name,
             TypeClass.sensor_type,
-            SensorLocationClass.sensor_id,
-            SensorLocationClass.location_id,
-            SensorLocationClass.installation_date,
+            locations_query.c.sensor_id,
+            locations_query.c.location_id,
+            locations_query.c.installation_date,
             LocationClass.id.label("location_id"),
             LocationClass.zone,
             LocationClass.aisle,
@@ -246,16 +245,15 @@ def find_closest_trh_sensor(zone, aisle, column, shelf):
         .filter(SensorClass.type_id == TypeClass.id)
         .filter(TypeClass.sensor_type == "Aranet T&RH")
         .join(
-            SensorLocationClass,
-            SensorClass.id == SensorLocationClass.sensor_id,
+            locations_query,
+            SensorClass.id == locations_query.c.sensor_id,
             isouter=True,
         )
         .join(
             LocationClass,
-            LocationClass.id == SensorLocationClass.location_id,
+            LocationClass.id == locations_query.c.location_id,
             isouter=True,
         )
-        .filter(filter_latest_sensor_location(db))
     )
     df_sensors = pd.read_sql(query.statement, query.session.bind)
     df_sensors["distance"] = df_sensors.apply(
@@ -292,6 +290,7 @@ def query_trh_data(sensor_id, dt_from, dt_to):
 
 def query_propagation_trh_data(dt_from, dt_to):
     trh_query = queries.trh_with_vpd(db.session).subquery()
+    locations_query = queries.latest_sensor_locations(db.session).subquery()
     query = (
         db.session.query(
             trh_query.c.timestamp,
@@ -300,9 +299,9 @@ def query_propagation_trh_data(dt_from, dt_to):
             trh_query.c.humidity,
             trh_query.c.vpd,
             SensorClass.id,
-            SensorLocationClass.sensor_id,
-            SensorLocationClass.location_id,
-            SensorLocationClass.installation_date,
+            locations_query.c.sensor_id,
+            locations_query.c.location_id,
+            locations_query.c.installation_date,
             LocationClass.zone,
         )
         .filter(
@@ -313,16 +312,15 @@ def query_propagation_trh_data(dt_from, dt_to):
             )
         )
         .join(
-            SensorLocationClass,
-            SensorClass.id == SensorLocationClass.sensor_id,
+            locations_query,
+            SensorClass.id == locations_query.c.sensor_id,
             isouter=True,
         )
         .join(
             LocationClass,
-            LocationClass.id == SensorLocationClass.location_id,
+            LocationClass.id == locations_query.c.location_id,
             isouter=True,
         )
-        .filter(filter_latest_sensor_location(db))
         .filter(LocationClass.zone == "Propagation")
     )
 
