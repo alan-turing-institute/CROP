@@ -12,6 +12,8 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.predictions import blueprint
+from core.constants import CONST_TIMESTAMP_FORMAT
+from core import queries
 from core.structure import (
     ModelClass,
     ModelMeasureClass,
@@ -24,8 +26,6 @@ from core.structure import (
     SensorClass,
 )
 from core.structure import SQLA as db
-from core.constants import CONST_TIMESTAMP_FORMAT
-from core.utils import filter_latest_sensor_location
 
 
 def aranet_trh_query(dt_from, dt_to):
@@ -38,6 +38,7 @@ def aranet_trh_query(dt_from, dt_to):
     Returns:
         df: a df with the queried data
     """
+    locations_query = queries.latest_sensor_locations(db.session)
     query = db.session.query(
         ReadingsAranetTRHClass.timestamp,
         ReadingsAranetTRHClass.sensor_id,
@@ -46,12 +47,11 @@ def aranet_trh_query(dt_from, dt_to):
         LocationClass.zone,
     ).filter(
         and_(
-            SensorLocationClass.location_id == LocationClass.id,
+            locations_query.c.location_id == LocationClass.id,
             ReadingsAranetTRHClass.sensor_id == SensorClass.id,
-            ReadingsAranetTRHClass.sensor_id == SensorLocationClass.sensor_id,
+            ReadingsAranetTRHClass.sensor_id == locations_query.c.sensor_id,
             ReadingsAranetTRHClass.timestamp >= dt_from,
             ReadingsAranetTRHClass.timestamp <= dt_to,
-            filter_latest_sensor_location(db),
         )
     )
 

@@ -216,34 +216,6 @@ def download_csv(readings, filename_base="results"):
     )
 
 
-def filter_latest_sensor_location(db):
-    """Return a filter object that excludes all but the latest location for each sensor.
-
-    This should be used to filter a query that involves the SensorLocationClass.
-
-    Args:
-        db: A database connection or session.
-    Returns:
-        An object that can be given as an argument to sqlalchemy.filter.
-    """
-    if hasattr(db, "session"):
-        session = db.session
-    else:
-        session = db
-    query = (
-        session.query(
-            SensorLocationClass.sensor_id,
-            func.max(SensorLocationClass.installation_date).label("installation_date"),
-        )
-        .group_by(SensorLocationClass.sensor_id)
-        .subquery()
-    )
-    return and_(
-        query.c.sensor_id == SensorLocationClass.sensor_id,
-        query.c.installation_date == SensorLocationClass.installation_date,
-    )
-
-
 def log_upload_event(sensor_type, filename, status, log, connection_string):
     """
     Function will log the upload event in the database by capturing information

@@ -15,6 +15,8 @@ from sqlalchemy import and_
 
 from app.home import blueprint
 
+from core.constants import CONST_TIMESTAMP_FORMAT
+from core import queries
 from core.structure import SQLA as db
 from core.structure import (
     LocationClass,
@@ -25,9 +27,6 @@ from core.structure import (
     WarningClass,
     WarningTypeClass,
 )
-from core.constants import CONST_TIMESTAMP_FORMAT
-from core import queries
-from core.utils import filter_latest_sensor_location
 
 TEMP_BINS = {
     "Propagation": [0.0, 20.0, 23.0, 25.0, 144.0],  # optimal 23
