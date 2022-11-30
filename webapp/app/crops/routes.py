@@ -107,87 +107,16 @@ def batch_list():
     """Render the batch_list page.
 
     A time range can be provided as a query parameter. For a batch to be included in the
-    page, its weigh-event must have happened in this range. In addition, if other
-    events, like harvesting, aren't in the time range, then data from those events is
-    left out.
+    page, its weigh-event must have happened in this range.
     """
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-
+    subquery = queries.batch_list(db.session).subquery()
     query = (
-        db.session.query(
-            BatchClass.id.label("batch_id"),
-            BatchClass.tray_size,
-            BatchClass.number_of_trays,
-            BatchClass.crop_type_id.label("batch_crop_type_id"),
-            CropTypeClass.id.label("crop_type_id"),
-            CropTypeClass.name.label("crop_type_name"),
-            BatchEventClass.id.label("batch_event_id"),
-            BatchEventClass.batch_id.label("event_batch_id"),
-            BatchEventClass.location_id.label("event_location_id"),
-            BatchEventClass.event_type,
-            BatchEventClass.event_time,
-            BatchEventClass.next_action_time,
-            HarvestClass.batch_event_id.label("harvest_batch_event_id"),
-            HarvestClass.crop_yield,
-            HarvestClass.waste_disease,
-            HarvestClass.waste_defect,
-            HarvestClass.over_production,
-            LocationClass.id.label("location_id"),
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf,
-        )
-        .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
-        .outerjoin(BatchEventClass, BatchEventClass.batch_id == BatchClass.id)
-        .outerjoin(HarvestClass, HarvestClass.batch_event_id == BatchEventClass.id)
-        .outerjoin(LocationClass, LocationClass.id == BatchEventClass.location_id)
-        .filter(
-            and_(
-                BatchEventClass.event_time >= dt_from,
-                BatchEventClass.event_time <= dt_to,
-            )
-        )
+        db.session.query(subquery)
+        .filter(and_(subquery.c.weigh_time >= dt_from, subquery.c.weigh_time <= dt_to))
+        .order_by(subquery.c.weigh_time)
     )
-    df_raw = pd.read_sql(query.statement, query.session.bind)
-
-    # Group events by batch, and manually collect the relevant information from each
-    # event type, if available. Build a new dataframe with only the information we want,
-    # constructing each row as a dictionary first. TODO Might there be a way to lift
-    # some of this work over to the Postgres server? Could be faster.
-    grouped = df_raw.groupby("batch_id")
-    rows = []
-    for batch_id, group in grouped:
-        details = collect_batch_details(group)
-        if details:
-            details["batch_id"] = batch_id
-            rows.append(details)
-
-    df = pd.DataFrame(
-        rows,
-        columns=[
-            "batch_id",
-            "last_event",
-            "crop_type_id",
-            "crop_type_name",
-            "tray_size",
-            "number_of_trays",
-            "weigh_time",
-            "propagate_time",
-            "transfer_time",
-            "harvest_time",
-            "location_id",
-            "zone",
-            "aisle",
-            "column",
-            "shelf",
-            "location",
-            "crop_yield",
-            "waste_disease",
-            "waste_defect",
-            "over_production",
-        ],
-    )
+    df = pd.read_sql(query.statement, query.session.bind)
     # Format the time strings. Easier to do here than in the Jinja template.
     for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
         df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
