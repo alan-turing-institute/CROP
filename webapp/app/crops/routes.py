@@ -114,7 +114,7 @@ def batch_list():
     query = (
         db.session.query(subquery)
         .filter(and_(subquery.c.weigh_time >= dt_from, subquery.c.weigh_time <= dt_to))
-        .order_by(subquery.c.weigh_time)
+        .order_by(subquery.c.weigh_time.desc())
     )
     df = pd.read_sql(query.statement, query.session.bind)
     # Format the time strings. Easier to do here than in the Jinja template.
@@ -422,7 +422,14 @@ def harvest_list():
     page, its harvest-event must have happened in this range.
     """
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-    query = queries.harvest_table(db.session)
+    subquery = queries.harvest_table(db.session).subquery()
+    query = (
+        db.session.query(subquery)
+        .filter(
+            and_(subquery.c.harvest_time >= dt_from, subquery.c.harvest_time <= dt_to)
+        )
+        .order_by(subquery.c.harvest_time.desc())
+    )
     df = pd.read_sql(query.statement, query.session.bind)
 
     # Format the time strings and some numerical fields. Easier to do here than in the
