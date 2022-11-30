@@ -56,7 +56,8 @@
                       <td>{{ t_sensor.name }}</td>
                       <td>{{ t_sensor.aranet_code }}</td>
                       <td>{{ t_sensor.aranet_pro_id }}</td>
-                      <td>{{ t_sensor.zone }}
+                      <td>
+                        {{ t_sensor.zone }}
                         {% if t_sensor.aisle %}
                         -
                         {{ t_sensor.aisle }}
@@ -67,8 +68,9 @@
                         {% endif %}
                         {% if t_sensor.shelf %}
                         -
-                        {{ t_sensor.shelf }}</td>
+                        {{ t_sensor.shelf }}
                         {% endif %}
+                      </td>
                       <td>{{ t_sensor.installation_date }}</td>
                       <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.id }}">Edit</a>
                     </tr>

@@ -121,12 +121,13 @@ def first_batch_event_time(session):
 
 
 def batch_events_by_type(session, type_name):
+    subquery = latest_batch_events(session).subquery()
     query = session.query(
-        BatchEventClass.id,
-        BatchEventClass.batch_id,
-        BatchEventClass.location_id,
-        BatchEventClass.event_time,
-    ).filter(BatchEventClass.event_type == type_name)
+        subquery.c.id,
+        subquery.c.batch_id,
+        subquery.c.location_id,
+        subquery.c.event_time,
+    ).filter(subquery.c.event_type == type_name)
     return query
 
 
@@ -169,6 +170,52 @@ def trh_sensors_by_zone(session, zone_name, latest_trh_locations_q=None):
         )
         .join(LocationClass, LocationClass.id == latest_trh_locations_q.c.location_id)
         .filter(LocationClass.zone == zone_name)
+    )
+    return query
+
+
+def harvest_with_unit_yield(session):
+    """A query that's like the harvest table, but with a column yield_per_sqm."""
+    query = (
+        session.query(
+            HarvestClass,
+            # Crop yield divided by number of trays * tray size.
+            (
+                HarvestClass.crop_yield
+                / (
+                    BatchClass.number_of_trays
+                    * case(
+                        [
+                            # Tray size in square metres.
+                            # TODO This information is very non-obvious, and should
+                            # probably be stored somewhere other than hardcoded here.
+                            (BatchClass.tray_size == 7.0, 0.25),
+                            (BatchClass.tray_size == 3.0, 0.24),
+                        ],
+                        else_=None,
+                    )
+                )
+            ).label("yield_per_sqm"),
+        )
+        .join(BatchEventClass, HarvestClass.batch_event_id == BatchEventClass.id)
+        .join(BatchClass, BatchEventClass.batch_id == BatchClass.id)
+    )
+    return query
+
+
+def latest_batch_events(session):
+    """A query like the batch events table, but filter to only keep the latest instance
+    of each (batch_id, event_type) pair, e.g. if the same batch has multiple "propagate"
+    events only keep the last.
+    """
+    subquery = session.query(
+        BatchEventClass,
+        func.max(BatchEventClass.event_time)
+        .over(partition_by=(BatchEventClass.batch_id, BatchEventClass.event_type))
+        .label("latest_time"),
+    ).subquery()
+    query = session.query(subquery).where(
+        subquery.c.event_time == subquery.c.latest_time
     )
     return query
 
@@ -248,29 +295,14 @@ def harvest_table(session):
         .group_by(BatchClass.id)
     ).subquery("propagate_trh")
 
+    harvest_sq = harvest_with_unit_yield(session).subquery("harvest_with_unit_yield")
+
     query = (
         session.query(
             BatchClass.id.label("batch_id"),
             CropTypeClass.name.label("crop_type_name"),
             BatchClass.tray_size,
             BatchClass.number_of_trays,
-            # Crop yield divided by number of trays * tray size.
-            (
-                HarvestClass.crop_yield
-                / (
-                    BatchClass.number_of_trays
-                    * case(
-                        [
-                            # Tray size in square metres.
-                            # TODO This information is very non-obvious, and should
-                            # probably be stored somewhere other than hardcoded here.
-                            (BatchClass.tray_size == 7.0, 0.25),
-                            (BatchClass.tray_size == 3.0, 0.24),
-                        ],
-                        else_=None,
-                    )
-                )
-            ).label("yield_per_sqm"),
             weigh_events_sq.c.event_time.label("weigh_time"),
             propagate_events_sq.c.event_time.label("propagate_time"),
             transfer_events_sq.c.event_time.label("transfer_time"),
@@ -279,10 +311,11 @@ def harvest_table(session):
             LocationClass.aisle,
             LocationClass.column,
             LocationClass.shelf,
-            HarvestClass.crop_yield,
-            HarvestClass.waste_disease,
-            HarvestClass.waste_defect,
-            HarvestClass.over_production,
+            harvest_sq.c.yield_per_sqm,
+            harvest_sq.c.crop_yield,
+            harvest_sq.c.waste_disease,
+            harvest_sq.c.waste_defect,
+            harvest_sq.c.over_production,
             (harvest_events_sq.c.event_time - transfer_events_sq.c.event_time).label(
                 "grow_time"
             ),
@@ -301,9 +334,82 @@ def harvest_table(session):
         .outerjoin(transfer_events_sq, transfer_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(harvest_events_sq, harvest_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(LocationClass, LocationClass.id == transfer_events_sq.c.location_id)
-        .outerjoin(HarvestClass, HarvestClass.batch_event_id == harvest_events_sq.c.id)
+        .outerjoin(harvest_sq, harvest_sq.c.batch_event_id == harvest_events_sq.c.id)
         .outerjoin(grow_trh_sq, grow_trh_sq.c.batch_id == BatchClass.id)
         .outerjoin(propagate_trh_sq, propagate_trh_sq.c.batch_id == BatchClass.id)
+    )
+    return query
+
+
+def batch_list(session):
+    weigh_events_sq = batch_events_by_type(session, "weigh").subquery("weigh_events")
+    propagate_events_sq = batch_events_by_type(session, "propagate").subquery(
+        "propagate_events"
+    )
+    transfer_events_sq = batch_events_by_type(session, "transfer").subquery(
+        "transfer_events"
+    )
+    harvest_events_sq = batch_events_by_type(session, "harvest").subquery(
+        "harvest_events"
+    )
+    harvest_sq = harvest_with_unit_yield(session).subquery("harvest_with_unit_yield")
+
+    query = (
+        session.query(
+            BatchClass.id.label("batch_id"),
+            BatchClass.tray_size,
+            BatchClass.number_of_trays,
+            CropTypeClass.id.label("crop_type_id"),
+            CropTypeClass.name.label("crop_type_name"),
+            weigh_events_sq.c.event_time.label("weigh_time"),
+            propagate_events_sq.c.event_time.label("propagate_time"),
+            transfer_events_sq.c.event_time.label("transfer_time"),
+            harvest_events_sq.c.event_time.label("harvest_time"),
+            LocationClass.id.label("location_id"),
+            LocationClass.zone,
+            LocationClass.aisle,
+            LocationClass.column,
+            LocationClass.shelf,
+            harvest_sq.c.yield_per_sqm,
+            harvest_sq.c.crop_yield,
+            harvest_sq.c.waste_disease,
+            harvest_sq.c.waste_defect,
+            harvest_sq.c.over_production,
+            (harvest_events_sq.c.event_time - transfer_events_sq.c.event_time).label(
+                "grow_time"
+            ),
+            case(
+                [
+                    (harvest_events_sq.c.event_time != None, "harvest"),
+                    (transfer_events_sq.c.event_time != None, "transfer"),
+                    (propagate_events_sq.c.event_time != None, "propagate"),
+                    (weigh_events_sq.c.event_time != None, "weigh"),
+                ],
+                else_=None,
+            ).label("last_event"),
+            func.concat(
+                LocationClass.zone,
+                case(
+                    [
+                        (
+                            LocationClass.column != None,
+                            func.concat(" ", LocationClass.column),
+                        )
+                    ]
+                ),
+                case([(LocationClass.aisle != None, LocationClass.aisle)]),
+                case([(LocationClass.shelf != None, LocationClass.shelf)]),
+            ).label("location"),
+        )
+        .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
+        # We inner join on weigh_events, because if the batch doesn't have a weigh event
+        # it doesn't really exist, but outer join on the others since they are optional.
+        .join(weigh_events_sq, weigh_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(propagate_events_sq, propagate_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(transfer_events_sq, transfer_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(harvest_events_sq, harvest_events_sq.c.batch_id == BatchClass.id)
+        .outerjoin(LocationClass, LocationClass.id == transfer_events_sq.c.location_id)
+        .outerjoin(harvest_sq, harvest_sq.c.batch_event_id == harvest_events_sq.c.id)
     )
     return query
 
