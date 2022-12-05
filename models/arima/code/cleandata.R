@@ -67,6 +67,8 @@ cleanEnvData = function() {
   trh$HourDec <- decimal_hour(trh$Timestamp2)
 
   # Create new hour column which encompasses 15 min before and after the hour (PM stands for plus minus)
+  # The code below creates an additional column where any time 15 min before or after the hour
+  # is given the value of the rounded hour. Times outside this range are assigned NA
   trh$HourPM <- ifelse(abs(trh$Hour-trh$HourDec)<=0.25 ,trh$Hour,NA)
   trh$HourPM <- ifelse(abs(trh$Hour+1-trh$HourDec)<=0.25,trh$Hour+1,trh$HourPM)
   # add special case for midnight!
@@ -76,11 +78,15 @@ cleanEnvData = function() {
   trh$Date <- as.Date(trh$Timestamp2)
   trh$DatePM <- trh$Date
   #trh$DatePM <- as.Date(ifelse(trh$HourPM>=23.5, trh$Date + 1 ,trh$Date), origin = "1970-01-01")
+  # this bit of code below is not very clear...
+  # what seems to be happening is that the date is kept only for hours where HourPM is not NA
   trh$DatePM <- lubridate::as_date(ifelse(trh$HourPM>=23.5, trh$Date + 1, trh$Date), origin = "1970-01-01")
-
+  # this takes the date and the hour and makes a UTC-formatted timestamp
   trh$Timestamp <- as.POSIXct(paste(trh$Date, trh$Hour),tz="UTC",format="%Y-%m-%d %H")
 
   # select the time duration over which you want to find new hourly averages
+  # the bit of code below creates a list with a column named "FarmTimestamp"
+  # over the specified range and with the specified delta
   my_time <- data.frame(FarmTimestamp = seq(from = min(trh$Timestamp)+3600,
                                             to = max(trh$Timestamp),
                                             by = "1 hour"))
