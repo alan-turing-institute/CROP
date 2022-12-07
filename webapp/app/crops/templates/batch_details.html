@@ -56,19 +56,27 @@
                   </tr>
                   <tr>
                     <td class="text-alignright">Weigh time</td>
-                    <td>{{ details.weigh_time }}</td>
+                    <td>
+                      {{ details.weigh_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Propagate time</td>
-                    <td>{{ details.propagate_time }}</td>
+                    <td>
+                      {{ details.propagate_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Transfer time</td>
-                    <td>{{ details.transfer_time }}</td>
+                    <td>
+                      {{ details.transfer_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Harvest time</td>
-                    <td>{{ details.harvest_time }}</td>
+                    <td>
+                      {{ details.harvest_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Grow time</td>
