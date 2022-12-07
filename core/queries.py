@@ -60,9 +60,7 @@ def location_distances(session):
         l2.id.label("id2"),
         (
             case([(l1.zone == l2.zone, 0)], else_=None)
-            + case(
-                [(l1.aisle == l2.aisle, 0)], else_=1
-            )  # TODO Is this line working?  Check the query string.
+            + case([(l1.aisle == l2.aisle, 0)], else_=1)
             + func.abs(l1.column - l2.column)
             + func.abs(l1.shelf - l2.shelf)
         ).label("distance"),
