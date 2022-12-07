@@ -34,10 +34,6 @@ def batch_list():
         .order_by(subquery.c.weigh_time.desc())
     )
     df = pd.read_sql(query.statement, query.session.bind)
-    # Format the time strings. Easier to do here than in the Jinja template.
-    for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
-        if df[column] is not None:
-            df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
     results_arr = df.to_dict("records")
 
     if request.method == "POST":
@@ -73,12 +69,6 @@ def batch_details():
     )
     grow_trh_df = pd.read_sql(grow_query.statement, grow_query.session.bind)
 
-    # Format some of the fields to be strings. Easier to do here than in the Jinja
-    # template.
-    for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
-        if details[column] is not None:
-            details[column] = pd.to_datetime(details[column]).strftime("%Y-%m-%d %H:%M")
-
     if request.method == "POST":
         return download_csv(grow_trh_df, template)
     grow_trh_json = grow_trh_df.to_json(orient="records")
@@ -106,11 +96,6 @@ def harvest_list():
     )
     df = pd.read_sql(query.statement, query.session.bind)
 
-    # Format the time strings and some numerical fields. Easier to do here than in the
-    # Jinja template.
-    for column in ["harvest_time"]:
-        if column in df:
-            df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
     if "grow_time" in df:
         df["grow_time"] = df["grow_time"].round("s")
     results_arr = df.to_dict("records")
