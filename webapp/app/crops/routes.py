@@ -1,104 +1,21 @@
 """
 Module for sensor data.
 """
-from datetime import datetime
 import json
 import urllib.parse
 
 from flask import render_template, request
 from flask_login import login_required
-import numpy as np
 import pandas as pd
 from sqlalchemy import and_
 
 from app.crops import blueprint
 from core import queries
 from core.structure import SQLA as db
-from core.structure import (
-    BatchClass,
-    BatchEventClass,
-    CropTypeClass,
-    EventType,
-    LocationClass,
-    HarvestClass,
-    ReadingsAranetTRHClass,
-    SensorClass,
-    TypeClass,
-)
 from core.utils import (
     download_csv,
     parse_date_range_argument,
 )
-
-
-def collect_batch_details(df_batch):
-    """Given a DataFrame that has rows for a given batch only, one per event, construct
-    a dictionary of the attributes we care about, discarding others.
-    """
-    details = {}
-    row_weigh = df_batch[df_batch["event_type"] == EventType.weigh]
-    row_propagate = df_batch[df_batch["event_type"] == EventType.propagate]
-    row_transfer = df_batch[df_batch["event_type"] == EventType.transfer]
-    row_harvest = df_batch[df_batch["event_type"] == EventType.harvest]
-
-    if len(row_weigh) > 0:
-        # Usually there should only be one event of each type per batch, so just
-        # pick the first one.
-        row_weigh = row_weigh.iloc[0]
-        details["tray_size"] = row_weigh["tray_size"]
-        details["number_of_trays"] = row_weigh["number_of_trays"]
-        details["crop_type_id"] = row_weigh["crop_type_id"]
-        details["crop_type_name"] = row_weigh["crop_type_name"]
-        details["weigh_time"] = row_weigh["event_time"]
-        details["last_event"] = "weigh"
-    else:
-        # If there's no weighing event, we don't want to process this batch at all,
-        # since we clearly lack meaningful data for it.
-        return details
-
-    if len(row_propagate) > 0:
-        row_propagate = row_propagate.iloc[0]
-        details["propagate_time"] = row_propagate["event_time"]
-        details["last_event"] = "propagate"
-    else:
-        details["propagate_time"] = None
-
-    if len(row_transfer) > 0:
-        row_transfer = row_transfer.iloc[0]
-        details["location_id"] = row_transfer["location_id"]
-        details["zone"] = row_transfer["zone"]
-        details["aisle"] = row_transfer["aisle"]
-        details["column"] = int(row_transfer["column"])
-        details["shelf"] = int(row_transfer["shelf"])
-        details["transfer_time"] = row_transfer["event_time"]
-        details[
-            "location"
-        ] = f"{details['zone']} {details['column']}{details['aisle']}{details['shelf']}"
-        details["last_event"] = "transfer"
-    else:
-        details["location_id"] = None
-        details["zone"] = None
-        details["aisle"] = None
-        details["column"] = None
-        details["shelf"] = None
-        details["location"] = None
-        details["transfer_time"] = None
-
-    if len(row_harvest) > 0:
-        row_harvest = row_harvest.iloc[0]
-        details["crop_yield"] = row_harvest["crop_yield"]
-        details["waste_disease"] = row_harvest["waste_disease"]
-        details["waste_defect"] = row_harvest["waste_defect"]
-        details["over_production"] = row_harvest["over_production"]
-        details["harvest_time"] = row_harvest["event_time"]
-        details["last_event"] = "harvest"
-    else:
-        details["crop_yield"] = None
-        details["waste_disease"] = None
-        details["waste_defect"] = None
-        details["over_production"] = None
-        details["harvest_time"] = None
-    return details
 
 
 @blueprint.route("/batch_list", methods=["GET", "POST"])
@@ -119,7 +36,8 @@ def batch_list():
     df = pd.read_sql(query.statement, query.session.bind)
     # Format the time strings. Easier to do here than in the Jinja template.
     for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
-        df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
+        if df[column] is not None:
+            df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
     results_arr = df.to_dict("records")
 
     if request.method == "POST":
@@ -133,192 +51,6 @@ def batch_list():
         )
 
 
-def distance_metric(location1, location2):
-    """Compute a custom notion distance between two locations.
-
-    The two locations should be tuples of (zone, aisle, column, shelf).
-
-    The return value is a float.
-    """
-    zone1, aisle1, column1, shelf1 = location1
-    zone2, aisle2, column2, shelf2 = location2
-    distance = 0.0
-    # TODO Improve this metric.
-    if zone1 != zone2:
-        distance += 1000.0
-    if aisle1 != aisle2:
-        distance += 1
-    distance += abs(column1 - column2)
-    distance += abs(shelf1 - shelf2)
-    return distance
-
-
-def find_closest_trh_sensor(zone, aisle, column, shelf):
-    """Return the Aranet TRH sensor ID of the sensor closest to this location."""
-    # TODO Move this to utils?
-    locations_query = queries.latest_sensor_locations(db.session).subquery()
-    query = (
-        db.session.query(
-            SensorClass.id,
-            SensorClass.name,
-            TypeClass.sensor_type,
-            locations_query.c.sensor_id,
-            locations_query.c.location_id,
-            locations_query.c.installation_date,
-            LocationClass.id.label("location_id"),
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf,
-        )
-        .filter(SensorClass.type_id == TypeClass.id)
-        .filter(TypeClass.sensor_type == "Aranet T&RH")
-        .join(
-            locations_query,
-            SensorClass.id == locations_query.c.sensor_id,
-            isouter=True,
-        )
-        .join(
-            LocationClass,
-            LocationClass.id == locations_query.c.location_id,
-            isouter=True,
-        )
-    )
-    df_sensors = pd.read_sql(query.statement, query.session.bind)
-    df_sensors["distance"] = df_sensors.apply(
-        lambda row: distance_metric(
-            (zone, aisle, column, shelf),
-            (row["zone"], row["aisle"], row["column"], row["shelf"]),
-        ),
-        axis=1,
-    )
-    min_idx = np.argmin(df_sensors["distance"])
-    closest_row = df_sensors.loc[min_idx, :]
-    return (
-        int(closest_row["id"]),
-        closest_row["name"],
-        closest_row["zone"],
-        closest_row["aisle"],
-        int(closest_row["column"]),
-        int(closest_row["shelf"]),
-    )
-
-
-def query_trh_data(sensor_id, dt_from, dt_to):
-    query = queries.trh_with_vpd(db.session).filter(
-        and_(
-            ReadingsAranetTRHClass.sensor_id == sensor_id,
-            ReadingsAranetTRHClass.timestamp >= dt_from,
-            ReadingsAranetTRHClass.timestamp <= dt_to,
-        )
-    )
-
-    df = pd.read_sql(query.statement, query.session.bind)
-    return df
-
-
-def query_propagation_trh_data(dt_from, dt_to):
-    trh_query = queries.trh_with_vpd(db.session).subquery()
-    locations_query = queries.latest_sensor_locations(db.session).subquery()
-    query = (
-        db.session.query(
-            trh_query.c.timestamp,
-            trh_query.c.sensor_id,
-            trh_query.c.temperature,
-            trh_query.c.humidity,
-            trh_query.c.vpd,
-            SensorClass.id,
-            locations_query.c.sensor_id,
-            locations_query.c.location_id,
-            locations_query.c.installation_date,
-            LocationClass.zone,
-        )
-        .filter(
-            and_(
-                trh_query.c.sensor_id == SensorClass.id,
-                trh_query.c.timestamp >= dt_from,
-                trh_query.c.timestamp <= dt_to,
-            )
-        )
-        .join(
-            locations_query,
-            SensorClass.id == locations_query.c.sensor_id,
-            isouter=True,
-        )
-        .join(
-            LocationClass,
-            LocationClass.id == locations_query.c.location_id,
-            isouter=True,
-        )
-        .filter(LocationClass.zone == "Propagation")
-    )
-
-    df = pd.read_sql(query.statement, query.session.bind)
-    return df
-
-
-def batch_details_trh(details):
-    """Get data from the nearest T&RH sensor, for the relevant time period."""
-    dt_from = details["transfer_time"]
-    dt_to = (
-        details["harvest_time"]
-        if details["last_event"] == "harvest"
-        else datetime.utcnow()
-        if details["last_event"] == "transfer"
-        else None
-    )
-    if dt_from and dt_to:
-        (
-            sensor_id,
-            sensor_name,
-            sensor_zone,
-            sensor_aisle,
-            sensor_column,
-            sensor_shelf,
-        ) = find_closest_trh_sensor(
-            details["zone"], details["aisle"], details["column"], details["shelf"]
-        )
-        trh_df = query_trh_data(sensor_id, dt_from, dt_to)
-        trh_summary = {
-            "sensor_id": sensor_id,
-            "sensor_name": sensor_name,
-            "sensor_zone": sensor_zone,
-            "sensor_aisle": sensor_aisle,
-            "sensor_column": sensor_column,
-            "sensor_shelf": sensor_shelf,
-            "sensor_location": f"{sensor_zone} {sensor_column}{sensor_aisle}{sensor_shelf}",
-            "mean_temperature": np.mean(trh_df.loc[:, "temperature"]),
-            "mean_humidity": np.mean(trh_df.loc[:, "humidity"]),
-            "mean_vpd": np.mean(trh_df.loc[:, "vpd"]),
-        }
-    else:
-        trh_df = pd.DataFrame()
-        trh_summary = {}
-    return trh_df, trh_summary
-
-
-def batch_details_prop_trh(details):
-    """Get data from the propagation T&RH sensors for the propagation time period."""
-    prop_dt_from = details["propagate_time"]
-    prop_dt_to = (
-        details["transfer_time"]
-        if details["last_event"] in ("transfer", "harvest")
-        else datetime.utcnow()
-        if details["last_event"] == "propagate"
-        else None
-    )
-    if prop_dt_from and prop_dt_to:
-        prop_trh_df = query_propagation_trh_data(prop_dt_from, prop_dt_to)
-        prop_trh_summary = {
-            "mean_temperature": np.mean(prop_trh_df.loc[:, "temperature"]),
-            "mean_humidity": np.mean(prop_trh_df.loc[:, "humidity"]),
-            "mean_vpd": np.mean(prop_trh_df.loc[:, "vpd"]),
-        }
-    else:
-        prop_trh_summary = {}
-    return prop_trh_summary
-
-
 @blueprint.route("/batch_details", methods=["GET", "POST"])
 @login_required
 def batch_details():
@@ -327,90 +59,32 @@ def batch_details():
     batch_id = request.args.get("query")
     if batch_id is not None:
         batch_id = int(batch_id)
-    query = (
-        db.session.query(
-            BatchClass.id.label("batch_id"),
-            BatchClass.tray_size,
-            BatchClass.number_of_trays,
-            BatchClass.crop_type_id.label("batch_crop_type_id"),
-            CropTypeClass.id.label("crop_type_id"),
-            CropTypeClass.name.label("crop_type_name"),
-            BatchEventClass.id.label("batch_event_id"),
-            BatchEventClass.batch_id.label("event_batch_id"),
-            BatchEventClass.location_id.label("event_location_id"),
-            BatchEventClass.event_type,
-            BatchEventClass.event_time,
-            BatchEventClass.next_action_time,
-            HarvestClass.batch_event_id.label("harvest_batch_event_id"),
-            HarvestClass.crop_yield,
-            HarvestClass.waste_disease,
-            HarvestClass.waste_defect,
-            HarvestClass.over_production,
-            LocationClass.id.label("location_id"),
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf,
-        )
-        .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
-        .outerjoin(BatchEventClass, BatchEventClass.batch_id == BatchClass.id)
-        .outerjoin(HarvestClass, HarvestClass.batch_event_id == BatchEventClass.id)
-        .outerjoin(LocationClass, LocationClass.id == BatchEventClass.location_id)
-        .filter(BatchClass.id == batch_id)
+
+    subquery = queries.harvest_table(db.session).subquery()
+    query = db.session.query(subquery).filter(subquery.c.batch_id == batch_id)
+    details = pd.read_sql(query.statement, query.session.bind).iloc[0, :].to_dict()
+
+    # Get the TRH data for the period this batch was in the main growing area.
+    grow_query = queries.grow_trh(
+        db.session,
+        details["location_id"],
+        details["transfer_time"],
+        details["harvest_time"],
     )
-    df_raw = pd.read_sql(query.statement, query.session.bind)
-    details = collect_batch_details(df_raw)
-    details["batch_id"] = batch_id
-    if len(details) < 2:
-        # We know nothing but the batch_id, so render a mostly empty page.
-        return render_template(
-            f"{template}.html",
-            details=details,
-            trh_json={},
-            trh_summary={},
-            prop_trh_summary={},
-        )
-
-    if details["harvest_time"] is not None and details["transfer_time"] is not None:
-        details["grow_time"] = details["harvest_time"] - details["transfer_time"]
-    else:
-        details["grow_time"] = None
-    if details["crop_yield"] is not None and details["number_of_trays"] is not None:
-        # I don't understand meaning of the GrowApp field called tray_size, but it
-        # identifies the two different types of trays, and we know from Jakob how many
-        # square metres each one is.
-        tray_size = details["tray_size"]
-        tray_sqm = 0.25 if tray_size == 7.0 else 0.24 if tray_size == 3.0 else np.nan
-        details["yield_per_sqm"] = details["crop_yield"] / (
-            details["number_of_trays"] * tray_sqm
-        )
-    else:
-        details["yield_per_sqm"] = None
-
-    # Get T&RH sensor data relevant for this batch.
-    trh_df, trh_summary = batch_details_trh(details)
-    prop_trh_summary = batch_details_prop_trh(details)
+    grow_trh_df = pd.read_sql(grow_query.statement, grow_query.session.bind)
 
     # Format some of the fields to be strings. Easier to do here than in the Jinja
     # template.
     for column in ["weigh_time", "propagate_time", "transfer_time", "harvest_time"]:
         if details[column] is not None:
             details[column] = pd.to_datetime(details[column]).strftime("%Y-%m-%d %H:%M")
-    if details["yield_per_sqm"] is not None:
-        details["yield_per_sqm"] = f"{details['yield_per_sqm']:.1f}"
 
     if request.method == "POST":
-        return download_csv(trh_df, template)
-    trh_json = trh_df.to_json(orient="records")
+        return download_csv(grow_trh_df, template)
+    grow_trh_json = grow_trh_df.to_json(orient="records")
     # TODO Implement comparing some of the data in `details` to averages for the same
     # crop type. See https://github.com/alan-turing-institute/CROP/issues/284
-    return render_template(
-        f"{template}.html",
-        details=details,
-        trh_json=trh_json,
-        trh_summary=trh_summary,
-        prop_trh_summary=prop_trh_summary,
-    )
+    return render_template(f"{template}.html", details=details, trh_json=grow_trh_json)
 
 
 @blueprint.route("/harvest_list", methods=["GET", "POST"])
@@ -439,17 +113,6 @@ def harvest_list():
             df[column] = pd.to_datetime(df[column]).dt.strftime("%Y-%m-%d %H:%M")
     if "grow_time" in df:
         df["grow_time"] = df["grow_time"].round("s")
-    for column in [
-        "yield_per_sqm",
-        "avg_propagate_temperature",
-        "avg_propagate_humidity",
-        "avg_propagate_vpd",
-        "avg_grow_temperature",
-        "avg_grow_humidity",
-        "avg_grow_vpd",
-    ]:
-        if column in df:
-            df[column] = df[column].apply(lambda x: f"{x:.2f}")
     results_arr = df.to_dict("records")
 
     if request.method == "POST":
