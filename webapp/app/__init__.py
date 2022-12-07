@@ -50,6 +50,15 @@ def register_blueprints(app):
         app.register_blueprint(module.blueprint)
 
 
+def register_template_filters(app):
+    @app.template_filter()
+    def format_datetime(value):
+        try:
+            return value.strftime("%Y-%m-%d %H:%M")
+        except (ValueError, AttributeError):
+            return value
+
+
 def configure_database(app):
     @app.before_first_request
     def initialize_database():
@@ -106,6 +115,7 @@ def create_app(config, selenium=False):
         app.config["LOGIN_DISABLED"] = True
     register_extensions(app)
     register_blueprints(app)
+    register_template_filters(app)
     configure_database(app)
     configure_logs(app)
     apply_themes(app)

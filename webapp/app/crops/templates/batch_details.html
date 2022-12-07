@@ -56,19 +56,27 @@
                   </tr>
                   <tr>
                     <td class="text-alignright">Weigh time</td>
-                    <td>{{ details.weigh_time }}</td>
+                    <td>
+                      {{ details.weigh_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Propagate time</td>
-                    <td>{{ details.propagate_time }}</td>
+                    <td>
+                      {{ details.propagate_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Transfer time</td>
-                    <td>{{ details.transfer_time }}</td>
+                    <td>
+                      {{ details.transfer_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Harvest time</td>
-                    <td>{{ details.harvest_time }}</td>
+                    <td>
+                      {{ details.harvest_time|format_datetime }}
+                    </td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Grow time</td>
@@ -76,88 +84,108 @@
                   </tr>
                   <tr>
                     <td class="text-alignright">Location</td>
-                    <td>{{ details.location }}</td>
+                    <td>{{ details.location_summary }}</td>
                   </tr>
                   <tr>
                     <td class="text-alignright">Yield</td>
-                    <td>{{ details.crop_yield }}</td>
+                    {% if details.crop_yield != None %}
+                    <td>{{ '%0.1f'|format(details.crop_yield|float) }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Yield per square metre</td>
-                    <td>{{ details.yield_per_sqm }}</td>
+                    {% if details.yield_per_sqm != None %}
+                    <td>{{ '%0.1f'|format(details.yield_per_sqm|float) }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Disease</td>
-                    <td>{{ details.waste_disease }}</td>
+                    {% if details.waste_disease != None %}
+                    <td>{{ '%0.1f'|format(details.waste_disease|float) }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Defect</td>
-                    <td>{{ details.waste_defect }}</td>
+                    {% if details.waste_defect != None %}
+                    <td>{{ '%0.1f'|format(details.waste_defect|float) }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Over-production</td>
-                    <td>{{ details.over_production }}</td>
+                    {% if details.over_production != None %}
+                    <td>{{ '%0.1f'|format(details.over_production|float) }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Mean propagation temperature</td>
-                    {% if not prop_trh_summary|length == 0 %}
-                    <td>{{ '%0.1f'|format(prop_trh_summary.mean_temperature|float) }}°C</td>
+                    {% if details.avg_propagate_temperature != None %}
+                    <td>{{ '%0.1f'|format(details.avg_propagate_temperature|float) }}°C</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Mean propagation humidity</td>
-                    {% if not prop_trh_summary|length == 0 %}
-                    <td>{{ '%0.1f'|format(prop_trh_summary.mean_humidity|float) }}%</td>
+                    {% if details.avg_propagate_humidity != None %}
+                    <td>{{ '%0.1f'|format(details.avg_propagate_humidity|float) }}%</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Mean propagation VPD</td>
-                    {% if not prop_trh_summary|length == 0 %}
-                    <td>{{ '%0.0f'|format(prop_trh_summary.mean_vpd|float) }} Pa</td>
+                    {% if details.avg_propagate_vpd != None %}
+                    <td>{{ '%0.0f'|format(details.avg_propagate_vpd|float) }} Pa</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Closest farm sensor</td>
-                    {% if not trh_summary|length == 0 %}
-                    <td>{{ trh_summary.sensor_name }}</td>
+                    {% if details.closest_sensor_name != None %}
+                    <td>{{ details.closest_sensor_name }}</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Sensor location</td>
-                    {% if not trh_summary|length == 0 %}
-                    <td>{{ trh_summary.sensor_location }}</td>
+                    {% if details.sensor_location_summary != None %}
+                    <td>{{ details.sensor_location_summary }}</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Mean farm temperature</td>
-                    {% if not trh_summary|length == 0 %}
-                    <td>{{ '%0.1f'|format(trh_summary.mean_temperature|float) }}°C</td>
+                    {% if details.avg_grow_temperature != None %}
+                    <td>{{ '%0.1f'|format(details.avg_grow_temperature|float) }}°C</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Mean farm humidity</td>
-                    {% if not trh_summary|length == 0 %}
-                    <td>{{ '%0.1f'|format(trh_summary.mean_humidity|float) }}%</td>
+                    {% if details.avg_grow_humidity != None %}
+                    <td>{{ '%0.1f'|format(details.avg_grow_humidity|float) }}%</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}
                   </tr>
                   <tr>
                     <td class="text-alignright">Mean farm VPD</td>
-                    {% if not trh_summary|length == 0 %}
-                    <td>{{ '%0.0f'|format(trh_summary.mean_vpd|float) }} Pa</td>
+                    {% if details.avg_grow_vpd != None %}
+                    <td>{{ '%0.0f'|format(details.avg_grow_vpd|float) }} Pa</td>
                     {% else %}
                     <td>N/A</td>
                     {% endif %}

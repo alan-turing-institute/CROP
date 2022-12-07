@@ -12,7 +12,7 @@ from core.structure import (
     SensorLocationClass,
     LocationClass,
 )
-from core.queries import latest_sensor_locations_query
+from core import queries
 from app.sensors import blueprint
 from core.utils import query_result_to_array
 
@@ -21,7 +21,7 @@ from core.utils import query_result_to_array
 @login_required
 def sensor_list():
     """A view for listing all sensors."""
-    latest_locations = latest_sensor_locations_query(db.session).subquery()
+    latest_locations = queries.latest_sensor_locations(db.session).subquery()
     query = (
         db.session.query(
             SensorClass.id,
