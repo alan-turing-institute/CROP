@@ -56,7 +56,7 @@ def batch_details():
     if batch_id is not None:
         batch_id = int(batch_id)
 
-    subquery = queries.harvest_table(db.session).subquery()
+    subquery = queries.batch_list_with_trh(db.session).subquery()
     query = db.session.query(subquery).filter(subquery.c.batch_id == batch_id)
     details = pd.read_sql(query.statement, query.session.bind).iloc[0, :].to_dict()
 
@@ -86,7 +86,7 @@ def harvest_list():
     page, its harvest-event must have happened in this range.
     """
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-    subquery = queries.harvest_table(db.session).subquery()
+    subquery = queries.batch_list_with_trh(db.session).subquery()
     query = (
         db.session.query(subquery)
         .filter(
@@ -111,8 +111,8 @@ def harvest_list():
         )
 
 
-"""This dictionary defines which columns from the harvest_table query will be used in
-the parallel axes plot, and what they'll be called in the plot.
+"""This dictionary defines which columns from the batch_list_with_trh query will be used
+in the parallel axes plot, and what they'll be called in the plot.
 """
 parallel_axes_dict = {
     "crop_yield": "Crop yield (g)",
@@ -143,7 +143,7 @@ def parallel_axes():
     else:
         crop_type = urllib.parse.unquote(crop_type)
 
-    squery = queries.harvest_table(db.session).subquery()
+    squery = queries.batch_list_with_trh(db.session).subquery()
     query = db.session.query(squery).filter(
         and_(
             squery.c.crop_type_name == crop_type if crop_type != "all" else True,
