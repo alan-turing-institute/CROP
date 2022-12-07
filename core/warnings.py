@@ -8,6 +8,7 @@ import pandas as pd
 from sqlalchemy import and_, select
 from sqlalchemy.exc import ProgrammingError
 
+from . import queries
 from .structure import (
     TypeClass,
     SensorClass,
@@ -18,10 +19,7 @@ from .structure import (
     WarningClass,
     WarningTypeClass,
 )
-from .utils import (
-    get_crop_db_session,
-    filter_latest_sensor_location,
-)
+from .utils import get_crop_db_session
 from .db import session_close
 
 # TODO Can we avoid having these constants? If not, should they be in core.constants?
@@ -129,13 +127,13 @@ def get_sensors_without_locations(session):
 
 
 def get_aranet_sensors(session):
+    locations_query = queries.latest_sensor_locations(session).subquery()
     query = session.query(SensorClass.id, LocationClass.zone).filter(
         and_(
             TypeClass.id == SensorClass.type_id,
             TypeClass.sensor_type == "Aranet T&RH",
-            SensorClass.id == SensorLocationClass.sensor_id,
-            SensorLocationClass.location_id == LocationClass.id,
-            filter_latest_sensor_location(session),
+            SensorClass.id == locations_query.c.sensor_id,
+            locations_query.c.location_id == LocationClass.id,
         )
     )
     sensors = pd.read_sql(query.statement, query.session.bind)

@@ -216,55 +216,6 @@ def download_csv(readings, filename_base="results"):
     )
 
 
-def filter_latest_sensor_location(db):
-    """Return a filter object that excludes all but the latest location for each sensor.
-
-    This should be used to filter a query that involves the SensorLocationClass.
-
-    Args:
-        db: A database connection or session.
-    Returns:
-        An object that can be given as an argument to sqlalchemy.filter.
-    """
-    if hasattr(db, "session"):
-        session = db.session
-    else:
-        session = db
-    query = (
-        session.query(
-            SensorLocationClass.sensor_id,
-            func.max(SensorLocationClass.installation_date).label("installation_date"),
-        )
-        .group_by(SensorLocationClass.sensor_id)
-        .subquery()
-    )
-    return and_(
-        query.c.sensor_id == SensorLocationClass.sensor_id,
-        query.c.installation_date == SensorLocationClass.installation_date,
-    )
-
-
-def vapour_pressure_deficit(temperature, relative_humidity):
-    """Compute vapour pressure deficit from T&RH data.
-
-    Args:
-        temperature: Temperature in celsius. Must support element-wise np.exp, so can be
-            a scalar or e.g. a numpy array.
-        relative_humidity: Relative humidity in percentage. Can be a scalar or an array
-            of the same length as temperature.
-
-    Returns:
-    Vapour pressure deficit, in pascals.
-    """
-    # This called the Tetens equations, see
-    # https://en.wikipedia.org/wiki/Tetens_equation and
-    # https://pulsegrow.com/blogs/learn/vpd.
-    saturation_vapour_pressure = 610.78 * np.exp(
-        temperature / (temperature + 237.3) * 17.2694
-    )
-    return saturation_vapour_pressure * (1.0 - relative_humidity / 100.0)
-
-
 def log_upload_event(sensor_type, filename, status, log, connection_string):
     """
     Function will log the upload event in the database by capturing information

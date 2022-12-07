@@ -114,15 +114,16 @@ READINGS_DICTS = [
 
 def get_api_sensor_data(api_key, dt_from, dt_to, columns):
     """
-    Makes a request to download sensor data for specified metrics for a specified period of time.
-    Note that this gets data for _all_ sensors, and returns it as a dict, keyed by
-    Aranet id.
+    Makes a request to download sensor data for specified metrics for a specified period
+    of time.  Note that this gets data for _all_ sensors, and returns it as a dict,
+    keyed by Aranet id.
 
     Arguments:
         api_key: api key for authentication
         dt_from: date range from
         dt_to: date range to
-        columns: list of dictionaries containing metric names, as defined in READINGS_DICTS
+        columns: list of dictionaries containing metric names, as defined in
+        READINGS_DICTS
     Return:
         success: whether data request was succesful
         error: error message
@@ -209,21 +210,24 @@ def import_hyper_metric(
     engine, dt_from, dt_to, ReadingsClass, columns, sensor_type, conn_string
 ):
     """
-    For each type of sensor, make a call to the Hyper API, get a corresponding dictionary
-    of dataframes (keyed by the Aranet ID of the sensor), get the timestamps of existing readings
-    in the database, and upload new readings.
+    For each type of sensor, make a call to the Hyper API, get a corresponding
+    dictionary of dataframes (keyed by the Aranet ID of the sensor), get the timestamps
+    of existing readings in the database, and upload new readings.
 
     Arguments:
         engine: sqlalchemy engine, connected to the database
         dt_from: datetime
         dt_to: datetime,
-        ReadingsClass: the SQLAlchemy class (from structure.py) corresponding to the sensor type
-        columns: list of dicts, names of the columns as defined in READINGS_DICTS at top of module.
+        ReadingsClass: the SQLAlchemy class (from structure.py) corresponding to the
+        sensor type
+        columns: list of dicts, names of the columns as defined in READINGS_DICTS at top
+        of module.
         sensor_type: str, only used for log message.
         conn_string: str, only used for log message.
 
     Returns:
-        success: bool, did we successfully retrieve data from the API, the DB, and upload new data?
+        success: bool, did we successfully retrieve data from the API, the DB, and
+        upload new data?
         error: str, any error messages that arose
     """
     # Create the readings table if it doesn't exist.

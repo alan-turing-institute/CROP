@@ -51,24 +51,48 @@
                 <tbody>
 
                 {%
-                    for batch in batches:
+                for batch in batches:
                 %}
                 <tr>
                   <td>
-                   <a href="/crops/batch_details?query={{ batch.batch_id }}">
-                     <i class="fa fa-info-circle"></i>
-                   </a>
+                    <a href="/crops/batch_details?query={{ batch.batch_id }}">
+                      <i class="fa fa-info-circle"></i>
+                    </a>
                   </td>
-                  <td>{{ batch.crop_type_name }}</td>
-                  <td>{{ batch.last_event }}</td>
-                  <td>{{ batch.weigh_time }}</td>
-                  <td>{{ batch.propagate_time }}</td>
-                  <td>{{ batch.transfer_time }}</td>
-                  <td>{{ batch.harvest_time }}</td>
-                  <td class="last">{{ batch.location }}</td>
-                {%
-                    endfor
-                %}
+                  <td>
+                    {{ batch.crop_type_name }}
+                  </td>
+                  <td>
+                    {{ batch.last_event }}
+                  </td>
+                  <td>
+                    {% if batch.weigh_time != None %}
+                    {{ batch.weigh_time|format_datetime }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if batch.propagate_time != None %}
+                    {{ batch.propagate_time|format_datetime }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if batch.transfer_time != None %}
+                    {{ batch.transfer_time|format_datetime }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if batch.harvest_time != None %}
+                    {{ batch.harvest_time|format_datetime }}
+                    {% endif %}
+                  </td>
+                  <td class="last">
+                    {% if batch.location_summary != None %}
+                    {{ batch.location_summary }}
+                    {% endif %}
+                  </td>
+                  {%
+                  endfor
+                  %}
 
                 </tbody>
               </table>
