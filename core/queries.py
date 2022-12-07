@@ -72,7 +72,9 @@ def location_distances(session):
 
 def sensor_distances(session, latest_trh_locations_q=None):
     if latest_trh_locations_q is None:
-        latest_trh_locations_q = latest_trh_locations(session)
+        latest_trh_locations_q = latest_trh_locations(session).subquery(
+            "latest_trh_locations_sensor_distances"
+        )
     location_distances_cte = location_distances(session).cte(name="location_distances")
     query = session.query(
         location_distances_cte.c.id1.label("location_id"),
@@ -200,36 +202,31 @@ def latest_batch_events(session):
     return query
 
 
-def harvest_table(session):
-    latest_trh_locations_cte = latest_trh_locations(session).cte(
-        name="latest_trh_locations"
-    )
-    weigh_events_sq = batch_events_by_type(session, "weigh").subquery("weigh_events")
-    propagate_events_sq = batch_events_by_type(session, "propagate").subquery(
-        "propagate_events"
-    )
-    transfer_events_sq = batch_events_by_type(session, "transfer").subquery(
-        "transfer_events"
-    )
-    harvest_events_sq = batch_events_by_type(session, "harvest").subquery(
-        "harvest_events"
-    )
+def grow_trh(session, location_id, start_time, end_time, latest_trh_locations_q=None):
+    # "infinity" is a special value understood by postgres
+    if start_time is None:
+        start_time = "infinity"
+    if end_time is None:
+        end_time = "infinity"
     closest_trh_sensors_cte = closest_trh_sensors(
-        session, latest_trh_locations_q=latest_trh_locations_cte
-    ).cte(name="closest_trh_sensors")
-    propagation_trh_sensors_cte = trh_sensors_by_zone(
-        session, "Propagation", latest_trh_locations_q=latest_trh_locations_cte
-    ).cte("propagation_trh_sensors")
-
-    # Drop all the TRH data from before the first batch event, to make the following
-    # queries faster.
-    first_event_time_sq = first_batch_event_time(session).subquery("first_event_time")
-    trh_q = trh_with_vpd(session).filter(
-        ReadingsAranetTRHClass.timestamp >= first_event_time_sq.c.min_time
+        session, latest_trh_locations_q=latest_trh_locations_q
+    ).subquery(name="closest_trh_sensors")
+    trh_sq = trh_with_vpd(session).subquery("trh_with_vpd")
+    query = session.query(trh_sq).filter(
+        and_(
+            start_time < trh_sq.c.timestamp,
+            trh_sq.c.timestamp < end_time,
+            closest_trh_sensors_cte.c.location_id == location_id,
+            closest_trh_sensors_cte.c.sensor_id == trh_sq.c.sensor_id,
+        ),
     )
-    trh_sq = trh_q.subquery("trh")
+    return query
 
-    grow_trh_sq = (
+
+def grow_trh_aggregate(
+    session, trh_sq, transfer_events_sq, harvest_events_sq, closest_trh_sensors_cte
+):
+    query = (
         session.query(
             BatchClass.id.label("batch_id"),
             func.avg(trh_sq.c.temperature).label("avg_temp"),
@@ -251,12 +248,20 @@ def harvest_table(session):
             ),
         )
         .group_by(BatchClass.id)
-    ).subquery("grow_trh")
+    )
+    return query
 
+
+def propagate_trh_aggregate(
+    session, trh_q, propagate_events_sq, transfer_events_sq, latest_trh_locations_q
+):
+    propagation_trh_sensors_cte = trh_sensors_by_zone(
+        session, "Propagation", latest_trh_locations_q=latest_trh_locations_q
+    ).cte("propagation_trh_sensors")
     trh_prop_sq = trh_q.filter(
         ReadingsAranetTRHClass.sensor_id.in_(propagation_trh_sensors_cte)
     ).subquery("trh_prop_sq")
-    propagate_trh_sq = (
+    query = (
         session.query(
             BatchClass.id.label("batch_id"),
             func.avg(trh_prop_sq.c.temperature).label("avg_temp"),
@@ -273,9 +278,54 @@ def harvest_table(session):
             ),
         )
         .group_by(BatchClass.id)
+    )
+    return query
+
+
+# TODO harvest_list duplicates a lot of batch_list, they should probably rather use each
+# other.
+def harvest_table(session):
+    latest_trh_locations_cte = latest_trh_locations(session).cte(
+        name="latest_trh_locations"
+    )
+    weigh_events_sq = batch_events_by_type(session, "weigh").subquery("weigh_events")
+    propagate_events_sq = batch_events_by_type(session, "propagate").subquery(
+        "propagate_events"
+    )
+    transfer_events_sq = batch_events_by_type(session, "transfer").subquery(
+        "transfer_events"
+    )
+    harvest_events_sq = batch_events_by_type(session, "harvest").subquery(
+        "harvest_events"
+    )
+
+    # Drop all the TRH data from before the first batch event, to make the following
+    # queries faster.
+    first_event_time_sq = first_batch_event_time(session).subquery("first_event_time")
+    trh_q = trh_with_vpd(session).filter(
+        ReadingsAranetTRHClass.timestamp >= first_event_time_sq.c.min_time
+    )
+    trh_sq = trh_q.subquery("trh")
+
+    closest_trh_sensors_cte = closest_trh_sensors(
+        session, latest_trh_locations_q=latest_trh_locations_cte
+    ).cte(name="closest_trh_sensors_grow_trh_agg")
+    grow_trh_sq = grow_trh_aggregate(
+        session, trh_sq, transfer_events_sq, harvest_events_sq, closest_trh_sensors_cte
+    ).subquery("grow_trh")
+
+    propagate_trh_sq = propagate_trh_aggregate(
+        session,
+        trh_q,
+        propagate_events_sq,
+        transfer_events_sq,
+        latest_trh_locations_cte,
     ).subquery("propagate_trh")
 
     harvest_sq = harvest_with_unit_yield(session).subquery("harvest_with_unit_yield")
+
+    locations_sq = locations_with_extras(session).subquery("locations")
+    locations_sq2 = aliased(locations_sq)
 
     query = (
         session.query(
@@ -287,10 +337,14 @@ def harvest_table(session):
             propagate_events_sq.c.event_time.label("propagate_time"),
             transfer_events_sq.c.event_time.label("transfer_time"),
             harvest_events_sq.c.event_time.label("harvest_time"),
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf,
+            locations_sq.c.id.label("location_id"),
+            locations_sq.c.zone,
+            locations_sq.c.aisle,
+            locations_sq.c.column,
+            locations_sq.c.shelf,
+            locations_sq.c.summary.label("location_summary"),
+            SensorClass.name.label("closest_sensor_name"),
+            locations_sq2.c.summary.label("sensor_location_summary"),
             harvest_sq.c.yield_per_sqm,
             harvest_sq.c.crop_yield,
             harvest_sq.c.waste_disease,
@@ -299,6 +353,15 @@ def harvest_table(session):
             (harvest_events_sq.c.event_time - transfer_events_sq.c.event_time).label(
                 "grow_time"
             ),
+            case(
+                [
+                    (harvest_events_sq.c.event_time != None, "harvest"),
+                    (transfer_events_sq.c.event_time != None, "transfer"),
+                    (propagate_events_sq.c.event_time != None, "propagate"),
+                    (weigh_events_sq.c.event_time != None, "weigh"),
+                ],
+                else_=None,
+            ).label("last_event"),
             grow_trh_sq.c.avg_temp.label("avg_grow_temperature"),
             grow_trh_sq.c.avg_rh.label("avg_grow_humidity"),
             grow_trh_sq.c.avg_vpd.label("avg_grow_vpd"),
@@ -313,7 +376,19 @@ def harvest_table(session):
         .outerjoin(propagate_events_sq, propagate_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(transfer_events_sq, transfer_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(harvest_events_sq, harvest_events_sq.c.batch_id == BatchClass.id)
-        .outerjoin(LocationClass, LocationClass.id == transfer_events_sq.c.location_id)
+        .outerjoin(locations_sq, locations_sq.c.id == transfer_events_sq.c.location_id)
+        .outerjoin(
+            closest_trh_sensors_cte,
+            closest_trh_sensors_cte.c.location_id == transfer_events_sq.c.location_id,
+        )
+        .outerjoin(SensorClass, SensorClass.id == closest_trh_sensors_cte.c.sensor_id)
+        .outerjoin(
+            latest_trh_locations_cte,
+            latest_trh_locations_cte.c.sensor_id == SensorClass.id,
+        )
+        .outerjoin(
+            locations_sq2, locations_sq2.c.id == latest_trh_locations_cte.c.location_id
+        )
         .outerjoin(harvest_sq, harvest_sq.c.batch_event_id == harvest_events_sq.c.id)
         .outerjoin(grow_trh_sq, grow_trh_sq.c.batch_id == BatchClass.id)
         .outerjoin(propagate_trh_sq, propagate_trh_sq.c.batch_id == BatchClass.id)
@@ -333,6 +408,7 @@ def batch_list(session):
         "harvest_events"
     )
     harvest_sq = harvest_with_unit_yield(session).subquery("harvest_with_unit_yield")
+    locations_sq = locations_with_extras(session).subquery("locations")
 
     query = (
         session.query(
@@ -345,11 +421,12 @@ def batch_list(session):
             propagate_events_sq.c.event_time.label("propagate_time"),
             transfer_events_sq.c.event_time.label("transfer_time"),
             harvest_events_sq.c.event_time.label("harvest_time"),
-            LocationClass.id.label("location_id"),
-            LocationClass.zone,
-            LocationClass.aisle,
-            LocationClass.column,
-            LocationClass.shelf,
+            locations_sq.c.id.label("location_id"),
+            locations_sq.c.zone,
+            locations_sq.c.aisle,
+            locations_sq.c.column,
+            locations_sq.c.shelf,
+            locations_sq.c.summary.label("location_summary"),
             harvest_sq.c.yield_per_sqm,
             harvest_sq.c.crop_yield,
             harvest_sq.c.waste_disease,
@@ -367,19 +444,6 @@ def batch_list(session):
                 ],
                 else_=None,
             ).label("last_event"),
-            func.concat(
-                LocationClass.zone,
-                case(
-                    [
-                        (
-                            LocationClass.column != None,
-                            func.concat(" ", LocationClass.column),
-                        )
-                    ]
-                ),
-                case([(LocationClass.aisle != None, LocationClass.aisle)]),
-                case([(LocationClass.shelf != None, LocationClass.shelf)]),
-            ).label("location"),
         )
         .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
         # We inner join on weigh_events, because if the batch doesn't have a weigh event
@@ -388,14 +452,15 @@ def batch_list(session):
         .outerjoin(propagate_events_sq, propagate_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(transfer_events_sq, transfer_events_sq.c.batch_id == BatchClass.id)
         .outerjoin(harvest_events_sq, harvest_events_sq.c.batch_id == BatchClass.id)
-        .outerjoin(LocationClass, LocationClass.id == transfer_events_sq.c.location_id)
+        .outerjoin(locations_sq, locations_sq.c.id == transfer_events_sq.c.location_id)
         .outerjoin(harvest_sq, harvest_sq.c.batch_event_id == harvest_events_sq.c.id)
     )
     return query
 
 
-def locations_with_regions(session):
-    """Return the locations table but with a an extra column for what we call "region".
+def locations_with_extras(session):
+    """Return the locations table but with a an extra columns for what we call "region"
+    and for summarising the location in a single string.
 
     Region distinguishes between front, back, and mid parts of tunnel 3. Propagation and
     R&D are regions by themselves, other tunnels have region "N/A".
@@ -431,5 +496,18 @@ def locations_with_regions(session):
             ],
             else_="N/A",
         ).label("region"),
+        func.concat(
+            LocationClass.zone,
+            case(
+                [
+                    (
+                        LocationClass.column != None,
+                        func.concat(" ", LocationClass.column),
+                    )
+                ]
+            ),
+            case([(LocationClass.aisle != None, LocationClass.aisle)]),
+            case([(LocationClass.shelf != None, LocationClass.shelf)]),
+        ).label("summary"),
     )
     return query
