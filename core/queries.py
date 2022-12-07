@@ -29,6 +29,9 @@ def crop_types(session):
 
 
 def latest_sensor_locations(session):
+    """A query like SensorLocationClass, but with only one row per sensor, the one with
+    the most recent installation date.
+    """
     subquery = session.query(
         SensorLocationClass,
         func.max(SensorLocationClass.installation_date)
@@ -42,6 +45,9 @@ def latest_sensor_locations(session):
 
 
 def latest_trh_locations(session):
+    """A query like latest_sensor_locations, but restricted to Aranet T&RH sensors
+    only.
+    """
     subquery = latest_sensor_locations(session).subquery()
     query = (
         session.query(subquery)
@@ -53,6 +59,15 @@ def latest_trh_locations(session):
 
 
 def location_distances(session):
+    """A query with three columns: id1, id2, which are location ids, and distance, which
+    is the distance metric value for those two locations.
+
+    We define our distance metric as follows: It's None/null (representing infinity) if
+    the locations are in different zones, otherwise it is
+    the difference in the column numbers
+    + the difference in shelf numbers
+    + 1 if the locations are on different aisles.
+    """
     l1 = aliased(LocationClass)
     l2 = aliased(LocationClass)
     query = session.query(
@@ -69,6 +84,11 @@ def location_distances(session):
 
 
 def sensor_distances(session, latest_trh_locations_q=None):
+    """Query with three columns: location_id, sensor_id, and distance, that measures the
+    distance between each sensor and location.
+
+    See location_distances for how the distance metric is defined.
+    """
     if latest_trh_locations_q is None:
         latest_trh_locations_q = latest_trh_locations(session).subquery(
             "latest_trh_locations_sensor_distances"
@@ -86,6 +106,9 @@ def sensor_distances(session, latest_trh_locations_q=None):
 
 
 def closest_trh_sensors(session, latest_trh_locations_q=None):
+    """Query with two columns: location_id (for every location there is) and sensor_id
+    for the T&RH sensor closest to that location.
+    """
     sensor_distances_cte = sensor_distances(
         session, latest_trh_locations_q=latest_trh_locations_q
     ).cte(name="sensor_distances")
@@ -106,19 +129,21 @@ def closest_trh_sensors(session, latest_trh_locations_q=None):
 
 
 def first_batch_event_time(session):
+    """Query for the time of the first event in BatchEventClass."""
     query = session.query(func.min(BatchEventClass.event_time).label("min_time"))
     return query
 
 
 def batch_events_by_type(session, type_name):
+    """Query for all BatchEventClass rows of the type given by type_name."""
     subquery = latest_batch_events(session).subquery()
     query = session.query(subquery).filter(subquery.c.event_type == type_name)
     return query
 
 
 def trh_with_vpd(session):
-    """Query that is like the ReadingsAranetTRHClass, except it has the extra column
-    "vpd" for vapour pressure deficit.
+    """Query like ReadingsAranetTRHClass, except with the extra column "vpd" for vapour
+    pressure deficit.
     """
     query = session.query(
         ReadingsAranetTRHClass,
@@ -140,6 +165,7 @@ def trh_with_vpd(session):
 
 
 def trh_sensors_by_zone(session, zone_name, latest_trh_locations_q=None):
+    """Query with one column, `id`, for the ids of all the sensors in zone zone_name."""
     if latest_trh_locations_q is None:
         latest_trh_locations_q = latest_trh_locations(session)
     query = (
@@ -155,7 +181,7 @@ def trh_sensors_by_zone(session, zone_name, latest_trh_locations_q=None):
 
 
 def harvest_with_unit_yield(session):
-    """A query that's like the harvest table, but with a column yield_per_sqm."""
+    """Query like HarvestClass but with a column yield_per_sqm."""
     query = (
         session.query(
             HarvestClass,
@@ -184,9 +210,9 @@ def harvest_with_unit_yield(session):
 
 
 def latest_batch_events(session):
-    """A query like the batch events table, but filter to only keep the latest instance
-    of each (batch_id, event_type) pair, e.g. if the same batch has multiple "propagate"
-    events only keep the last.
+    """Query like BatchEventClass, but filtered to only keep the latest instance of each
+    (batch_id, event_type) pair, e.g. if the same batch has multiple "propagate" events
+    only keep the last.
     """
     subquery = session.query(
         BatchEventClass,
@@ -201,6 +227,9 @@ def latest_batch_events(session):
 
 
 def grow_trh(session, location_id, start_time, end_time, latest_trh_locations_q=None):
+    """Query of T&RH data (with VPD) from the sensor closest to location_id, within the
+    time window from start_time to end_time.
+    """
     # "infinity" is a special value understood by postgres
     if start_time is None:
         start_time = "infinity"
@@ -222,6 +251,14 @@ def grow_trh(session, location_id, start_time, end_time, latest_trh_locations_q=
 
 
 def grow_trh_aggregate(session, batches_sq, trh_sq, closest_trh_sensors_cte):
+    """Query with four columns: batch_id, avg_temp, avg_rh, and avg_vpd, where the last
+    three are means of T&RH values over the period from transfer time to harvest time
+    from the closest sensor for each batch.
+
+    trh_sq is the T&RH subquery to use for getting the T&RH data, batches_sq is a query
+    (probably the output of batch_list) with columns for batch_id, location_id,
+    transfer_time, and harvest_time.
+    """
     query = (
         session.query(
             batches_sq.c.batch_id,
@@ -247,6 +284,14 @@ def grow_trh_aggregate(session, batches_sq, trh_sq, closest_trh_sensors_cte):
 
 
 def propagate_trh_aggregate(session, batches_sq, trh_q, latest_trh_locations_q):
+    """Query with four columns: batch_id, avg_temp, avg_rh, and avg_vpd, where the last
+    three are means of T&RH values over the period from propagation time to transfer
+    time for each batch from the propagation sensors.
+
+    trh_sq is the T&RH subquery to use for getting the T&RH data, batches_sq is a query
+    (probably the output of batch_list) with columns for batch_id, propagate_time, and
+    transfer_time.
+    """
     propagation_trh_sensors_cte = trh_sensors_by_zone(
         session, "Propagation", latest_trh_locations_q=latest_trh_locations_q
     ).cte("propagation_trh_sensors")
@@ -273,6 +318,13 @@ def propagate_trh_aggregate(session, batches_sq, trh_q, latest_trh_locations_q):
 
 
 def batch_list_with_trh(session):
+    """Query like batch_list, but with columns for information about the nearest sensor,
+    and T&RH growing and propagation conditions.
+
+    The added columns are called closest_sensor_name, sensor_location_summary,
+    avg_grow_temperature avg_grow_humidity, avg_grow_vpd, avg_propagate_temperature,
+    avg_propagate_humidity, and avg_propagate_vpd.
+    """
     batch_list_sq = batch_list(session).subquery("batch_list")
 
     # Drop all the TRH data from before the first batch event, to make the following
@@ -335,6 +387,36 @@ def batch_list_with_trh(session):
 
 
 def batch_list(session):
+    """Query for all sorts of data related to batches, one row per batch.
+
+    Columns included are:
+    batch_id,
+    tray_size,
+    number_of_trays,
+    crop_type_id,
+    crop_type_name,
+    weigh_time,
+    propagate_time,
+    transfer_time,
+    harvest_time,
+    location_id,
+    zone (zone, aisle, column, and shelf are for the location in the main farm),
+    aisle,
+    column,
+    shelf,
+    location_summary,
+    yield_per_sqm,
+    crop_yield,
+    waste_disease,
+    waste_defect,
+    over_production,
+    grow_time,
+    last_event (one of "weigh", "propagate", "transfer", or "harvest").
+
+    Batches that don't have even a weighing event are not included in the query. Batches
+    that have multiple cases of the same event (e.g. two propagation events) only have
+    the latest of each event type included.
+    """
     weigh_events_sq = batch_events_by_type(session, "weigh").subquery("weigh_events")
     propagate_events_sq = batch_events_by_type(session, "propagate").subquery(
         "propagate_events"
@@ -397,8 +479,8 @@ def batch_list(session):
 
 
 def locations_with_extras(session):
-    """Return the locations table but with a an extra columns for what we call "region"
-    and for summarising the location in a single string.
+    """Query like LocationClass but with extra columns for what we call "region" and for
+    summarising the location in a single string, called "summary".
 
     Region distinguishes between front, back, and mid parts of tunnel 3. Propagation and
     R&D are regions by themselves, other tunnels have region "N/A".
