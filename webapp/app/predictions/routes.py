@@ -38,7 +38,9 @@ def aranet_trh_query(dt_from, dt_to):
     Returns:
         df: a df with the queried data
     """
-    locations_query = queries.latest_sensor_locations(db.session)
+    locations_query = queries.latest_sensor_locations(db.session).subquery(
+        "sensor_locations"
+    )
     query = db.session.query(
         ReadingsAranetTRHClass.timestamp,
         ReadingsAranetTRHClass.sensor_id,
@@ -48,7 +50,6 @@ def aranet_trh_query(dt_from, dt_to):
     ).filter(
         and_(
             locations_query.c.location_id == LocationClass.id,
-            ReadingsAranetTRHClass.sensor_id == SensorClass.id,
             ReadingsAranetTRHClass.sensor_id == locations_query.c.sensor_id,
             ReadingsAranetTRHClass.timestamp >= dt_from,
             ReadingsAranetTRHClass.timestamp <= dt_to,
