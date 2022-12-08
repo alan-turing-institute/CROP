@@ -11,7 +11,7 @@ def pytest_configure(config):
     file after command line options have been parsed.
     """
 
-    print("pytest_configure: start")
+    print("pytest_configure: start " + SQL_CONNECTION_STRING + " " + SQL_TEST_DBNAME)
 
     # establishes temp DB for testing
     upload_synthetic_data.main(SQL_TEST_DBNAME)
