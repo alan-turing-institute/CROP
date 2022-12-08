@@ -87,7 +87,7 @@ cleanEnvData = function() {
   # select the time duration over which you want to find new hourly averages
   # the bit of code below creates a list with a column named "FarmTimestamp"
   # over the specified range and with the specified delta
-  my_time <- data.frame(FarmTimestamp = seq(from = min(trh$Timestamp)+3600,
+  my_time <- data.frame(FarmTimestamp = seq(from = min(trh$Timestamp)+3600, # TODO: why are we adding 3600 seconds?
                                             to = max(trh$Timestamp),
                                             by = "1 hour"))
 
@@ -98,7 +98,7 @@ cleanEnvData = function() {
   # Identify each unique sensor
   sensor_names_from_database <- unique(trh$name)
   sensor_names = c()
-  SENSOR_ID = list("FARM_T/RH_16B1"=18, "Farm_T/RH_16B2"=27, "Farm_T/RH_16B4"=23)
+  SENSOR_ID = list("FARM_T/RH_16B1"=18, "Farm_T/RH_16B2"=27, "Farm_T/RH_16B4"=23) # TODO: "FARM_T/RH_16B1" not getting idetified because in capital letters
   for (n in sensor_names_from_database)
   {
     #print (n)
