@@ -45,74 +45,6 @@ CONST_AEGIS_IRRIGATION_SENSOR_TYPE = "Aegis II"
 
 CONST_API_WEATHER_TYPE = "openweathermap"
 
-# FILE STRUCTURE
-CONST_DATA_FOLDER = "data"
-CONST_TEST_FOLDER = "tests"
-CONST_CORE_DATA_FOLDER = "Core"
-CONST_AIR_VELOCITY_FOLDER = "Air_Velocity"
-CONST_ENV_FOLDER = "Environmental"
-
-CONST_SENSOR_LOCATION_TESTS = "sensor_location_tests"
-
-CONST_TEST_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", CONST_TEST_FOLDER)
-)
-CONST_TEST_DIR_DATA = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER)
-CONST_COREDATA_DIR = os.path.join(
-    CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_CORE_DATA_FOLDER
-)
-CONST_ENV_DIR = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER)
-
-# Core data
-SENSOR_CSV = "Sensors.csv"  # List of sensors
-SENSOR_TYPE_CSV = "Sensortypes.csv"  # list of all available sensor types
-LOCATION_CSV = "locations.csv"  # List of locations in the farm
-
-# Air Velocity test data
-CONST_AIR_VELOCITY_TEST_1 = "data-20200128-test1.csv"
-
-# New environmental sensors IMPORT
-CONST_NEW_ENV_COL_TIMESTAMP = "Logger timestamp"
-CONST_NEW_ENV_COL_DEVICE = "Device Address"
-CONST_NEW_ENV_COL_UPTIME = "Uptime"
-CONST_NEW_ENV_COL_BATTERY = "Battery"
-CONST_NEW_ENV_COL_VALIDITY = "Validity"
-CONST_NEW_ENV_COL_CH0 = "Ch.0"
-CONST_NEW_ENV_COL_CH1 = "Ch.1"
-CONST_NEW_ENV_COL_CH2 = "Ch.2"
-CONST_NEW_ENV_COL_CH3 = "Ch.3"
-CONST_NEW_ENV_COL_OPT3001 = "OPT3001"
-CONST_NEW_ENV_COL_CO2 = "Cozir CO2"
-CONST_NEW_ENV_COL_TEMPERATURE = "SHT21 Temp"
-CONST_NEW_ENV_COL_HUMIDITY = "SHT21 Humid"
-CONST_NEW_ENV_COL_DS_TEMP = "DS3231 Temp"
-CONST_NEW_ENV_COL_LIST = [
-    CONST_NEW_ENV_COL_TIMESTAMP,
-    CONST_NEW_ENV_COL_DEVICE,
-    CONST_NEW_ENV_COL_UPTIME,
-    CONST_NEW_ENV_COL_UPTIME,
-    CONST_NEW_ENV_COL_BATTERY,
-    CONST_NEW_ENV_COL_VALIDITY,
-    CONST_NEW_ENV_COL_CH0,
-    CONST_NEW_ENV_COL_CH1,
-    CONST_NEW_ENV_COL_CH2,
-    CONST_NEW_ENV_COL_CH3,
-    CONST_NEW_ENV_COL_OPT3001,
-    CONST_NEW_ENV_COL_CO2,
-    CONST_NEW_ENV_COL_TEMPERATURE,
-    CONST_NEW_ENV_COL_HUMIDITY,
-    CONST_NEW_ENV_COL_DS_TEMP,
-]
-
-# New Environmental sensors test data
-CONST_NEW_ENV_TEST_1 = "raw-20200124-test1.csv"  # Healthy data file
-
-# Error messages
-ERR_IMPORT_ERROR_1 = "Import file does not contain all the necessary columns."
-ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)"
-ERR_IMPORT_ERROR_3 = "Data contains empty entries"
-ERR_IMPORT_ERROR_4 = "Data contains duplicates"
-ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # STARK
 STARK_USERNAME = (
@@ -241,3 +173,37 @@ CONST_OPENWEATHERMAP_FORECAST_URL = (
     f"https://api.openweathermap.org/data/3.0/onecall?"
     f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid="
 )  # weather forecast URL withouth API key
+
+# Testing-related constants - filenames and filepaths
+
+CONST_TEST_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests")
+)
+CONST_TESTDATA_BASE_FOLDER = os.path.join(CONST_TEST_DIR, "data")
+CONST_TESTDATA_SENSOR_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Sensors")
+CONST_TESTDATA_WEATHER_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Weather")
+CONST_TESTDATA_ELECTRICITY_FOLDER = os.path.join(
+    CONST_TESTDATA_BASE_FOLDER, "Electricity"
+)
+CONST_TESTDATA_ENVIRONMENT_FOLDER = os.path.join(
+    CONST_TESTDATA_BASE_FOLDER, "Environmental"
+)
+CONST_TESTDATA_CROPGROWTH_FOLDER = os.path.join(
+    CONST_TESTDATA_BASE_FOLDER, "CropGrowth"
+)
+
+# test data filenames
+SENSOR_CSV = "sensors.csv"  # List of sensors
+SENSOR_TYPE_CSV = "sensor_types.csv"  # List of all available sensor types
+LOCATION_CSV = "locations.csv"  # List of locations in the farm
+SENSOR_LOCATION_CSV = "sensor_locations.csv"  # List of sensor locations
+
+# Air Velocity test data
+CONST_AIR_VELOCITY_TEST_1 = "data-20200128-test1.csv"
+
+# Error messages
+ERR_IMPORT_ERROR_1 = "Import file does not contain all the necessary columns."
+ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)"
+ERR_IMPORT_ERROR_3 = "Data contains empty entries"
+ERR_IMPORT_ERROR_4 = "Data contains duplicates"
+ERR_IMPORT_ERROR_5 = "Data contains invalid values"
