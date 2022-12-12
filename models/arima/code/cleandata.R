@@ -24,6 +24,7 @@ decimal_hour <- function(my_timestamp){
 hourly_av_sensor <- function(trh, sensor_index,my_time){
 
   # subset the data set for the sensor of choice
+  # select only the row entries that correspond to the sensor of choice
   trh_sub<- subset(trh, name== sensor_index)
 
   # Find the mean temp and RH for this new HourPM
@@ -39,15 +40,24 @@ hourly_av_sensor <- function(trh, sensor_index,my_time){
   trh_ph <- delete.na(trh_ph,1)
 
   # calculate a second hourly average where averaging over the entire hour rather than between xxh45-xxh15.
+  # note that this actually is NOT used
   trh_ph2 <- plyr::ddply(trh_sub, .(Date,Hour),
                    summarise,
                    Temp_hourav=mean(temperature, na.rm = T),
                    Humid_hourav = mean(humidity, na.rm = T))
   trh_ph2$Timestamp <- as.POSIXct(paste(trh_ph2$Date, trh_ph2$Hour),tz="UTC",format="%Y-%m-%d %H")
+  # A left join in R is a merge operation between two data frames
+  # where the merge returns all of the rows from one table (the left side)
+  # and any matching rows from the second table. A left join in R will NOT
+  # return values of the second table which do not already exist in the first table.
+  # by: A character vector of variables to join by.
+  # If NULL, the default, will perform a natural join, using all variables in common
+  # across x and y
   trh_ph<- dplyr::left_join(trh_ph,trh_ph2,by=c("Timestamp") )
 
   trh_ph$FarmTimestamp <- trh_ph$Timestamp
 
+  # note that Temp_hourav and Humid_hourav not returned
   trh_ph_all <- dplyr::left_join(my_time, trh_ph[c("FarmTimestamp","Timestamp",
                                             "Temperature","Humidity")])
 
