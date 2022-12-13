@@ -8,6 +8,21 @@ sensors_list = sensors_list["include_sensors"]
 
 
 def timeVector(start, end, frequency="1H", offset=1):
+    """
+    Create a vector of increasing timestamps.
+
+    Parameters:
+        start: starting timestamp.
+        end: end timestamp.
+        frequency: delta between successive timestamps.
+            The default is "1H".
+        offset: date offset added to the starting timestamp,
+            in hours. The default is 1.
+    Returns:
+        time_vector: a pandas dataframe, with a single column
+            named "timestamp", containing the vector of increasing
+            timestamps.
+    """
     # create a Pandas fixed frequency DatetimeIndex
     time_vector = pd.date_range(
         start + pd.DateOffset(hours=offset),
@@ -24,13 +39,36 @@ def timeVector(start, end, frequency="1H", offset=1):
 
 
 def hourly_average_sensor(env_data, col_names, time_vector):
+    """
+    Split the pandas dataframe containing the environment data
+    into the user-requested list of sensors, group by the column
+    "timestamp_hour_plus_minus", and perform averaging of the
+    requested columns.
+
+    Arguments:
+        env_data: pre-processed pandas dataframe containing the
+            environment data.
+        col_names: list containing the names of the columns on
+            which to perform the averaging after grouping by the
+            column "timestamp_hour_plus_minus".
+        time_vector: pandas dataframe containing a vector of increasing
+            timestamps. Only timestamps contained in "time_vector"
+            will be returned in the output ("hour_averages").
+    Returns:
+        hour_averages: a dict with keys named after the user-requested
+            sensors, containing the columns on which averaging has been
+            performed. Note that the column "timestamp_hour_plus_minus"
+            is renamed to "timestamp".
+    """
     hour_averages = dict.fromkeys(
         sensors_list
-    )  # creates empty dict with specified keys
+    )  # creates empty dict with specified keys (requested sensors)
     keys = list(hour_averages.keys())
     grouped = env_data.groupby("name")  # group by sensor name
     for ii in range(len(hour_averages)):
         sensor = grouped.get_group(keys[ii])
+        # group by column "timestamp_hour_plus_minus" and perform
+        # averaging on the requested columns
         hour_averages[keys[ii]] = sensor.groupby(
             "timestamp_hour_plus_minus", as_index=False
         )[col_names].mean()
