@@ -443,9 +443,6 @@ def index():
     """
     Index page
     """
-    # TODO The page would probably load faster if we did one DB query to get all the
-    # data we need and then slice that.
-
     dt_to = dt.datetime.now(dt.timezone.utc)
     dt_from_fortnightly = dt_to - dt.timedelta(days=14)
     dt_from_weekly = dt_to - dt.timedelta(days=7)
