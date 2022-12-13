@@ -14,10 +14,16 @@ def timeVector(start, end, frequency="1H", offset=1):
         end,
         freq=frequency,
     )
+    time_vector = time_vector.to_frame(index=False)
+    # rename the column to "timestamp"
+    time_vector.rename(
+        columns={list(time_vector)[0]: "timestamp"},
+        inplace=True,
+    )
     return time_vector
 
 
-def hourly_average_sensor(env_data, var_names):
+def hourly_average_sensor(env_data, col_names, time_vector):
     hour_averages = dict.fromkeys(
         sensors_list
     )  # creates empty dict with specified keys
@@ -27,7 +33,19 @@ def hourly_average_sensor(env_data, var_names):
         sensor = grouped.get_group(keys[ii])
         hour_averages[keys[ii]] = sensor.groupby(
             "timestamp_hour_plus_minus", as_index=False
-        )[var_names].mean()
+        )[col_names].mean()
+        # rename the column to "timestamp"
+        hour_averages[keys[ii]].rename(
+            columns={"timestamp_hour_plus_minus": "timestamp"},
+            inplace=True,
+        )
+        # perform a left merge with "time_vector" so that only
+        # timestamps contained in "time_vector" are retained
+        hour_averages[keys[ii]] = pd.merge(
+            time_vector,
+            hour_averages[keys[ii]],
+            how="left",
+        )
     return hour_averages
 
 
@@ -73,10 +91,15 @@ def cleanEnvData(env_data):
     # remove row entries that have been assigned None above
     env_data = env_data.dropna(subset="timestamp_hour_plus_minus")
 
-    hour_averages = hourly_average_sensor(env_data, ["temperature", "humidity"])
-
     time_vector = timeVector(
         start=min(env_data["timestamp_hour_floor"]),
         end=max(env_data["timestamp_hour_floor"]),
     )
-    return env_data, hour_averages
+
+    hour_averages = hourly_average_sensor(
+        env_data,
+        ["temperature", "humidity"],
+        time_vector,
+    )
+
+    return env_data, hour_averages, time_vector
