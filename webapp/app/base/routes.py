@@ -12,6 +12,7 @@ from app.base.forms import LoginForm, CreateAccountForm
 
 from core.structure import SQLA as db
 from core.structure import UserClass
+from core import utils
 
 
 @blueprint.route("/")
@@ -62,13 +63,11 @@ def login():
     return redirect(url_for("home_blueprint.index"))
 
 
-# TODO Fix this end point.
-# @blueprint.route("/create_user", methods=["POST"])
-# def create_user():
-#    user = UserClass(**request.form)
-#    db.session.add(user)
-#    db.session.commit()
-#    return jsonify("success")
+@blueprint.route("/create_user", methods=["POST"])
+@login_required
+def create_user():
+    success, result = utils.create_user(**request.form)
+    return jsonify({"success": success, "output": result})
 
 
 @blueprint.route("/logout")
