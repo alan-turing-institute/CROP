@@ -57,6 +57,9 @@ def route_template(template):
                 loc_aisle = request.form.get("loc_aisle")
                 loc_column = request.form.get("loc_column")
                 loc_shelf = request.form.get("loc_shelf")
+                loc_aisle = None if loc_aisle == "" else loc_aisle
+                loc_column = None if loc_column == "" else loc_column
+                loc_shelf = None if loc_shelf == "" else loc_shelf
 
                 # Adding a new location
                 if loc_action == CONST_ACTION_ADD:

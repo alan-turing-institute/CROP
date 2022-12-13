@@ -60,35 +60,90 @@
                 </thead>
                 <tbody>
 
-                {%
-                    for batch in batches:
-                %}
-                <tr>
-                  <td>
-                   <a href="/crops/batch_details?query={{ batch.batch_id }}">
-                     <i class="fa fa-info-circle"></i>
-                   </a>
-                  </td>
-                  <td>{{ batch.crop_type_name }}</td>
-                  <td>{{ batch.harvest_time }}</td>
-                  <td>{{ batch.grow_time }}</td>
-                  <td>{{ batch.yield_per_sqm }}</td>
-                  <td>{{ batch.waste_disease }}</td>
-                  <td>{{ batch.waste_defect }}</td>
-                  <td>{{ batch.over_production }}</td>
-                  <td>{{ batch.zone }} </td>
-                  <td>{{ batch.aisle }} </td>
-                  <td>{{ batch.column }} </td>
-                  <td>{{ batch.shelf }} </td>
-                  <td>{{ batch.avg_propagation_temperature }} </td>
-                  <td>{{ batch.avg_propagation_humidity }} </td>
-                  <td>{{ batch.avg_propagation_vpd }} </td>
-                  <td>{{ batch.avg_grow_temperature }} </td>
-                  <td>{{ batch.avg_grow_humidity }} </td>
-                  <td class="last">{{ batch.avg_grow_vpd }} </td>
                   {%
-                  endfor
+                  for batch in batches:
                   %}
+                  <tr>
+                    <td>
+                      <a href="/crops/batch_details?query={{ batch.batch_id }}">
+                        <i class="fa fa-info-circle"></i>
+                      </a>
+                    </td>
+                    <td>
+                      {{ batch.crop_type_name }}
+                    </td>
+                    <td>
+                      {{ batch.harvest_time|format_datetime }}
+                    </td>
+                    <td>
+                      {{ batch.grow_time }}
+                    </td>
+                    <td>
+                      {% if batch.yield_per_sqm != None %}
+                      {{ '%0.0f'|format(batch.yield_per_sqm|float) }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if batch.waste_disease != None %}
+                      {{ '%0.0f'|format(batch.waste_disease|float) }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if batch.waste_defect != None %}
+                      {{ '%0.0f'|format(batch.waste_defect|float) }}
+                      {% endif %}
+
+                    </td>
+                    <td>
+                      {% if batch.over_production != None %}
+                      {{ '%0.0f'|format(batch.over_production|float) }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ batch.zone }}
+                    </td>
+                    <td>
+                      {{ batch.aisle }}
+                    </td>
+                    <td>
+                      {{ batch.column }}
+                    </td>
+                    <td>
+                      {{ batch.shelf }}
+                    </td>
+                    <td>
+                      {% if batch.avg_propagate_temperature != None %}
+                      {{ '%0.1f'|format(batch.avg_propagate_temperature|float) }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if batch.avg_propagate_humidity != None %}
+                      {{ '%0.1f'|format(batch.avg_propagate_humidity|float) }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if batch.avg_propagate_vpd != None %}
+                      {{ '%0.0f'|format(batch.avg_propagate_vpd|float) }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if batch.avg_grow_temperature != None %}
+                      {{ '%0.1f'|format(batch.avg_grow_temperature|float) }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if batch.avg_grow_humidity != None %}
+                      {{ '%0.1f'|format(batch.avg_grow_humidity|float) }}
+                      {% endif %}
+                    </td>
+                    <td class="last">
+                      {% if batch.avg_grow_vpd != None %}
+                      {{ '%0.0f'|format(batch.avg_grow_vpd|float) }}
+                      {% endif %}
+                    </td>
+                    {%
+                    endfor
+                    %}
 
                 </tbody>
               </table>

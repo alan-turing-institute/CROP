@@ -21,10 +21,10 @@ from sqlalchemy import and_
 
 from app.dashboards import blueprint
 
+from core import queries
 from core.utils import (
     download_csv,
     parse_date_range_argument,
-    vapour_pressure_deficit,
     query_result_to_array,
 )
 
@@ -76,10 +76,10 @@ DEFAULT_SENSOR_TYPE = "Aranet T&RH"
 # Some data that varies based on sensor type.
 # DATA_COLUMNS_BY_SENSOR_TYPE names the class for the readings table.
 DATA_TABLES_BY_SENSOR_TYPE = {
-    "Aranet T&RH": ReadingsAranetTRHClass,
-    "Aranet CO2": ReadingsAranetCO2Class,
-    "Aranet Air Velocity": ReadingsAranetAirVelocityClass,
-    "Aegis II": ReadingsAegisIrrigationClass,
+    "Aranet T&RH": lambda: queries.trh_with_vpd(db.session).subquery().c,
+    "Aranet CO2": lambda: ReadingsAranetCO2Class,
+    "Aranet Air Velocity": lambda: ReadingsAranetAirVelocityClass,
+    "Aegis II": lambda: ReadingsAegisIrrigationClass,
 }
 # DATA_COLUMNS_BY_SENSOR_TYPE names the columns of that table that we want to plot as
 # data, and gives them human friendly names to display on the UI.
@@ -134,18 +134,22 @@ def get_sensor_type_id(sensor_type_name):
 
 
 def get_table_by_sensor_type(sensor_type_id):
-    """Return the SQLAlchemy table corresponding to a given sensor type ID."""
+    """Return the SQLAlchemy table/subquery corresponding to a given sensor type ID."""
+    # Because of how global constants work in Flask, DATA_COLUMNS_BY_SENSOR_TYPE has
+    # functions that return the relevant table/subquery, rather than the
+    # tables/subqueries themselves. Hence the calls like `value()` and setting
+    # `value = lambda: None`
     global DATA_TABLES_BY_SENSOR_TYPE
     if sensor_type_id in DATA_TABLES_BY_SENSOR_TYPE:
-        return DATA_TABLES_BY_SENSOR_TYPE[sensor_type_id]
+        return DATA_TABLES_BY_SENSOR_TYPE[sensor_type_id]()
     else:
         sensor_type_name = get_sensor_type_name(sensor_type_id)
         if sensor_type_name in DATA_TABLES_BY_SENSOR_TYPE:
             value = DATA_TABLES_BY_SENSOR_TYPE[sensor_type_name]
         else:
-            value = None
+            value = lambda: None
         DATA_TABLES_BY_SENSOR_TYPE[sensor_type_id] = value
-        return value
+        return value()
 
 
 def get_columns_by_sensor_type(sensor_type_id):
@@ -582,10 +586,6 @@ def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
     data_table_columns = [
         getattr(data_table, column["column_name"])
         for column in get_columns_by_sensor_type(sensor_type)
-        # The VPD "column" is a special case: It's not an actual database column,
-        # although we treat it as if it was. See at the end of this function, where we
-        # compute it.
-        if not (sensor_type_name == "Aranet T&RH" and column["column_name"] == "vpd")
     ]
     query = db.session.query(
         data_table.timestamp,
@@ -603,11 +603,9 @@ def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
 
     df = pd.read_sql(query.statement, query.session.bind)
     if sensor_type_name == "Aranet T&RH":
-        df.loc[:, "vpd"] = vapour_pressure_deficit(
-            df.loc[:, "temperature"], df.loc[:, "humidity"]
-        ).round(2)
         # Rounding to two decimal places, because our precision isn't infinite, and
         # long floats look really ugly on the front end.
+        df.loc[:, "vpd"] = df.loc[:, "vpd"].round(2)
     return df
 
 
