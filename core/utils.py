@@ -8,14 +8,14 @@ import logging
 import uuid
 
 from flask import send_file
-import numpy as np
 import pandas as pd
-from sqlalchemy import and_, func
+from sqlalchemy import exc
 
 from .db import connect_db, session_open, session_close
 from .constants import SQL_CONNECTION_STRING, SQL_DBNAME
-from .structure import DataUploadLogClass, SensorLocationClass
 from .sensors import find_sensor_type_id
+from .structure import DataUploadLogClass, UserClass
+from .structure import SQLA as db
 
 
 def get_crop_db_session(return_engine=False):
@@ -257,3 +257,18 @@ def log_upload_event(sensor_type, filename, status, log, connection_string):
     session_close(session)
 
     return success, error
+
+
+def create_user(username, email, password):
+    """Create a new user.
+
+    Return (True, user_id) if successful, (False, error_message) if not.
+    """
+    try:
+        user = UserClass(username=username, email=email, password=password)
+        db.session.add(user)
+        db.session.commit()
+        return True, user.id
+    except exc.SQLAlchemyError as e:
+        db.session.rollback()
+        return False, str(e)
