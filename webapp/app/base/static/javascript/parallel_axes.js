@@ -50,7 +50,7 @@ function makeParAxesPlot(data, axes) {
     type: "parcoords",
     line: {
       showscale: true,
-      colorscale: "Jet",
+      colorscale: "Portland",
       color: Object.values(data[colourAxis]),
       // TODO I would like to increase the line width. That's currently unsupported by
       // Plotly, but support is on the way:
