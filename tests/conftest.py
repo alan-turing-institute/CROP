@@ -1,4 +1,4 @@
-from util_scripts.upload_synthetic_data import upload_synthetic_data
+from util_scripts import upload_synthetic_data
 
 from core.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
 from core.db import drop_db
@@ -13,7 +13,6 @@ def pytest_configure(config):
 
     print("pytest_configure: start " + SQL_CONNECTION_STRING + " " + SQL_TEST_DBNAME)
 
-    # establishes temp DB for testing
     upload_synthetic_data.main(SQL_TEST_DBNAME)
 
     print("pytest_configure: end")

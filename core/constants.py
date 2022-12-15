@@ -180,6 +180,7 @@ CONST_TEST_DIR = os.path.abspath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests")
 )
 CONST_TESTDATA_BASE_FOLDER = os.path.join(CONST_TEST_DIR, "data")
+CONST_TESTDATA_LOCATION_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Locations")
 CONST_TESTDATA_SENSOR_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Sensors")
 CONST_TESTDATA_WEATHER_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Weather")
 CONST_TESTDATA_ELECTRICITY_FOLDER = os.path.join(
@@ -193,6 +194,7 @@ CONST_TESTDATA_CROPGROWTH_FOLDER = os.path.join(
 )
 
 # test data filenames
+LOCATIONS_CSV = "locations.csv"  # Locations within the farm
 SENSOR_CSV = "sensors.csv"  # List of sensors
 SENSOR_TYPE_CSV = "sensor_types.csv"  # List of all available sensor types
 LOCATION_CSV = "locations.csv"  # List of locations in the farm
@@ -200,6 +202,12 @@ SENSOR_LOCATION_CSV = "sensor_locations.csv"  # List of sensor locations
 
 # Air Velocity test data
 CONST_AIR_VELOCITY_TEST_1 = "data-20200128-test1.csv"
+
+# Crop growth synthetic data
+CROP_TYPE_CSV = "crop_types.csv"
+BATCH_CSV = "batches.csv"
+BATCH_EVENT_CSV = "batch_events.csv"
+HARVEST_CSV = "harvests.csv"
 
 # Error messages
 ERR_IMPORT_ERROR_1 = "Import file does not contain all the necessary columns."
