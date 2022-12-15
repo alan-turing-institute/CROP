@@ -58,21 +58,29 @@
                 <div>
                   Columns to show
                   <div id="columnsCheckboxesDiv">
-                    {% for axis in axes %}
+                    {% for axis_group in axes %}
+                    {% set group_name = axis_group["group_name"] %}
+                    {% set members = axis_group["group_members"] %}
+                    {% if loop.index0 != 0 %} <br> {% endif %}
+                    {% if group_name %}
+                    <strong style="padding-right: 0.4em;">{{group_name}}, </strong>
+                    {% endif %}
+                    {% for axis in members %}
                     <div class="checkbox-inline" id="columnCheckbox{{axis}}">
                       <input
                           class="form-check-input"
                           type="checkbox"
                           id="column_checkbox_{{axis}}"
-                          checked
+                          {% if members[axis]["on_by_default"] %} checked {% endif %}
                           onchange="rerender(data)"
                           value={{axis}}>
                       <label
                           class="form-check-label"
                           for="column_checkbox_{{axis}}">
-                        {{axes[axis]}}
+                        {{members[axis]["text"]}}
                       </label>
                     </div>
+                    {% endfor %}
                     {% endfor %}
                   </div>
                 </div>
@@ -86,10 +94,17 @@
                       // The following line relies on the global variable data to be set.
                       onchange="rerender(data)"
                     >
-                    {% for axis in axes %}
-                    <option value="{{ axis }}" >
-                        {{axes[axis]}}
+                    {% for axis_group in axes %}
+                    {% set group_name = axis_group["group_name"] %}
+                    {% set members = axis_group["group_members"] %}
+                    {% for axis in members %}
+                    <option value="{{ axis }}">
+                    {% if group_name != None %}
+                    {{group_name}},
+                    {% endif %}
+                    {{members[axis]["text"]}}
                     </option>
+                    {% endfor %}
                     {% endfor %}
                   </select>
                 </div>
