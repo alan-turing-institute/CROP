@@ -60,13 +60,24 @@ function makeParAxesPlot(data, axes) {
     dimensions: [],
   };
 
-  Object.keys(axes).forEach((columnName) => {
-    const checkbox = document.getElementById("column_checkbox_" + columnName);
-    trace.dimensions.push({
-      name: columnName,
-      label: axes[columnName],
-      values: Object.values(data[columnName]),
-      visible: checkbox.checked,
+  axes.forEach((axisGroup) => {
+    const groupName = axisGroup["group_name"];
+    const groupMembers = axisGroup["group_members"];
+    Object.keys(groupMembers).forEach((columnName) => {
+      const checkbox = document.getElementById("column_checkbox_" + columnName);
+      const axisData = groupMembers[columnName];
+      let label = "";
+      if (groupName != null) label = groupName + ", ";
+      label += axisData["text"];
+      const dimension = {
+        name: columnName,
+        label: label,
+        values: Object.values(data[columnName]),
+        visible: checkbox.checked,
+      };
+      const range = axisData["range"];
+      if (range != null) dimension["range"] = range;
+      trace.dimensions.push(dimension);
     });
   });
 
