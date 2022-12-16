@@ -111,25 +111,212 @@ def harvest_list():
         )
 
 
-"""This dictionary defines which columns from the batch_list_with_trh query will be used
-in the parallel axes plot, and what they'll be called in the plot.
-"""
-parallel_axes_dict = {
-    "crop_yield": "Crop yield (g)",
-    "yield_per_sqm": "Unit yield (g/sqm)",
-    "waste_disease": "Waste disease (%)",
-    "waste_defect": "Waste defect (%)",
-    "over_production": "Over-production (g)",
-    "grow_time": "Grow time (days)",
-    "avg_propagate_temperature": "Avg. prop. temperature (°C)",
-    "avg_propagate_humidity": "Avg. prop. humidity (%)",
-    "avg_propagate_vpd": "Avg. prop. VPD (Pa)",
-    "avg_grow_temperature": "Avg. grow temperature (°C)",
-    "avg_grow_humidity": "Avg. grow humidity (%)",
-    "avg_grow_vpd": "Avg. grow VPD (Pa)",
-    "column": "Column",
-    "shelf": "Shelf",
-}
+# This list of dictionaries defines which columns from the batch_list_with_trh query
+# will be used in the parallel axes plot, and what they'll be called in the plot. They
+# are grouped into groups of axes related to each other, which will affect how they are
+# grouped in the UI.
+axis_data = [
+    {
+        "group_name": None,
+        "group_members": {
+            "yield_per_sqm": {
+                "text": "Unit yield (g/sqm)",
+                "on_by_default": True,
+                "range": None,
+            },
+            "crop_yield": {
+                "text": "Total yield (g)",
+                "on_by_default": False,
+                "range": None,
+            },
+            "waste_disease": {
+                "text": "Waste disease (%)",
+                "on_by_default": True,
+                "range": [0, 100],
+            },
+            "waste_defect": {
+                "text": "Waste defect (%)",
+                "on_by_default": True,
+                "range": [0, 100],
+            },
+            "over_production": {
+                "text": "Over-production (g)",
+                "on_by_default": False,
+                "range": None,
+            },
+        },
+    },
+    {
+        "group_name": "Propagation temperature (°C)",
+        "group_members": {
+            "avg_propagate_temperature": {
+                "text": "mean",
+                "on_by_default": True,
+                "range": None,
+            },
+            "max_propagate_temperature": {
+                "text": "max",
+                "on_by_default": False,
+                "range": None,
+            },
+            "min_propagate_temperature": {
+                "text": "min",
+                "on_by_default": False,
+                "range": None,
+            },
+            "sigma_propagate_temperature": {
+                "text": "standard deviation",
+                "on_by_default": False,
+                "range": None,
+            },
+        },
+    },
+    {
+        "group_name": "Propagation humidity (%)",
+        "group_members": {
+            "avg_propagate_humidity": {
+                "text": "mean",
+                "on_by_default": False,
+                "range": None,
+            },
+            "max_propagate_humidity": {
+                "text": "max",
+                "on_by_default": False,
+                "range": None,
+            },
+            "min_propagate_humidity": {
+                "text": "min",
+                "on_by_default": False,
+                "range": None,
+            },
+            "sigma_propagate_humidity": {
+                "text": "standard deviation",
+                "on_by_default": False,
+                "range": None,
+            },
+        },
+    },
+    {
+        "group_name": "Propagation VPD (Pa)",
+        "group_members": {
+            "avg_propagate_vpd": {
+                "text": "mean",
+                "on_by_default": False,
+                "range": None,
+            },
+            "max_propagate_vpd": {
+                "text": "max",
+                "on_by_default": False,
+                "range": None,
+            },
+            "min_propagate_vpd": {
+                "text": "min",
+                "on_by_default": False,
+                "range": None,
+            },
+            "sigma_propagate_vpd": {
+                "text": "standard deviation",
+                "on_by_default": False,
+                "range": None,
+            },
+        },
+    },
+    {
+        "group_name": "Grow temperature (°C)",
+        "group_members": {
+            "avg_grow_temperature": {
+                "text": "mean",
+                "on_by_default": True,
+                "range": None,
+            },
+            "max_grow_temperature": {
+                "text": "max",
+                "on_by_default": False,
+                "range": None,
+            },
+            "min_grow_temperature": {
+                "text": "min",
+                "on_by_default": False,
+                "range": None,
+            },
+            "sigma_grow_temperature": {
+                "text": "standard deviation",
+                "on_by_default": False,
+                "range": None,
+            },
+        },
+    },
+    {
+        "group_name": "Grow humidity (%)",
+        "group_members": {
+            "avg_grow_humidity": {
+                "text": "mean",
+                "on_by_default": False,
+                "range": None,
+            },
+            "max_grow_humidity": {
+                "text": "max",
+                "on_by_default": False,
+                "range": None,
+            },
+            "min_grow_humidity": {
+                "text": "min",
+                "on_by_default": False,
+                "range": None,
+            },
+            "sigma_grow_humidity": {
+                "text": "standard deviation",
+                "on_by_default": False,
+                "range": None,
+            },
+        },
+    },
+    {
+        "group_name": "Grow VPD (Pa)",
+        "group_members": {
+            "avg_grow_vpd": {
+                "text": "mean",
+                "on_by_default": False,
+                "range": None,
+            },
+            "max_grow_vpd": {
+                "text": "max",
+                "on_by_default": False,
+                "range": None,
+            },
+            "min_grow_vpd": {
+                "text": "min",
+                "on_by_default": False,
+                "range": None,
+            },
+            "sigma_grow_vpd": {
+                "text": "standard deviation",
+                "on_by_default": False,
+                "range": None,
+            },
+        },
+    },
+    {
+        "group_name": None,
+        "group_members": {
+            "grow_time": {
+                "text": "Grow time (days)",
+                "on_by_default": True,
+                "range": None,
+            },
+            "column": {
+                "text": "Column",
+                "on_by_default": False,
+                "range": None,
+            },
+            "shelf": {
+                "text": "Shelf",
+                "on_by_default": True,
+                "range": [1, 4],
+            },
+        },
+    },
+]
 
 
 @blueprint.route("/parallel_axes", methods=["GET"])
@@ -164,8 +351,9 @@ def parallel_axes():
     )
     crop_types = [{"name": "all"}] + crop_types
 
-    for axis in parallel_axes_dict.keys():
-        assert axis in df.columns
+    for axis_group in axis_data:
+        for axis in axis_group["group_members"].keys():
+            assert axis in df.columns
 
     data_json = df.to_json(orient="columns")
     return render_template(
@@ -173,8 +361,8 @@ def parallel_axes():
         data_json=data_json,
         crop_type=crop_type,
         crop_types=crop_types,
-        axes=parallel_axes_dict,
-        axes_json=json.dumps(parallel_axes_dict),
+        axes=axis_data,
+        axes_json=json.dumps(axis_data),
         dt_from=dt_from,
         dt_to=dt_to,
     )
