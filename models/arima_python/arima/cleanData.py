@@ -1,6 +1,7 @@
 from .dataAccess import getTrainingData
 from .config import config
 import pandas as pd
+import numpy as np
 
 constants = config(section="constants")
 sensors_list = config(section="sensors")
@@ -45,7 +46,7 @@ def hourly_average_sensor(env_data, col_names, time_vector):
     "timestamp_hour_plus_minus", and perform averaging of the
     requested columns.
 
-    Arguments:
+    Parameters:
         env_data: pre-processed pandas dataframe containing the
             environment data.
         col_names: list containing the names of the columns on
@@ -87,7 +88,41 @@ def hourly_average_sensor(env_data, col_names, time_vector):
     return hour_averages
 
 
+def centeredMA(series: pd.Series, window: int = 3):
+    """
+    Compute a weighted centered moving average of a time series.
+
+    Parameters:
+        series: time series as a pandas series.
+        window: size of the moving window (fixed number of
+            observations used for each window). Must be an
+            odd integer, so that the average is centered.
+            The default value is 3.
+    Returns:
+        MA: the weighted centered moving averages, returned as a
+            pandas series. NaNs are returned at both ends of the
+            series, where the centered average cannot be computed
+            depending on the specified window size.
+    """
+    if not (window % 2):
+        raise Exception("The window must be an odd integer.")
+    # calculate the weights for the weighted average
+    n = window - 1
+    weights = np.zeros(
+        window,
+    )
+    weights[1:-1] = 1 / n
+    weights[0] = 1 / (n * 2)
+    weights[-1] = 1 / (n * 2)
+    # calculate the weighted centered MA, returned as a
+    # pandas series
+    MA = series.rolling(window=window, center=True).apply(lambda x: np.sum(weights * x))
+    MA.name = MA.name + "_MA"  # rename the series
+    return MA
+
+
 def cleanEnvData(env_data):
+    # TODO: this is done in the original R code but not yet clear if necessary
     # insert a new column at the end of the dataframe, named "hour_truncated",
     # that takes the truncated hour from the "timestamp" column
     env_data.insert(
@@ -95,6 +130,7 @@ def cleanEnvData(env_data):
         "hour_truncated",
         env_data.timestamp.dt.hour,
     )
+    # TODO: this is done in the original R code but not yet clear if necessary
     # insert a new column at the end of the dataframe, named "hour_decimal",
     # that expresses the time of the "timestamp" column in decimal form
     env_data.insert(
@@ -140,4 +176,4 @@ def cleanEnvData(env_data):
         time_vector,
     )
 
-    return env_data, hour_averages, time_vector
+    return env_data, hour_averages
