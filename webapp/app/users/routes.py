@@ -1,16 +1,34 @@
-from app.users import blueprint
-from flask import render_template, request, jsonify
+from flask import render_template, request
 from flask_login import login_required
 
+
+from app.users import blueprint
 from core.structure import UserClass
+from core import utils
 
 
-@blueprint.route("/<template>")
+@blueprint.route("/users", methods=["GET"])
 @login_required
-def route_template(template, methods=["GET"]):
+def users():
+    users = UserClass.query.all()
+    return render_template("users.html", users=users)
 
+
+@blueprint.route("/create_user_form", methods=["GET", "POST"])
+@login_required
+def create_user_form():
     if request.method == "GET":
-
-        users = UserClass.query.all()
-
-        return render_template(template + ".html", users=users)
+        message = None
+    elif request.method == "POST":
+        success, result = utils.create_user(
+            username=request.form.get("username"),
+            email=request.form.get("email"),
+            password=request.form.get("password"),
+        )
+        if success:
+            message = f"Created new user (ID = {result})."
+        else:
+            message = f"Failed to create new user. Error: {result}"
+    else:
+        message = f"Unknown HTTP method {request.method}"
+    return render_template("create_user_form.html", message=message)
