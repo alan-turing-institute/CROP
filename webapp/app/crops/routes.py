@@ -26,6 +26,8 @@ def batch_list():
     A time range can be provided as a query parameter. For a batch to be included in the
     page, its weigh-event must have happened in this range.
     """
+    query = queries.crop_types(db.session)
+    print(f"NUMBER OF CROP TYPES {query.count()} URL {db.engine.url}")
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
     subquery = queries.batch_list(db.session).subquery()
     query = (
@@ -95,8 +97,7 @@ def harvest_list():
         .order_by(subquery.c.harvest_time.desc())
     )
     df = pd.read_sql(query.statement, query.session.bind)
-
-    if "grow_time" in df:
+    if "grow_time" in df and len(df["grow_time"]) > 0:
         df["grow_time"] = df["grow_time"].round("s")
     results_arr = df.to_dict("records")
 
