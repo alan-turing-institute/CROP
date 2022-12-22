@@ -6,8 +6,38 @@ from webapp.config import config_dict
 from core.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
 from core.db import drop_db
 from util_scripts import upload_synthetic_data
+from core.utils import create_user
 
 sys.path.append("webapp")
+
+
+@pytest.fixture()
+def app():
+    config = config_dict["Production"]
+    app = create_app(config)
+    app.config.update(
+        {
+            "TESTING": True,
+        }
+    )
+    yield app
+
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+
+
+@pytest.fixture()
+def runner(app):
+    return app.test_cli_runner()
+
+
+@pytest.fixture()
+def testuser(app):
+    # create a dummy test user
+    with app.app_context():
+        create_user(username="testuser", email="test@test.com", password="test")
 
 
 def pytest_configure(config):
@@ -36,26 +66,3 @@ def pytest_unconfigure(config):
     assert success, log
 
     print("pytest_unconfigure: end")
-
-
-@pytest.fixture()
-def app():
-    config = config_dict["Production"]
-    app = create_app(config)
-    app.config.update(
-        {
-            "TESTING": True,
-        }
-    )
-
-    yield app
-
-
-@pytest.fixture()
-def client(app):
-    return app.test_client()
-
-
-@pytest.fixture()
-def runner(app):
-    return app.test_cli_runner()

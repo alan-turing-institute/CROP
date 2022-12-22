@@ -94,7 +94,7 @@ SQL_DBNAME = (
 SQL_DEFAULT_DBNAME = "postgres"
 SQL_SSLMODE = "require"
 
-SQL_TEST_DBNAME = "test_db"
+SQL_TEST_DBNAME = "cropdb"
 
 SQL_CONNECTION_STRING = make_conn_string(
     SQL_ENGINE,

@@ -50,6 +50,7 @@ def sensor_list():
     )
     sensors = db.session.execute(query).fetchall()
     sensors_arr = query_result_to_array(sensors, date_iso=False)
+    print(f"NUMBER OF SENSORS IS {len(sensors_arr)}")
     return render_template("sensor_list.html", sensors=sensors_arr)
 
 

@@ -221,7 +221,7 @@ def test_grow_trh_aggregate():
     ).cte(name="closest_trh_sensors_grow_trh_agg")
     query = grow_trh_aggregate(session, batch_list_sq, trh_sq, closest_trh_sensors_cte)
     assert isinstance(query, Query)
-    assert len(query.column_descriptions) == 4
+    assert len(query.column_descriptions) == 13
     assert query.count() == 4
     session_close(session)
 
@@ -249,7 +249,7 @@ def test_propagate_trh_aggregate():
         session, batch_list_sq, trh_q, closest_trh_sensors_cte
     )
     assert isinstance(query, Query)
-    assert len(query.column_descriptions) == 4
+    assert len(query.column_descriptions) == 13
     assert query.count() == 4
     session_close(session)
 
@@ -268,7 +268,7 @@ def test_batch_list_with_trh():
     # 4 batches that went through the farm
     assert query.count() == 4
     # 9 columns
-    assert len(query.column_descriptions) == 30
+    assert len(query.column_descriptions) == 48
     session_close(session)
 
 
