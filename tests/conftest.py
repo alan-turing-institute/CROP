@@ -4,7 +4,11 @@ import pytest
 from webapp.app import create_app
 from webapp.config import config_dict
 from core.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
-from core.db import drop_db
+from core.db import (
+    connect_db,
+    drop_db,
+    session_open,
+)
 from util_scripts import upload_synthetic_data
 from core.utils import create_user
 
@@ -31,6 +35,13 @@ def client(app):
 @pytest.fixture()
 def runner(app):
     return app.test_cli_runner()
+
+
+@pytest.fixture()
+def session(app):
+    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
+    session = session_open(engine)
+    yield session
 
 
 @pytest.fixture()
