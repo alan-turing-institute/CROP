@@ -135,6 +135,14 @@ WEATHER_FORECAST_TABLE_NAME = "weather_forecast"
 # SQL Column names
 ID_COL_NAME = "id"
 
+# indexes of predictive models in the "model" table
+ARIMA_MODEL_ID = 1
+BSTS_MODEL_ID = 2
+GES_MODEL_ID = 3
+# sensor ID to use in GES model plot
+GES_SENSOR_ID = 27
+
+
 CONST_MAX_RECORDS = 50000
 
 CONST_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
