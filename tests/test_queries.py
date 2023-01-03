@@ -1,10 +1,7 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Query
 
-from core.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
 from core.db import (
-    connect_db,
-    session_open,
     session_close,
 )
 from core.queries import (
