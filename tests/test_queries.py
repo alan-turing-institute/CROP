@@ -29,48 +29,40 @@ from core.queries import (
 from core.structure import ReadingsAranetTRHClass
 
 
-def test_crop_types_query():
+def test_crop_types_query(session):
     """
     Test retrieval of crop types
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = crop_types(session)
     assert isinstance(query, Query)
     assert query.count() == 5
     session_close(session)
 
 
-def test_latest_sensor_locations_query():
+def test_latest_sensor_locations_query(session):
     """
     Test query of sensor locations.
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = latest_sensor_locations(session)
     assert isinstance(query, Query)
     assert query.count() > 0
     session_close(session)
 
 
-def test_latest_trh_locations_query():
+def test_latest_trh_locations_query(session):
     """
     Test query of T&RH sensor locations.
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = latest_trh_locations(session)
     assert isinstance(query, Query)
     assert query.count() == 2
     session_close(session)
 
 
-def test_location_distances():
+def test_location_distances(session):
     """
     Test query of distances between locations
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = location_distances(session)
     assert isinstance(query, Query)
     # 12 rows in locations.csv - expect 12^2 results
@@ -80,12 +72,10 @@ def test_location_distances():
     session_close(session)
 
 
-def test_closest_trh():
+def test_closest_trh(session):
     """
     Test query that finds closest sensor for each location
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = closest_trh_sensors(session)
     assert isinstance(query, Query)
     # 5 Farm1 locations in locations.csv
@@ -95,24 +85,20 @@ def test_closest_trh():
     session_close(session)
 
 
-def test_first_batch_event_time():
+def test_first_batch_event_time(session):
     """
     Test query that finds the earliest batch event
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = first_batch_event_time(session)
     assert isinstance(query, Query)
     assert query.count() == 1
     session_close(session)
 
 
-def test_batch_events_by_type():
+def test_batch_events_by_type(session):
     """
     Test the query that selects batch events according to event type
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = batch_events_by_type(session, "weigh")
     assert isinstance(query, Query)
     assert query.count() == 4
@@ -128,24 +114,20 @@ def test_batch_events_by_type():
     session_close(session)
 
 
-def test_trh_with_vpd():
+def test_trh_with_vpd(session):
     """
     Test the query that calculates VPD from temperature and humidity
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = trh_with_vpd(session)
     assert isinstance(query, Query)
     assert query.count() == 115248
     session_close(session)
 
 
-def test_trh_sensors_by_zone():
+def test_trh_sensors_by_zone(session):
     """
     Test the query that gets sensors by zone name
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     loc_query = latest_trh_locations(session)
     # two sensors in Farm1
     query = trh_sensors_by_zone(session, "Farm1", loc_query)
@@ -158,24 +140,20 @@ def test_trh_sensors_by_zone():
     session_close(session)
 
 
-def test_harvest_with_unit_yield():
+def test_harvest_with_unit_yield(session):
     """
     Test the query that gets Harvest divided by ntrays*tray_size
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = harvest_with_unit_yield(session)
     assert isinstance(query, Query)
     assert query.count() == 4
     session_close(session)
 
 
-def test_latest_batch_events():
+def test_latest_batch_events(session):
     """
     Test the query that keeps only the latest batch event of each type
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     query = latest_batch_events(session)
     assert isinstance(query, Query)
     # four types of event, four batches with events
@@ -183,12 +161,10 @@ def test_latest_batch_events():
     session_close(session)
 
 
-def test_grow_trh():
+def test_grow_trh(session):
     """
     Test the query that gets TRH+VPD data from sensor closest to location
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     end_time = datetime.now()
     start_time = end_time - timedelta(days=1)
 
@@ -199,12 +175,10 @@ def test_grow_trh():
     session_close(session)
 
 
-def test_grow_trh_aggregate():
+def test_grow_trh_aggregate(session):
     """
     Test the query that gets average conditions near a batch in grow area
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     batch_list_sq = batch_list(session).subquery("batch_list")
     first_event_time_sq = first_batch_event_time(session).subquery("first_event_time")
     trh_q = trh_with_vpd(session).filter(
@@ -226,12 +200,10 @@ def test_grow_trh_aggregate():
     session_close(session)
 
 
-def test_propagate_trh_aggregate():
+def test_propagate_trh_aggregate(session):
     """
     Test the query that gets average conditions near a batch in grow area
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     batch_list_sq = batch_list(session).subquery("batch_list")
     first_event_time_sq = first_batch_event_time(session).subquery("first_event_time")
     trh_q = trh_with_vpd(session).filter(
@@ -254,12 +226,10 @@ def test_propagate_trh_aggregate():
     session_close(session)
 
 
-def test_batch_list_with_trh():
+def test_batch_list_with_trh(session):
     """
     Test the query that lists batches along with environmental conditions
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     end_time = datetime.now()
     start_time = end_time - timedelta(days=1)
 
@@ -272,12 +242,10 @@ def test_batch_list_with_trh():
     session_close(session)
 
 
-def test_batch_list():
+def test_batch_list(session):
     """
     Test the query that lists batches along with lots of other data
     """
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
-    session = session_open(engine)
     end_time = datetime.now()
     start_time = end_time - timedelta(days=1)
 
