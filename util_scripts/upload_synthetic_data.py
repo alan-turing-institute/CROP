@@ -37,7 +37,7 @@ from core.constants import (
     BATCH_CSV,
     BATCH_EVENT_CSV,
     HARVEST_CSV,
-    SQL_CONNECTION_STRING,
+    SQL_TEST_CONNECTION_STRING,
 )
 
 from core.db import (
@@ -158,13 +158,13 @@ def main(db_name):
         db_name: Database name
     """
 
-    created, log = create_database(SQL_CONNECTION_STRING, db_name)
+    created, log = create_database(SQL_TEST_CONNECTION_STRING, db_name)
 
     if not created:
         error_message(log)
 
     # creating an engine
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, db_name)
+    status, log, engine = connect_db(SQL_TEST_CONNECTION_STRING, db_name)
 
     if not status:
         error_message(log)
