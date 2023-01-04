@@ -1,18 +1,25 @@
 """
 Test the routes defined in webapp/app/locations/routes.py
 """
+import pytest
 
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
 
 # use the testuser fixture to add a user to the database
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_user(testuser):
     assert True
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_locations_not_logged_in(client):
     response = client.get("/locations/locations")
     assert response.status_code == 401
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_locations_logged_in(client):
     with client:
         # login
@@ -33,11 +40,13 @@ def test_locations_logged_in(client):
         assert html_content.count("<tr class='clickable-row' method = POST>") == 12
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_location_form_not_logged_in(client):
     response = client.get("/locations/location_form")
     assert response.status_code == 401
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_location_form_logged_in(client):
     with client:
         # login

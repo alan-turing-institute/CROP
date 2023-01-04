@@ -2,11 +2,19 @@
 Test the routes that show dashboards
 """
 
+import pytest
+
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
+
 # use the testuser fixture to add a user to the database
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_user(testuser):
     assert True
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_dashboard_trh(client):
     # login
     response = client.post(
@@ -28,6 +36,7 @@ def test_dashboard_trh(client):
     assert '<div class="plotDiv"' in html_content
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_dashboard_energy(client):
     # login
     response = client.post(
@@ -49,6 +58,7 @@ def test_dashboard_energy(client):
     assert "Plotly.newPlot('plotVentilationDiv', data, layout);" in html_content
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_dashboard_timeseries(client):
     # login
     response = client.post(

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Query
+import pytest
 
 from core.db import (
     session_close,
@@ -24,8 +25,12 @@ from core.queries import (
     batch_list,
 )
 from core.structure import ReadingsAranetTRHClass
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_crop_types_query(session):
     """
     Test retrieval of crop types
@@ -36,6 +41,7 @@ def test_crop_types_query(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_latest_sensor_locations_query(session):
     """
     Test query of sensor locations.
@@ -46,6 +52,7 @@ def test_latest_sensor_locations_query(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_latest_trh_locations_query(session):
     """
     Test query of T&RH sensor locations.
@@ -56,6 +63,7 @@ def test_latest_trh_locations_query(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_location_distances(session):
     """
     Test query of distances between locations
@@ -69,6 +77,7 @@ def test_location_distances(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_closest_trh(session):
     """
     Test query that finds closest sensor for each location
@@ -82,6 +91,7 @@ def test_closest_trh(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_first_batch_event_time(session):
     """
     Test query that finds the earliest batch event
@@ -92,6 +102,7 @@ def test_first_batch_event_time(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_batch_events_by_type(session):
     """
     Test the query that selects batch events according to event type
@@ -111,6 +122,7 @@ def test_batch_events_by_type(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_trh_with_vpd(session):
     """
     Test the query that calculates VPD from temperature and humidity
@@ -121,6 +133,7 @@ def test_trh_with_vpd(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_trh_sensors_by_zone(session):
     """
     Test the query that gets sensors by zone name
@@ -137,6 +150,7 @@ def test_trh_sensors_by_zone(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_harvest_with_unit_yield(session):
     """
     Test the query that gets Harvest divided by ntrays*tray_size
@@ -147,6 +161,7 @@ def test_harvest_with_unit_yield(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_latest_batch_events(session):
     """
     Test the query that keeps only the latest batch event of each type
@@ -158,6 +173,7 @@ def test_latest_batch_events(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_grow_trh(session):
     """
     Test the query that gets TRH+VPD data from sensor closest to location
@@ -172,6 +188,7 @@ def test_grow_trh(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_grow_trh_aggregate(session):
     """
     Test the query that gets average conditions near a batch in grow area
@@ -197,6 +214,7 @@ def test_grow_trh_aggregate(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_propagate_trh_aggregate(session):
     """
     Test the query that gets average conditions near a batch in grow area
@@ -223,6 +241,7 @@ def test_propagate_trh_aggregate(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_batch_list_with_trh(session):
     """
     Test the query that lists batches along with environmental conditions
@@ -239,6 +258,7 @@ def test_batch_list_with_trh(session):
     session_close(session)
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_batch_list(session):
     """
     Test the query that lists batches along with lots of other data

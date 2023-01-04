@@ -2,11 +2,19 @@
 Test the routes that show results of predictive models
 """
 
+import pytest
+
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
+
 # use the testuser fixture to add a user to the database
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_user(testuser):
     assert True
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_predictions_arima(client):
     # login
     response = client.post(
@@ -26,6 +34,7 @@ def test_predictions_arima(client):
     assert "function sensor_loop(data) {" in html_content
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_predictions_ges(client):
     # login
     response = client.post(
