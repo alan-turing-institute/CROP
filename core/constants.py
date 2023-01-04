@@ -86,6 +86,13 @@ SQL_HOST = (
 SQL_PORT = (
     os.environ["CROP_SQL_PORT"].strip() if "CROP_SQL_PORT" in os.environ else "DUMMY"
 )
+SQL_CONNECTION_STRING = make_conn_string(
+    SQL_ENGINE,
+    SQL_USER,
+    parse.quote(SQL_PASSWORD),
+    SQL_HOST,
+    SQL_PORT,
+)
 SQL_DBNAME = (
     os.environ["CROP_SQL_DBNAME"].strip().lower()
     if "CROP_SQL_DBNAME" in os.environ
@@ -94,14 +101,39 @@ SQL_DBNAME = (
 SQL_DEFAULT_DBNAME = "postgres"
 SQL_SSLMODE = "require"
 
-SQL_TEST_DBNAME = "cropdb"
+# same for the temporary db used for unit testing
+SQL_TEST_USER = (
+    os.environ["CROP_SQL_TESTUSER"].strip()
+    if "CROP_SQL_TESTUSER" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_PASSWORD = (
+    os.environ["CROP_SQL_TESTPASS"].strip()
+    if "CROP_SQL_TESTPASS" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_HOST = (
+    os.environ["CROP_SQL_TESTHOST"].strip()
+    if "CROP_SQL_TESTHOST" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_PORT = (
+    os.environ["CROP_SQL_TESTPORT"].strip()
+    if "CROP_SQL_TESTPORT" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_DBNAME = (
+    os.environ["CROP_SQL_TESTDBNAME"]
+    if "CROP_SQL_TESTDBNAME" in os.environ
+    else "test_db"
+)
 
-SQL_CONNECTION_STRING = make_conn_string(
+SQL_TEST_CONNECTION_STRING = make_conn_string(
     SQL_ENGINE,
-    SQL_USER,
-    parse.quote(SQL_PASSWORD),
-    SQL_HOST,
-    SQL_PORT,
+    SQL_TEST_USER,
+    parse.quote(SQL_TEST_PASSWORD),
+    SQL_TEST_HOST,
+    SQL_TEST_PORT,
 )
 
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)

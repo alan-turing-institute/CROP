@@ -3,7 +3,7 @@ import pytest
 
 from webapp.app import create_app
 from webapp.config import config_dict
-from core.constants import SQL_CONNECTION_STRING, SQL_TEST_DBNAME
+from core.constants import SQL_TEST_CONNECTION_STRING, SQL_TEST_DBNAME
 from core.db import (
     connect_db,
     drop_db,
@@ -17,13 +17,8 @@ sys.path.append("webapp")
 
 @pytest.fixture()
 def app():
-    config = config_dict["Production"]
+    config = config_dict["Test"]
     app = create_app(config)
-    app.config.update(
-        {
-            "TESTING": True,
-        }
-    )
     yield app
 
 
@@ -39,7 +34,7 @@ def runner(app):
 
 @pytest.fixture()
 def session(app):
-    status, log, engine = connect_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
+    status, log, engine = connect_db(SQL_TEST_CONNECTION_STRING, SQL_TEST_DBNAME)
     session = session_open(engine)
     yield session
 
@@ -58,7 +53,9 @@ def pytest_configure(config):
     file after command line options have been parsed.
     """
 
-    print("pytest_configure: start " + SQL_CONNECTION_STRING + " " + SQL_TEST_DBNAME)
+    print(
+        "pytest_configure: start " + SQL_TEST_CONNECTION_STRING + " " + SQL_TEST_DBNAME
+    )
 
     upload_synthetic_data.main(SQL_TEST_DBNAME)
 
@@ -73,7 +70,7 @@ def pytest_unconfigure(config):
     print("pytest_unconfigure: start")
 
     # drops test db
-    success, log = drop_db(SQL_CONNECTION_STRING, SQL_TEST_DBNAME)
+    success, log = drop_db(SQL_TEST_CONNECTION_STRING, SQL_TEST_DBNAME)
     assert success, log
 
     print("pytest_unconfigure: end")
