@@ -2,11 +2,19 @@
 Test the routes that show sensor readings
 """
 
+import pytest
+
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
+
 # use the testuser fixture to add a user to the database
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_user(testuser):
     assert True
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_energy_readings(client):
     # login
     response = client.post(
@@ -24,6 +32,7 @@ def test_energy_readings(client):
     assert '<table id="datatable-responsive"' in html_content
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_trh_readings(client):
     # login
     response = client.post(
@@ -44,6 +53,7 @@ def test_trh_readings(client):
     assert html_content.count("<tr>") > 8000  # seems to vary..?
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_co2_readings(client):
     # login
     response = client.post(
@@ -61,6 +71,7 @@ def test_co2_readings(client):
     assert html_content.count("<tr>") > 1000  # seems to vary..?
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_air_velocity_readings(client):
     # login
     response = client.post(

@@ -2,11 +2,20 @@
 Test the routes defined in webapp/app/crops/routes.py
 """
 
+import pytest
+
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
+
+
 # use the testuser fixture to add a user to the database
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_user(testuser):
     assert True
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_batch_list(client):
     with client:
         # login
@@ -27,6 +36,7 @@ def test_batch_list(client):
         assert '<input type="submit" value="Download" name="download"/>' in html_content
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_batch_details(client):
     with client:
         # login
@@ -46,6 +56,7 @@ def test_batch_details(client):
         assert '<td class="text-alignright">Batch ID</td>' in html_content
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_harvest_list(client):
     with client:
         # login
@@ -66,6 +77,7 @@ def test_harvest_list(client):
         assert "<th>Unit yield (g/sqm)</th>" in html_content
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_parallel_axes(client):
     with client:
         # login

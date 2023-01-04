@@ -1,7 +1,7 @@
 """
 Test db.py module
 """
-
+import pytest
 
 from core.constants import SQL_TEST_CONNECTION_STRING, SQL_TEST_DBNAME
 
@@ -10,7 +10,13 @@ from core.db import (
     check_database_structure,
 )
 
+from .conftest import check_for_docker
 
+
+DOCKER_RUNNING = check_for_docker()
+
+
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_connect_db():
 
     # Try to connect to an engine that exists
@@ -24,6 +30,7 @@ def test_connect_db():
     assert engine is None
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_check_database_structure():
 
     status, log, engine = connect_db(SQL_TEST_CONNECTION_STRING, SQL_TEST_DBNAME)

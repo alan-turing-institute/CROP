@@ -2,11 +2,19 @@
 Test the homepage renders OK
 """
 
+import pytest
+
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
+
 # use the testuser fixture to add a user to the database
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_user(testuser):
     assert True
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_homepage_not_logged_in(client):
     with client:
         response = client.get("/")
@@ -19,6 +27,7 @@ def test_homepage_not_logged_in(client):
         )
 
 
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_homepage_logged_in(client):
     # login
     response = client.post(
