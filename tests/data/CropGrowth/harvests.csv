@@ -1,0 +1,5 @@
+batch_event_id,location_id,crop_yield,waste_disease,waste_defect,over_production
+4,2,3000.0,0.0,0.0,0.0
+8,3,2500.0,0.0,0.0,0.0
+12,4,0.0,100.0,0.0,0.0
+16,5,1250.0,50.0,0.0,0.0
