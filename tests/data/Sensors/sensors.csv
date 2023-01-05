@@ -1,0 +1,16 @@
+type_id,device_id,name
+1,trhA,trh
+1,trhB,trh
+1,trhC,trh
+1,trhD,trh
+1,trhE,trh
+1,trhF,trh
+1,trhG,trh
+1,trhH,trh
+2,co2A,co2
+2,co2B,co2
+3,avA,airvelocity
+3,avB,airvelocity
+3,avC,airvelocity
+3,avD,airvelocity
+4,irrigationA,irrigation
