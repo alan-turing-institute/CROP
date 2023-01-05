@@ -177,3 +177,56 @@ def cleanEnvData(env_data):
     )
 
     return env_data, hour_averages
+
+
+def cleanEnergyData(energy_data):
+    # pivot the input dataframe, setting the timestamp as the index,
+    # sensor_id as columns and electricity_consumption as the values
+    # of the new dataframe.
+    energy_pivoted = energy_data.pivot(
+        index="timestamp", columns="sensor_id", values="electricity_consumption"
+    )
+    energy_pivoted.columns.name = ""  # remove 'sensor_id' as columns name
+    # rename the sensor_id columns as "EnergyCC" and "EnergyCP"
+    energy_pivoted.rename(
+        columns={16: "EnergyCC", 17: "EnergyCP"},
+        inplace=True,
+    )
+    # convert the timestamp index into a column
+    energy_pivoted = energy_pivoted.reset_index(level=0)
+    # compute weighted, centered moving averages using the default window
+    # size of 3. The deltatime between successive observations is 30 mins.
+    # Therefore, for timestamp t, the average will be computed using the
+    # values as t-30min, t and t+30min, with t weighted higher than
+    # t-30min and t+30min
+    energy_pivoted["EnergyCC_MA"] = centeredMA(energy_pivoted.EnergyCC)
+    energy_pivoted["EnergyCP_MA"] = centeredMA(energy_pivoted.EnergyCP)
+    # insert a new column at the end of the dataframe, named "timestamp_hour_floor",
+    # that rounds the timestamp by flooring to hour precision
+    energy_pivoted.insert(
+        len(energy_pivoted.columns),
+        "timestamp_hour_floor",
+        energy_pivoted.timestamp.dt.floor("h"),
+    )
+
+    def f(x):
+        d = {}
+        d["EnergyCC"] = x["EnergyCC"].mean()
+        d["EnergyCP"] = x["EnergyCP"].mean()
+        d["EnergyCC_MA"] = x["EnergyCC_MA"].iloc[0]
+        d["EnergyCP_MA"] = x["EnergyCP_MA"].iloc[0]
+        return pd.Series(
+            d, index=["EnergyCC", "EnergyCP", "EnergyCC_MA", "EnergyCP_MA"]
+        )
+
+    energy_pivoted = energy_pivoted.groupby(
+        "timestamp_hour_floor",
+        as_index=False,
+    ).apply(f)
+
+    energy_pivoted.rename(
+        columns={"timestamp_hour_floor": "timestamp"},
+        inplace=True,
+    )
+
+    return energy_pivoted
