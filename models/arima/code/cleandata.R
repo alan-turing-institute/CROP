@@ -152,8 +152,11 @@ cleanEnergyData = function() {
   ## Clean energy data -----------------------
   ecp <- energy_raw
 
+  # Note that while in the dcast below the mean for "electricity_consumption" across a given
+  # timestamp for each "sensor_id" is taken, there is only one value for each sensor_id for a
+  # given timestamp. Therefore the mean may be ommitted in the dcast.
   ecpp <- reshape2::dcast(energy_raw, Timestamp2  ~sensor_id,value.var = "electricity_consumption", mean)
-  names(ecpp) <- c("Timestamp2","EnergyCC","EnergyCP")
+  names(ecpp) <- c("Timestamp2","EnergyCC","EnergyCP") # TODO: what do "EnergyCC" and "EnergyCP" stand for?
 
   ecpp$Hour <- hour(ecpp$Timestamp2)
   ecpp$HourDec <- decimal_hour(ecpp$Timestamp2)
