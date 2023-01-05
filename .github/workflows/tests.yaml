@@ -14,7 +14,7 @@ jobs:
       CROP_SQL_TESTHOST: "localhost"
       CROP_SQL_TESTUSER: "postgres"
       CROP_SQL_TESTPASS: "postgres"
-      CROP_SQL_TESTDBNAME: "cropdb"
+      CROP_SQL_TESTDBNAME: "test_db"
       CROP_SQL_TESTPORT: "5432"
       CROP_STARK_USERNAME: "testname"
       CROP_STARK_PASS: "testpass"
