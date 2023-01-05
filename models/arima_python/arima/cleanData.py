@@ -121,7 +121,23 @@ def centeredMA(series: pd.Series, window: int = 3):
     return MA
 
 
-def cleanEnvData(env_data):
+def cleanEnvData(env_data: pd.DataFrame):
+    """
+    Clean the pandas dataframe containing the temperature and humidity data
+    retrieved from the database (DB).
+
+    Parameters:
+        env_data: pandas dataframe containing temperature and humidity data
+            returned by dataAccess.getTrainingData.
+    Returns:
+        env_data: processed pandas dataframe containing additional columns and
+            fewer rows (timestamps that are a certain time length from the
+            rounded hour are dropped).
+        hour_averages: a dictionary with keys named after the user-requested
+            sensors. The corresponding values are pandas dataframes containing
+            processed data for each sensor (the data is averaged based on its
+            timestamp).
+    """
     # TODO: this is done in the original R code but not yet clear if necessary
     # insert a new column at the end of the dataframe, named "hour_truncated",
     # that takes the truncated hour from the "timestamp" column
@@ -179,7 +195,20 @@ def cleanEnvData(env_data):
     return env_data, hour_averages
 
 
-def cleanEnergyData(energy_data):
+def cleanEnergyData(energy_data: pd.DataFrame):
+    """
+    Clean the pandas dataframe containing the energy data retrieved from
+    the database (DB).
+
+    Parameters:
+        energy_data: pandas dataframe containing the energy data returned
+            by dataAccess.getTrainingData.
+    Returns:
+        energy_pivoted: pandas dataframe storing the processed energy data.
+            It contains the energy consumption for each sensor, averaged
+            as a function of the timestamp. It also contains moving-averaged
+            (MA) data.
+    """
     # pivot the input dataframe, setting the timestamp as the index,
     # sensor_id as columns and electricity_consumption as the values
     # of the new dataframe.
@@ -208,7 +237,8 @@ def cleanEnergyData(energy_data):
         "timestamp_hour_floor",
         energy_pivoted.timestamp.dt.floor("h"),
     )
-
+    # group the the data by "timestamp_hour_floor" and apply the following
+    # function to compute the mean or take the first row entry.
     def f(x):
         d = {}
         d["EnergyCC"] = x["EnergyCC"].mean()
@@ -219,11 +249,12 @@ def cleanEnergyData(energy_data):
             d, index=["EnergyCC", "EnergyCP", "EnergyCC_MA", "EnergyCP_MA"]
         )
 
+    # now perform the groupby operation
     energy_pivoted = energy_pivoted.groupby(
         "timestamp_hour_floor",
         as_index=False,
     ).apply(f)
-
+    # rename the "timestamp_hour_floor" column to "timestamp"
     energy_pivoted.rename(
         columns={"timestamp_hour_floor": "timestamp"},
         inplace=True,
