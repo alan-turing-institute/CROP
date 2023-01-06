@@ -142,23 +142,6 @@ def cleanEnvData(env_data: pd.DataFrame):
             oldest and most recent timestamps in "env_data", with a deltatime
             between successive timestamps of one hour.
     """
-    # TODO: this is done in the original R code but not yet clear if necessary
-    # insert a new column at the end of the dataframe, named "hour_truncated",
-    # that takes the truncated hour from the "timestamp" column
-    env_data.insert(
-        len(env_data.columns),
-        "hour_truncated",
-        env_data.timestamp.dt.hour,
-    )
-    # TODO: this is done in the original R code but not yet clear if necessary
-    # insert a new column at the end of the dataframe, named "hour_decimal",
-    # that expresses the time of the "timestamp" column in decimal form
-    env_data.insert(
-        len(env_data.columns),
-        "hour_decimal",
-        env_data.timestamp.dt.hour
-        + env_data.timestamp.dt.minute / constants["secs_per_min"],
-    )
     # insert a new column at the end of the dataframe, named "timestamp_hour_floor",
     # that rounds the timestamp by flooring to hour precision
     env_data.insert(
