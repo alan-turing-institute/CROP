@@ -137,6 +137,10 @@ def cleanEnvData(env_data: pd.DataFrame):
             sensors. The corresponding values are pandas dataframes containing
             processed data for each sensor (the data is averaged based on its
             timestamp).
+        time_vector: a pandas dataframe with a single column named "timestamp",
+            containing a vector of increasing timestamps, ranging between the
+            oldest and most recent timestamps in "env_data", with a deltatime
+            between successive timestamps of one hour.
     """
     # TODO: this is done in the original R code but not yet clear if necessary
     # insert a new column at the end of the dataframe, named "hour_truncated",
@@ -192,7 +196,7 @@ def cleanEnvData(env_data: pd.DataFrame):
         time_vector,
     )
 
-    return env_data, hour_averages
+    return env_data, hour_averages, time_vector
 
 
 def cleanEnergyData(energy_data: pd.DataFrame):
@@ -262,3 +266,17 @@ def cleanEnergyData(energy_data: pd.DataFrame):
     )
 
     return energy_data
+
+
+def cleanData(env_data, energy_data):
+    hour_averages, time_vector = cleanEnvData(env_data)[1:4]
+    energy_data = cleanEnergyData(energy_data)
+    # perform a left merge of "energy_data" with "time_vector",
+    # so that only timestamps contained in "time_vector" are
+    # retained
+    energy_data = pd.merge(
+        time_vector,
+        energy_data,
+        how="left",
+    )
+    return hour_averages, energy_data
