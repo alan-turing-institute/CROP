@@ -39,7 +39,7 @@ def timeVector(start, end, frequency="1H", offset=1):
     return time_vector
 
 
-def hourly_average_sensor(env_data, col_names, time_vector):
+def hourlyAverageSensor(env_data, col_names, time_vector):
     """
     Split the pandas dataframe containing the environment data
     into the user-requested list of sensors, group by the column
@@ -180,13 +180,13 @@ def cleanEnvData(env_data: pd.DataFrame):
     )
     # remove row entries that have been assigned None above
     env_data = env_data.dropna(subset="timestamp_hour_plus_minus")
-
+    # create the time vector for which hourly-averaged data will be returned
     time_vector = timeVector(
         start=min(env_data["timestamp_hour_floor"]),
         end=max(env_data["timestamp_hour_floor"]),
     )
-
-    hour_averages = hourly_average_sensor(
+    # calculate the hourly-averaged data
+    hour_averages = hourlyAverageSensor(
         env_data,
         ["temperature", "humidity"],
         time_vector,
