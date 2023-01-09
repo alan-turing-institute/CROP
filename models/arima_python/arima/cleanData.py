@@ -130,17 +130,14 @@ def cleanEnvData(env_data: pd.DataFrame):
         env_data: pandas dataframe containing temperature and humidity data
             returned by dataAccess.getTrainingData.
     Returns:
-        env_data: processed pandas dataframe containing additional columns and
-            fewer rows (timestamps that are a certain time length from the
-            rounded hour are dropped).
-        hour_averages: a dictionary with keys named after the user-requested
-            sensors. The corresponding values are pandas dataframes containing
-            processed data for each sensor (the data is averaged based on its
-            timestamp).
+        env_data: a dictionary with keys named after the user-requested sensors.
+            The corresponding values are pandas dataframes containing processed
+            temperature and humidity data for each sensor (the data is averaged
+            based on its timestamp).
         time_vector: a pandas dataframe with a single column named "timestamp",
             containing a vector of increasing timestamps, ranging between the
-            oldest and most recent timestamps in "env_data", with a deltatime
-            between successive timestamps of one hour.
+            oldest and most recent timestamps in the input dataframe, with a
+            deltatime between successive timestamps of one hour.
     """
     # insert a new column at the end of the dataframe, named "timestamp_hour_floor",
     # that rounds the timestamp by flooring to hour precision
@@ -173,13 +170,13 @@ def cleanEnvData(env_data: pd.DataFrame):
         end=max(env_data["timestamp_hour_floor"]),
     )
     # calculate the hourly-averaged data
-    hour_averages = hourlyAverageSensor(
+    env_data = hourlyAverageSensor(
         env_data,
         ["temperature", "humidity"],
         time_vector,
     )
 
-    return env_data, hour_averages, time_vector
+    return env_data, time_vector
 
 
 def cleanEnergyData(energy_data: pd.DataFrame):
@@ -252,7 +249,7 @@ def cleanEnergyData(energy_data: pd.DataFrame):
 
 
 def cleanData(env_data, energy_data):
-    hour_averages, time_vector = cleanEnvData(env_data)[1:4]
+    env_data, time_vector = cleanEnvData(env_data)
     energy_data = cleanEnergyData(energy_data)
     # perform a left merge of "energy_data" with "time_vector",
     # so that only timestamps contained in "time_vector" are
@@ -262,4 +259,4 @@ def cleanData(env_data, energy_data):
         energy_data,
         how="left",
     )
-    return hour_averages, energy_data
+    return env_data, energy_data
