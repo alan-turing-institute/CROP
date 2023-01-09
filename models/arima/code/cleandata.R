@@ -28,6 +28,9 @@ hourly_av_sensor <- function(trh, sensor_index,my_time){
   trh_sub<- subset(trh, name== sensor_index)
 
   # Find the mean temp and RH for this new HourPM
+  # Note that there is a bug here regarding the averaging of timestamps
+  # close to midnight. Check GitHub issue:
+  # https://github.com/alan-turing-institute/CROP/issues/398
   trh_ph <- plyr::ddply(trh_sub, .(DatePM,HourPM),
                   summarise,
                   Temperature=mean(temperature, na.rm = T),
