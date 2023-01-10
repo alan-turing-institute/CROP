@@ -12,14 +12,16 @@ from core.structure import (
     SensorLocationClass,
     LocationClass,
 )
+from core import queries
 from app.sensors import blueprint
-from core.utils import filter_latest_sensor_location, query_result_to_array
+from core.utils import query_result_to_array
 
 
 @blueprint.route("/sensor_list", methods=["POST", "GET"])
 @login_required
 def sensor_list():
     """A view for listing all sensors."""
+    latest_locations = queries.latest_sensor_locations(db.session).subquery()
     query = (
         db.session.query(
             SensorClass.id,
@@ -27,27 +29,22 @@ def sensor_list():
             SensorClass.aranet_pro_id,
             SensorClass.name,
             TypeClass.sensor_type,
-            SensorLocationClass.sensor_id,
-            SensorLocationClass.location_id,
-            SensorLocationClass.installation_date,
+            latest_locations.c.installation_date,
             LocationClass.id.label("location_id"),
             LocationClass.zone,
             LocationClass.aisle,
             LocationClass.column,
             LocationClass.shelf,
         )
-        .filter(SensorClass.type_id == TypeClass.id)
-        .join(
-            SensorLocationClass,
-            SensorClass.id == SensorLocationClass.sensor_id,
-            isouter=True,
+        .join(TypeClass, SensorClass.type_id == TypeClass.id)
+        .outerjoin(
+            latest_locations,
+            SensorClass.id == latest_locations.c.sensor_id,
         )
-        .join(
+        .outerjoin(
             LocationClass,
-            LocationClass.id == SensorLocationClass.location_id,
-            isouter=True,
+            LocationClass.id == latest_locations.c.location_id,
         )
-        .filter(and_(filter_latest_sensor_location(db)))
         .order_by(asc(SensorClass.id))
         .limit(CONST_MAX_RECORDS)
     )

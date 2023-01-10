@@ -2,21 +2,14 @@
 Module for sensor data.
 """
 
-import sys
-from flask import render_template, request, send_file
+from flask import render_template, request
 from flask_login import login_required
-from sqlalchemy import and_, desc
 import pandas as pd
-import io
+from sqlalchemy import and_, desc
 
 from app.readings import blueprint
-from core.utils import (
-    query_result_to_array,
-    parse_date_range_argument,
-    download_csv,
-    vapour_pressure_deficit,
-)
-
+from core.constants import CONST_MAX_RECORDS
+from core import queries
 from core.structure import SQLA as db
 from core.structure import (
     SensorClass,
@@ -26,7 +19,11 @@ from core.structure import (
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
 )
-from core.constants import CONST_MAX_RECORDS
+from core.utils import (
+    query_result_to_array,
+    parse_date_range_argument,
+    download_csv,
+)
 
 
 @blueprint.route("/<template>", methods=["GET", "POST"])
@@ -45,11 +42,11 @@ def route_template(template):
             query = (
                 db.session.query(
                     ReadingsEnergyClass.timestamp,
+                    ReadingsEnergyClass.electricity_consumption,
+                    ReadingsEnergyClass.time_created,
                     SensorClass.id,
                     SensorClass.name,
                     TypeClass.sensor_type,
-                    ReadingsEnergyClass.electricity_consumption,
-                    ReadingsEnergyClass.time_created,
                 )
                 .filter(
                     and_(
@@ -65,24 +62,26 @@ def route_template(template):
 
         elif template == "aranet_trh":
 
+            trh_query = queries.trh_with_vpd(db.session).subquery()
             query = (
                 db.session.query(
-                    ReadingsAranetTRHClass.timestamp,
+                    trh_query.c.timestamp,
+                    trh_query.c.temperature,
+                    trh_query.c.humidity,
+                    trh_query.c.vpd,
+                    trh_query.c.time_created,
+                    trh_query.c.time_updated,
+                    trh_query.c.sensor_id,
                     SensorClass.name,
-                    ReadingsAranetTRHClass.temperature,
-                    ReadingsAranetTRHClass.humidity,
-                    ReadingsAranetTRHClass.time_created,
-                    ReadingsAranetTRHClass.time_updated,
-                    ReadingsAranetTRHClass.sensor_id,
                 )
                 .filter(
                     and_(
-                        ReadingsAranetTRHClass.sensor_id == SensorClass.id,
-                        ReadingsAranetTRHClass.timestamp >= dt_from,
-                        ReadingsAranetTRHClass.timestamp <= dt_to,
+                        trh_query.c.sensor_id == SensorClass.id,
+                        trh_query.c.timestamp >= dt_from,
+                        trh_query.c.timestamp <= dt_to,
                     )
                 )
-                .order_by(desc(ReadingsAranetTRHClass.timestamp))
+                .order_by(desc(trh_query.c.timestamp))
                 .limit(CONST_MAX_RECORDS)
             )
         elif template == "aranet_co2":
@@ -90,11 +89,11 @@ def route_template(template):
             query = (
                 db.session.query(
                     ReadingsAranetCO2Class.timestamp,
-                    SensorClass.name,
                     ReadingsAranetCO2Class.co2,
                     ReadingsAranetCO2Class.time_created,
                     ReadingsAranetCO2Class.time_updated,
                     ReadingsAranetCO2Class.sensor_id,
+                    SensorClass.name,
                 )
                 .filter(
                     and_(
@@ -111,12 +110,12 @@ def route_template(template):
             query = (
                 db.session.query(
                     ReadingsAranetAirVelocityClass.timestamp,
-                    SensorClass.name,
                     ReadingsAranetAirVelocityClass.current,
                     ReadingsAranetAirVelocityClass.air_velocity,
                     ReadingsAranetAirVelocityClass.time_created,
                     ReadingsAranetAirVelocityClass.time_updated,
                     ReadingsAranetAirVelocityClass.sensor_id,
+                    SensorClass.name,
                 )
                 .filter(
                     and_(
@@ -131,11 +130,9 @@ def route_template(template):
 
         df = pd.read_sql(query.statement, query.session.bind)
         if template == "aranet_trh":
-            df.loc[:, "vpd"] = vapour_pressure_deficit(
-                df.loc[:, "temperature"], df.loc[:, "humidity"]
-            ).round(2)
             # Rounding to two decimal places, because our precision isn't infinite, and
             # long floats look really ugly on the front end.
+            df.loc[:, "vpd"] = df.loc[:, "vpd"].round(2)
         results_arr = df.to_dict("records")
 
     if request.method == "POST":

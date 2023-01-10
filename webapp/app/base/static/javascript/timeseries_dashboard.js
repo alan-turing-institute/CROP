@@ -119,12 +119,16 @@ const colouramp_blue = [
   "rgba(141,245,252,1)",
 ];
 
-function makePlot(data, yDataName, yLabel, canvasName) {
+function makePlot(data, allSensors, yDataName, yLabel, canvasName) {
   const datasets = [];
   const sensorIds = Object.keys(data);
   const numSensors = sensorIds.length;
   for (let i = 0; i < numSensors; i++) {
     const sensorId = sensorIds[i];
+    let label = sensorId;
+    if (allSensors[sensorId] && allSensors[sensorId].aranet_code) {
+      label = allSensors[sensorId].aranet_code;
+    }
     let colour = colouramp_redblue[Math.min(i, numSensors - 1)];
     let pointRadius = 1;
     let borderWidth = 1;
@@ -135,7 +139,7 @@ function makePlot(data, yDataName, yLabel, canvasName) {
       colour = "#111111";
     }
     datasets.push({
-      label: sensorId,
+      label: label,
       data: data[sensorId].map((row) => {
         return { x: row["timestamp"], y: row[yDataName] };
       }),

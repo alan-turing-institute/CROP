@@ -2,25 +2,17 @@
 Module (routes.py) to handle queries from the 3d model javascript application
 """
 from datetime import datetime, timedelta
+
 from flask import request
-from flask_login import login_required
-from sqlalchemy import func, and_, desc
+
+# from flask_login import login_required
+import pandas as pd
+from sqlalchemy import and_, desc
 
 from app.queries import blueprint
-
-# pandas to deduplicate two arrays
-import pandas as pd
-
-from core.utils import (
-    filter_latest_sensor_location,
-    query_result_to_array,
-    jsonify_query_result,
-    parse_date_range_argument,
-)
-
+from core import queries
 from core.structure import SQLA as db
 from core.structure import (
-    SensorLocationClass,
     TypeClass,
     SensorClass,
     LocationClass,
@@ -36,6 +28,11 @@ from core.structure import (
     HarvestClass,
     EventType,
 )
+from core.utils import (
+    query_result_to_array,
+    jsonify_query_result,
+    parse_date_range_argument,
+)
 
 
 @blueprint.route("/getallsensors", methods=["GET"])
@@ -48,9 +45,10 @@ def get_all_sensors():
         result - JSON string
     """
     # Collecting the general information about the selected sensors
+    locations_query = queries.latest_sensor_locations(db.session).subquery()
     query = db.session.query(
-        SensorLocationClass.sensor_id,
-        SensorLocationClass.installation_date,
+        locations_query.c.sensor_id,
+        locations_query.c.installation_date,
         TypeClass.sensor_type,
         LocationClass.zone,
         LocationClass.aisle,
@@ -61,10 +59,9 @@ def get_all_sensors():
         SensorClass.serial_number,
     ).filter(
         and_(
-            filter_latest_sensor_location(db),
             SensorClass.type_id == TypeClass.id,
-            SensorLocationClass.location_id == LocationClass.id,
-            SensorLocationClass.sensor_id == SensorClass.id,
+            locations_query.c.location_id == LocationClass.id,
+            locations_query.c.sensor_id == SensorClass.id,
         )
     )
 
