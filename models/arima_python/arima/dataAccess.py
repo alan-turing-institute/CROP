@@ -69,7 +69,7 @@ def getData(query):
         logging.info(f"Got data from {query} - returning {len(data)} rows")
         # convert the fetched list to a pandas dataframe
         data = pd.DataFrame(data, columns=colnames)
-        removeTimeZone(data)
+        removeTimeZone(data)  # all timestamps in the DB should be in UTC
     except (Exception, psycopg2.DatabaseError) as error:
         logging.error(error)
     finally:
@@ -112,7 +112,7 @@ def getTemperatureHumidityData(deltaDays, numRows=None):
         data: a pandas DataFrame where each row corresponds to a different row of the DB
             table, organised by the timestamp column of the aranet_trh_data table.
     """
-    today = datetime.datetime.now()
+    today = datetime.datetime.now(datetime.timezone.utc)
     delta = datetime.timedelta(days=deltaDays)
     dateNumDaysAgo = today - delta
     params = {
@@ -163,7 +163,7 @@ def getEnergyData(deltaDays, numRows=None):
         data: a pandas DataFrame where each row corresponds to a different row of the DB
             table, organised by the timestamp column of the utc_energy_data table.
     """
-    today = datetime.datetime.now()
+    today = datetime.datetime.now(datetime.timezone.utc)
     delta = datetime.timedelta(days=deltaDays)
     dateNumDaysAgo = today - delta
     params = {
@@ -203,6 +203,7 @@ def getEnergyData(deltaDays, numRows=None):
 def removeTimeZone(dataframe: pd.DataFrame):
     """
     Remove timezone information from datetime columns.
+    Note that all timestamps in the SQL database should be UTC.
 
     Parameters:
         dataframe: pandas DataFrame
