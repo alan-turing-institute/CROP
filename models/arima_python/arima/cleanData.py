@@ -207,7 +207,7 @@ def cleanEnergyData(energy_data: pd.DataFrame):
     )
     # convert the timestamp index into a column
     energy_data = energy_data.reset_index(level=0)
-    # compute weighted, centered moving averages using the default window
+    # compute weighted, centered moving averages (MA) using the default window
     # size of 3. The deltatime between successive observations is 30 mins.
     # Therefore, for timestamp t, the average will be computed using the
     # values as t-30min, t and t+30min, with t weighted higher than
@@ -221,7 +221,7 @@ def cleanEnergyData(energy_data: pd.DataFrame):
         "timestamp_hour_floor",
         energy_data.timestamp.dt.floor("h"),
     )
-    # group the the data by "timestamp_hour_floor" and apply the following
+    # group the data by "timestamp_hour_floor" and apply the following
     # function to compute the mean or take the first row entry (because it
     # corresponds to the MA for the full hour for time-ordered data).
     def f(x):
@@ -249,6 +249,30 @@ def cleanEnergyData(energy_data: pd.DataFrame):
 
 
 def cleanData(env_data, energy_data):
+    """
+    Parent function of this module: clean environment (temperature
+    and humidity) and energy data retrieved from the database (DB).
+
+    Parameters:
+        env_data: pandas dataframe containing temperature and humidity data
+            returned by dataAccess.getTrainingData.
+        energy_data: pandas dataframe containing the energy data returned
+            by dataAccess.getTrainingData.
+    Returns:
+        env_data: a dictionary with keys named after the user-requested sensors.
+            Use the "include_sensors" parameter in "config.ini" to specify the
+            sensors. The corresponding values for the dict keys are pandas dataframes
+            containing processed temperature and humidity data for each sensor
+            (the observations are averaged based on the proximity of the timestamp
+            to the full hour - use the "mins_from_the_hour" parameter in "config.ini"
+            to specify what timestamps to average together). The processed data is
+            time-ordered.
+        energy_data: a pandas dataframe containing processed electricity consumption
+            for each sensor. Based on the timestamp of the observations, standard averages
+            and centered moving averages are returned (the latter have the subscript "_MA").
+            The data is time-ordered. Only timestamps contained in the processed
+            "env_data" are returned.
+    """
     env_data, time_vector = cleanEnvData(env_data)
     energy_data = cleanEnergyData(energy_data)
     # perform a left merge of "energy_data" with "time_vector",
