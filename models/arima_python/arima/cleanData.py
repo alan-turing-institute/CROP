@@ -18,7 +18,8 @@ def timeVector(start, end, frequency="1H", offset=1):
         frequency: delta between successive timestamps.
             The default is "1H".
         offset: date offset added to the starting timestamp,
-            in hours. The default is 1.
+            in hours. The default is 1, as this is what was
+            done in the original ARIMA R code.
     Returns:
         time_vector: a pandas dataframe, with a single column
             named "timestamp", containing the vector of increasing
@@ -268,8 +269,10 @@ def cleanData(env_data, energy_data):
             to specify what timestamps to average together). The processed data is
             time-ordered.
         energy_data: a pandas dataframe containing processed electricity consumption
-            for each sensor. Based on the timestamp of the observations, standard averages
-            and centered moving averages are returned (the latter have the subscript "_MA").
+            for each sensor. "EnergyCC" refers to electricity consumption at Clapham
+            Common, and EnergyCP refers to electricity consumption at Carpenter's Place.
+            Based on the timestamp of the observations, standard averages and centered
+            moving averages are returned (the latter have the subscript "_MA").
             The data is time-ordered. Only timestamps contained in the processed
             "env_data" are returned.
     """
