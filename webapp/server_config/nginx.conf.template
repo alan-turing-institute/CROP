@@ -1,13 +1,4 @@
-
-#user  nobody;
 worker_processes  1;
-
-#error_log  logs/error.log;
-#error_log  logs/error.log  notice;
-#error_log  logs/error.log  info;
-
-#pid        logs/nginx.pid;
-
 
 events {
     worker_connections  1024;
@@ -18,19 +9,10 @@ http {
     include       mime.types;
     default_type  application/octet-stream;
 
-    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-    #                  '$status $body_bytes_sent "$http_referer" '
-    #                  '"$http_user_agent" "$http_x_forwarded_for"';
-
-    #access_log  logs/access.log  main;
-
     sendfile        on;
-    #tcp_nopush     on;
-
-    #keepalive_timeout  0;
     keepalive_timeout  65;
 
-    #gzip  on;
+    gzip  on;
 
     server {
         listen       8080;
@@ -49,33 +31,10 @@ http {
         location = /50x.html {
             root   html;
         }
-
-        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
-        #
-        #location ~ \.php$ {
-        #    proxy_pass   http://127.0.0.1;
-        #}
-
-        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-        #
-        #location ~ \.php$ {
-        #    root           html;
-        #    fastcgi_pass   127.0.0.1:9000;
-        #    fastcgi_index  index.php;
-        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
-        #    include        fastcgi_params;
-        #}
-
-        # deny access to .htaccess files, if Apache's document root
-        # concurs with nginx's one
-        #
-        #location ~ /\.ht {
-        #    deny  all;
-        #}
     }
 
 
-    # another virtual host using mix of IP-, name-, and port-based configuration
+    # act as reverse proxy to gunicorn WSGI server on port 8000
     #
     server {
         listen       80;
@@ -91,7 +50,7 @@ http {
 
 	# On-disk Brotli-precompressed data files should be served with compression enabled:
 	location ~ .+\.(data|symbols\.json)\.br$ {
-	    root /Users/nbarlow/CROP/webapp/app/base;
+	    root <PATH_TO_CROP>/CROP/webapp/app/base;
     	    # Because this file is already pre-compressed on disk, disable the on-demand compression on it.
             # Otherwise nginx would attempt double compression.
     	    gzip off;
@@ -101,7 +60,7 @@ http {
 
 	# On-disk Brotli-precompressed JavaScript code files:
 	location ~ .+\.js\.br$ {
-	    root /Users/nbarlow/CROP/webapp/app/base;
+	    root <PATH_TO_CROP>/CROP/webapp/app/base;
     	    gzip off; # Do not attempt dynamic gzip compression on an already compressed file
     	    add_header Content-Encoding br;
     	    default_type application/javascript;
@@ -109,7 +68,7 @@ http {
 
         # On-disk Brotli-precompressed WebAssembly files:
 	location ~ .+\.wasm\.br$ {
-	    root /Users/nbarlow/CROP/webapp/app/base;
+	    root <PATH_TO_CROP>/CROP/webapp/app/base;
     	    gzip off; # Do not attempt dynamic gzip compression on an already compressed file
             add_header Content-Encoding br;
     	    # Enable streaming WebAssembly compilation by specifying the correct MIME type for
@@ -119,7 +78,7 @@ http {
 
 	# On-disk gzip-precompressed data files should be served with compression enabled:
 	location ~ .+\.(data|symbols\.json)\.gz$ {
-	    root /Users/nbarlow/CROP/webapp/app/base;
+	    root <PATH_TO_CROP>/CROP/webapp/app/base;
     	    gzip off; # Do not attempt dynamic gzip compression on an already compressed file
     	    add_header Content-Encoding gzip;
     	    default_type application/gzip;
@@ -127,7 +86,7 @@ http {
 
 	# On-disk gzip-precompressed JavaScript code files:
 	location ~ .+\.js\.gz$ {
-	    root /Users/nbarlow/CROP/webapp/app/base;
+	    root <PATH_TO_CROP>/CROP/webapp/app/base;
     	    gzip off; # Do not attempt dynamic gzip compression on an already compressed file
     	    add_header Content-Encoding gzip; # The correct MIME type here would be application/octet-stream, but due to Safari bug https://bugs.webkit.org/show_bug.cgi?id=247421, it's preferable to use MIME Type application/gzip instead.
     	    default_type application/javascript;
@@ -135,7 +94,7 @@ http {
 
 	# On-disk gzip-precompressed WebAssembly files:
 	location ~ .+\.wasm\.gz$ {
-	    root /Users/nbarlow/CROP/webapp/app/base;
+	    root <PATH_TO_CROP>/CROP/webapp/app/base;
     	    gzip off; # Do not attempt dynamic gzip compression on an already compressed file
     	    add_header Content-Encoding gzip;
     	    # Enable streaming WebAssembly compilation by specifying the correct MIME type for

@@ -2,9 +2,8 @@ FROM turingcropapp/webappbase:latest
 
 # Install and configure nginx
 RUN apt update; apt install -y nginx
-RUN unlink /etc/nginx/sites-enabled/default
-WORKDIR /etc/nginx/sites-available
-
+COPY webapp/server_config/nginx.conf.template nginx.conf.template
+RUN sed "s/<PATH_TO_CROP>//g" nginx.conf.template > /etc/nginx/nginx.conf
 # Upgrading python and installing python libraries
 COPY requirements.txt /
 RUN apt update
