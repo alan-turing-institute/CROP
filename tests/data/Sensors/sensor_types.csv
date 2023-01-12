@@ -1,0 +1,5 @@
+sensor_type,source,origin,data,frequency,description
+Aranet T&RH,Source1,some server,"Temperature, Relative Humidity",10 mins,Generic TRH Sensor
+Type2,Source2,some other server,CO2,10 mins,Generic CO2 Sensor
+Type3,Source2,some other server,Air Velocity,10 mins,Generic Air Velocity Sensor
+Type4,Source3,irrigation system,"pH,Salinity,Oxygen,Peroxide",hourly,Irrigation System Monitoring

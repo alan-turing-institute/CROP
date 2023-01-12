@@ -21,6 +21,13 @@ export CROP_SQL_WHITEIPS="<<<replaceme>>" # list of ips to be whitelisted for co
 export CROP_SQL_READER_USER="<<<replaceme>>" # Azure PostgreSQL Read-only user name
 export CROP_SQL_READER_PASS="<<<replaceme>>" # Azure PostgreSQL Read-only user password
 
+# Test database
+export CROP_SQL_TESTUSER="<<<replaceme>>"
+export CROP_SQL_TESTPASS="<<<replaceme>>"
+export CROP_SQL_TESTHOST="<<<replaceme>>"
+export CROP_SQL_TESTPORT="<<<replaceme>>"
+export CROP_SQL_TESTDBNAME="<<<replaceme>>"
+
 # Stark
 export CROP_STARK_USERNAME="<<<replaceme>>"
 export CROP_STARK_PASS="<<<replaceme>>"

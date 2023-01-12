@@ -8,21 +8,30 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 import requests_mock
-from core.ingress_hyper import get_api_sensor_data, CONST_CHECK_URL_PATH, READINGS_DICTS
+from core.ingress_hyper import get_api_sensor_data, READINGS_DICTS
+from core.constants import CONST_TESTDATA_ENVIRONMENT_FOLDER
+
 
 DUMMY_API_KEY = "dummy"
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 MOCK_TRH_DATA = json.load(
-    open(os.path.join(THIS_DIR, "data", "Hyper", "hyper_trh_testdata.json"))
+    open(os.path.join(CONST_TESTDATA_ENVIRONMENT_FOLDER, "hyper_trh_testdata.json"))
 )
 MOCK_CO2_DATA = json.load(
-    open(os.path.join(THIS_DIR, "data", "Hyper", "hyper_co2_testdata.json"))
+    open(os.path.join(CONST_TESTDATA_ENVIRONMENT_FOLDER, "hyper_co2_testdata.json"))
 )
 MOCK_AIRVELOCITY_DATA = json.load(
-    open(os.path.join(THIS_DIR, "data", "Hyper", "hyper_airvelocity_testdata.json"))
+    open(
+        os.path.join(
+            CONST_TESTDATA_ENVIRONMENT_FOLDER, "hyper_airvelocity_testdata.json"
+        )
+    )
 )
 MOCK_IRRIGATION_DATA = json.load(
-    open(os.path.join(THIS_DIR, "data", "Hyper", "hyper_irrigation_testdata.json"))
+    open(
+        os.path.join(
+            CONST_TESTDATA_ENVIRONMENT_FOLDER, "hyper_irrigation_testdata.json"
+        )
+    )
 )
 
 DT_FROM = datetime.utcnow() + timedelta(days=-1)

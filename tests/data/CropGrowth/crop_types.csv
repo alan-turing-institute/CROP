@@ -1,0 +1,6 @@
+name,seed_density,propagation_period,grow_period,is_pre_harvest
+broccoli,1.23,3,21,1
+peashoots,2.34,4,12,1
+brussels sprouts,34.5,5,23,0
+radishes,45.6,6,34,1
+lettuce,56.7,7,44,0
