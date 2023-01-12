@@ -26,8 +26,6 @@ def batch_list():
     A time range can be provided as a query parameter. For a batch to be included in the
     page, its weigh-event must have happened in this range.
     """
-    query = queries.crop_types(db.session)
-    print(f"NUMBER OF CROP TYPES {query.count()} URL {db.engine.url}")
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
     subquery = queries.batch_list(db.session).subquery()
     query = (
