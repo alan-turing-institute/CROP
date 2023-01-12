@@ -2,6 +2,7 @@
 Test the homepage renders OK
 """
 
+import re
 import pytest
 
 from .conftest import check_for_docker
@@ -16,15 +17,20 @@ def test_user(testuser):
 
 @pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_homepage_not_logged_in(client):
+    # On some platforms, the message is a slightly different (the optional "the"), so we
+    # use a regular expression to catch both cases.
+    test_regex = re.compile(
+        r"<title>Redirecting\.\.\.</title>\n"
+        r"<h1>Redirecting\.\.\.</h1>\n"
+        r"<p>You should be redirected automatically to (the )?target URL: "
+        r'<a href="/login">/login</a>'
+    )
     with client:
         response = client.get("/")
         # should redirect to login page
         assert response.status_code == 302
         html_content = response.data.decode("utf-8")
-        assert (
-            '<title>Redirecting...</title>\n<h1>Redirecting...</h1>\n<p>You should be redirected automatically to target URL: <a href="/login">/login</a>'
-            in html_content
-        )
+        assert test_regex.search(html_content) is not None
 
 
 @pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
