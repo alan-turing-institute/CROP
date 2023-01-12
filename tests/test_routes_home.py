@@ -22,7 +22,7 @@ def test_homepage_not_logged_in(client):
         assert response.status_code == 302
         html_content = response.data.decode("utf-8")
         assert (
-            '<title>Redirecting...</title>\n<h1>Redirecting...</h1>\n<p>You should be redirected automatically to the target URL: <a href="/login">/login</a>'
+            '<title>Redirecting...</title>\n<h1>Redirecting...</h1>\n<p>You should be redirected automatically to target URL: <a href="/login">/login</a>'
             in html_content
         )
 
