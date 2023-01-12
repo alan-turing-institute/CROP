@@ -2,6 +2,7 @@
 Module (routes.py) to handle queries from the 3d model javascript application
 """
 from datetime import datetime, timedelta
+import json
 
 from flask import request
 
@@ -532,3 +533,44 @@ def get_growing_batches():
     if len(harvest_df) > 0:
         transfer_df = transfer_df[~transfer_df.batch_id.isin(harvest_df["batch_id"])]
     return transfer_df.to_json(orient="records")
+
+
+@blueprint.route("/shelfdata_for_zone/<zone>", methods=["GET"])
+def get_shelf_data(zone):
+    """
+    find all shelves in a given zone, find the nearest sensor, latest
+    reading from that sensor, any crop currently growing there.
+    """
+    result = [
+        {
+            "cropData": {
+                "zone": zone,
+                "aisle": "A",
+                "column": 4,
+                "shelf": 2,
+                "name": "basil",
+                "number_of_trays": 10,
+                "tray_size": 0.4,
+                "event_time": "2023-01-10",
+                "next_action_time": "2023-02-01",
+            },
+            "sensor": {
+                "zone": zone,
+                "aisle": "A",
+                "column": 4,
+                "shelf": 2,
+                "installation_date": "2020-01-01",
+                "sensor_id": 17,
+                "aranet_code": "a4281",
+                "serial_number": "3445230923",
+                "aranet_pro_id": "ab312",
+            },
+            "latestReading": {
+                "sensor_id": 17,
+                "time_created": "2022-01-11 12:00:00",
+                "time_updated": "",
+                "timestamp": "2022-01-11 12:00:00",
+            },
+        }
+    ]
+    return json.dumps(result)

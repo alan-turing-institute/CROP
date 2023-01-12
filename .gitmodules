@@ -1,0 +1,3 @@
+[submodule "webapp/app/base/static/structures/CropUnityBuilds"]
+	path = webapp/app/base/static/structures/CropUnityBuilds
+	url = https://github.com/alan-turing-institute/CROPUnityBuilds

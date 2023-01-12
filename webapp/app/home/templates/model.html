@@ -70,15 +70,14 @@
         updateBannerVisibility();
       }
 
-      var loaderUrl = "{{url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.loader.js') }}";
-  //    var loaderUrl = buildUrl + "/CROP_unity_js.loader.js";
+      var loaderUrl = "{{url_for('static', filename='structures/CropUnityBuilds/Build/CROPDEMO_UNITY_BUILDS.loader.js') }}";
       var config = {
-          dataUrl: "{{url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.data') }}",
-          frameworkUrl: "{{url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.framework.js') }}",
-          codeUrl: "{{url_for('static', filename='structures/CROP_unity_js/Build/CROP_unity_js.wasm')}}",
+          dataUrl: "{{url_for('static', filename='structures/CropUnityBuilds/Build/CROPDEMO_UNITY_BUILDS.data.gz') }}",
+          frameworkUrl: "{{url_for('static', filename='structures/CropUnityBuilds/Build/CROPDEMO_UNITY_BUILDS.framework.js.gz') }}",
+          codeUrl: "{{url_for('static', filename='structures/CropUnityBuilds/Build/CROPDEMO_UNITY_BUILDS.wasm.gz')}}",
           streamingAssetsUrl: "StreamingAssets",
           companyName: "TheAlanTuringInstitute",
-          productName: "CROP_unity_js",
+          productName: "CropUnityBuilds",
           productVersion: "0.1",
           showBanner: unityShowBanner,
       };
