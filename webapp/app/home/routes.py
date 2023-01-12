@@ -381,8 +381,10 @@ def get_warnings(time_from):
         )
     )
     warnings = pd.read_sql(query.statement, query.session.bind)
-    warnings["time_created"] = warnings["time_created"].dt.tz_localize(dt.timezone.utc)
     if len(warnings) > 0:
+        warnings["time_created"] = warnings["time_created"].dt.tz_localize(
+            dt.timezone.utc
+        )
         warnings["description"] = warnings.apply(
             lambda row: row["short_description"].format(
                 sensor_id=row["sensor_id"],

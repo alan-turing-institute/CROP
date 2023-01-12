@@ -95,8 +95,7 @@ def harvest_list():
         .order_by(subquery.c.harvest_time.desc())
     )
     df = pd.read_sql(query.statement, query.session.bind)
-
-    if "grow_time" in df:
+    if "grow_time" in df and len(df["grow_time"]) > 0:
         df["grow_time"] = df["grow_time"].round("s")
     results_arr = df.to_dict("records")
 

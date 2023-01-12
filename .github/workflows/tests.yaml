@@ -11,11 +11,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      CROP_SQL_HOST: "localhost"
-      CROP_SQL_USER: "postgres"
-      CROP_SQL_PASS: "postgres"
-      CROP_SQL_DBNAME: "cropdb"
-      CROP_SQL_PORT: "5432"
+      CROP_SQL_TESTHOST: "localhost"
+      CROP_SQL_TESTUSER: "postgres"
+      CROP_SQL_TESTPASS: "postgres"
+      CROP_SQL_TESTDBNAME: "test_db"
+      CROP_SQL_TESTPORT: "5432"
       CROP_STARK_USERNAME: "testname"
       CROP_STARK_PASS: "testpass"
       CROP_30MHZ_TEST_T_RH_CHECKID: "testid"
