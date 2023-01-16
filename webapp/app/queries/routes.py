@@ -29,6 +29,7 @@ from core.structure import (
     HarvestClass,
     EventType,
 )
+from core.queries import closest_trh_sensors, batch_list
 from core.utils import (
     query_result_to_array,
     jsonify_query_result,
@@ -488,89 +489,146 @@ def get_all_harvests():
 
 @blueprint.route("/batchesinfarm", methods=["GET"])
 def get_growing_batches():
-
-    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-    # first query all the batches that have a location
-    # set the dt_from back 30 days here (the longest possible grow period)
-    dt_from = dt_from + timedelta(days=-30)
-    query = db.session.query(
-        BatchEventClass.id,
-        BatchEventClass.event_time,
-        BatchEventClass.next_action_time,
-        BatchEventClass.batch_id,
-        BatchClass.tray_size,
-        BatchClass.number_of_trays,
-        CropTypeClass.name,
-        LocationClass.zone,
-        LocationClass.aisle,
-        LocationClass.column,
-        LocationClass.shelf,
-    ).filter(
-        and_(
-            BatchEventClass.event_type == EventType.transfer,
-            LocationClass.id == BatchEventClass.location_id,
-            BatchClass.id == BatchEventClass.batch_id,
-            CropTypeClass.id == BatchClass.crop_type_id,
-            BatchEventClass.event_time > dt_from,
-            BatchEventClass.event_time < dt_to,
-        )
-    )
-    execute_result = db.session.execute(query).fetchall()
-    transfer_result = query_result_to_array(execute_result)
-    # now query batch events with event type "harvest"
-    query = db.session.query(BatchEventClass.batch_id,).filter(
-        and_(
-            BatchEventClass.event_type == EventType.harvest,
-            BatchEventClass.event_time > dt_from,
-            BatchEventClass.event_time < dt_to,
-        )
-    )
-    execute_result = db.session.execute(query).fetchall()
-    harvest_result = query_result_to_array(execute_result)
-    # now remove these from the transfer result using pandas
-    transfer_df = pd.DataFrame(transfer_result)
-    harvest_df = pd.DataFrame(harvest_result)
-    if len(harvest_df) > 0:
-        transfer_df = transfer_df[~transfer_df.batch_id.isin(harvest_df["batch_id"])]
-    return transfer_df.to_json(orient="records")
+    query = batch_list(db.session)
+    squery = query.subquery()
+    fquery = db.session.query(squery).filter(squery.c.last_event == "transfer")
+    execute_result = db.session.execute(fquery).fetchall()
+    result = query_result_to_array(execute_result)
+    return json.dumps(result)
 
 
-@blueprint.route("/shelfdata_for_zone/<zone>", methods=["GET"])
-def get_shelf_data(zone):
+@blueprint.route("/shelfdata/<zone>", methods=["GET"])
+def get_shelf_data_for_zone(zone):
     """
     find all shelves in a given zone, find the nearest sensor, latest
     reading from that sensor, any crop currently growing there.
     """
+    #    batch_squery = batch_list(db.session).subquery()
+    #    batch_query = db.session.query(batch_squery).filter(
+    #        batch_squery.c.last_event == "transfer"
+    #    )
+    #    nearest_trh_squery = closest_trh_sensors(db.session).subquery()
+    #    query = db.session.query(batch_squery).outerjoin(
+    #        nearest_trh_squery,
+    #        and_(
+    #            nearest_trh_squery.c.location_id==batch_squery.c.location_id,
+    #            batch_squery.c.zone == zone,
+    #            batch_squery.c.last_event == "transfer"
+    #        )
+    #    )#.group_by(nearest_trh_squery.c.location_id)
+    #
+    #    execute_result = db.session.execute(query).fetchall()
+    #    result = query_result_to_array(execute_result)
+    #    df = pd.DataFrame(result)
+    #    return df.to_json(orient="records")
+    ##    return json.dumps(result)
+    #
+    #
+    # def dummy():
     result = [
         {
+            "zone": zone,
+            "aisle": "A",
+            "column": 3,
+            "shelf": 2,
             "cropData": {
-                "zone": zone,
-                "aisle": "A",
-                "column": 4,
-                "shelf": 2,
-                "name": "basil",
-                "number_of_trays": 10,
-                "tray_size": 0.4,
-                "event_time": "2023-01-10",
-                "next_action_time": "2023-02-01",
+                "cropList": [
+                    {
+                        "zone": zone,
+                        "aisle": "A",
+                        "column": 4,
+                        "shelf": 2,
+                        "name": "basil",
+                        "number_of_trays": 10,
+                        "tray_size": 0.4,
+                        "event_time": "2023-01-10",
+                        "next_action_time": "2023-02-01",
+                    }
+                ]
             },
-            "sensor": {
-                "zone": zone,
-                "aisle": "A",
-                "column": 4,
-                "shelf": 2,
-                "installation_date": "2020-01-01",
-                "sensor_id": 17,
-                "aranet_code": "a4281",
-                "serial_number": "3445230923",
-                "aranet_pro_id": "ab312",
+            "nearestSensor": {
+                "sensorList": [
+                    {
+                        "zone": zone,
+                        "aisle": "A",
+                        "column": 4,
+                        "shelf": 2,
+                        "installation_date": "2020-01-01",
+                        "sensor_id": 17,
+                        "aranet_code": "a4281",
+                        "serial_number": "3445230923",
+                        "aranet_pro_id": "ab312",
+                    }
+                ]
             },
             "latestReading": {
-                "sensor_id": 17,
-                "time_created": "2022-01-11 12:00:00",
-                "time_updated": "",
-                "timestamp": "2022-01-11 12:00:00",
+                "readingList": [
+                    {
+                        "sensor_id": 17,
+                        "time_created": "2022-01-11 12:00:00",
+                        "time_updated": "",
+                        "timestamp": "2022-01-11 12:00:00",
+                        "temperature": 18.4,
+                        "humidity": 68,
+                    }
+                ]
             },
         }
     ]
+    return json.dumps(result)
+
+
+@blueprint.route("/shelfdata/<zone>/<aisle>/<column>/<shelf>", methods=["GET"])
+def get_shelf_data(zone, aisle, column, shelf):
+    """
+    for shelf in a given zone/aisle/column/shelf, find the nearest sensor,
+    latest reading from that sensor, any crop currently growing there.
+    """
+    result = {
+        "cropData": {
+            "zone": zone,
+            "aisle": "A",
+            "column": 4,
+            "shelf": 2,
+            "name": "basil",
+            "number_of_trays": 10,
+            "tray_size": 0.4,
+            "event_time": "2023-01-10",
+            "next_action_time": "2023-02-01",
+        },
+        "sensor": {
+            "zone": zone,
+            "aisle": "A",
+            "column": 4,
+            "shelf": 2,
+            "installation_date": "2020-01-01",
+            "sensor_id": 17,
+            "aranet_code": "a4281",
+            "serial_number": "3445230923",
+            "aranet_pro_id": "ab312",
+        },
+        "latestReading": {
+            "sensor_id": 17,
+            "time_created": "2022-01-11 12:00:00",
+            "time_updated": "",
+            "timestamp": "2022-01-11 12:00:00",
+        },
+    }
+    return json.dumps(result)
+
+
+@blueprint.route("closest_trh_sensors", methods=["GET"])
+def get_closest_sensors():
+    closest_trh_squery = closest_trh_sensors(db.session).subquery(
+        "location_and_trh_ids"
+    )
+    query = db.session.query(
+        LocationClass.aisle,
+        LocationClass.column,
+        LocationClass.shelf,
+        LocationClass.id,
+        closest_trh_squery.c.sensor_id,
+    ).join(closest_trh_squery, closest_trh_squery.c.location_id == LocationClass.id)
+    execute_result = db.session.execute(query).fetchall()
+    result = query_result_to_array(execute_result)
     return json.dumps(result)
