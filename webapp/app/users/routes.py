@@ -3,13 +3,19 @@ from flask_login import login_required
 
 
 from app.users import blueprint
+from core.structure import SQLA as db
 from core.structure import UserClass
 from core import utils
 
 
-@blueprint.route("/users", methods=["GET"])
+@blueprint.route("/users", methods=["GET", "POST"])
 @login_required
 def users():
+    if request.method == "POST":
+        user_id = request.values.get("user_id")
+        user = db.session.get(UserClass, user_id)
+        db.session.delete(user)
+        db.session.commit()
     users = UserClass.query.all()
     return render_template("users.html", users=users)
 
