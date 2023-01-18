@@ -44,7 +44,7 @@
                     <th>Aranet Pro ID</th>
                     <th>Location (zone-aisle-column-shelf)</th>
                     <th>Installation date</th>
-                    <th class="column-title no-link last"><span class="nobr">Action</span>
+                    <th class="column-title no-link last"><span class="nobr">Edit</span>
                   </tr>
                 </thead>
 
@@ -72,7 +72,10 @@
                         {% endif %}
                       </td>
                       <td>{{ t_sensor.installation_date }}</td>
-                      <td class=" last"><a href="/sensors/sensor_form?query={{ t_sensor.id }}">Edit</a>
+                      <td class=" last">
+                        <a href="/sensors/sensor_form?query={{ t_sensor.id }}">
+                          <i class="fa fa-pencil"></i>
+                        </a>
                     </tr>
                     {% endfor %}
                 </tbody>

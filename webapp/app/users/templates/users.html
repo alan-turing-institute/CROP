@@ -37,6 +37,7 @@
                     <th>ID</th>
                     <th>Username</th>
                     <th>Email</th>
+                    <th>Delete</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -48,6 +49,14 @@
                     <td>{{ t_user.id }}</td>
                     <td>{{ t_user.username }}</td>
                     <td>{{ t_user.email }}</td>
+                    <td>
+                      <form name="deleteUser{{ t_user.id }}" method="POST">
+                        <input type="hidden" name="user_id" value={{ t_user.id }}>
+                        <span onclick="deleteUser{{ t_user.id }}.submit()" onmouseover="" style="cursor: pointer;">
+                          <i class="fa fa-trash"></i>
+                        </span>
+                      </form>
+                    </td>
                   </tr>
                   {%
                     endfor

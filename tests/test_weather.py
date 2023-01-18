@@ -8,6 +8,8 @@ import json
 from datetime import datetime, timedelta
 import requests
 import requests_mock
+
+from core.constants import CONST_TESTDATA_WEATHER_FOLDER
 from core.ingress_weather import (
     get_openweathermap_data as get_openweathermap_history,
 )
@@ -16,13 +18,13 @@ from core.ingress_weather_forecast import (
     get_openweathermap_data as get_openweathermap_forecast,
 )
 
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+
 MOCK_OPENWEATHERMAP_HISTORY = json.load(
-    open(os.path.join(THIS_DIR, "data", "OpenWeatherMap", "weatherHistory.json"))
+    open(os.path.join(CONST_TESTDATA_WEATHER_FOLDER, "weatherHistory.json"))
 )
 
 MOCK_OPENWEATHERMAP_FORECAST = json.load(
-    open(os.path.join(THIS_DIR, "data", "OpenWeatherMap", "weatherForecast.json"))
+    open(os.path.join(CONST_TESTDATA_WEATHER_FOLDER, "weatherForecast.json"))
 )
 
 
