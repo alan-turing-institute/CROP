@@ -56,3 +56,25 @@ def test_columns_cleanData():
         "EnergyCP_MA",
     ]
     assert all(item in energy_data for item in colnames)
+
+
+def test_timestamps_cleanData():
+    """
+    Test that the post-processed TRH and Energy dataframes
+    have the same timestamps, that the timestamp vector is
+    monotonically increasing and that timedelta between
+    timestamps is unique.
+    """
+    # check that the timestamp vector is the same for all data
+    for ii in range(1, len(keys)):
+        timestamp1 = env_data[keys[ii - 1]].timestamp
+        timestamp2 = env_data[keys[ii]].timestamp
+        assert timestamp2.equals(timestamp1)
+    timestamp1 = energy_data.timestamp
+    assert timestamp2.equals(timestamp1)
+    # check that the timestamp vector is monotonically increasing
+    assert timestamp2.is_monotonic
+    # check that the timedelta is unique
+    time_delta = timestamp2.diff()[1:]
+    time_delta = pd.unique(time_delta)
+    assert len(time_delta) == 1
