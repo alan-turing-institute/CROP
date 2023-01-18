@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 
 constants = config(section="constants")
+processing_params = config(section="data")
 sensors_list = config(section="sensors")
 sensors_list = sensors_list["include_sensors"]
 
@@ -159,7 +160,7 @@ def cleanEnvData(env_data: pd.DataFrame):
     env_data["timestamp_hour_plus_minus"] = env_data.apply(
         lambda x: x["timestamp"].round(freq="H")
         if x["timedelta_in_secs"]
-        <= constants["mins_from_the_hour"] * constants["secs_per_min"]
+        <= processing_params["mins_from_the_hour"] * constants["secs_per_min"]
         else None,
         axis=1,
     )
@@ -169,6 +170,7 @@ def cleanEnvData(env_data: pd.DataFrame):
     time_vector = timeVector(
         start=min(env_data["timestamp_hour_floor"]),
         end=max(env_data["timestamp_hour_floor"]),
+        frequency=processing_params["time_delta"],
     )
     # calculate the hourly-averaged data
     env_data = hourlyAverageSensor(
@@ -213,8 +215,12 @@ def cleanEnergyData(energy_data: pd.DataFrame):
     # Therefore, for timestamp t, the average will be computed using the
     # values as t-30min, t and t+30min, with t weighted higher than
     # t-30min and t+30min
-    energy_data["EnergyCC_MA"] = centeredMA(energy_data.EnergyCC)
-    energy_data["EnergyCP_MA"] = centeredMA(energy_data.EnergyCP)
+    energy_data["EnergyCC_MA"] = centeredMA(
+        energy_data.EnergyCC, window=processing_params["window"]
+    )
+    energy_data["EnergyCP_MA"] = centeredMA(
+        energy_data.EnergyCP, window=processing_params["window"]
+    )
     # insert a new column at the end of the dataframe, named "timestamp_hour_floor",
     # that rounds the timestamp by flooring to hour precision
     energy_data.insert(

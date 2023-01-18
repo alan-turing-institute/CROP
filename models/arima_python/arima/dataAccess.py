@@ -234,7 +234,7 @@ def getTrainingData(numRows=None):
             to a different row in the utc_energy_data table. Organised
             by the timestamp column of the utc_energy_data table.
     """
-    params = config(section="constants")
+    params = config(section="data")
     num_days_training = params["num_days_training"]
     env_data = getTemperatureHumidityData(deltaDays=num_days_training, numRows=numRows)
     energy_data = getEnergyData(deltaDays=num_days_training, numRows=numRows)
