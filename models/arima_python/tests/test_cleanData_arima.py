@@ -1,6 +1,5 @@
 import pandas as pd
 import arima.cleanData as cleanData
-import arima.config as config
 
 # import the sample raw (un-processed) data
 env_raw = pd.read_pickle("tests/data/aranet_trh_raw.pkl")
@@ -11,8 +10,15 @@ env_clean = pd.read_pickle("tests/data/aranet_trh_processed.pkl")
 energy_clean = pd.read_pickle("tests/data/utc_energy_processed.pkl")
 
 # set the list of temperature/rel humidity (TRH) sensors
+# this is done here because "sensors_list" can be specified by the user via the config file
 keys_clean = list(env_clean.keys())
 cleanData.sensors_list = keys_clean
+
+# column names TRH data should contain
+colnames_env = list(env_clean[keys_clean[0]].columns)
+
+# column names energy data should contain
+colnames_energy = list(energy_clean.columns)
 
 # call the function to process the raw data
 env_data, energy_data = cleanData.cleanData(env_raw, energy_raw)
@@ -38,24 +44,11 @@ def test_columns_cleanData():
     Test that the post-processed dataframes contain the
     expected columns.
     """
-    # expected column names for TRH data
-    colnames = [
-        "timestamp",
-        "temperature",
-        "humidity",
-    ]
     # loop through every sensor (key) in the TRH data
     for ii in range(0, len(keys)):
-        assert all(item in env_data[keys[ii]].columns for item in colnames)
-    # expected column names for energy data
-    colnames = [
-        "timestamp",
-        "EnergyCC",
-        "EnergyCP",
-        "EnergyCC_MA",
-        "EnergyCP_MA",
-    ]
-    assert all(item in energy_data for item in colnames)
+        assert all(item in env_data[keys[ii]].columns for item in colnames_env)
+    # now test the energy data
+    assert all(item in energy_data.columns for item in colnames_energy)
 
 
 def test_timestamps_cleanData():
