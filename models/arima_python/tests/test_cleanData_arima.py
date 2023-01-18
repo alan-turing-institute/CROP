@@ -27,7 +27,7 @@ keys = list(env_data.keys())
 
 def test_format_cleanData():
     """
-    Test that the format of the post-processed data is
+    Test that the format of the pre-processed data is
     the expected one.
     """
     # chect that variable types are correct
@@ -41,7 +41,7 @@ def test_format_cleanData():
 
 def test_columns_cleanData():
     """
-    Test that the post-processed dataframes contain the
+    Test that the pre-processed dataframes contain the
     expected columns.
     """
     # loop through every sensor (key) in the TRH data
@@ -53,7 +53,7 @@ def test_columns_cleanData():
 
 def test_timestamps_cleanData():
     """
-    Test that the post-processed TRH and Energy dataframes
+    Test that the pre-processed TRH and Energy dataframes
     have the same timestamps, that the timestamp vector is
     monotonically increasing and that timedelta between
     timestamps is unique.
@@ -71,3 +71,16 @@ def test_timestamps_cleanData():
     time_delta = timestamp2.diff()[1:]
     time_delta = pd.unique(time_delta)
     assert len(time_delta) == 1
+
+
+def test_data_cleanData():
+    """
+    Test that the data in the pre-processed dataframes
+    is strictly equal to the expected one.
+    """
+    # compare sensor by sensor and column by column
+    for sensor in keys_clean:
+        for column in colnames_env:
+            assert env_data[sensor][column].equals(env_clean[sensor][column])
+    for column in colnames_energy:
+        assert energy_data[column].equals(energy_clean[column])
