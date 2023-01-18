@@ -2,8 +2,10 @@ import pandas as pd
 import arima.cleanData as cleanData
 
 # import the sample raw (un-processed) data
-env_raw = pd.read_pickle("tests/data/aranet_trh_raw.pkl")
-energy_raw = pd.read_pickle("tests/data/utc_energy_raw.pkl")
+env_raw = pd.read_pickle(
+    "tests/data/aranet_trh_raw.pkl"
+)  # temperature/rel humidity (TRH) data
+energy_raw = pd.read_pickle("tests/data/utc_energy_raw.pkl")  # energy data
 
 # import the processed data - this is the baseline we compare against
 env_clean = pd.read_pickle("tests/data/aranet_trh_processed.pkl")
@@ -16,9 +18,14 @@ colnames_env = list(env_clean[keys_clean[0]].columns)
 # column names energy data should contain
 colnames_energy = list(energy_clean.columns)
 
-# set the list of temperature/rel humidity (TRH) sensors
-# this is done here because "sensors_list" can be specified by the user via the config file
+# Set the TRH sensors and processing parameters of the cleanData module to those
+# of the baseline dataset loaded above.
+# This is done here because these are parameters that can be specified by the user
+# via the config file, so here we are simply overwriting them.
 cleanData.sensors_list = keys_clean
+cleanData.processing_params["mins_from_the_hour"] = 15
+cleanData.processing_params["time_delta"] = "1H"
+cleanData.processing_params["window"] = 3
 
 # now call the function to process the raw data
 env_data, energy_data = cleanData.cleanData(env_raw, energy_raw)
