@@ -13,7 +13,7 @@ def test_connection():
 def test_getTrainingData():
     """
     Test that the format of the training data fetched
-    from the DB is in the correct format.
+    from the DB is correct.
     The training data is fetched from the "aranet_trh_data"
     and "utc_energy_data" tables.
     """
@@ -53,15 +53,15 @@ def test_getTrainingData():
         "name": "O",
         "id": "int64",
         "sensor_id": "int64",
-        "timestamp": "<M8[ns]",
+        "timestamp": "<M8[ns]",  # note no time-zone information
         "temperature": "float64",
         "humidity": "float64",
-        "time_created": "<M8[ns]",
+        "time_created": "<M8[ns]",  # note no time-zone information
         "time_updated": "O",
     }
     assert all([env_data[item].dtypes == datatypes[item] for item in datatypes.keys()])
     datatypes = {
-        "timestamp": "<M8[ns]",
+        "timestamp": "<M8[ns]",  # note no time-zone information
         "electricity_consumption": "float64",
         "time_created": "O",
         "time_updated": "O",
