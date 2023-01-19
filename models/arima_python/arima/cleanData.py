@@ -1,7 +1,9 @@
-from .dataAccess import getTrainingData
 from .config import config
 import pandas as pd
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 constants = config(section="constants")
 processing_params = config(section="data")
@@ -26,6 +28,14 @@ def timeVector(start, end, frequency="1H", offset=1):
             named "timestamp", containing the vector of increasing
             timestamps.
     """
+    if frequency != "1H":
+        logger.warning(
+            "!!! The time delta between successive timestamps has been set to something different than '1H' !!!"
+        )
+    if offset != 1:
+        logger.warning(
+            "!!! The date offset added to the starting timestamp has been set to something different than 1 (hour) !!!"
+        )
     # create a Pandas fixed frequency DatetimeIndex
     time_vector = pd.date_range(
         start + pd.DateOffset(hours=offset),

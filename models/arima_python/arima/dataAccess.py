@@ -7,6 +7,8 @@ from six import string_types
 from copy import deepcopy
 import pandas as pd
 
+logger = logging.getLogger(__name__)
+
 
 def openConnection():
     """
@@ -20,11 +22,11 @@ def openConnection():
         params = config()
 
         # connect to the PostreSQL server
-        logging.info("Connecting to the PostgreSQL database...")
+        logger.info("Connecting to the PostgreSQL database...")
         conn = psycopg2.connect(**params)
 
     except (Exception, psycopg2.DatabaseError) as error:
-        logging.error(error)
+        logger.error(error)
     finally:
         return conn
 
@@ -33,18 +35,18 @@ def closeConnection(conn):
     """Close the PostgreSQL connection"""
     if conn is not None:
         conn.close()
-        logging.info("Database connection closed.")
+        logger.info("Database connection closed.")
 
 
 def printRowsHead(rows, numrows=0):
     """Log the number of rows retrieved from the database"""
-    logging.info("Printing:{0} of {1}".format(numrows, len(rows)))
+    logger.info("Printing:{0} of {1}".format(numrows, len(rows)))
     if numrows == 0:
         for row in rows[: len(rows)]:
-            logging.info(row)
+            logger.info(row)
     else:
         for row in rows[:numrows]:
-            logging.info(row)
+            logger.info(row)
 
 
 def getData(query):
@@ -66,12 +68,12 @@ def getData(query):
         colnames = [desc[0] for desc in cur.description]  # get column names
         printRowsHead(data, numrows=10)
         cur.close()  # close the communication with the PostgreSQL
-        logging.info(f"Got data from {query} - returning {len(data)} rows")
+        logger.info(f"Got data from {query} - returning {len(data)} rows")
         # convert the fetched list to a pandas dataframe
         data = pd.DataFrame(data, columns=colnames)
         removeTimeZone(data)  # all timestamps in the DB should be in UTC
     except (Exception, psycopg2.DatabaseError) as error:
-        logging.error(error)
+        logger.error(error)
     finally:
         closeConnection(conn=conn)
     return data
