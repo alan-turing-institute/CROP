@@ -28,10 +28,6 @@ def timeVector(start, end, frequency="1H", offset=1):
             named "timestamp", containing the vector of increasing
             timestamps.
     """
-    if frequency != "1H":
-        logger.warning(
-            "!!! The time delta between successive timestamps has been set to something different than '1H' !!!"
-        )
     if offset != 1:
         logger.warning(
             "!!! The date offset added to the starting timestamp has been set to something different than 1 (hour) !!!"
@@ -117,7 +113,8 @@ def centeredMA(series: pd.Series, window: int = 3):
             depending on the specified window size.
     """
     if not (window % 2):
-        raise Exception("The window must be an odd integer.")
+        logger.error("The moving average window must be an odd integer.")
+        raise Exception
     # calculate the weights for the weighted average
     n = window - 1
     weights = np.zeros(
@@ -151,6 +148,7 @@ def cleanEnvData(env_data: pd.DataFrame):
             oldest and most recent timestamps in the input dataframe, with a
             deltatime between successive timestamps of one hour.
     """
+    logger.info("Cleaning temperature/rel humidity data...")
     # insert a new column at the end of the dataframe, named "timestamp_hour_floor",
     # that rounds the timestamp by flooring to hour precision
     env_data.insert(
@@ -188,7 +186,7 @@ def cleanEnvData(env_data: pd.DataFrame):
         ["temperature", "humidity"],
         time_vector,
     )
-
+    logger.info("Done cleaning temperature/rel humidity data.")
     return env_data, time_vector
 
 
@@ -206,6 +204,7 @@ def cleanEnergyData(energy_data: pd.DataFrame):
             as a function of the timestamp. It also contains moving-averaged
             (MA) data.
     """
+    logger.info("Cleaning energy data...")
     # pivot the input dataframe, setting the timestamp as the index,
     # sensor_id as columns and electricity_consumption as the values
     # of the new dataframe.
@@ -261,7 +260,7 @@ def cleanEnergyData(energy_data: pd.DataFrame):
         columns={"timestamp_hour_floor": "timestamp"},
         inplace=True,
     )
-
+    logger.info("Done cleaning energy data.")
     return energy_data
 
 
@@ -292,6 +291,18 @@ def cleanData(env_data, energy_data):
             The data is time-ordered. Only timestamps contained in the processed
             "env_data" are returned.
     """
+    if processing_params["mins_from_the_hour"] != 15:
+        logger.warning(
+            "The 'mins_from_the_hour' setting in config.ini has been set to something different than 15."
+        )
+    if processing_params["time_delta"] != "1H":
+        logger.warning(
+            "The 'time_delta' setting in config.ini has been set to something different than '1H'."
+        )
+    if processing_params["window"] != 3:
+        logger.warning(
+            "The 'window' setting in config.ini has been set to something different than 3."
+        )
     env_data, time_vector = cleanEnvData(env_data)
     energy_data = cleanEnergyData(energy_data)
     # perform a left merge of "energy_data" with "time_vector",

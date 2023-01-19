@@ -232,6 +232,10 @@ def getTrainingData(numRows=None):
     """
     params = config(section="data")
     num_days_training = params["num_days_training"]
+    if num_days_training != 200:
+        logger.warning(
+            "The 'num_days_training' setting in config.ini has been set to something different than 200."
+        )
     env_data = getTemperatureHumidityData(deltaDays=num_days_training, numRows=numRows)
     energy_data = getEnergyData(deltaDays=num_days_training, numRows=numRows)
     return env_data, energy_data

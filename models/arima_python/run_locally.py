@@ -2,10 +2,17 @@ def main() -> None:
     from arima.dataAccess import getTrainingData
     from arima.cleanData import cleanData
     import pickle
-    import logging
+    import logging, coloredlogs
     import sys
 
+    # set up logging
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    field_styles = coloredlogs.DEFAULT_FIELD_STYLES
+    field_styles["levelname"][
+        "color"
+    ] = "white"  # change the default levelname color from black to white
+    coloredlogs.ColoredFormatter(field_styles=field_styles)
+    coloredlogs.install(level="INFO")
 
     env_raw, energy_raw = getTrainingData(numRows=500)
 
