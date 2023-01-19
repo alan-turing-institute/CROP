@@ -38,17 +38,6 @@ def closeConnection(conn):
         logger.info("Database connection closed.")
 
 
-def printRowsHead(rows, numrows=0):
-    """Log the number of rows retrieved from the database"""
-    logger.info("Printing:{0} of {1}".format(numrows, len(rows)))
-    if numrows == 0:
-        for row in rows[: len(rows)]:
-            logger.info(row)
-    else:
-        for row in rows[:numrows]:
-            logger.info(row)
-
-
 def getData(query):
     """
     Fetch data from the DB based on the type of query.
@@ -66,7 +55,6 @@ def getData(query):
         cur.execute(query)
         data = cur.fetchall()
         colnames = [desc[0] for desc in cur.description]  # get column names
-        printRowsHead(data, numrows=10)
         cur.close()  # close the communication with the PostgreSQL
         logger.info(f"Got data from {query} - returning {len(data)} rows")
         # convert the fetched list to a pandas dataframe
@@ -148,6 +136,9 @@ def getTemperatureHumidityData(deltaDays, numRows=None):
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(transaction_template, params)
     data = getData(get_sql_from_template(query=query, bind_params=bind_params))
+    logger.info("Temperature/Rel humidity data - head/tail:")
+    logger.info(data.head(5))
+    logger.info(data.tail(5))
     return data
 
 
@@ -199,6 +190,9 @@ def getEnergyData(deltaDays, numRows=None):
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(transaction_template, params)
     data = getData(get_sql_from_template(query=query, bind_params=bind_params))
+    logger.info("Energy data - head/tail:")
+    logger.info(data.head(5))
+    logger.info(data.tail(5))
     return data
 
 
