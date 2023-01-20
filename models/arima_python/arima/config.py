@@ -5,7 +5,7 @@ including parameters required to connect to the PostgreSQL database server
 
 from configparser import ConfigParser
 import os
-import json
+import ast
 
 
 def config(
@@ -27,7 +27,8 @@ def config(
     if parser.has_section(section):
         params = parser.items(section)  # returns a list with item name and item value
         for param in params:
-            conf_dict[param[0]] = json.loads(parser.get(section, param[0]))
+            # use ast.literal_eval to convert a string to a Python literal structure
+            conf_dict[param[0]] = ast.literal_eval(parser.get(section, param[0]))
     else:
         raise Exception(
             "Section {0} not found in the {1} file".format(section, filename)
@@ -35,10 +36,12 @@ def config(
 
     # If the same variable is defined also as an environment variable, have that
     # override the value in the file.
+    # Note that the environment variable must follow this structure: CROP_ARIMA_VARIABLENAME
     for key in conf_dict.keys():
-        env_var = "CROP_{}".format(key).upper()
+        env_var = "CROP_ARIMA_{}".format(key).upper()
         if env_var in os.environ:
-            conf_dict[key] = os.environ[env_var]
+            # use ast.literal_eval to convert a string to a Python literal structure
+            conf_dict[key] = ast.literal_eval(os.environ[env_var])
 
     # special treatment for SQL environment variables
     if section == "postgresql":
