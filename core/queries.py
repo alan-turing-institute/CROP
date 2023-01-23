@@ -476,6 +476,7 @@ def batch_list(session):
             weigh_events_sq.c.event_time.label("weigh_time"),
             propagate_events_sq.c.event_time.label("propagate_time"),
             transfer_events_sq.c.event_time.label("transfer_time"),
+            transfer_events_sq.c.next_action_time.label("expected_harvest_time"),
             harvest_events_sq.c.event_time.label("harvest_time"),
             locations_sq.c.id.label("location_id"),
             locations_sq.c.zone,
@@ -502,6 +503,7 @@ def batch_list(session):
             ).label("last_event"),
         )
         .join(CropTypeClass, CropTypeClass.id == BatchClass.crop_type_id)
+        #        .join(BatchEventClass, BatchEventClass.batch_id == BatchClass.id)
         # We inner join on weigh_events, because if the batch doesn't have a weigh event
         # it doesn't really exist, but outer join on the others since they are optional.
         .join(weigh_events_sq, weigh_events_sq.c.batch_id == BatchClass.id)
