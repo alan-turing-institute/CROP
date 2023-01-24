@@ -49,6 +49,7 @@ from .constants import (
     WEATHER_TABLE_NAME,
     WEATHER_FORECAST_TABLE_NAME,
     MODEL_TABLE_NAME,
+    MODEL_SCENARIO_TABLE_NAME,
     MODEL_MEASURE_TABLE_NAME,
     MODEL_RUN_TABLE_NAME,
     MODEL_PRODUCT_TABLE_NAME,
@@ -78,6 +79,28 @@ class ModelClass(BASE):
     author = Column(String(100), nullable=False, unique=False)
 
 
+class ModelScenarioClass(BASE):
+    """
+    This class allows us to vary some parameters in a Model.
+    If we were to generalize this, we could have the variables and their
+    values in separate tables, but lets keep it simple for now.
+    """
+
+    __tablename__ = MODEL_SCENARIO_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    model_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    ventilation_rate = Column(Float, nullable=False)
+    num_dehumidifiers = Column(Integer, nullable=False)
+    lighting_shift = Column(Float, nullable=False)
+    lighting_on_duration = Column(Float, nullable=False)
+
+
 class ModelMeasureClass(BASE):
     """
     This class contains the names of all columns in models
@@ -87,8 +110,15 @@ class ModelMeasureClass(BASE):
 
     # columns
     id = Column(Integer, primary_key=True)
-    measure_name = Column(String(100), nullable=False, unique=True)
+    measure_name = Column(String(100), nullable=False, unique=False)
     measure_description = Column(String(100), nullable=True, unique=False)
+    scenario_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_SCENARIO_TABLE_NAME, ID_COL_NAME)),
+        nullable=True,
+    )
+    # arguments
+    __table_args__ = (UniqueConstraint("measure_name", "scenario_id"),)
 
 
 class ModelRunClass(BASE):

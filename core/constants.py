@@ -150,6 +150,7 @@ SENSOR_LOCATION_TABLE_NAME = "sensor_location"
 SENSOR_UPLOAD_LOG_TABLE_NAME = "sensor_upload_log"
 MODEL_TABLE_NAME = "model"
 MODEL_MEASURE_TABLE_NAME = "model_measure"
+MODEL_SCENARIO_TABLE_NAME = "model_scenario"
 MODEL_RUN_TABLE_NAME = "model_run"
 MODEL_PRODUCT_TABLE_NAME = "model_product"
 MODEL_VALUE_TABLE_NAME = "model_value"
@@ -232,6 +233,7 @@ CONST_TESTDATA_ENVIRONMENT_FOLDER = os.path.join(
 CONST_TESTDATA_CROPGROWTH_FOLDER = os.path.join(
     CONST_TESTDATA_BASE_FOLDER, "CropGrowth"
 )
+CONST_TESTDATA_MODEL_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Models")
 
 # test data filenames
 LOCATIONS_CSV = "locations.csv"  # Locations within the farm
@@ -239,7 +241,8 @@ SENSOR_CSV = "sensors.csv"  # List of sensors
 SENSOR_TYPE_CSV = "sensor_types.csv"  # List of all available sensor types
 LOCATION_CSV = "locations.csv"  # List of locations in the farm
 SENSOR_LOCATION_CSV = "sensor_locations.csv"  # List of sensor locations
-
+MODEL_CSV = "models.csv"  # List of models
+MEASURE_CSV = "measures.csv"  # List of things to be predicted by models
 # Air Velocity test data
 CONST_AIR_VELOCITY_TEST_1 = "data-20200128-test1.csv"
 

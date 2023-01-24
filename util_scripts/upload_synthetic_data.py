@@ -3,11 +3,10 @@
 Script that creates (if needed) a database in an existing PostgreSQL
 server and uploads synthetic data to it.
 """
-
-import argparse
-
 import os
 import sys
+import argparse
+import json
 import uuid
 import pandas as pd
 
@@ -23,12 +22,16 @@ from core.structure import (
     BatchClass,
     BatchEventClass,
     HarvestClass,
+    ModelClass,
+    ModelMeasureClass,
+    ModelScenarioClass,
 )
 
 from core.constants import (
     CONST_TESTDATA_LOCATION_FOLDER,
     CONST_TESTDATA_SENSOR_FOLDER,
     CONST_TESTDATA_CROPGROWTH_FOLDER,
+    CONST_TESTDATA_MODEL_FOLDER,
     LOCATION_CSV,
     SENSOR_CSV,
     SENSOR_TYPE_CSV,
@@ -37,6 +40,8 @@ from core.constants import (
     BATCH_CSV,
     BATCH_EVENT_CSV,
     HARVEST_CSV,
+    MODEL_CSV,
+    MEASURE_CSV,
     SQL_TEST_CONNECTION_STRING,
 )
 
@@ -52,6 +57,10 @@ from util_scripts.generate_synthetic_readings import (
     generate_co2_readings,
     generate_airvelocity_readings,
 )
+
+# from util_scripts.upload_model_data import (
+#    upload_model_data
+# )
 
 
 def error_message(message):
@@ -150,6 +159,81 @@ def add_crop_data(engine):
     insert_from_df(engine, df, HarvestClass)
 
 
+def add_model_data(engine):
+    csv_location = os.path.join(CONST_TESTDATA_MODEL_FOLDER, MODEL_CSV)
+    df = pd.read_csv(csv_location)
+    insert_from_df(engine, df, ModelClass)
+
+
+def generate_scenarios(model_id):
+    """
+    Do a Cartesian product of the variables.
+    """
+    scenarios = []
+    # default scenario
+    scenario = {
+        "model_id": model_id,
+        "ventilation_rate": 2,
+        "num_dehumidifiers": 1,
+        "lighting_shift": 0,
+        "lighting_on_duration": 16,
+    }
+    scenarios.append(scenario)
+    # existing alternative
+    scenario = {
+        "model_id": model_id,
+        "ventilation_rate": 2,
+        "num_dehumidifiers": 1,
+        "lighting_shift": -3,
+        "lighting_on_duration": 16,
+    }
+    scenarios.append(scenario)
+    for ventilation_rate in range(2, 12, 2):
+        for num_dehumidifiers in range(3):
+            for lighting_shift in range(-6, 9, 3):
+                for lighting_on_duration in range(12, 22, 2):
+                    scenario = {
+                        "model_id": model_id,
+                        "ventilation_rate": float(ventilation_rate),
+                        "num_dehumidifiers": num_dehumidifiers,
+                        "lighting_shift": float(lighting_shift),
+                        "lighting_on_duration": float(lighting_on_duration),
+                    }
+                    scenarios.append(scenario)
+    df = pd.DataFrame(scenarios)
+    return df
+
+
+def add_scenario_data(engine):
+    df = generate_scenarios(2)
+    insert_from_df(engine, df, ModelScenarioClass)
+
+
+def add_measure_data(engine):
+    # get default measures
+    csv_location = os.path.join(CONST_TESTDATA_MODEL_FOLDER, MEASURE_CSV)
+    df = pd.read_csv(csv_location)
+    measures = json.loads(df.to_json(orient="records"))
+    # get extra ones from scenarios
+    scenarios_df = generate_scenarios(2)
+    for i, row in scenarios_df.iterrows():
+        # skip the first two rows with the default scenarios
+        if i < 2:
+            continue
+        for measure_name in [
+            "Scenario Temperature (Degree Celcius)",
+            "Scenario Humidity (percent)",
+        ]:
+            measure = {
+                "measure_name": measure_name,
+                "measure_description": "",
+                "scenario_id": i + 1,  # because the IDs start counting at 1
+            }
+            measures.append(measure)
+    measures_df = pd.DataFrame(measures)
+    insert_from_df(engine, measures_df, ModelMeasureClass)
+
+
 def main(db_name):
     """
     Main routine.
@@ -172,3 +256,6 @@ def main(db_name):
     add_location_data(engine)
     add_sensor_data(engine)
     add_crop_data(engine)
+    add_model_data(engine)
+    add_scenario_data(engine)
+    add_measure_data(engine)
