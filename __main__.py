@@ -1,4 +1,4 @@
-import pulumi_azure_native.dbforpostgresql as dbforpostgresql
+import pulumi_azure_native.dbforpostgresql as psql
 import pulumi_azure_native.insights as insights
 import pulumi_azure_native.resources as resource
 import pulumi_azure_native.sql as sql
@@ -37,24 +37,24 @@ app_insights = insights.Component(
 )
 
 sql_server_name = f"{resource_name_prefix}-postgresql"
-sql_server = dbforpostgresql.Server(
+sql_server = psql.Server(
     sql_server_name,
     server_name=sql_server_name,
     resource_group_name=resource_group.name,
-    properties=dbforpostgresql.ServerPropertiesForDefaultCreateArgs(
+    properties=psql.ServerPropertiesForDefaultCreateArgs(
         administrator_login=sql_server_user,
         administrator_login_password=sql_server_password,
         create_mode="Default",
-        minimal_tls_version="TLS1_2",
-        ssl_enforcement=dbforpostgresql.SslEnforcementEnum.ENABLED,
-        storage_profile=dbforpostgresql.StorageProfileArgs(
+        ssl_enforcement=psql.SslEnforcementEnum.DISABLED,
+        minimal_tls_version=psql.MinimalTlsVersionEnum.TLSEnforcementDisabled,
+        storage_profile=psql.StorageProfileArgs(
             backup_retention_days=14,
             geo_redundant_backup="Disabled",
-            storage_autogrow=dbforpostgresql.StorageAutogrow.ENABLED,
+            storage_autogrow=psql.StorageAutogrow.ENABLED,
             storage_mb=5120,
         ),
     ),
-    sku=dbforpostgresql.SkuArgs(
+    sku=psql.SkuArgs(
         capacity=2,
         family="Gen5",
         name="B_Gen5_2",
@@ -62,7 +62,7 @@ sql_server = dbforpostgresql.Server(
     ),
 )
 
-sql_db = dbforpostgresql.Database(
+sql_db = psql.Database(
     sql_db_name,
     charset="UTF8",
     collation="English_United States.1252",
