@@ -130,6 +130,7 @@ celerybeat-schedule
 # Environments
 .env
 .venv
+.venv-pulumi
 env/
 venv/
 ENV/
@@ -159,3 +160,5 @@ node_modules
 
 # emacs autosave
 *~
+
+*.pyc

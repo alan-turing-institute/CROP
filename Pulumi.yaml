@@ -1,0 +1,6 @@
+name: crop-azure
+runtime:
+  name: python
+  options:
+    virtualenv: .venv-pulumi
+description: CROP on Azure
