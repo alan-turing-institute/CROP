@@ -6,8 +6,10 @@ from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 
+from core.constants import DEFAULT_USER_USERNAME, DEFAULT_USER_EMAIL, DEFAULT_USER_PASS
 from core.structure import SQLA as db
 from core.structure import UserClass
+from core.utils import change_user_password, create_user
 
 login_manager = LoginManager()
 
@@ -107,6 +109,21 @@ def apply_themes(app):
         return url_for(endpoint, **values)
 
 
+def add_default_user(app):
+    """Add a default user with a given password."""
+    if DEFAULT_USER_PASS is not None:
+        user_info = {
+            "username": DEFAULT_USER_USERNAME,
+            "email": DEFAULT_USER_EMAIL,
+            "password": DEFAULT_USER_PASS,
+        }
+        with app.app_context():
+            success, _ = create_user(**user_info)
+            if not success:
+                # Presumably the user exists already, so change their password.
+                change_user_password(**user_info)
+
+
 def create_app(config, selenium=False):
     app = Flask(__name__, static_folder="base/static")
     app.config.from_object(config)
@@ -120,4 +137,5 @@ def create_app(config, selenium=False):
     configure_logs(app)
     apply_themes(app)
     CORS(app)
+    add_default_user(app)
     return app
