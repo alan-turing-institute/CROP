@@ -1,17 +1,42 @@
+import sys
 import logging
 from pathlib import Path
-import psycopg2
-from psycopg2.extras import execute_values
+from sqlalchemy import desc, asc
+
+# import psycopg2
+# from psycopg2.extras import execute_values
 import datetime
-from jinjasql import JinjaSql
-from six import string_types
-from copy import deepcopy
+
+# from jinjasql import JinjaSql
+# from six import string_types
+# from copy import deepcopy
 import numpy as np
 import pandas as pd
 from .config import config
 
+from cropcore.db import connect_db, session_open, session_close
+from cropcore.structure import (
+    ReadingsWeatherClass,
+    WeatherForecastsClass,
+    ReadingsAranetTRHClass,
+    ModelRunClass,
+    ModelProductionClass,
+    ModelValueClass,
+)
+from core.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+
 path_conf = config(section="paths")
 data_dir = Path(path_conf["data_dir"])
+
+
+def get_sqlalchemy_session(connection_string=None, dbname=None):
+    if not connection_string:
+        connection_string = SQL_CONNECTION_STRING
+    if not dbname:
+        dbname = SQL_DBNAME
+    status, log, engine = connect_db(connection_string, dbname)
+    session = session_open(engine)
+    return session
 
 
 def openConnection():
@@ -129,6 +154,30 @@ def get_sql_from_template(query, bind_params):
     return query % params
 
 
+def get_days_weather(num_days=2, num_rows=5, session=None):
+    """
+    Get 5 rows of weather data [(timestamp:datetime, temp:float, humid:float),...]
+    """
+    if not session:
+        session = get_sqlalchemy_session()
+    date_to = datetime.datetime.now()
+    delta = datetime.timedelta(days=num_days)
+    date_from = date_to - delta
+    query = (
+        session.query(
+            ReadingsWeatherClass.timestamp,
+            ReadingsWeatherClass.temperature,
+            ReadingsWeatherClass.relative_humidity,
+        )
+        .filter(ReadingsWeatherClass.timestamp > date_from)
+        .order_by(asc(ReadingsWeatherClass.timestamp))
+        .limit(num_rows)
+    )
+    result = session.execute(query).fetchall()
+    session_close(session)
+    return result
+
+
 def getDaysWeather(numDays=2, numRows=5):
     today = datetime.datetime.now()
     delta = datetime.timedelta(days=numDays)
@@ -222,6 +271,36 @@ def getDaysWeatherForecast(numDays=2):
     return data
 
 
+def get_days_weather_forecast(numDays=2, session=None):
+    if not session:
+        session = get_sqlalchemy_session()
+    date_from = datetime.datetime.now()
+    delta = datetime.timedelta(days=numDays)
+    date_to = date_from + delta
+    # allow for a delay of 24 hours from current time to ensure that there are
+    # no gaps between historical weather data (retrieved from table iweather)
+    # and forecast weather data (retrieved from table weather_forecast)
+    date_from = date_from - datetime.timedelta(hours=24)
+    query = (
+        session.query(
+            WeatherForecastsClass.timestamp,
+            WeatherForecastsClass.temperature,
+            WeatherForecastsClass.relative_humidity,
+            WeatherForecastsClass.time_created,
+        )
+        .filter(WeatherForecastsClass.timestamp > date_from)
+        .filter(WeatherForecastsClass.timestamp < date_to)
+        .order_by(
+            WeatherForecastsClass.timestamp, desc(WeatherForecastsClass.time_created)
+        )
+        .distinct(WeatherForecastsClass.timestamp)
+    )
+    result = session.execute(query).fetchall()
+    session_close(session)
+    # drop the time_created from each row
+    return [r[:3] for r in result]
+
+
 def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
     # select * from aranet_trh_data where sensor_id=27 order by timestamp desc limit 10;
     today = datetime.datetime.now()
@@ -246,6 +325,29 @@ def getDaysHumidityTemp(deltaDays=10, numRows=5, sensorID=27):
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(humidity_transaction_template, params)
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
+
+
+def get_days_humidity_temperature(
+    delta_days=10, num_rows=5, sensor_id=27, session=None
+):
+    if not session:
+        session = get_sqlalchemy_session()
+    date_to = datetime.datetime.now()
+    delta = datetime.timedelta(days=delta_days)
+    date_from = date_to - delta
+    query = (
+        session.query(
+            ReadingsAranetTRHClass.timestamp,
+            ReadingsAranetTRHClass.temperature,
+            ReadingsAranetTRHClass.humidity,
+        )
+        .filter(ReadingsAranetTRHClass.sensor_id == sensor_id)
+        .filter(ReadingsAranetTRHClass.timestamp > date_from)
+        .limit(num_rows)
+    )
+    result = session.execute(query).fetchall()
+    session_close(session)
+    return result
 
 
 def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
@@ -274,20 +376,13 @@ def getDaysHumidity(deltaDays=10, numRows=5, sensorID=27):
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
-def insert_particles(particles_array):
-    insertQuery = "INSERT INTO model_parameter(parameter_id, parameter_index, parameter_value) VALUES (%s,%s,%s)"
-    conn = None
-    try:
-        conn = openConnection()
-        if conn is not None:
-            cur = conn.cursor()
-            cur.executemany(insertQuery, particles_array)
-            conn.commit()
-            cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        logging.info(error)
-    finally:
-        closeConnection(conn=conn)
+def get_days_humidity(delta_days=10, num_rows=5, sensor_id=27, session=None):
+    """
+    almost the same as get_days_humidity - just run that and get the first
+    and third elements of the output tuples.
+    """
+    result = get_days_humidity_temperature(delta_days, num_rows, sensor_id, session)
+    return [(r[0], r[2]) for r in result]
 
 
 def getDataPointHumidity(sensorID=27, numRows=1):
@@ -309,7 +404,21 @@ def getDataPointHumidity(sensorID=27, numRows=1):
     return getData(get_sql_from_template(query=query, bind_params=bind_params))
 
 
-def getDataPoint(filepath=None):
+def get_datapoint_humidity(sensor_id=27, num_rows=1, session=None):
+    if not session:
+        session = get_sqlalchemy_session()
+    query = (
+        session.query(ReadingsAranetTRHClass.timestamp, ReadingsAranetTRHClass.humidity)
+        .filter(ReadingsAranetTRHClass.sensor_id == sensor_id)
+        .order_by(desc(ReadingsAranetTRHClass.timestamp))
+        .limit(num_rows)
+    )
+    result = session.execute(query).fetchall()
+    session_close(session)
+    return result
+
+
+def get_data_point(filepath=None):
     if filepath:
         LastDataPoint = pd.read_csv(filepath)
         jj = np.size(LastDataPoint, 1)
@@ -321,11 +430,6 @@ def getDataPoint(filepath=None):
     else:
         dp_database = np.asarray(getDataPointHumidity())[0, 1]
         return dp_database
-
-
-def testEnergy():
-    sql_command = "SELECT * FROM utc_energy_data WHERE utc_energy_data.timestamp >= '2021-03-12 16:03:11' AND utc_energy_data.timestamp < '2021-09-28 17:03:11'"
-    return getData(sql_command)
 
 
 def insertRow(query, parameters):
@@ -377,6 +481,23 @@ def insertModelRun(sensor_id=None, model_id=None, time_forecast=None):
     return None
 
 
+def insert_model_run(sensor_id=None, model_id=None, time_forecast=None, session=None):
+    if not session:
+        session = get_sqlalchemy_session()
+    if sensor_id is not None:
+        if model_id is not None:
+            if time_forecast is not None:
+                mr = ModelRunClass(
+                    sensor_id=sensor_id, model_id=model_id, time_forecast=time_forecast
+                )
+                try:
+                    session.add(mr)
+                    session.commit()
+                except exc.SQLAlchemyError as e:
+                    session.rollback()
+    session.close()
+
+
 def insertModelProduct(run_id=None, measure_id=None):
     if run_id is not None:
         if measure_id is not None:
@@ -386,6 +507,20 @@ def insertModelProduct(run_id=None, measure_id=None):
             logging.info("Product inserted, logged as ID: {0}".format(product_id))
             return product_id
     return None
+
+
+def insert_model_product(run_id=None, measure_id=None, session=None):
+    if not session:
+        session = get_sqlalchemy_session()
+    if run_id is not None:
+        if measure_id is not None:
+            mp = ModelProductClass(run_id=run_id, measure_id=measure_id)
+            try:
+                session.add(mp)
+                session.commit()
+            except exc.SQLAlchemyError as e:
+                session.rollback()
+    session.close()
 
 
 def insertModelPrediction(parameters=None):
@@ -399,28 +534,23 @@ def insertModelPrediction(parameters=None):
     return num_rows_inserted
 
 
-# if __name__ == '__main__':
-# testInsert()
-# particles_array = [(2, 1, 0.4594613726254301), (2, 2, 0.763604572422916), (2, 3, 0.7340651592924317), (2, 0.7047730309779485), (2, 0.4595117250921914)]
-# insert_particles(particles_array)
-# compareHumiditySources()
-# compareDataPoint()
-# getDaysWeather(numDays=7, numRows=10)
-# humidityDataList = getDaysHumidity(deltaDays=1, numRows=1000)
-# # for row in humidityList:
-#   # logging.info(row)
-# dp = getDataPointHumidity()
-# humidityList = []
-# # temperature = []
-# for row in humidityDataList:
-#     humidityList.append(row[1])
-#     logging.info(row[1])
-#     logging.info(row[0])
-
-# humidity = pd.Series(humidityList)
-# # take average and turn to hourly data
-# DT = humidityDataList[len(humidityDataList)-1][0]
-# logging.info(DT)
-
-# energy = testEnergy()
-# logging.info(energy[0])
+def insert_model_prediction(parameters=None, session=None):
+    if not session:
+        session = get_sqlalchemy_session()
+    num_rows_inserted = 0
+    if parameters is not None and len(parameters) > 0:
+        for parameter in parameters:
+            mv = ModelValueClass(
+                product_id=parameter[0],
+                prediction_value=parameter[1],
+                prediction_index=parameter[2],
+            )
+            try:
+                session.add(mv)
+                session.commit()
+                num_rows_inserted += 1
+            except exc.SQLAlchemyError as e:
+                session.rollback()
+    session.close()
+    print(f"Inserted {num_rows_inserted} model predictions")
+    return num_rows_inserted

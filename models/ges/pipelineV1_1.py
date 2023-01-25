@@ -5,9 +5,9 @@ from TestScenarioV1_1 import testScenario, FILEPATH_WEATHER
 import pandas as pd
 from pathlib import Path
 from ges.dataAccess import (
-    insertModelRun,
-    insertModelProduct,
-    insertModelPrediction,
+    insert_model_run,
+    insert_model_product,
+    insert_model_prediction,
 )
 from ges.config import config
 
@@ -140,7 +140,7 @@ def main():
     df_resultsT = pd.DataFrame(result["T_air"])
     df_resultsT.to_csv(filepath_resultsT, header=False)
 
-    run_id = insertModelRun(
+    run_id = insert_model_run(
         sensor_id=SENSOR_RH_16B2_DATABASE_ID,
         model_id=MODEL_GES_DATABASE_ID,
         time_forecast=forecast_date,
@@ -149,14 +149,14 @@ def main():
     if run_id is not None:
         logging.info("Run inserted, logged as ID: {0}".format(run_id))
         for measure in measures:
-            product_id = insertModelProduct(
+            product_id = insert_model_product(
                 run_id=run_id, measure_id=measure["measure_database_id"]
             )
             value_parameters = assemble_values(
                 product_id=product_id, measure=measure, all_results=result
             )
             logging.info(value_parameters)
-            num_rows_inserted = insertModelPrediction(value_parameters)
+            num_rows_inserted = insert_model_prediction(value_parameters)
             logging.info("{0} rows inserted".format(num_rows_inserted))
 
 

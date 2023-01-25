@@ -1,17 +1,17 @@
 import pytest
 from datetime import datetime
 from ges.dataAccess import (
-    getDaysWeather,
-    getDaysWeatherForecast,
-    getDaysHumidityTemp,
-    getDaysHumidity,
-    getDataPointHumidity,
-    getDataPoint,
+    get_days_weather,
+    get_days_weather_forecast,
+    get_days_humidity_temperature,
+    get_days_humidity,
+    get_datapoint_humidity,
+    get_data_point,
 )
 
 
 def test_get_days_weather():
-    result = getDaysWeather()
+    result = get_days_weather()
     assert len(result) == 5
     # check right format
     for r in result:
@@ -22,7 +22,7 @@ def test_get_days_weather():
 
 
 def test_get_days_weather_forecast():
-    result = getDaysWeatherForecast()
+    result = get_days_weather_forecast()
     assert len(result) > 0
     # check right format
     for r in result:
@@ -36,8 +36,8 @@ def test_get_days_weather_forecast():
     assert dts == sorted(dts)
 
 
-def test_get_day_humidity_temperature():
-    result = getDaysHumidityTemp()
+def test_get_days_humidity_temperature():
+    result = get_days_humidity_temperature()
     assert len(result) == 5
     # check right format
     for r in result:
@@ -47,8 +47,8 @@ def test_get_day_humidity_temperature():
         assert isinstance(r[2], float)
 
 
-def test_get_day_humidity():
-    result = getDaysHumidity()
+def test_get_days_humidity():
+    result = get_days_humidity()
     assert len(result) == 5
     # check right format
     for r in result:
@@ -58,7 +58,7 @@ def test_get_day_humidity():
 
 
 def test_get_datapoint_humidity():
-    result = getDataPointHumidity()
+    result = get_datapoint_humidity()
     assert len(result) == 1
     assert len(result[0]) == 2
     assert isinstance(result[0][0], datetime)
@@ -66,6 +66,6 @@ def test_get_datapoint_humidity():
 
 
 def test_get_datapoint():
-    result = getDataPoint()
+    result = get_data_point()
     # should be just one number?
-    assert isinstance(r, float)
+    assert isinstance(result, float)
