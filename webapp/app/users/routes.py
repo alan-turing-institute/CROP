@@ -12,6 +12,9 @@ from core import utils
 @login_required
 def users():
     if request.method == "POST":
+        # TODO This should now use utils.delete_user. The reason this is a tiny bit
+        # non-trivial is that that one takes an email and a password, this one takes an
+        # id.
         user_id = request.values.get("user_id")
         user = db.session.get(UserClass, user_id)
         db.session.delete(user)

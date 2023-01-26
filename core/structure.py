@@ -528,9 +528,13 @@ class UserClass(BASE, UserMixin):
             if hasattr(value, "__iter__") and not isinstance(value, str):
                 # the ,= unpack of a singleton fails PEP8 (travis flake8 test)
                 value = value[0]
-            if prop == "password":
-                value = hashpw(value.encode("utf8"), gensalt())
             setattr(self, prop, value)
+
+    def __setattr__(self, prop, value):
+        """Like setattr, but if the property we are setting is the password, hash it."""
+        if prop == "password":
+            value = hashpw(value.encode("utf8"), gensalt())
+        super().__setattr__(prop, value)
 
     def __repr__(self):
         """
