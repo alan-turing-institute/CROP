@@ -287,7 +287,7 @@ def arima_template():
     for sensor_id in sensor_ids:
         # Model number 1 is Arima, 2 is BSTS, 3 is for GES.
         df_arima = model_query(dt_from, dt_to, ARIMA_MODEL_ID, sensor_id)
-        if df_arima and len(df_arima) > 0:
+        if df_arima is not None and len(df_arima) > 0:
             json_arima = json_temp_arima(df_arima)
             # Get TRH data for the relevant period
             times = pd.to_datetime(df_arima["timestamp"])
@@ -315,7 +315,7 @@ def ges_template():
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
     df_ges = model_query(dt_from, dt_to, GES_MODEL_ID, GES_SENSOR_ID)
-    if df_ges:
+    if df_ges is not None and len(df_ges) > 0:
         # TODO This is a hard coded constant for now, marking the length of the
         # calibration period, because this data is lacking in the DB.
         time_shift = 24 * 10 - 1
