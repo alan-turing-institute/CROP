@@ -263,7 +263,7 @@ def json_temp_ges(df):
 
 
 def recent_arima_sensors(timerange=dt.timedelta(days=5)):
-    """Get the IDs of sensors for which there has been an Ariam run in the last some
+    """Get the IDs of sensors for which there has been an Arima run in the last some
     time.
     """
     dt_from = dt.datetime.now() - timerange
@@ -287,7 +287,7 @@ def arima_template():
     for sensor_id in sensor_ids:
         # Model number 1 is Arima, 2 is BSTS, 3 is for GES.
         df_arima = model_query(dt_from, dt_to, ARIMA_MODEL_ID, sensor_id)
-        if len(df_arima) > 0:
+        if df_arima and len(df_arima) > 0:
             json_arima = json_temp_arima(df_arima)
             # Get TRH data for the relevant period
             times = pd.to_datetime(df_arima["timestamp"])
