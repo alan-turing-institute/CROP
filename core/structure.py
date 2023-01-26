@@ -163,8 +163,6 @@ class ModelValueClass(BASE):
     )
     prediction_value = Column(Float, nullable=False)
     prediction_index = Column(Integer, nullable=False)
-    measure_description = Column(String(100), nullable=True, unique=False)
-
     # arguments
     __table_args__ = (UniqueConstraint("product_id"),)
 
