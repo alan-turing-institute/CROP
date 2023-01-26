@@ -7,7 +7,7 @@ from pathlib import Path
 from ges.dataAccess import (
     insert_model_run,
     insert_model_product,
-    insert_model_prediction,
+    insert_model_predictions,
 )
 from ges.config import config
 
@@ -156,7 +156,7 @@ def main():
                 product_id=product_id, measure=measure, all_results=result
             )
             logging.info(value_parameters)
-            num_rows_inserted = insert_model_prediction(value_parameters)
+            num_rows_inserted = insert_model_predictions(value_parameters)
             logging.info("{0} rows inserted".format(num_rows_inserted))
 
 

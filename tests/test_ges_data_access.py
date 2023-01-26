@@ -9,7 +9,7 @@ from models.ges.ges.dataAccess import (
     get_datapoint,
     insert_model_run,
     insert_model_product,
-    insert_model_prediction,
+    insert_model_predictions,
 )
 from .conftest import check_for_docker
 
@@ -86,4 +86,20 @@ def test_get_datapoint(session):
 @pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_insert_model_run(session):
     time_now = datetime.now()
-    run_id = insert_model_run(3, 2, session=session)
+    run_id = insert_model_run(3, 2, time_now, session=session)
+    assert run_id
+
+
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_insert_model_product(session):
+    product_id = insert_model_product(run_id=1, measure_id=2, session=session)
+    assert product_id
+
+
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_insert_model_predictions(session):
+    predictions = []
+    for i in range(1, 101):
+        predictions.append((1, 23.4, i))
+    num_predictions = insert_model_predictions(predictions, session=session)
+    assert num_predictions

@@ -542,7 +542,7 @@ def insertModelPrediction(parameters=None):
     return num_rows_inserted
 
 
-def insert_model_prediction(predictions=None, session=None):
+def insert_model_predictions(predictions=None, session=None):
     if not session:
         session = get_sqlalchemy_session()
     num_rows_inserted = 0
