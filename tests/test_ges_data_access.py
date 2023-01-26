@@ -6,12 +6,19 @@ from models.ges.ges.dataAccess import (
     get_days_humidity_temperature,
     get_days_humidity,
     get_datapoint_humidity,
-    get_data_point,
+    get_datapoint,
+    insert_model_run,
+    insert_model_product,
+    insert_model_prediction,
 )
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
 
 
-def test_get_days_weather():
-    result = get_days_weather()
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_days_weather(session):
+    result = get_days_weather(session=session)
     assert len(result) == 5
     # check right format
     for r in result:
@@ -21,8 +28,9 @@ def test_get_days_weather():
         assert isinstance(r[2], float)
 
 
-def test_get_days_weather_forecast():
-    result = get_days_weather_forecast()
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_days_weather_forecast(session):
+    result = get_days_weather_forecast(session=session)
     assert len(result) > 0
     # check right format
     for r in result:
@@ -36,8 +44,9 @@ def test_get_days_weather_forecast():
     assert dts == sorted(dts)
 
 
-def test_get_days_humidity_temperature():
-    result = get_days_humidity_temperature()
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_days_humidity_temperature(session):
+    result = get_days_humidity_temperature(sensor_id=2, session=session)
     assert len(result) == 5
     # check right format
     for r in result:
@@ -47,8 +56,9 @@ def test_get_days_humidity_temperature():
         assert isinstance(r[2], float)
 
 
-def test_get_days_humidity():
-    result = get_days_humidity()
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_days_humidity(session):
+    result = get_days_humidity(sensor_id=2, session=session)
     assert len(result) == 5
     # check right format
     for r in result:
@@ -57,15 +67,23 @@ def test_get_days_humidity():
         assert isinstance(r[1], float)
 
 
-def test_get_datapoint_humidity():
-    result = get_datapoint_humidity()
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_datapoint_humidity(session):
+    result = get_datapoint_humidity(sensor_id=2, session=session)
     assert len(result) == 1
     assert len(result[0]) == 2
     assert isinstance(result[0][0], datetime)
     assert isinstance(result[0][1], float)
 
 
-def test_get_datapoint():
-    result = get_data_point()
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_datapoint(session):
+    result = get_datapoint(sensor_id=2, session=session)
     # should be just one number?
     assert isinstance(result, float)
+
+
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_insert_model_run(session):
+    time_now = datetime.now()
+    run_id = insert_model_run(3, 2, session=session)

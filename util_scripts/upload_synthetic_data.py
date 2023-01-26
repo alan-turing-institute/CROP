@@ -25,6 +25,8 @@ from core.structure import (
     ModelClass,
     ModelMeasureClass,
     ModelScenarioClass,
+    ReadingsWeatherClass,
+    WeatherForecastsClass,
 )
 
 from core.constants import (
@@ -56,11 +58,9 @@ from util_scripts.generate_synthetic_readings import (
     generate_trh_readings,
     generate_co2_readings,
     generate_airvelocity_readings,
+    generate_weather,
+    generate_weather_forecast,
 )
-
-# from util_scripts.upload_model_data import (
-#    upload_model_data
-# )
 
 
 def error_message(message):
@@ -133,6 +133,15 @@ def add_sensor_data(engine):
     # air velocity readings
     df = generate_airvelocity_readings()
     insert_from_df(engine, df, ReadingsAranetAirVelocityClass)
+
+
+def add_weather_data(engine):
+    # weather history
+    df = generate_weather()
+    insert_from_df(engine, df, ReadingsWeatherClass)
+    # weather forecast
+    df = generate_weather()
+    insert_from_df(engine, df, WeatherForecastsClass)
 
 
 def add_crop_data(engine):
@@ -255,6 +264,7 @@ def main(db_name):
 
     add_location_data(engine)
     add_sensor_data(engine)
+    add_weather_data(engine)
     add_crop_data(engine)
     add_model_data(engine)
     add_scenario_data(engine)

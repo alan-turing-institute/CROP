@@ -418,7 +418,7 @@ def get_datapoint_humidity(sensor_id=27, num_rows=1, session=None):
     return result
 
 
-def get_data_point(filepath=None):
+def get_datapoint(filepath=None, **kwargs):
     if filepath:
         LastDataPoint = pd.read_csv(filepath)
         jj = np.size(LastDataPoint, 1)
@@ -428,7 +428,7 @@ def get_data_point(filepath=None):
             DataPoint = 0.5  # dummy value
         return DataPoint
     else:
-        dp_database = np.asarray(getDataPointHumidity())[0, 1]
+        dp_database = np.asarray(get_datapoint_humidity(**kwargs))[0, 1]
         return dp_database
 
 
