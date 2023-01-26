@@ -1,7 +1,7 @@
 import sys
 import logging
 from pathlib import Path
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, exc
 
 # import psycopg2
 # from psycopg2.extras import execute_values
@@ -20,7 +20,7 @@ from cropcore.structure import (
     WeatherForecastsClass,
     ReadingsAranetTRHClass,
     ModelRunClass,
-    ModelProductionClass,
+    ModelProductClass,
     ModelValueClass,
 )
 from core.constants import SQL_CONNECTION_STRING, SQL_DBNAME
@@ -493,6 +493,10 @@ def insert_model_run(sensor_id=None, model_id=None, time_forecast=None, session=
                 try:
                     session.add(mr)
                     session.commit()
+                    session.refresh(mr)
+                    run_id = mr.id
+                    print(f"Inserted model run {run_id}")
+                    return run_id
                 except exc.SQLAlchemyError as e:
                     session.rollback()
     session.close()
@@ -518,6 +522,10 @@ def insert_model_product(run_id=None, measure_id=None, session=None):
             try:
                 session.add(mp)
                 session.commit()
+                session.refresh(mp)
+                product_id = mp.id
+                print(f"Inserting model product {product_id}")
+                return product_id
             except exc.SQLAlchemyError as e:
                 session.rollback()
     session.close()
@@ -534,23 +542,27 @@ def insertModelPrediction(parameters=None):
     return num_rows_inserted
 
 
-def insert_model_prediction(parameters=None, session=None):
+def insert_model_prediction(predictions=None, session=None):
     if not session:
         session = get_sqlalchemy_session()
     num_rows_inserted = 0
-    if parameters is not None and len(parameters) > 0:
-        for parameter in parameters:
-            mv = ModelValueClass(
-                product_id=parameter[0],
-                prediction_value=parameter[1],
-                prediction_index=parameter[2],
-            )
-            try:
-                session.add(mv)
-                session.commit()
-                num_rows_inserted += 1
-            except exc.SQLAlchemyError as e:
-                session.rollback()
+    if predictions is not None:
+        print(f"Inserting {len(predictions)} model prediction values")
+        if len(predictions) > 0:
+            for prediction in predictions:
+                mv = ModelValueClass(
+                    product_id=prediction[0],
+                    prediction_value=prediction[1],
+                    prediction_index=prediction[2],
+                )
+                try:
+                    session.add(mv)
+                    session.commit()
+                    num_rows_inserted += 1
+                except exc.SQLAlchemyError as e:
+                    print(f"Error adding row: {e}")
+                    session.rollback()
+                    break
     session.close()
-    print(f"Inserted {num_rows_inserted} model predictions")
+    print(f"Inserted {num_rows_inserted} value predictions")
     return num_rows_inserted
