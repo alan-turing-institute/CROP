@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from ges.dataAccess import (
+from models.ges.ges.dataAccess import (
     get_days_weather,
     get_days_weather_forecast,
     get_days_humidity_temperature,
