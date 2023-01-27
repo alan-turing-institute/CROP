@@ -2,5 +2,27 @@ secretsprovider: azurekeyvault://crop-keyvault.vault.azure.net/keys/pulumi-dev-s
 encryptedkey: S3ZKODRfeUxHY0xXZ1pwM205a2NmblR2MGFpSllVZ2Z0RjU3b2NxeWhmYU1VR0NQQVZyVTRCWWRkV0I3TXYtazVFLTV6U2trZGprOVVkTnVUN0hXZDJMRlRiUWZYZVdNYWx4aDAzM19VZ2dYSTZyemN6UnluVlRMZFZrcTJFMmxiZU5TSlFyUWJoZTFtZVI3VVNRZkJ6Yklra0ZOdjFycFBoVWpkSGxUZFFNUGVFMmtZU19HczBwZHlENkVqOGxfREtMcU5ZN0NDOHE5ak9EeS1OV0VxTV95U2dvb0FhZ2lMVjNuNDVrMExPbVJCYTV2OEp5MUM5RGRidlpmeGs5eFZNcnBUV1B6VUhjMmZYNi1GTEZhdTJnTUQ1QlktckNSMW5KbnFQaWV3a01uTWxDZXJBVDFuUG91TTVHWXQ1NXNtU293cno5eFRRTWNCNExQeEY5b05sc0RVQThtbi1fV1EwUnYtOGlPN0MyQVNLZ25Gcmp4ZW02SktkRElGQlNUdHF4cC1FT3BTNTF6S3pPeHFpWjhxVDZGSllwakNGWGJFdnpzWjVzTklUMVQxb1RsVjhIR1RJbXVxZVhWMjd5NXdHbUNMU0dIdUluZnNCSWxEakxIalhDaDhUbXlEaFdvZVhFTmI3YjlJZlRnRnV3LXUxcS12SFVhU2Z2SUVMSTV3TENGQklwbERDVnBvY0lUXzFqdHdKcl93UC1wU2M4c09XZ0I1c2x4UXpiaWJONzlXNFc0RGpoSE82ODJCcDlXenMwTDgzVHhYV04zSDdIWTMzYm0wT3BBTWdYSndtMmNvWDZmRF9LeGVSV0xLSFRrTVhDZjN4bFpUdnE3TVdzYW5wTm9HTUhCUl9ZcWZDT3IxR2l4ZEt2bFN4d1RzRnJ3d1BUZGRSU1h0Vlk=
 config:
   azure-native:location: UKSouth
+  crop-azure:default-user-password:
+    secure: v1:ZUYHzDGH8FTLlol1:yn1y6sk95Yzg0KURABHtjf7qZYV2ML5ch9WDvni0RBc=
+  crop-azure:growapp-database:
+    secure: v1:ubMKWH7enm4ywi28:nwOhvU8FTzWspCNq5E0veIIC5Az4pHjLQ1Ly4RNPTVWj
+  crop-azure:growapp-ip:
+    secure: v1:RAmKbKz8rwkBoQwO:T6sRjXQULIz70KNOaWNhY0L7e7rVBfHoJmaQOrcshmuhgBE=
+  crop-azure:growapp-password:
+    secure: v1:0N/2nWkLdUtcqn3E:leWxVslnTUgxf9H1+Q6XiX7IJ+oxmIGuwgaNmBTpkfAUiPfOCIx6l0WlbEOVPelp
+  crop-azure:growapp-schema:
+    secure: v1:bcJTXUXojs4AAu3G:IyCTC77Gcs4RBTXcVQfG0lTdEr5ndN8=
+  crop-azure:growapp-username:
+    secure: v1:1kcFYl0Q1GrHDZox:4RapgJvI7j1DVUruM6HFj0dIMFhmIg==
+  crop-azure:hyper-apikey:
+    secure: v1:gQdjjlliah9uCk3c:43wh2XxDfPEm3WnmAzHpU5giP3jq3GhZotd9BZJfUsw9OUKtJ0c0h4oQQk0OgFL3VVteWEO00o4nO4HWbYC4z+8SUXEU5sUqR+tX7kGg2dP95QmmSpxoO+5vaRWFGuYJL969a5QmVn55GIzaixgA+E7RDSceIsFtfM8zOokxXeyeL5++ptHhOjh/AAsUi+LSvVWwLvClDyzRaVUJDz9h
+  crop-azure:openweathermap-apikey:
+    secure: v1:+XSjooY+kq3jJqCD:aO10mFocuO5Yqa38/J+9RBxYaS//3iaGjcf737LEXxlLUhyptQnoBIxipqqwTRyG
+  crop-azure:postgres-allowed-ips:
+    secure: v1:0OlUuu2yHKj+a1GZ:SAHAYHEfxONTktBVNgLKyj0fiT/i+BSFLLHFaHgp
   crop-azure:sql-server-password:
-    secure: v1:8OqpoMNyWw3e2CRq:OraoUB5rXf+pMnHbqB2aoG2qi3oLzJoJEuWZwX7UHts=
+    secure: v1:6yZkGrr6ewMyNnrF:UcwnhqpaD+8VeK/2IiKPz2lcXcJnrEyLXwF7sMYl6Fw=
+  crop-azure:stark-password:
+    secure: v1:Hv1jZx+gkybh6BrP:aOmU56YtrKwEF+6Bxhuu6Qu4RSOYKKcVUXk=
+  crop-azure:stark-username:
+    secure: v1:VW44994dC4qtn/qw:0hg9jCw46Qlq70xV9ydlHuhhFJR7vhoKnyPZ+GtUTJ6vCO08WIEAK5SLlbI=
