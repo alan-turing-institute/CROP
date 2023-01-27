@@ -1,13 +1,13 @@
-import arima.dataAccess as dataAccess
+import arima.data_access as data_access
 
 
 def test_connection():
     """
     Test PostgreSQL connection
     """
-    conn = dataAccess.open_connection()
+    conn = data_access.open_connection()
     assert conn is not None
-    dataAccess.close_connection(conn)
+    data_access.close_connection(conn)
 
 
 def test_get_training_data():
@@ -17,11 +17,11 @@ def test_get_training_data():
     The training data is fetched from the "aranet_trh_data"
     and "utc_energy_data" tables.
     """
-    conn = dataAccess.open_connection()  # open PostgreSQL connection
+    conn = data_access.open_connection()  # open PostgreSQL connection
     # fetch 50 rows of training data
     num_rows = 50
-    env_data, energy_data = dataAccess.get_training_data(num_rows=num_rows)
-    dataAccess.close_connection(conn)  # close PostreSQL connection
+    env_data, energy_data = data_access.get_training_data(num_rows=num_rows)
+    data_access.close_connection(conn)  # close PostreSQL connection
     # check that the dataframes have the correct size
     num_cols = 8
     assert env_data.shape == (num_rows, num_cols)

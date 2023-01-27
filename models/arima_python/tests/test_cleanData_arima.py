@@ -1,5 +1,5 @@
 import pandas as pd
-import arima.cleanData as cleanData
+import arima.clean_data as clean_data
 
 # import the sample raw (un-processed) data
 env_raw = pd.read_pickle(
@@ -22,13 +22,13 @@ colnames_energy = list(energy_clean.columns)
 # of the baseline dataset loaded above.
 # This is done here because these are parameters that can be specified by the user
 # via the config file, so here we are simply overwriting them.
-cleanData.sensors_list = keys_clean
-cleanData.processing_params["mins_from_the_hour"] = 15
-cleanData.processing_params["time_delta"] = "1H"
-cleanData.processing_params["window"] = 3
+clean_data.sensors_list = keys_clean
+clean_data.processing_params["mins_from_the_hour"] = 15
+clean_data.processing_params["time_delta"] = "1H"
+clean_data.processing_params["window"] = 3
 
 # now call the function to process the raw data
-env_data, energy_data = cleanData.clean_data(env_raw, energy_raw)
+env_data, energy_data = clean_data.clean_data(env_raw, energy_raw)
 keys = list(env_data.keys())
 
 

@@ -1,6 +1,6 @@
 def main() -> None:
-    from arima.dataAccess import getTrainingData
-    from arima.cleanData import cleanData
+    from arima.data_access import get_training_data
+    from arima.clean_data import clean_data
     import pickle
     import logging, coloredlogs
     import sys
@@ -14,14 +14,14 @@ def main() -> None:
     coloredlogs.ColoredFormatter(field_styles=field_styles)
     coloredlogs.install(level="INFO")
 
-    env_raw, energy_raw = getTrainingData(numRows=500)
+    env_raw, energy_raw = get_training_data(num_rows=500)
 
     with open("dump/env_raw.pkl", "wb") as handle:
         pickle.dump(env_raw, handle, protocol=pickle.HIGHEST_PROTOCOL)
     with open("dump/energy_raw.pkl", "wb") as handle:
         pickle.dump(energy_raw, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    env_clean, energy_clean = cleanData(env_raw, energy_raw)
+    env_clean, energy_clean = clean_data(env_raw, energy_raw)
 
     with open("dump/env_clean.pkl", "wb") as handle:
         pickle.dump(env_clean, handle, protocol=pickle.HIGHEST_PROTOCOL)
