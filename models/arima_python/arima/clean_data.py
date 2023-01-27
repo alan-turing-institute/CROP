@@ -137,7 +137,7 @@ def clean_env_data(env_data: pd.DataFrame):
 
     Parameters:
         env_data: pandas dataframe containing temperature and humidity data
-            returned by dataAccess.getTrainingData.
+            returned by data_access.get_training_data.
     Returns:
         env_data: a dictionary with keys named after the user-requested sensors.
             The corresponding values are pandas dataframes containing processed
@@ -197,7 +197,7 @@ def clean_energy_data(energy_data: pd.DataFrame):
 
     Parameters:
         energy_data: pandas dataframe containing the energy data returned
-            by dataAccess.getTrainingData.
+            by data_access.get_training_data.
     Returns:
         energy_data: pandas dataframe storing the processed energy data.
             It contains the energy consumption for each sensor, averaged
@@ -271,9 +271,9 @@ def clean_data(env_data, energy_data):
 
     Parameters:
         env_data: pandas dataframe containing temperature and humidity data
-            returned by dataAccess.getTrainingData.
+            returned by data_access.get_training_data.
         energy_data: pandas dataframe containing the energy data returned
-            by dataAccess.getTrainingData.
+            by data_access.get_training_data.
     Returns:
         env_data: a dictionary with keys named after the user-requested sensors.
             Use the "include_sensors" parameter in "config.ini" to specify the
