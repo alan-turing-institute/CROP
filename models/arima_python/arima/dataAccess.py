@@ -10,7 +10,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def openConnection():
+def open_connection():
     """
     Connect to the PostgreSQL database server.
     Returns a psycopg2 connection object if
@@ -31,14 +31,14 @@ def openConnection():
         return conn
 
 
-def closeConnection(conn):
+def close_connection(conn):
     """Close the PostgreSQL connection"""
     if conn is not None:
         conn.close()
         logger.info("Database connection closed.")
 
 
-def getData(query):
+def get_data(query):
     """
     Fetch data from the DB based on the type of query.
 
@@ -50,7 +50,7 @@ def getData(query):
     """
     conn = None
     try:
-        conn = openConnection()
+        conn = open_connection()
         cur = conn.cursor()  # create a cursor
         cur.execute(query)
         data = cur.fetchall()
@@ -59,11 +59,11 @@ def getData(query):
         logger.info(f"Got data from {query} - returning {len(data)} rows")
         # convert the fetched list to a pandas dataframe
         data = pd.DataFrame(data, columns=colnames)
-        removeTimeZone(data)  # all timestamps in the DB should be in UTC
+        remove_time_zone(data)  # all timestamps in the DB should be in UTC
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(error)
     finally:
-        closeConnection(conn=conn)
+        close_connection(conn=conn)
     return data
 
 
@@ -88,7 +88,7 @@ def get_sql_from_template(query, bind_params):
     return query % params
 
 
-def getTemperatureHumidityData(deltaDays, numRows=None):
+def get_temperature_humidity_data(delta_days, num_rows=None):
     """
     Fetch temperature and humidity data from the aranet_trh_data table
     of the DB over the specified time period, limited by the specified
@@ -103,13 +103,13 @@ def getTemperatureHumidityData(deltaDays, numRows=None):
             table, organised by the timestamp column of the aranet_trh_data table.
     """
     today = datetime.datetime.now(datetime.timezone.utc)
-    delta = datetime.timedelta(days=deltaDays)
-    dateNumDaysAgo = today - delta
+    delta = datetime.timedelta(days=delta_days)
+    date_num_days_ago = today - delta
     params = {
-        "timestamp": dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"),
-        "numRows": numRows,
+        "timestamp": date_num_days_ago.strftime("%Y-%m-%d %H:%M:%S"),
+        "numRows": num_rows,
     }
-    if numRows:
+    if num_rows:
         transaction_template = """
         select
             sensors.name, aranet_trh_data.*
@@ -135,14 +135,14 @@ def getTemperatureHumidityData(deltaDays, numRows=None):
         """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(transaction_template, params)
-    data = getData(get_sql_from_template(query=query, bind_params=bind_params))
+    data = get_data(get_sql_from_template(query=query, bind_params=bind_params))
     logger.info("Temperature/Rel humidity data - head/tail:")
     logger.info(data.head(5))
     logger.info(data.tail(5))
     return data
 
 
-def getEnergyData(deltaDays, numRows=None):
+def get_energy_data(delta_days, num_rows=None):
     """
     Fetch energy data from the utc_energy_data table
     over the specified time period, limited by the specified
@@ -157,13 +157,13 @@ def getEnergyData(deltaDays, numRows=None):
             table, organised by the timestamp column of the utc_energy_data table.
     """
     today = datetime.datetime.now(datetime.timezone.utc)
-    delta = datetime.timedelta(days=deltaDays)
-    dateNumDaysAgo = today - delta
+    delta = datetime.timedelta(days=delta_days)
+    date_num_days_ago = today - delta
     params = {
-        "timestamp": dateNumDaysAgo.strftime("%Y-%m-%d %H:%M:%S"),
-        "numRows": numRows,
+        "timestamp": date_num_days_ago.strftime("%Y-%m-%d %H:%M:%S"),
+        "numRows": num_rows,
     }
-    if numRows:
+    if num_rows:
         transaction_template = """
         select
             *
@@ -189,14 +189,14 @@ def getEnergyData(deltaDays, numRows=None):
     """
     j = JinjaSql(param_style="pyformat")
     query, bind_params = j.prepare_query(transaction_template, params)
-    data = getData(get_sql_from_template(query=query, bind_params=bind_params))
+    data = get_data(get_sql_from_template(query=query, bind_params=bind_params))
     logger.info("Energy data - head/tail:")
     logger.info(data.head(5))
     logger.info(data.tail(5))
     return data
 
 
-def removeTimeZone(dataframe: pd.DataFrame):
+def remove_time_zone(dataframe: pd.DataFrame):
     """
     Remove timezone information from datetime columns.
     Note that all timestamps in the SQL database should be UTC.
@@ -211,7 +211,7 @@ def removeTimeZone(dataframe: pd.DataFrame):
             dataframe[column] = pd.to_datetime(dataframe[column]).dt.tz_localize(None)
 
 
-def getTrainingData(numRows=None):
+def get_training_data(num_rows=None):
     """
     Fetch temperature and humidity data from the aranet_trh_data table
     and energy data from the utc_energy_data table for training of the
@@ -236,6 +236,8 @@ def getTrainingData(numRows=None):
         logger.warning(
             "The 'num_days_training' setting in config.ini has been set to something different than 200."
         )
-    env_data = getTemperatureHumidityData(deltaDays=num_days_training, numRows=numRows)
-    energy_data = getEnergyData(deltaDays=num_days_training, numRows=numRows)
+    env_data = get_temperature_humidity_data(
+        delta_days=num_days_training, num_rows=num_rows
+    )
+    energy_data = get_energy_data(delta_days=num_days_training, num_rows=num_rows)
     return env_data, energy_data

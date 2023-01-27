@@ -5,28 +5,28 @@ def test_connection():
     """
     Test PostgreSQL connection
     """
-    conn = dataAccess.openConnection()
+    conn = dataAccess.open_connection()
     assert conn is not None
-    dataAccess.closeConnection(conn)
+    dataAccess.close_connection(conn)
 
 
-def test_getTrainingData():
+def test_get_training_data():
     """
     Test that the format of the training data fetched
     from the DB is correct.
     The training data is fetched from the "aranet_trh_data"
     and "utc_energy_data" tables.
     """
-    conn = dataAccess.openConnection()  # open PostgreSQL connection
+    conn = dataAccess.open_connection()  # open PostgreSQL connection
     # fetch 50 rows of training data
-    numRows = 50
-    env_data, energy_data = dataAccess.getTrainingData(numRows=numRows)
-    dataAccess.closeConnection(conn)  # close PostreSQL connection
+    num_rows = 50
+    env_data, energy_data = dataAccess.get_training_data(num_rows=num_rows)
+    dataAccess.close_connection(conn)  # close PostreSQL connection
     # check that the dataframes have the correct size
-    numCols = 8
-    assert env_data.shape == (numRows, numCols)
-    numCols = 6
-    assert energy_data.shape == (numRows, numCols)
+    num_cols = 8
+    assert env_data.shape == (num_rows, num_cols)
+    num_cols = 6
+    assert energy_data.shape == (num_rows, num_cols)
     # check that the dataframes have the expected column names
     colnames = [
         "name",

@@ -11,7 +11,7 @@ sensors_list = config(section="sensors")
 sensors_list = sensors_list["include_sensors"]
 
 
-def timeVector(start, end, frequency="1H", offset=1):
+def get_time_vector(start, end, frequency="1H", offset=1):
     """
     Create a vector of increasing timestamps.
 
@@ -47,7 +47,7 @@ def timeVector(start, end, frequency="1H", offset=1):
     return time_vector
 
 
-def hourlyAverageSensor(env_data, col_names, time_vector):
+def hourly_average_sensor(env_data, col_names, time_vector):
     """
     Split the pandas dataframe containing the environment data
     into the user-requested list of sensors, group by the column
@@ -96,7 +96,7 @@ def hourlyAverageSensor(env_data, col_names, time_vector):
     return hour_averages
 
 
-def centeredMA(series: pd.Series, window: int = 3):
+def centered_ma(series: pd.Series, window: int = 3):
     """
     Compute a weighted centered moving average of a time series.
 
@@ -130,7 +130,7 @@ def centeredMA(series: pd.Series, window: int = 3):
     return MA
 
 
-def cleanEnvData(env_data: pd.DataFrame):
+def clean_env_data(env_data: pd.DataFrame):
     """
     Clean the pandas dataframe containing the temperature and humidity data
     retrieved from the database (DB).
@@ -175,13 +175,13 @@ def cleanEnvData(env_data: pd.DataFrame):
     # remove row entries that have been assigned None above
     env_data = env_data.dropna(subset="timestamp_hour_plus_minus")
     # create the time vector for which hourly-averaged data will be returned
-    time_vector = timeVector(
+    time_vector = get_time_vector(
         start=min(env_data["timestamp_hour_floor"]),
         end=max(env_data["timestamp_hour_floor"]),
         frequency=processing_params["time_delta"],
     )
     # calculate the hourly-averaged data
-    env_data = hourlyAverageSensor(
+    env_data = hourly_average_sensor(
         env_data,
         ["temperature", "humidity"],
         time_vector,
@@ -190,7 +190,7 @@ def cleanEnvData(env_data: pd.DataFrame):
     return env_data, time_vector
 
 
-def cleanEnergyData(energy_data: pd.DataFrame):
+def clean_energy_data(energy_data: pd.DataFrame):
     """
     Clean the pandas dataframe containing the energy data retrieved from
     the database (DB).
@@ -224,10 +224,10 @@ def cleanEnergyData(energy_data: pd.DataFrame):
     # Therefore, for timestamp t, the average will be computed using the
     # values as t-30min, t and t+30min, with t weighted higher than
     # t-30min and t+30min
-    energy_data["EnergyCC_MA"] = centeredMA(
+    energy_data["EnergyCC_MA"] = centered_ma(
         energy_data.EnergyCC, window=processing_params["window"]
     )
-    energy_data["EnergyCP_MA"] = centeredMA(
+    energy_data["EnergyCP_MA"] = centered_ma(
         energy_data.EnergyCP, window=processing_params["window"]
     )
     # insert a new column at the end of the dataframe, named "timestamp_hour_floor",
@@ -264,7 +264,7 @@ def cleanEnergyData(energy_data: pd.DataFrame):
     return energy_data
 
 
-def cleanData(env_data, energy_data):
+def clean_data(env_data, energy_data):
     """
     Parent function of this module: clean environment (temperature
     and humidity) and energy data retrieved from the database (DB).
@@ -303,8 +303,8 @@ def cleanData(env_data, energy_data):
         logger.warning(
             "The 'window' setting in config.ini has been set to something different than 3."
         )
-    env_data, time_vector = cleanEnvData(env_data)
-    energy_data = cleanEnergyData(energy_data)
+    env_data, time_vector = clean_env_data(env_data)
+    energy_data = clean_energy_data(energy_data)
     # perform a left merge of "energy_data" with "time_vector",
     # so that only timestamps contained in "time_vector" are
     # retained

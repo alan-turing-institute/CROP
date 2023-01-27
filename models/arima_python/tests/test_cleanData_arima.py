@@ -28,11 +28,11 @@ cleanData.processing_params["time_delta"] = "1H"
 cleanData.processing_params["window"] = 3
 
 # now call the function to process the raw data
-env_data, energy_data = cleanData.cleanData(env_raw, energy_raw)
+env_data, energy_data = cleanData.clean_data(env_raw, energy_raw)
 keys = list(env_data.keys())
 
 
-def test_format_cleanData():
+def test_format_clean_data():
     """
     Test that the format of the processed data is
     the expected one.
@@ -46,7 +46,7 @@ def test_format_cleanData():
     assert sorted(keys) == sorted(keys_clean)
 
 
-def test_columns_cleanData():
+def test_columns_clean_data():
     """
     Test that the processed dataframes contain the
     expected columns.
@@ -60,7 +60,7 @@ def test_columns_cleanData():
     assert all(item in energy_data.columns for item in colnames_energy)
 
 
-def test_timestamps_cleanData():
+def test_timestamps_clean_data():
     """
     Test that the processed TRH and Energy dataframes
     have the same timestamps, that the timestamp vector is
@@ -82,7 +82,7 @@ def test_timestamps_cleanData():
     assert len(time_delta) == 1
 
 
-def test_data_cleanData():
+def test_data_clean_data():
     """
     Test that the data in the processed dataframes
     is strictly equal to the expected one.
