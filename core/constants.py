@@ -234,6 +234,7 @@ CONST_TESTDATA_CROPGROWTH_FOLDER = os.path.join(
     CONST_TESTDATA_BASE_FOLDER, "CropGrowth"
 )
 CONST_TESTDATA_MODEL_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Models")
+CONST_TESTDATA_GES_FOLDER = os.path.join(CONST_TESTDATA_MODEL_FOLDER, "GES", "ges_data")
 
 # test data filenames
 LOCATIONS_CSV = "locations.csv"  # Locations within the farm
