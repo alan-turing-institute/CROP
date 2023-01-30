@@ -1,5 +1,5 @@
 import logging
-from TestScenarioV1_1 import testScenario, FILEPATH_WEATHER
+from TestScenarioV1_1 import runScenario, FILEPATH_WEATHER
 
 # from CalibrationV2 import runCalibration
 import pandas as pd
@@ -10,6 +10,7 @@ from ges.dataAccess import (
     insert_model_predictions,
 )
 from ges.config import config
+from ges.ges_utils import get_ges_model_id, get_scenarios, get_measures
 
 path_conf = config(section="paths")
 
@@ -18,7 +19,7 @@ filepath_resultsRH = data_dir / path_conf["filename_resultsrh"]
 filepath_resultsT = data_dir / path_conf["filename_resultst"]
 
 cal_conf = config(section="calibration")
-MODEL_GES_DATABASE_ID = 3
+MODEL_GES_DATABASE_ID = get_ges_model_id()
 SENSOR_RH_16B2_DATABASE_ID = int(cal_conf["sensor_id"])
 
 MEASURE_MEAN_TEMPERATURE = {
@@ -134,7 +135,7 @@ def main():
     ]
 
     # result = mock_data()
-    result = testScenario()
+    result = runScenario()
     df_resultsRH = pd.DataFrame(result["RH_air"])
     df_resultsRH.to_csv(filepath_resultsRH, header=False)
     df_resultsT = pd.DataFrame(result["T_air"])

@@ -7,12 +7,10 @@ Created on Mon Jun 14 09:32:23 2021
 import os
 from ges.functionsV2 import derivatives, priorPPF, sat_conc
 from ges.dataAccess import (
-    getDaysWeather,
     get_days_weather,
     get_days_weather_forecast,
     get_days_humidity_temperature,
     get_datapoint_humidity,
-    getDaysHumidityTemp,
 )
 import pandas as pd
 from pandas import DataFrame
@@ -94,7 +92,7 @@ def main():
 
     # Weather forecast
     logging.info("About to call get_days_weather_forecast")
-    WeatherForecast_data = get_days_weather_forecast(numDays=2)
+    WeatherForecast_data = get_days_weather_forecast(num_days=2)
     WeatherForecast_hour = pd.DataFrame(
         WeatherForecast_data, columns=["DateTime", "T_e", "RH_e"]
     )

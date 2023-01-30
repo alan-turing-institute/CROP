@@ -1,33 +1,38 @@
+import os
 import logging
 from typing import Dict
-from ges.functions_scenarioV1 import (
-    derivatives,
-    sat_conc,
-    FILEPATH_WEATHER,
-    FILEPATH_WEATHER_FORECAST,
-    FILEPATH_ACH,
-    FILEPATH_IAS,
-)
 import numpy as np
 import pandas as pd
-from ges.config import config
+
+# relative imports don't work if we are in same directory
+if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
+    from ges.functions_scenarioV1 import (
+        derivatives,
+        sat_conc,
+        FILEPATH_WEATHER,
+        FILEPATH_WEATHER_FORECAST,
+        FILEPATH_ACH,
+        FILEPATH_IAS,
+    )
+    from ges.config import config
+    from ges.ges_utils import get_latest_time_hour_value
+else:  # relative imports
+    from .ges.functions_scenarioV1 import (
+        derivatives,
+        sat_conc,
+        FILEPATH_WEATHER,
+        FILEPATH_WEATHER_FORECAST,
+        FILEPATH_ACH,
+        FILEPATH_IAS,
+    )
+    from .ges.config import config
+    from .ges.ges_utils import get_latest_time_hour_value
 
 logging.basicConfig(level=logging.INFO)
 
 CAL_CONF = config(section="calibration")
 
 USE_LIVE = False
-
-# Import Weather Data
-header_list = ["DateTime", "T_e", "RH_e"]
-Weather = pd.read_csv(FILEPATH_WEATHER, delimiter=",", names=header_list)
-
-# Latest timestamp for weather and monitored data - hour (for lights)
-Weather_hour = pd.DataFrame(Weather, columns=["DateTime", "T_e", "RH_e"]).set_index(
-    "DateTime"
-)
-LatestTime = Weather_hour[-1:]
-LatestTimeHourValue = pd.DatetimeIndex(LatestTime.index).hour.astype(float)[0]
 
 
 def getTimeParameters() -> Dict:
@@ -182,9 +187,10 @@ def runModel(
     filepath_weather=None,
     filepath_weather_forecast=None,
     params: np.ndarray = [],
-    LatestTimeHourValue=LatestTimeHourValue,
+    LatestTimeHourValue=None,
 ) -> Dict:
-
+    if not LatestTimeHourValue:
+        LatestTimeHourValue = get_latest_time_hour_value()
     results = derivatives(
         time_parameters["h1"],
         time_parameters["h2"],
@@ -202,7 +208,8 @@ def runModel(
     return results_to_store
 
 
-def testScenario():
+# rename from 'testScenario' so that pytest doesn't run as a test (!)
+def runScenario():
     # Get calibrated parameters output from calibration model
     # Stored in database? Currently output to csv file
     time_parameters: Dict = getTimeParameters()
@@ -235,7 +242,7 @@ def testScenario():
     params: np.ndarray = np.concatenate(
         (model, scenario)
     )  # put scenario on the end of the calibrated parameters
-
+    LatestTimeHourValue = get_latest_time_hour_value()
     results = runModel(
         time_parameters=time_parameters,
         filepath_weather=None if USE_LIVE else FILEPATH_WEATHER,
@@ -248,4 +255,4 @@ def testScenario():
 
 
 if __name__ == "__main__":
-    testScenario()
+    runScenario()

@@ -1,5 +1,6 @@
-from inversion import *
-import inversion.kernels as kernels
+# from .inversion import *
+# import inversion.kernels as kernels
+from . import kernels
 
 
 def LikelihoodRatio(
