@@ -479,6 +479,7 @@ def batch_list(session):
             propagate_events_sq.c.event_time.label("propagate_time"),
             transfer_events_sq.c.event_time.label("transfer_time"),
             harvest_events_sq.c.event_time.label("harvest_time"),
+            transfer_events_sq.c.next_action_time.label("expected_harvest_time"),
             locations_sq.c.id.label("location_id"),
             locations_sq.c.zone,
             locations_sq.c.aisle,

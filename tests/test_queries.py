@@ -254,8 +254,8 @@ def test_batch_list_with_trh(session):
     assert isinstance(query, Query)
     # 4 batches that went through the farm
     assert query.count() == 4
-    # 9 columns
-    assert len(query.column_descriptions) == 48
+    # 49 columns
+    assert len(query.column_descriptions) == 49
     session_close(session)
 
 
@@ -271,6 +271,6 @@ def test_batch_list(session):
     assert isinstance(query, Query)
     # 4 batches that went through the farm
     assert query.count() == 4
-    # 22 columns
-    assert len(query.column_descriptions) == 22
+    # 23 columns
+    assert len(query.column_descriptions) == 23
     session_close(session)
