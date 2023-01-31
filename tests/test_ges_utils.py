@@ -9,6 +9,7 @@ from core.constants import CONST_TESTDATA_GES_FOLDER
 from models.ges.ges.ges_utils import (
     get_ges_model_id,
     get_scenarios,
+    get_scenarios_by_id,
     get_measures,
     get_weather_data_from_file,
     get_latest_time_hour_value,
@@ -30,6 +31,13 @@ def test_get_scenarios(session):
     result = get_scenarios(model_name="GES", session=session)
     assert isinstance(result, pd.DataFrame)
     assert len(result) == 377  # 5x3x5x5 'interactive' plus two previous ones.
+
+
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_scenarios_by_id(session):
+    result = get_scenarios_by_id(scenario_ids=[5, 7, 9, 11], session=session)
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) == 4
 
 
 @pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")

@@ -40,6 +40,46 @@ def get_ges_model_id(model_name="Greenhouse Energy Simulation (GES)", session=No
     return None
 
 
+def get_scenarios_by_id(scenario_ids, session=None):
+    """
+    Take a list of scenario ids and produce a dataframe
+    for each
+    """
+    if not session:
+        session = get_sqlalchemy_session()
+    df_all = pd.DataFrame(
+        columns=[
+            "ventilation_rate",
+            "num_dehumidifiers",
+            "lighting_shift",
+            "lighting_on_duration",
+        ]
+    )
+    dfs = []
+    for scenario_id in scenario_ids:
+        query = session.query(
+            ModelScenarioClass.ventilation_rate,
+            ModelScenarioClass.num_dehumidifiers,
+            ModelScenarioClass.lighting_shift,
+            ModelScenarioClass.lighting_on_duration,
+        ).filter(
+            ModelScenarioClass.id == scenario_id,
+        )
+        result = session.execute(query).fetchall()
+        df = pd.DataFrame(
+            result,
+            columns=[
+                "ventilation_rate",
+                "num_dehumidifiers",
+                "lighting_shift",
+                "lighting_on_duration",
+            ],
+        )
+        dfs.append(df)
+    df_all = pd.concat(dfs)
+    return df_all
+
+
 def get_scenarios(model_name="Greenhouse Energy Simulation (GES)", session=None):
     if not session:
         session = get_sqlalchemy_session()
