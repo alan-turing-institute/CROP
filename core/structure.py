@@ -228,11 +228,11 @@ class TypeClass(BASE):
     # columns
     id = Column(Integer, primary_key=True)
     sensor_type = Column(String(100), nullable=False, unique=True)
-    source = Column(String(100), nullable=False)
-    origin = Column(String(100), nullable=False)
-    frequency = Column(String(100), nullable=False)
-    data = Column(String(100), nullable=False)
-    description = Column(Text)
+    source = Column(String(100), nullable=True)
+    origin = Column(String(100), nullable=True)
+    frequency = Column(String(100), nullable=True)
+    data = Column(Text, nullable=True)
+    description = Column(Text, nullable=True)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
