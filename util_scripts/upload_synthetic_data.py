@@ -183,32 +183,26 @@ def generate_scenarios(model_id):
     scenario = {
         "model_id": model_id,
         "ventilation_rate": 2,
-        "num_dehumidifiers": 1,
+        "num_dehumidifiers": 2,
         "lighting_shift": 0,
         "lighting_on_duration": 16,
+        "scenario_type": "BAU",
     }
     scenarios.append(scenario)
-    # existing alternative
-    scenario = {
-        "model_id": model_id,
-        "ventilation_rate": 2,
-        "num_dehumidifiers": 1,
-        "lighting_shift": -3,
-        "lighting_on_duration": 16,
-    }
-    scenarios.append(scenario)
+    lighting_on_duration = 16
     for ventilation_rate in range(2, 12, 2):
         for num_dehumidifiers in range(3):
             for lighting_shift in range(-6, 9, 3):
-                for lighting_on_duration in range(12, 22, 2):
-                    scenario = {
-                        "model_id": model_id,
-                        "ventilation_rate": float(ventilation_rate),
-                        "num_dehumidifiers": num_dehumidifiers,
-                        "lighting_shift": float(lighting_shift),
-                        "lighting_on_duration": float(lighting_on_duration),
-                    }
-                    scenarios.append(scenario)
+                #                for lighting_on_duration in range(12, 22, 2):
+                scenario = {
+                    "model_id": model_id,
+                    "ventilation_rate": float(ventilation_rate),
+                    "num_dehumidifiers": num_dehumidifiers,
+                    "lighting_shift": float(lighting_shift),
+                    "lighting_on_duration": float(lighting_on_duration),
+                    "scenario_type": "Test",
+                }
+                scenarios.append(scenario)
     df = pd.DataFrame(scenarios)
     return df
 
@@ -220,19 +214,29 @@ def add_scenario_data(engine):
 
 def add_measure_data(engine):
     # get default measures
-    csv_location = os.path.join(CONST_TESTDATA_MODEL_FOLDER, MEASURE_CSV)
-    df = pd.read_csv(csv_location)
-    measures = json.loads(df.to_json(orient="records"))
+    #    csv_location = os.path.join(CONST_TESTDATA_MODEL_FOLDER, MEASURE_CSV)
+    #    df = pd.read_csv(csv_location)
+    #    measures = json.loads(df.to_json(orient="records"))
     # get extra ones from scenarios
+    measures = []
     scenarios_df = generate_scenarios(2)
     for i, row in scenarios_df.iterrows():
-        # skip the first two rows with the default scenarios
-        if i < 2:
-            continue
-        for measure_name in [
-            "Scenario Temperature (Degree Celcius)",
-            "Scenario Humidity (percent)",
-        ]:
+
+        if row.scenario_type == "BAU":  # Business As Usual
+            measure_names = [
+                "Mean Temperature (Degree Celcius)",
+                "Upper Bound Temperature (Degree Celcius)",
+                "Lower Bound Temperature (Degree Celcius)",
+                "Mean Relative Humidity (Percent)",
+                "Upper Bound Relative Humidity (Percent)",
+                "Lower Bound Relative Humidity (Percent)",
+            ]
+        else:
+            measure_names = [
+                "Mean Temperature (Degree Celcius)",
+                "Mean Relative Humidity (Percent)",
+            ]
+        for measure_name in measure_names:
             measure = {
                 "measure_name": measure_name,
                 "measure_description": "",

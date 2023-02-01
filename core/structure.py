@@ -79,6 +79,17 @@ class ModelClass(BASE):
     author = Column(String(100), nullable=False, unique=False)
 
 
+class ScenarioType(enum.Enum):
+    """
+    Distinguish between the "Business As Usual" scenario, which will have
+    measures for upper lower bounds as well as the mean, and "Test" scenarios,
+    where we will only have measures for the mean.
+    """
+
+    BAU = 0
+    Test = 1
+
+
 class ModelScenarioClass(BASE):
     """
     This class allows us to vary some parameters in a Model.
@@ -98,7 +109,19 @@ class ModelScenarioClass(BASE):
     ventilation_rate = Column(Float, nullable=False)
     num_dehumidifiers = Column(Integer, nullable=False)
     lighting_shift = Column(Float, nullable=False)
-    lighting_on_duration = Column(Float, nullable=False)
+    lighting_on_duration = Column(Float, nullable=True)
+    scenario_type = Column(Enum(ScenarioType), nullable=False)
+    # arguments
+    __table_args__ = (
+        UniqueConstraint(
+            "model_id",
+            "ventilation_rate",
+            "num_dehumidifiers",
+            "lighting_shift",
+            "lighting_on_duration",
+            "scenario_type",
+        ),
+    )
 
 
 class ModelMeasureClass(BASE):

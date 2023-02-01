@@ -1,16 +1,27 @@
+import os
 import logging
-from TestScenarioV1_1 import runScenario, FILEPATH_WEATHER
-
-# from CalibrationV2 import runCalibration
 import pandas as pd
 from pathlib import Path
-from ges.dataAccess import (
-    insert_model_run,
-    insert_model_product,
-    insert_model_predictions,
-)
-from ges.config import config
-from ges.ges_utils import get_ges_model_id, get_scenarios, get_measures
+
+# relative or non-relative imports, depending on where we run from :-/
+if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
+    from TestScenarioV1_1 import runScenarios, FILEPATH_WEATHER
+    from ges.dataAccess import (
+        insert_model_run,
+        insert_model_product,
+        insert_model_predictions,
+    )
+    from ges.config import config
+    from ges.ges_utils import get_ges_model_id, get_scenarios, get_measures
+else:
+    from .TestScenarioV1_1 import runScenarios, FILEPATH_WEATHER
+    from .ges.dataAccess import (
+        insert_model_run,
+        insert_model_product,
+        insert_model_predictions,
+    )
+    from .ges.config import config
+    from .ges.ges_utils import get_ges_model_id, get_scenarios, get_measures
 
 path_conf = config(section="paths")
 
@@ -89,9 +100,11 @@ def mock_data():
     return result
 
 
-def get_forecast_date():
+def get_forecast_date(filepath_weather=None):
+    if not filepath_weather:
+        filepath_weather = FILEPATH_WEATHER
     df_weather = pd.read_csv(
-        FILEPATH_WEATHER, header=None, names=["Timestamp", "Temperature", "Humidity"]
+        filepath_weather, header=None, names=["Timestamp", "Temperature", "Humidity"]
     )
     forecast_date = pd.to_datetime(df_weather.tail(1)["Timestamp"].item())
     logging.info("Forecast Date: {0}".format(forecast_date))

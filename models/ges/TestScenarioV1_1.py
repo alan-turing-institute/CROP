@@ -177,7 +177,6 @@ def setScenarios(
     for i, row in scenarios_df.iterrows():
         ScenEval[:, 0, 3 + i] = row.ventilation_rate
         ScenEval[:, 1, 3 + i] = np.tile(ias_day, 4)
-
         ScenEval[:, 2, 3 + i] = int(
             row.num_dehumidifiers / 2
         )  # ndh input from slider (integer) (/2 as half farm modelled)
