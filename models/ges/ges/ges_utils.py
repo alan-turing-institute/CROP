@@ -78,13 +78,11 @@ def get_scenarios_by_id(scenario_ids, session=None):
         ModelScenarioClass.num_dehumidifiers,
         ModelScenarioClass.lighting_shift,
         ModelScenarioClass.lighting_on_duration,
+        ModelScenarioClass.scenario_type,
     )
     if isinstance(scenario_ids, int):
         query = query.filter(ModelScenarioClass.id == scenario_ids)
     else:
-        #        # always include scenario_id 1 (Business-as-usual)
-        #        if not (1 in scenario_ids):
-        #            scenario_ids.append(1)
         query = query.filter(ModelScenarioClass.id.in_(scenario_ids))
     result = session.execute(query).fetchall()
     df = pd.DataFrame(
@@ -94,6 +92,7 @@ def get_scenarios_by_id(scenario_ids, session=None):
             "num_dehumidifiers",
             "lighting_shift",
             "lighting_on_duration",
+            "scenario_type",
         ],
     )
     return df

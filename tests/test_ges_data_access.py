@@ -91,6 +91,16 @@ def test_insert_model_run(session):
 
 
 @pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_insert_two_model_runs(session):
+    time_now = datetime.now()
+    run_id = insert_model_run(3, 2, time_now, session=session)
+    assert run_id
+    time_now = datetime.now()
+    run_id = insert_model_run(3, 2, time_now, session=session)
+    assert run_id > 1
+
+
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_insert_model_product(session):
     product_id = insert_model_product(run_id=1, measure_id=2, session=session)
     assert product_id
@@ -103,3 +113,4 @@ def test_insert_model_predictions(session):
         predictions.append((1, 23.4, i))
     num_predictions = insert_model_predictions(predictions, session=session)
     assert num_predictions
+    assert num_predictions == 100

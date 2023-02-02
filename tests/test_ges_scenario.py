@@ -49,7 +49,7 @@ def test_set_ias_parameters():
     assert "IASmean" in result.keys()
 
 
-def test_set_model():
+def test_set_model_one_test_scenario():
     time_parameters = getTimeParameters()
     filepath_ach = os.path.join(CONST_TESTDATA_GES_FOLDER, "ACH_outV1.csv")
     filepath_ias = os.path.join(CONST_TESTDATA_GES_FOLDER, "IAS_outV1.csv")
@@ -59,7 +59,23 @@ def test_set_model():
         time_parameters["ndp"], ach_parameters=ach_params, ias_parameters=ias_params
     )
     assert isinstance(model, np.ndarray)
-    assert model.shape == (40, 4, 4)
+    assert model.shape == (80, 4, 4)
+
+
+def test_set_model_five_test_scenarios():
+    time_parameters = getTimeParameters()
+    filepath_ach = os.path.join(CONST_TESTDATA_GES_FOLDER, "ACH_outV1.csv")
+    filepath_ias = os.path.join(CONST_TESTDATA_GES_FOLDER, "IAS_outV1.csv")
+    ach_params = setACHParameters(filepath_ach, time_parameters["ndp"])
+    ias_params = setIASParameters(filepath_ias, time_parameters["ndp"])
+    model = setModel(
+        time_parameters["ndp"],
+        num_test_scenarios=5,
+        ach_parameters=ach_params,
+        ias_parameters=ias_params,
+    )
+    assert isinstance(model, np.ndarray)
+    assert model.shape == (80, 4, 8)
 
 
 def test_set_scenario_default():
@@ -69,7 +85,12 @@ def test_set_scenario_default():
     ach_params = setACHParameters(filepath_ach, time_parameters["ndp"])
     ias_params = setIASParameters(filepath_ias, time_parameters["ndp"])
     scenarios_df = pd.DataFrame(
-        {"ventilation_rate": [1], "num_dehumidifiers": [2], "lighting_shift": [-3]}
+        {
+            "ventilation_rate": [1],
+            "num_dehumidifiers": [2],
+            "lighting_shift": [-3],
+            "scenario_type": "Test",
+        }
     )
     scenario = setScenarios(
         scenarios_df=scenarios_df,
@@ -113,7 +134,12 @@ def test_run_model_default():
         time_parameters["ndp"], ach_parameters=ach_params, ias_parameters=ias_params
     )
     scenarios_df = pd.DataFrame(
-        {"ventilation_rate": [1], "num_dehumidifiers": [2], "lighting_shift": [-3]}
+        {
+            "ventilation_rate": [1],
+            "num_dehumidifiers": [2],
+            "lighting_shift": [-3],
+            "scenario_type": "Test",
+        }
     )
     scenario = setScenarios(
         scenarios_df=scenarios_df,
@@ -142,7 +168,7 @@ def test_run_scenarios(session):
     filepath_ach = os.path.join(CONST_TESTDATA_GES_FOLDER, "ACH_outV1.csv")
     filepath_ias = os.path.join(CONST_TESTDATA_GES_FOLDER, "IAS_outV1.csv")
     results = runScenarios(
-        [3, 4, 5],
+        scenario_ids=[3, 4, 5],
         filepath_ach=filepath_ach,
         filepath_ias=filepath_ias,
         filepath_weather=filepath_weather,
@@ -152,5 +178,5 @@ def test_run_scenarios(session):
     assert isinstance(results, dict)
     assert "RH_air" in results.keys()
     assert "T_air" in results.keys()
-    # 2nd dim of results array should be 6 (3 BAU + 3 scenarios)
-    assert results["T_air"].shape == (192, 6)
+    # 2nd dim of results array should be 6 (3 BAU + 3 test scenarios)
+    assert results["T_air"].shape == (312, 6)
