@@ -167,32 +167,13 @@ class ModelRunClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
 
     # arguments
-    __table_args__ = (UniqueConstraint("sensor_id", "model_id"),)
-
-
-class ModelValueClass(BASE):
-    """
-    This class contains the outputs of model runs
-    """
-
-    __tablename__ = MODEL_VALUE_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True)
-    product_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(MODEL_PRODUCT_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-    prediction_value = Column(Float, nullable=False)
-    prediction_index = Column(Integer, nullable=False)
-    # arguments
-    __table_args__ = (UniqueConstraint("product_id"),)
+    __table_args__ = (UniqueConstraint("sensor_id", "model_id", "time_forecast"),)
 
 
 class ModelProductClass(BASE):
     """
-    This class contains the relationships of all model outputs
+    This class contains the relationships of all model outputs.
+    There will be one row in this table for every (run x measure)
     """
 
     __tablename__ = MODEL_PRODUCT_TABLE_NAME
@@ -212,6 +193,28 @@ class ModelProductClass(BASE):
 
     # arguments
     __table_args__ = (UniqueConstraint("run_id", "measure_id"),)
+
+
+class ModelValueClass(BASE):
+    """
+    This class contains the outputs of model runs.
+    Every ModelProduct (i.e. run x measure) will have a set of ModelValues
+    corresponding to the value of that measure at each timepoint.
+    """
+
+    __tablename__ = MODEL_VALUE_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    product_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_PRODUCT_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    prediction_value = Column(Float, nullable=False)
+    prediction_index = Column(Integer, nullable=False)
+    # arguments
+    __table_args__ = (UniqueConstraint("product_id", "prediction_index"),)
 
 
 class TypeClass(BASE):
