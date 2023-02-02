@@ -272,3 +272,35 @@ def create_user(username, email, password):
     except exc.SQLAlchemyError as e:
         db.session.rollback()
         return False, str(e)
+
+
+def insert_to_db_from_df(engine, df, DbClass, check_size=False):
+    """
+    Read a CSV file into a pandas dataframe, and then upload to
+    database table
+
+    Parameters
+    ==========
+    engine: SQL engine object
+    df:pandas.DataFrame, input data
+    DbClass:class from core.structure.py
+    """
+    assert not df.empty
+
+    # Creates/Opens a new connection to the db and binds the engine
+    session = session_open(engine)
+
+    # Check if table is empty and bulk inserts if it is
+    first_entry = session.query(DbClass).first()
+
+    if first_entry is None:
+        session.bulk_insert_mappings(DbClass, df.to_dict(orient="records"))
+        session_close(session)
+        if check_size:
+            assert session.query(DbClass).count() == len(df.index)
+    else:
+        session_close(session)
+        if check_size:
+            assert session.query(DbClass).count() == len(df.index)
+    session_close(session)
+    print(f"Inserted {len(df.index)} rows to table {DbClass.__tablename__}")
