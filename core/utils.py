@@ -274,7 +274,7 @@ def create_user(username, email, password):
         return False, str(e)
 
 
-def insert_to_db_from_df(engine, df, DbClass, check_size=False):
+def insert_to_db_from_df(engine, df, DbClass):
     """
     Read a CSV file into a pandas dataframe, and then upload to
     database table
@@ -296,11 +296,14 @@ def insert_to_db_from_df(engine, df, DbClass, check_size=False):
     if first_entry is None:
         session.bulk_insert_mappings(DbClass, df.to_dict(orient="records"))
         session_close(session)
-        if check_size:
-            assert session.query(DbClass).count() == len(df.index)
+        assert session.query(DbClass).count() == len(df.index)
     else:
-        session_close(session)
-        if check_size:
-            assert session.query(DbClass).count() == len(df.index)
+        records = df.to_dict(orient="records")
+        for record in records:
+            try:
+                session.add(DbClass(**record))
+                session.commit()
+            except exc.SQLAlchemyError as e:
+                session.rollback()
     session_close(session)
     print(f"Inserted {len(df.index)} rows to table {DbClass.__tablename__}")
