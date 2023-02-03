@@ -185,7 +185,7 @@ def main():
     LastDataPoint = pd.DataFrame()
 
     for ii in range(ndp):
-
+        logging.info(f"=== Processing === {ii} of {ndp}")
         ### Calibration runs
 
         h2 = int(seq[ii])

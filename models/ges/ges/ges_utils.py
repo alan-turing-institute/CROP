@@ -9,6 +9,7 @@ from cropcore.structure import (
     ModelClass,
     ModelMeasureClass,
     ModelScenarioClass,
+    ScenarioType,
 )
 
 # Relative import doesn't work if we are in same dir as this module
@@ -102,15 +103,16 @@ def get_bau_scenario_id(model_name="Greenhouse Energy Simulation (GES)", session
     """
     Find the scenario_id corresponding to the Business As Usual scenario.
     """
+    print(f"Getting BAU scenario ID for model {model_name}")
     if not session:
         session = get_sqlalchemy_session()
     query = session.query(ModelScenarioClass.id,).filter(
-        ModelScenarioClass.scenario_type == "BAU",
+        ModelScenarioClass.scenario_type == ScenarioType.BAU,
         ModelScenarioClass.model_id == ModelClass.id,
         ModelClass.model_name == model_name,
     )
-    result = session.execute(query).fetchall()
-    return result[0][0]
+    result = session.execute(query).fetchone()
+    return result[0]
 
 
 def get_scenarios(model_name="Greenhouse Energy Simulation (GES)", session=None):

@@ -12,7 +12,12 @@ if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
         insert_model_predictions,
     )
     from ges.config import config
-    from ges.ges_utils import get_ges_model_id, get_scenarios, create_measures_dicts
+    from ges.ges_utils import (
+        get_ges_model_id,
+        get_scenarios,
+        create_measures_dicts,
+        get_sqlalchemy_session,
+    )
 else:
     from .TestScenarioV1_1 import runScenarios, FILEPATH_WEATHER
     from .ges.dataAccess import (
@@ -21,7 +26,12 @@ else:
         insert_model_predictions,
     )
     from .ges.config import config
-    from .ges.ges_utils import get_ges_model_id, get_scenarios, create_measures_dicts
+    from .ges.ges_utils import (
+        get_ges_model_id,
+        get_scenarios,
+        create_measures_dicts,
+        get_sqlalchemy_session,
+    )
 
 path_conf = config(section="paths")
 DATA_DIR = Path(path_conf["data_dir"])
@@ -150,6 +160,8 @@ def run_pipeline(
     """
     Run all the test scenarios and upload results to DB
     """
+    if not session:
+        session = get_sqlalchemy_session()
     logging.basicConfig(level=logging.INFO)
     forecast_date = get_forecast_date(filepath_weather)
     model_id = get_ges_model_id(model_name, session=session)
@@ -177,7 +189,6 @@ def run_pipeline(
         time_forecast=forecast_date,
         session=session,
     )
-    print(f"NICK!! {run_id}")
     num_rows_inserted = 0
     if run_id is not None:
         logging.info("Run inserted, logged as ID: {0}".format(run_id))
@@ -187,11 +198,11 @@ def run_pipeline(
                 measure_id=measure["measure_database_id"],
                 session=session,
             )
+            # Don't try to add values unless we successfully added a run x measure "product".
+            if not product_id:
+                continue
             value_parameters = assemble_values(
                 product_id=product_id, measure=measure, all_results=result
-            )
-            print(
-                f"NICK!!! value parameters for run_id {run_id} for {measure} has {len(value_parameters)}"
             )
             logging.info(value_parameters)
             num_rows_inserted += insert_model_predictions(

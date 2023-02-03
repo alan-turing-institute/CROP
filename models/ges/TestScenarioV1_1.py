@@ -4,6 +4,8 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 
+from cropcore.structure import ScenarioType
+
 # relative imports don't work if we are in same directory
 if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
     from ges.functions_scenarioV1 import (
@@ -157,8 +159,18 @@ def setScenarios(
     ias_parameters: Dict = {},
     delta_h: int = 3,
 ) -> np.ndarray:
+    """
+    Setup the arrays for projecting various scenarios into the future.
+
+    Parameters
+    ----------
+    """
 
     number_of_points_in_a_day = int(np.round(24 / delta_h))
+
+    # if the BAU scenario is in our scenarios_df, exclude it - we only need "Test" scenarios
+    scenarios_df = scenarios_df[scenarios_df.scenario_type != ScenarioType.BAU]
+    scenarios_df.reset_index(inplace=True)
 
     # ScenEval has dimensions of:
     #    ndays_into_the_future*number_of_points_in_a_day,
@@ -195,9 +207,6 @@ def setScenarios(
 
     # test scenarios
     for i, row in scenarios_df.iterrows():
-        # don't count the Business-as-usual scenario
-        if row.scenario_type == "BAU":
-            continue
         ScenEval[:, 0, 3 + i] = row.ventilation_rate
         ScenEval[:, 1, 3 + i] = np.tile(ias_day, 4)
         ScenEval[:, 2, 3 + i] = int(
@@ -279,13 +288,15 @@ def runScenarios(
              of dim (n_timepoints, 3+n_test_scenario)
     """
     # if scenario_indices is empty, run all scenarios for this model
-    if len(scenario_ids) == 0:
+    if (scenario_ids is None) or (len(scenario_ids) == 0):
         scenarios_df = get_scenarios(session=session)
     else:
         scenarios_df = get_scenarios_by_id(scenario_ids, session=session)
     num_scenarios = len(scenarios_df)
     # how many scenarios, discounting the BusinessAsUsual one?
-    num_test_scenarios = len(scenarios_df[scenarios_df.scenario_type != "BAU"])
+    num_test_scenarios = len(
+        scenarios_df[scenarios_df.scenario_type != ScenarioType.BAU]
+    )
     if not filepath_ach:
         filepath_ach = FILEPATH_ACH
     if not filepath_ias:
