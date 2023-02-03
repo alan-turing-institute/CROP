@@ -33,6 +33,58 @@
             <div class="clearfix"></div>
           </div>
 
+        <div
+            class="x_content"
+            style="display: flex; flex-direction: row; justify-content: space-between; flex-wrap: nowrap;"
+          >
+            <label
+                for="ventilationRate"
+                style="flex-grow: 0; flex-shrink: 0; margin-right: 20px">
+              Ventilation Rate
+            </label>
+          <input
+              type="range"
+              id="ventilationRate"
+              name="ventilationRate"
+              min=2
+              max=10
+              value=2
+              step=2
+              class="form-range"
+              style="direction: ltr; flex-grow: 1; flex-shrink: 1">
+            <label
+                for="numDehumidifiers"
+                style="flex-grow: 0; flex-shrink: 0; margin-right: 20px">
+              Num Dehumidifiers
+            </label>
+          <input
+              type="range"
+              id="numDehumidifiers"
+              name="numDehumidifiers"
+              min=0
+              max=3
+              value=2
+              step=1
+              class="form-range"
+            style="direction: ltr; flex-grow: 1; flex-shrink: 1">
+            <label
+                for="numDehumidifiers"
+                style="flex-grow: 0; flex-shrink: 0; margin-right: 20px">
+              Lighting time shift
+            </label>
+          <input
+              type="range"
+              id="lightingShift"
+              name="lightingShift"
+              min=-6
+              max=6
+              value=0
+              step=3
+              class="form-range"
+            style="direction: ltr; flex-grow: 1; flex-shrink: 1">
+
+        </div>
+
           <div class="x_content">
             <div class="" role="tabpanel" data-example-id="togglable-tabs">
               <div id="myTabContent" class="tab-content">
@@ -91,11 +143,18 @@
   const ges_json = JSON.parse('{{json_ges_f | safe}}');
   const trh_json = JSON.parse('{{json_trh_f | safe}}');
   const canvasname = "ges_model";
-  const scenario_name = "1 ACH, 1 DH, -3 hours";
+
+//  const scenario_name = "1 ACH, 1 DH, -3 hours";
   document.getElementById(canvasname+"_title").innerHTML = "sensor id: "+ ges_json[0]["sensor_id"] + "     |   " + "run id: " + ges_json[0]["Values"][0]["run_id"];
-  // See static/javascript/predictions.js for the plot function.
-  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], trh_json, "temperature", canvasname + "_temperature", "Temperature (°C)", true, scenario_name);
-  plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], trh_json, "humidity", canvasname + "_humidity", "Relative humidity (%)", false, scenario_name);
+  // See static/javascript/predictions.js for the create_charts function.
+  create_charts(
+      ges_json,
+      trh_json,
+      canvasname
+  );
+
+//  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], trh_json, "temperature", canvasname + "_temperature", "Temperature (°C)", true, scenario_name);
+ // plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], trh_json, "humidity", canvasname + "_humidity", "Relative humidity (%)", false, scenario_name);
 </script>
 
 

@@ -6,7 +6,7 @@ import datetime as dt
 import json
 import logging
 
-from flask import render_template
+from flask import render_template, request
 from flask_login import login_required
 import pandas as pd
 from sqlalchemy import and_
@@ -26,6 +26,7 @@ from core.structure import (
     ModelRunClass,
     ModelValueClass,
     ModelProductClass,
+    ModelScenarioClass,
     ReadingsAranetTRHClass,
     SensorLocationClass,
     LocationClass,
@@ -84,8 +85,9 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
         df: a df with the queried data
     """
     logging.info(
-        "Calling arima model with parameters %s %s"
+        "Calling model %i with parameters %s %s"
         % (
+            model_id,
             dt_from.strftime(CONST_TIMESTAMP_FORMAT),
             dt_to.strftime(CONST_TIMESTAMP_FORMAT),
         )
@@ -115,6 +117,9 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
         ModelProductClass.run_id,
         ModelRunClass.time_created,
         ModelRunClass.time_forecast,
+        ModelScenarioClass.ventilation_rate,
+        ModelScenarioClass.num_dehumidifiers,
+        ModelScenarioClass.lighting_shift,
     ).filter(
         and_(
             ModelClass.id == model_id,
@@ -126,11 +131,12 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
             ModelRunClass.sensor_id == sensor_id,
             ModelRunClass.time_created >= dt_from,
             ModelRunClass.time_created <= dt_to,
+            ModelMeasureClass.scenario_id == ModelScenarioClass.id,
         )
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
-
+    df.to_csv("/tmp/ges_df.csv")
     logging.info("Total number of records found: %d" % (len(df.index)))
 
     if df.empty:
@@ -332,7 +338,8 @@ def ges_template():
     else:
         json_ges = {}
         json_trh = {}
-
+    json.dump(json_ges, open("/tmp/json_ges.json", "w"))
+    json_ges = open("/tmp/testGES.json").read()
     return render_template(
         "ges.html",
         json_ges_f=json_ges,
@@ -346,6 +353,7 @@ def route_template(template, methods=["GET"]):
     if template == "arima":
         return arima_template()
     elif template == "ges":
+
         return ges_template()
     else:
         return render_template(template + ".html")

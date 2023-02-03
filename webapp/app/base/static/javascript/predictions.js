@@ -1,3 +1,35 @@
+function setScenario(ventilationRate, numDehumidifiers, lightingShift, chart) {
+  chart.options.scales.x.min = minTime;
+  chart.update();
+}
+
+function createSliderListeners(charts) {
+  const ventilationRate = document.getElementById("ventilationRate");
+  const numDehumidifiers = document.getElementById("numDehumidifiers");
+  const lightingShift = document.getElementById("lightingShift");
+
+  function onChangeSlider(value) {
+    setValuesFromSlider(
+      ventilationRate.value,
+      numDehumidifiers.value,
+      lightingShift.value,
+      charts
+    );
+  }
+
+  ventilationRate.oninput = (e) => onChangeSlider(e.target.value);
+  numDehumidifiers.oninput = (e) => onChangeSlider(e.target.value);
+  lightingShift.onchange = (e) => onChangeSlider(e.target.value);
+}
+
+function findInJson(ges_json, measureName) {
+  // pick out rows from a list, based on measure name and/or scenario type
+  const result = ges_json.find((obj) => {
+    return obj.measure_name == measureName;
+  });
+  return result;
+}
+
 function plot(
   top_json,
   mid_json,
@@ -148,6 +180,12 @@ function plot(
     },
   };
   const ctx = document.getElementById(canvasname);
-  const myChart = new Chart(ctx, config);
-  myChart.update();
+  return new Chart(ctx, config);
+
+  //    myChart.update();
+}
+
+function create_charts(ges_json, trh_json, canvasname) {
+  const temperaturePlot = plot();
+  createSliderListeners([temperaturePlot, humidityPlot]);
 }
