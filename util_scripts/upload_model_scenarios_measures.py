@@ -15,6 +15,7 @@ from cropcore.structure import (
     ModelClass,
     ModelMeasureClass,
     ModelScenarioClass,
+    ScenarioType,
 )
 
 from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
@@ -52,7 +53,7 @@ def generate_scenarios(model_id):
         "num_dehumidifiers": 2,
         "lighting_shift": 0,
         "lighting_on_duration": 16,
-        "scenario_type": "BAU",
+        "scenario_type": ScenarioType.BAU,
     }
     scenarios.append(scenario)
     # Test scenarios
@@ -67,7 +68,7 @@ def generate_scenarios(model_id):
                     "num_dehumidifiers": num_dehumidifiers,
                     "lighting_shift": float(lighting_shift),
                     "lighting_on_duration": float(lighting_on_duration),
-                    "scenario_type": "Test",
+                    "scenario_type": ScenarioType.Test,
                 }
                 scenarios.append(scenario)
     df = pd.DataFrame(scenarios)
