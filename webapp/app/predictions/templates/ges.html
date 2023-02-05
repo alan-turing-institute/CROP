@@ -140,11 +140,11 @@
 <script src="{{ url_for('static', filename='node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js') }}"></script>
 
 <script>
-  const ges_json = JSON.parse('{{json_ges_f | safe}}');
-  const trh_json = JSON.parse('{{json_trh_f | safe}}');
-  const canvasname = "ges_model";
 
-//  const scenario_name = "1 ACH, 1 DH, -3 hours";
+  const trh_json = JSON.parse('{{json_trh_f | safe}}');
+  const ges_json = JSON.parse('{{json_ges_f | safe}}');
+
+  const canvasname = "ges_model";
   document.getElementById(canvasname+"_title").innerHTML = "sensor id: "+ ges_json[0]["sensor_id"] + "     |   " + "run id: " + ges_json[0]["Values"][0]["run_id"];
   // See static/javascript/predictions.js for the create_charts function.
   create_charts(
@@ -153,8 +153,6 @@
       canvasname
   );
 
-//  plot(ges_json[7], ges_json[3], ges_json[1], ges_json[5], trh_json, "temperature", canvasname + "_temperature", "Temperature (°C)", true, scenario_name);
- // plot(ges_json[6], ges_json[2], ges_json[0], ges_json[4], trh_json, "humidity", canvasname + "_humidity", "Relative humidity (%)", false, scenario_name);
 </script>
 
 
