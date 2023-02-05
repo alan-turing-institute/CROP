@@ -120,6 +120,7 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
         ModelScenarioClass.ventilation_rate,
         ModelScenarioClass.num_dehumidifiers,
         ModelScenarioClass.lighting_shift,
+        ModelScenarioClass.scenario_type,
     ).filter(
         and_(
             ModelClass.id == model_id,
@@ -136,7 +137,7 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
-    df.to_csv("/tmp/ges_df.csv")
+    df["scenario_type"] = df["scenario_type"].astype(str)
     logging.info("Total number of records found: %d" % (len(df.index)))
 
     if df.empty:
@@ -248,8 +249,9 @@ def json_temp_ges(df):
     Function to return the JSON for the temperature related charts in the GES
     model run.
     """
+
     json_str = (
-        df.groupby(["sensor_id", "measure_name", "run_id"], as_index=True)
+        df.groupby(["sensor_id", "measure_name", "run_id", "ventilation_rate", "num_dehumidifiers", "lighting_shift", "scenario_type"], as_index=True)
         .apply(
             lambda x: x[
                 [
@@ -338,8 +340,6 @@ def ges_template():
     else:
         json_ges = {}
         json_trh = {}
-    json.dump(json_ges, open("/tmp/json_ges.json", "w"))
-    json_ges = open("/tmp/testGES.json").read()
     return render_template(
         "ges.html",
         json_ges_f=json_ges,
