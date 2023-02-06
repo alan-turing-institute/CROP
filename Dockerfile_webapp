@@ -8,6 +8,7 @@ RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.8 /usr/bin/python3
 RUN ls -l /usr/bin | grep python
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install -r /requirements.txt && rm -rf ~/.cache/pip /requirements.txt
+RUN python3 -m pip install .
 
 # install nodejs/npm (requires first installing CURL
 RUN apt-get install -y curl
