@@ -45,74 +45,6 @@ CONST_AEGIS_IRRIGATION_SENSOR_TYPE = "Aegis II"
 
 CONST_API_WEATHER_TYPE = "openweathermap"
 
-# FILE STRUCTURE
-CONST_DATA_FOLDER = "data"
-CONST_TEST_FOLDER = "tests"
-CONST_CORE_DATA_FOLDER = "Core"
-CONST_AIR_VELOCITY_FOLDER = "Air_Velocity"
-CONST_ENV_FOLDER = "Environmental"
-
-CONST_SENSOR_LOCATION_TESTS = "sensor_location_tests"
-
-CONST_TEST_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", CONST_TEST_FOLDER)
-)
-CONST_TEST_DIR_DATA = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER)
-CONST_COREDATA_DIR = os.path.join(
-    CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_CORE_DATA_FOLDER
-)
-CONST_ENV_DIR = os.path.join(CONST_TEST_DIR, CONST_DATA_FOLDER, CONST_ENV_FOLDER)
-
-# Core data
-SENSOR_CSV = "Sensors.csv"  # List of sensors
-SENSOR_TYPE_CSV = "Sensortypes.csv"  # list of all available sensor types
-LOCATION_CSV = "locations.csv"  # List of locations in the farm
-
-# Air Velocity test data
-CONST_AIR_VELOCITY_TEST_1 = "data-20200128-test1.csv"
-
-# New environmental sensors IMPORT
-CONST_NEW_ENV_COL_TIMESTAMP = "Logger timestamp"
-CONST_NEW_ENV_COL_DEVICE = "Device Address"
-CONST_NEW_ENV_COL_UPTIME = "Uptime"
-CONST_NEW_ENV_COL_BATTERY = "Battery"
-CONST_NEW_ENV_COL_VALIDITY = "Validity"
-CONST_NEW_ENV_COL_CH0 = "Ch.0"
-CONST_NEW_ENV_COL_CH1 = "Ch.1"
-CONST_NEW_ENV_COL_CH2 = "Ch.2"
-CONST_NEW_ENV_COL_CH3 = "Ch.3"
-CONST_NEW_ENV_COL_OPT3001 = "OPT3001"
-CONST_NEW_ENV_COL_CO2 = "Cozir CO2"
-CONST_NEW_ENV_COL_TEMPERATURE = "SHT21 Temp"
-CONST_NEW_ENV_COL_HUMIDITY = "SHT21 Humid"
-CONST_NEW_ENV_COL_DS_TEMP = "DS3231 Temp"
-CONST_NEW_ENV_COL_LIST = [
-    CONST_NEW_ENV_COL_TIMESTAMP,
-    CONST_NEW_ENV_COL_DEVICE,
-    CONST_NEW_ENV_COL_UPTIME,
-    CONST_NEW_ENV_COL_UPTIME,
-    CONST_NEW_ENV_COL_BATTERY,
-    CONST_NEW_ENV_COL_VALIDITY,
-    CONST_NEW_ENV_COL_CH0,
-    CONST_NEW_ENV_COL_CH1,
-    CONST_NEW_ENV_COL_CH2,
-    CONST_NEW_ENV_COL_CH3,
-    CONST_NEW_ENV_COL_OPT3001,
-    CONST_NEW_ENV_COL_CO2,
-    CONST_NEW_ENV_COL_TEMPERATURE,
-    CONST_NEW_ENV_COL_HUMIDITY,
-    CONST_NEW_ENV_COL_DS_TEMP,
-]
-
-# New Environmental sensors test data
-CONST_NEW_ENV_TEST_1 = "raw-20200124-test1.csv"  # Healthy data file
-
-# Error messages
-ERR_IMPORT_ERROR_1 = "Import file does not contain all the necessary columns."
-ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)"
-ERR_IMPORT_ERROR_3 = "Data contains empty entries"
-ERR_IMPORT_ERROR_4 = "Data contains duplicates"
-ERR_IMPORT_ERROR_5 = "Data contains invalid values"
 
 # STARK
 STARK_USERNAME = (
@@ -154,6 +86,13 @@ SQL_HOST = (
 SQL_PORT = (
     os.environ["CROP_SQL_PORT"].strip() if "CROP_SQL_PORT" in os.environ else "DUMMY"
 )
+SQL_CONNECTION_STRING = make_conn_string(
+    SQL_ENGINE,
+    SQL_USER,
+    parse.quote(SQL_PASSWORD),
+    SQL_HOST,
+    SQL_PORT,
+)
 SQL_DBNAME = (
     os.environ["CROP_SQL_DBNAME"].strip().lower()
     if "CROP_SQL_DBNAME" in os.environ
@@ -162,14 +101,39 @@ SQL_DBNAME = (
 SQL_DEFAULT_DBNAME = "postgres"
 SQL_SSLMODE = "require"
 
-SQL_TEST_DBNAME = "test_db"
+# same for the temporary db used for unit testing
+SQL_TEST_USER = (
+    os.environ["CROP_SQL_TESTUSER"].strip()
+    if "CROP_SQL_TESTUSER" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_PASSWORD = (
+    os.environ["CROP_SQL_TESTPASS"].strip()
+    if "CROP_SQL_TESTPASS" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_HOST = (
+    os.environ["CROP_SQL_TESTHOST"].strip()
+    if "CROP_SQL_TESTHOST" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_PORT = (
+    os.environ["CROP_SQL_TESTPORT"].strip()
+    if "CROP_SQL_TESTPORT" in os.environ
+    else "DUMMY"
+)
+SQL_TEST_DBNAME = (
+    os.environ["CROP_SQL_TESTDBNAME"]
+    if "CROP_SQL_TESTDBNAME" in os.environ
+    else "test_db"
+)
 
-SQL_CONNECTION_STRING = make_conn_string(
+SQL_TEST_CONNECTION_STRING = make_conn_string(
     SQL_ENGINE,
-    SQL_USER,
-    parse.quote(SQL_PASSWORD),
-    SQL_HOST,
-    SQL_PORT,
+    SQL_TEST_USER,
+    parse.quote(SQL_TEST_PASSWORD),
+    SQL_TEST_HOST,
+    SQL_TEST_PORT,
 )
 
 SQL_CONNECTION_STRING_DEFAULT = "%s/%s" % (SQL_CONNECTION_STRING, SQL_DEFAULT_DBNAME)
@@ -202,6 +166,14 @@ WEATHER_FORECAST_TABLE_NAME = "weather_forecast"
 
 # SQL Column names
 ID_COL_NAME = "id"
+
+# indexes of predictive models in the "model" table
+ARIMA_MODEL_ID = 1
+BSTS_MODEL_ID = 2
+GES_MODEL_ID = 3
+# sensor ID to use in GES model plot
+GES_SENSOR_ID = 27
+
 
 CONST_MAX_RECORDS = 50000
 
@@ -241,3 +213,53 @@ CONST_OPENWEATHERMAP_FORECAST_URL = (
     f"https://api.openweathermap.org/data/3.0/onecall?"
     f"lat={CONST_OPENWEATHERMAP_LAT}&lon={CONST_OPENWEATHERMAP_LON}&units={CONST_OPENWEATHERMAP_UNITS}&appid="
 )  # weather forecast URL withouth API key
+
+# Testing-related constants - filenames and filepaths
+
+CONST_TEST_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "tests")
+)
+CONST_TESTDATA_BASE_FOLDER = os.path.join(CONST_TEST_DIR, "data")
+CONST_TESTDATA_LOCATION_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Locations")
+CONST_TESTDATA_SENSOR_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Sensors")
+CONST_TESTDATA_WEATHER_FOLDER = os.path.join(CONST_TESTDATA_BASE_FOLDER, "Weather")
+CONST_TESTDATA_ELECTRICITY_FOLDER = os.path.join(
+    CONST_TESTDATA_BASE_FOLDER, "Electricity"
+)
+CONST_TESTDATA_ENVIRONMENT_FOLDER = os.path.join(
+    CONST_TESTDATA_BASE_FOLDER, "Environmental"
+)
+CONST_TESTDATA_CROPGROWTH_FOLDER = os.path.join(
+    CONST_TESTDATA_BASE_FOLDER, "CropGrowth"
+)
+
+# test data filenames
+LOCATIONS_CSV = "locations.csv"  # Locations within the farm
+SENSOR_CSV = "sensors.csv"  # List of sensors
+SENSOR_TYPE_CSV = "sensor_types.csv"  # List of all available sensor types
+LOCATION_CSV = "locations.csv"  # List of locations in the farm
+SENSOR_LOCATION_CSV = "sensor_locations.csv"  # List of sensor locations
+
+# Air Velocity test data
+CONST_AIR_VELOCITY_TEST_1 = "data-20200128-test1.csv"
+
+# Crop growth synthetic data
+CROP_TYPE_CSV = "crop_types.csv"
+BATCH_CSV = "batches.csv"
+BATCH_EVENT_CSV = "batch_events.csv"
+HARVEST_CSV = "harvests.csv"
+
+# Error messages
+ERR_IMPORT_ERROR_1 = "Import file does not contain all the necessary columns."
+ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)"
+ERR_IMPORT_ERROR_3 = "Data contains empty entries"
+ERR_IMPORT_ERROR_4 = "Data contains duplicates"
+ERR_IMPORT_ERROR_5 = "Data contains invalid values"
+
+DEFAULT_USER_USERNAME = "default_user"
+DEFAULT_USER_EMAIL = "N/A"
+DEFAULT_USER_PASS = (
+    os.environ["CROP_DEFAULT_USER_PASS"]
+    if "CROP_DEFAULT_USER_PASS" in os.environ
+    else None
+)

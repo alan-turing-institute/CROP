@@ -25,6 +25,14 @@ setx CROP_SQL_WHITEIPS "<<<replaceme>>" # list of ips to be whitelisted for conn
 setx CROP_SQL_READER_USER  "<<<replaceme>>" # Azure PostgreSQL Read-only user name
 setx CROP_SQL_READER_PASS  "<<<replaceme>>" # Azure PostgreSQL Read-only user password
 
+# Test database
+setx CROP_SQL_TESTUSER  "<<<replaceme>>"
+setx CROP_SQL_TESTPASS  "<<<replaceme>>"
+setx CROP_SQL_TESTHOST  "<<<replaceme>>"
+setx CROP_SQL_TESTPORT  "<<<replaceme>>"
+setx CROP_SQL_TESTDBNAME  "<<<replaceme>>"
+
+
 # Stark
 setx CROP_STARK_USERNAME "<<<replaceme>>"
 setx CROP_STARK_PASS "<<<replaceme>>"

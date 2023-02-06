@@ -12,7 +12,13 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.predictions import blueprint
-from core.constants import CONST_TIMESTAMP_FORMAT
+from core.constants import (
+    CONST_TIMESTAMP_FORMAT,
+    ARIMA_MODEL_ID,
+    BSTS_MODEL_ID,
+    GES_MODEL_ID,
+    GES_SENSOR_ID,
+)
 from core import queries
 from core.structure import (
     ModelClass,
@@ -92,9 +98,12 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
             ModelRunClass.model_id == model_id,
             ModelRunClass.sensor_id == sensor_id,
         )
-        .all()[-1]
+        .all()
     )
-
+    if len(sbqr) > 0:
+        sbqr = sbqr[-1]
+    else:
+        return None
     # query to get all the results from the model run in the subquery
     query = db.session.query(
         ModelClass.id,
@@ -277,7 +286,7 @@ def arima_template():
 
     for sensor_id in sensor_ids:
         # Model number 1 is Arima, 2 is BSTS, 3 is for GES.
-        df_arima = model_query(dt_from, dt_to, 1, sensor_id)
+        df_arima = model_query(dt_from, dt_to, ARIMA_MODEL_ID, sensor_id)
         if len(df_arima) > 0:
             json_arima = json_temp_arima(df_arima)
             # Get TRH data for the relevant period
@@ -305,20 +314,25 @@ def ges_template():
     # should be, not the time window that gets plotted.
     dt_to = dt.datetime.now()
     dt_from = dt_to - dt.timedelta(days=3)
-    df_ges = model_query(dt_from, dt_to, 3, 27)
-    # TODO This is a hard coded constant for now, marking the length of the
-    # calibration period, because this data is lacking in the DB.
-    time_shift = 24 * 10 - 1
-    df_ges = add_time_columns(df_ges, time_shift)
-    # Crop the data to a certain time window.
-    unique_time_forecast = df_ges["time_forecast"].unique()
-    forecast_time = pd.to_datetime(unique_time_forecast[0])
-    start_time = forecast_time - dt.timedelta(days=3)
-    end_time = df_ges["timestamp"].max()
-    df_ges = df_ges[start_time <= df_ges["timestamp"]]
-    json_ges = json_temp_ges(df_ges)
-    # Get Aranet T&RH data within that window.
-    json_trh = json_temp_trh(start_time, end_time)
+    df_ges = model_query(dt_from, dt_to, GES_MODEL_ID, GES_SENSOR_ID)
+    if df_ges is not None and len(df_ges) > 0:
+        # TODO This is a hard coded constant for now, marking the length of the
+        # calibration period, because this data is lacking in the DB.
+        time_shift = 24 * 10 - 1
+        df_ges = add_time_columns(df_ges, time_shift)
+        # Crop the data to a certain time window.
+        unique_time_forecast = df_ges["time_forecast"].unique()
+        forecast_time = pd.to_datetime(unique_time_forecast[0])
+        start_time = forecast_time - dt.timedelta(days=3)
+        end_time = df_ges["timestamp"].max()
+        df_ges = df_ges[start_time <= df_ges["timestamp"]]
+        json_ges = json_temp_ges(df_ges)
+        # Get Aranet T&RH data within that window.
+        json_trh = json_temp_trh(start_time, end_time)
+    else:
+        json_ges = {}
+        json_trh = {}
+
     return render_template(
         "ges.html",
         json_ges_f=json_ges,
