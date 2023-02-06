@@ -259,3 +259,11 @@ ERR_IMPORT_ERROR_2 = "Cannot convert data into a data structure (invalid values)
 ERR_IMPORT_ERROR_3 = "Data contains empty entries"
 ERR_IMPORT_ERROR_4 = "Data contains duplicates"
 ERR_IMPORT_ERROR_5 = "Data contains invalid values"
+
+DEFAULT_USER_USERNAME = "default_user"
+DEFAULT_USER_EMAIL = "N/A"
+DEFAULT_USER_PASS = (
+    os.environ["CROP_DEFAULT_USER_PASS"]
+    if "CROP_DEFAULT_USER_PASS" in os.environ
+    else None
+)

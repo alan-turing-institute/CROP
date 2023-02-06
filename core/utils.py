@@ -273,7 +273,6 @@ def create_user(username, email, password):
         db.session.rollback()
         return False, str(e)
 
-
 def insert_to_db_from_df(engine, df, DbClass):
     """
     Read a CSV file into a pandas dataframe, and then upload to
@@ -307,3 +306,39 @@ def insert_to_db_from_df(engine, df, DbClass):
                 session.rollback()
     session_close(session)
     print(f"Inserted {len(df.index)} rows to table {DbClass.__tablename__}")
+
+def delete_user(username, email):
+    """Delete the user with this username and email.
+
+    Return (True, user_id) if successful, (False, error_message) if not.
+    """
+    try:
+        user = UserClass.query.filter_by(username=username, email=email).first()
+        db.session.delete(user)
+        db.session.flush()
+        db.session.commit()
+        return True, user.id
+    except exc.SQLAlchemyError as e:
+        db.session.rollback()
+        return False, str(e)
+
+
+def change_user_password(username, email, password):
+    """Change the password of a given user.
+
+    Return (True, user_id) if successful, (False, error_message) if not.
+    """
+    try:
+        user = UserClass.query.filter_by(username=username, email=email).first()
+        old_hashed_password = user.password
+        user.password = password
+        new_hashed_password = user.password
+        if old_hashed_password != new_hashed_password:
+            db.session.flush()
+            db.session.commit()
+            return True, user.id
+        else:
+            return False, f"Password already up-to-date for {username}"
+    except exc.SQLAlchemyError as e:
+        db.session.rollback()
+        return False, str(e)

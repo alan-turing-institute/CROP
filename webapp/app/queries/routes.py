@@ -2,6 +2,7 @@
 Module (routes.py) to handle queries from the 3d model javascript application
 """
 from datetime import datetime, timedelta
+import json
 
 from flask import request
 
@@ -28,6 +29,8 @@ from cropcore.structure import (
     HarvestClass,
     EventType,
 )
+
+from cropcore.queries import closest_trh_sensors, batch_list
 from cropcore.utils import (
     query_result_to_array,
     jsonify_query_result,
@@ -487,48 +490,26 @@ def get_all_harvests():
 
 @blueprint.route("/batchesinfarm", methods=["GET"])
 def get_growing_batches():
+    query = batch_list(db.session)
+    squery = query.subquery()
+    fquery = db.session.query(squery).filter(squery.c.last_event == "transfer")
+    execute_result = db.session.execute(fquery).fetchall()
+    result = query_result_to_array(execute_result)
+    return json.dumps(result)
 
-    dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
-    # first query all the batches that have a location
-    # set the dt_from back 30 days here (the longest possible grow period)
-    dt_from = dt_from + timedelta(days=-30)
+
+@blueprint.route("closest_trh_sensors", methods=["GET"])
+def get_closest_sensors():
+    closest_trh_squery = closest_trh_sensors(db.session).subquery(
+        "location_and_trh_ids"
+    )
     query = db.session.query(
-        BatchEventClass.id,
-        BatchEventClass.event_time,
-        BatchEventClass.next_action_time,
-        BatchEventClass.batch_id,
-        BatchClass.tray_size,
-        BatchClass.number_of_trays,
-        CropTypeClass.name,
-        LocationClass.zone,
         LocationClass.aisle,
         LocationClass.column,
         LocationClass.shelf,
-    ).filter(
-        and_(
-            BatchEventClass.event_type == EventType.transfer,
-            LocationClass.id == BatchEventClass.location_id,
-            BatchClass.id == BatchEventClass.batch_id,
-            CropTypeClass.id == BatchClass.crop_type_id,
-            BatchEventClass.event_time > dt_from,
-            BatchEventClass.event_time < dt_to,
-        )
-    )
+        LocationClass.id,
+        closest_trh_squery.c.sensor_id,
+    ).join(closest_trh_squery, closest_trh_squery.c.location_id == LocationClass.id)
     execute_result = db.session.execute(query).fetchall()
-    transfer_result = query_result_to_array(execute_result)
-    # now query batch events with event type "harvest"
-    query = db.session.query(BatchEventClass.batch_id,).filter(
-        and_(
-            BatchEventClass.event_type == EventType.harvest,
-            BatchEventClass.event_time > dt_from,
-            BatchEventClass.event_time < dt_to,
-        )
-    )
-    execute_result = db.session.execute(query).fetchall()
-    harvest_result = query_result_to_array(execute_result)
-    # now remove these from the transfer result using pandas
-    transfer_df = pd.DataFrame(transfer_result)
-    harvest_df = pd.DataFrame(harvest_result)
-    if len(harvest_df) > 0:
-        transfer_df = transfer_df[~transfer_df.batch_id.isin(harvest_df["batch_id"])]
-    return transfer_df.to_json(orient="records")
+    result = query_result_to_array(execute_result)
+    return json.dumps(result)
