@@ -30,7 +30,7 @@ from .dataAccess import get_days_weather, get_days_weather_forecast
 # import will be different depending on where we run from
 try:
     from ..inversion import *
-except (ValueError):
+except ValueError:
     from inversion import *
 
 path_conf = config(section="paths")

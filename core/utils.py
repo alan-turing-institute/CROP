@@ -273,6 +273,7 @@ def create_user(username, email, password):
         db.session.rollback()
         return False, str(e)
 
+
 def insert_to_db_from_df(engine, df, DbClass):
     """
     Read a CSV file into a pandas dataframe, and then upload to
@@ -306,6 +307,7 @@ def insert_to_db_from_df(engine, df, DbClass):
                 session.rollback()
     session_close(session)
     print(f"Inserted {len(df.index)} rows to table {DbClass.__tablename__}")
+
 
 def delete_user(username, email):
     """Delete the user with this username and email.

@@ -364,7 +364,6 @@ def route_template(template, methods=["GET"]):
     if template == "arima":
         return arima_template()
     elif template == "ges":
-
         return ges_template()
     else:
         return render_template(template + ".html")
