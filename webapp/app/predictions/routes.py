@@ -12,15 +12,15 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.predictions import blueprint
-from core.constants import (
+from cropcore.constants import (
     CONST_TIMESTAMP_FORMAT,
     ARIMA_MODEL_ID,
     BSTS_MODEL_ID,
     GES_MODEL_ID,
     GES_SENSOR_ID,
 )
-from core import queries
-from core.structure import (
+from cropcore import queries
+from cropcore.structure import (
     ModelClass,
     ModelMeasureClass,
     ModelRunClass,
@@ -32,7 +32,7 @@ from core.structure import (
     LocationClass,
     SensorClass,
 )
-from core.structure import SQLA as db
+from cropcore.structure import SQLA as db
 
 
 def aranet_trh_query(dt_from, dt_to):
@@ -251,7 +251,18 @@ def json_temp_ges(df):
     """
 
     json_str = (
-        df.groupby(["sensor_id", "measure_name", "run_id", "ventilation_rate", "num_dehumidifiers", "lighting_shift", "scenario_type"], as_index=True)
+        df.groupby(
+            [
+                "sensor_id",
+                "measure_name",
+                "run_id",
+                "ventilation_rate",
+                "num_dehumidifiers",
+                "lighting_shift",
+                "scenario_type",
+            ],
+            as_index=True,
+        )
         .apply(
             lambda x: x[
                 [

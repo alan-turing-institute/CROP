@@ -4,17 +4,17 @@ from flask import redirect, request, render_template
 from flask_login import login_required
 from sqlalchemy import and_, asc, desc
 
-from core.constants import CONST_MAX_RECORDS
-from core.structure import SQLA as db
-from core.structure import (
+from cropcore.constants import CONST_MAX_RECORDS
+from cropcore.structure import SQLA as db
+from cropcore.structure import (
     SensorClass,
     TypeClass,
     SensorLocationClass,
     LocationClass,
 )
-from core import queries
+from cropcore import queries
+from cropcore.utils import query_result_to_array
 from app.sensors import blueprint
-from core.utils import query_result_to_array
 
 
 @blueprint.route("/sensor_list", methods=["POST", "GET"])

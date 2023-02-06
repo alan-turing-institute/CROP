@@ -8,10 +8,10 @@ import pandas as pd
 from sqlalchemy import and_, desc
 
 from app.readings import blueprint
-from core.constants import CONST_MAX_RECORDS
-from core import queries
-from core.structure import SQLA as db
-from core.structure import (
+from cropcore.constants import CONST_MAX_RECORDS
+from cropcore import queries
+from cropcore.structure import SQLA as db
+from cropcore.structure import (
     SensorClass,
     ReadingsEnergyClass,
     TypeClass,
@@ -19,7 +19,7 @@ from core.structure import (
     ReadingsAranetCO2Class,
     ReadingsAranetAirVelocityClass,
 )
-from core.utils import (
+from cropcore.utils import (
     query_result_to_array,
     parse_date_range_argument,
     download_csv,

@@ -3,9 +3,9 @@ from flask_login import login_required
 
 
 from app.users import blueprint
-from core.structure import SQLA as db
-from core.structure import UserClass
-from core import utils
+from cropcore.structure import SQLA as db
+from cropcore.structure import UserClass
+from cropcore import utils
 
 
 @blueprint.route("/users", methods=["GET", "POST"])

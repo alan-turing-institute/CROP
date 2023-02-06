@@ -10,9 +10,9 @@ import pandas as pd
 from sqlalchemy import and_, desc
 
 from app.queries import blueprint
-from core import queries
-from core.structure import SQLA as db
-from core.structure import (
+from cropcore import queries
+from cropcore.structure import SQLA as db
+from cropcore.structure import (
     TypeClass,
     SensorClass,
     LocationClass,
@@ -28,7 +28,7 @@ from core.structure import (
     HarvestClass,
     EventType,
 )
-from core.utils import (
+from cropcore.utils import (
     query_result_to_array,
     jsonify_query_result,
     parse_date_range_argument,
