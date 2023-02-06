@@ -6,7 +6,7 @@ the responsibility of the caller.
 from sqlalchemy import and_, case, func
 from sqlalchemy.orm import aliased, Query
 
-from core.structure import (
+from .structure import (
     BatchClass,
     BatchEventClass,
     CropTypeClass,

@@ -6,8 +6,8 @@ import logging
 import pandas as pd
 from sqlalchemy.dialects.postgresql import insert
 
-from core.structure import LocationClass
-from core.utils import get_crop_db_session
+from cropcore.structure import LocationClass
+from cropcore.utils import get_crop_db_session
 
 TUNNEL_AISLES_DICT = {
     "Tunnel3": ["A", "B"],
