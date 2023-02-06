@@ -79,7 +79,7 @@ function createSliderListeners(ges_json, charts) {
   const numDehumidifiers = document.getElementById("numDehumidifiers");
   const lightingShift = document.getElementById("lightingShift");
 
-  function onChangeSlider(value) {
+  function onChangeSlider() {
     //update temperature plot
     setScenario(
       ges_json,
@@ -100,9 +100,10 @@ function createSliderListeners(ges_json, charts) {
     );
   }
 
-  ventilationRate.oninput = (e) => onChangeSlider(e.target.value);
-  numDehumidifiers.oninput = (e) => onChangeSlider(e.target.value);
-  lightingShift.onchange = (e) => onChangeSlider(e.target.value);
+  ventilationRate.oninput = (e) => onChangeSlider();
+  numDehumidifiers.oninput = (e) => onChangeSlider();
+  lightingShift.oninput = (e) => onChangeSlider();
+  onChangeSlider();
 }
 
 function plot(
@@ -223,6 +224,9 @@ function plot(
     type: "scatter",
     data: data,
     options: {
+      animation: {
+        duration: 0,
+      },
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
@@ -260,7 +264,7 @@ function plot(
 }
 
 function create_charts(ges_json, trh_json, canvasname) {
-  /// temperature
+  // temperature
   const topTempJson = findInJson(
     ges_json,
     "Upper Bound Temperature (Degree Celcius)",
