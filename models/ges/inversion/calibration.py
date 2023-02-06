@@ -9,8 +9,6 @@ from scipy.stats import norm
 
 from . import utils
 
-# from inversion import *
-
 
 class calibrate:
     def __init__(self, priorPPF, sigmaY, nugget=0, lambda_e=1):

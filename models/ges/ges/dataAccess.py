@@ -3,13 +3,8 @@ import logging
 from pathlib import Path
 from sqlalchemy import desc, asc, exc
 
-# import psycopg2
-# from psycopg2.extras import execute_values
 import datetime
 
-# from jinjasql import JinjaSql
-# from six import string_types
-# from copy import deepcopy
 import numpy as np
 import pandas as pd
 from .config import config
@@ -28,16 +23,6 @@ from .ges_utils import get_sqlalchemy_session
 
 path_conf = config(section="paths")
 data_dir = Path(path_conf["data_dir"])
-
-
-# def get_sqlalchemy_session(connection_string=None, dbname=None):
-#    if not connection_string:
-#        connection_string = SQL_CONNECTION_STRING
-#    if not dbname:
-#        dbname = SQL_DBNAME
-#    status, log, engine = connect_db(connection_string, dbname)
-#    session = session_open(engine)
-#    return session
 
 
 def print_rows_head(rows, numrows=0):
@@ -167,39 +152,36 @@ def get_datapoint(filepath=None, **kwargs):
 def insert_model_run(sensor_id=None, model_id=None, time_forecast=None, session=None):
     if not session:
         session = get_sqlalchemy_session()
-    if sensor_id is not None:
-        if model_id is not None:
-            if time_forecast is not None:
-                mr = ModelRunClass(
-                    sensor_id=sensor_id, model_id=model_id, time_forecast=time_forecast
-                )
-                try:
-                    session.add(mr)
-                    session.commit()
-                    session.refresh(mr)
-                    run_id = mr.id
-                    print(f"Inserted model run {run_id}")
-                    return run_id
-                except exc.SQLAlchemyError as e:
-                    session.rollback()
+    if sensor_id is not None and model_id is not None and time_forecast is not None:
+        mr = ModelRunClass(
+            sensor_id=sensor_id, model_id=model_id, time_forecast=time_forecast
+        )
+        try:
+            session.add(mr)
+            session.commit()
+            session.refresh(mr)
+            run_id = mr.id
+            print(f"Inserted model run {run_id}")
+            return run_id
+        except exc.SQLAlchemyError:
+            session.rollback()
     session.close()
 
 
 def insert_model_product(run_id=None, measure_id=None, session=None):
     if not session:
         session = get_sqlalchemy_session()
-    if run_id is not None:
-        if measure_id is not None:
-            mp = ModelProductClass(run_id=run_id, measure_id=measure_id)
-            try:
-                session.add(mp)
-                session.commit()
-                session.refresh(mp)
-                product_id = mp.id
-                print(f"Inserting model product {product_id}")
-                return product_id
-            except exc.SQLAlchemyError as e:
-                session.rollback()
+    if run_id is not None and measure_id is not None:
+        mp = ModelProductClass(run_id=run_id, measure_id=measure_id)
+        try:
+            session.add(mp)
+            session.commit()
+            session.refresh(mp)
+            product_id = mp.id
+            print(f"Inserting model product {product_id}")
+            return product_id
+        except exc.SQLAlchemyError:
+            session.rollback()
     session.close()
 
 

@@ -7,14 +7,11 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 from scipy.stats import norm
 
-# import inversion.utils as utils
 from . import utils
 
-# import inversion.calibration as calibration
 from . import calibration
 import warnings
 
-# import inversion.kernels as kernels
 from . import kernels
 from sklearn.exceptions import ConvergenceWarning
 
