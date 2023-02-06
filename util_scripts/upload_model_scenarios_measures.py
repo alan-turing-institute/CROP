@@ -86,7 +86,7 @@ def add_measure_data(model_id, engine):
     scenarios_df = generate_scenarios(2)
     for i, row in scenarios_df.iterrows():
 
-        if row.scenario_type == "BAU":  # Business As Usual
+        if row.scenario_type == ScenarioType.BAU:  # Business As Usual
             measure_names = [
                 "Mean Temperature (Degree Celcius)",
                 "Upper Bound Temperature (Degree Celcius)",
