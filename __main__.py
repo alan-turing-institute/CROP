@@ -12,10 +12,13 @@ config = Config()
 
 username = "pulumi"
 webapp_docker_url = "turingcropapp/webapp:dev"
-functionapp_docker_url = "turingcropapp/functions:dev"
+ingressfunctions_docker_url = "turingcropapp/functions:dev"
+modelfunctions_docker_url = "turingcropapp/modelfunctions:dev"
 resource_name_prefix = "cropdev"
 sql_server_user = "cropdbadmin"
 sql_db_name = "app_db"
+models_fileshare_name = "models-share"
+ges_data_dir = "/ges-data"
 sql_server_password = config.require("sql-server-password")
 default_user_password = config.require("default-user-password")
 hyper_apikey = config.require("hyper-apikey")
@@ -198,9 +201,16 @@ ingress_app = web.WebApp(
     server_farm_id=app_service_plan.id,
     site_config=web.SiteConfigArgs(
         app_settings=ingress_fa_settings,
-        linux_fx_version=f"DOCKER|{functionapp_docker_url}",
+        linux_fx_version=f"DOCKER|{ingressfunctions_docker_url}",
     ),
     https_only=True,
+)
+
+models_fa_fileshare = storage.FileShare(
+    f"{resource_name_prefix}-models-share",
+    account_name=storage_account.name,
+    resource_group_name=resource_group.name,
+    share_name=models_fileshare_name,
 )
 
 
@@ -215,7 +225,12 @@ models_fa_settings = [
             lambda key: "InstrumentationKey=" + key
         ),
     ),
-    web.NameValuePairArgs(name="FUNCTIONS_EXTENSION_VERSION", value="~4"),
+    web.NameValuePairArgs(name="FUNCTIONS_EXTENSION_VERSION", value="~3"),
+    web.NameValuePairArgs(name="WEBSITES_ENABLE_APP_SERVICE_STORAGE", value="false"),
+    web.NameValuePairArgs(
+        name="DOCKER_REGISTRY_SERVER_URL", value="https://index.docker.io/v1"
+    ),
+    web.NameValuePairArgs(name="DOCKER_ENABLE_CI", value="true"),
     web.NameValuePairArgs(
         name="CROP_SQL_HOST", value=f"{sql_server_name}.postgres.database.azure.com"
     ),
@@ -226,14 +241,9 @@ models_fa_settings = [
     ),
     web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=sql_server_user),
     web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=sql_db_name),
-    web.NameValuePairArgs(name="CROP_DATA_DIR", value="/ges-data"),
-    web.NameValuePairArgs(name="CROP_DELTA_H", value=3),
-    web.NameValuePairArgs(name="CROP_LIGHTING_FACTOR", value=0.7),
-    web.NameValuePairArgs(name="CROP_NUM_DATA_POINTS", value=81),
-    web.NameValuePairArgs(name="ENABLE_ORYX_BUILD", value=True),
-    web.NameValuePairArgs(name="FUNCTIONS_WORKER_RUNTIME", value="python"),
-    web.NameValuePairArgs(name="WEBSITE_CONTENTAZUREFILECONNECTIONSTRING", value=None),
-    web.NameValuePairArgs(name="WEBSITE_CONTENTSHARE", value=None),
+    web.NameValuePairArgs(name="CROP_DATA_DIR", value=ges_data_dir),
+    # web.NameValuePairArgs(name="WEBSITE_CONTENTAZUREFILECONNECTIONSTRING", value=None),
+    # web.NameValuePairArgs(name="WEBSITE_CONTENTSHARE", value=None),
 ]
 models_app = web.WebApp(
     f"{resource_name_prefix}-models-fa",
@@ -242,7 +252,13 @@ models_app = web.WebApp(
     server_farm_id=app_service_plan.id,
     site_config=web.SiteConfigArgs(
         app_settings=models_fa_settings,
-        linux_fx_version=f"DOCKER|{functionapp_docker_url}",
+        linux_fx_version=f"DOCKER|{modelfunctions_docker_url}",
+        azure_storage_accounts=web.AzureStorageInfoValueArgs(
+            account_name=storage_account.name,
+            share_name=models_fa_fileshare.name,
+            mount_path=ges_data_dir,
+            type=web.AzureStorageType.AZURE_FILES,
+        ),
     ),
     https_only=True,
 )
