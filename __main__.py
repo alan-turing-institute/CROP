@@ -204,6 +204,50 @@ ingress_app = web.WebApp(
 )
 
 
+models_fa_settings = [
+    web.NameValuePairArgs(name="AzureWebJobsStorage", value=sa_connection_string),
+    web.NameValuePairArgs(
+        name="APPINSIGHTS_INSTRUMENTATIONKEY", value=app_insights.instrumentation_key
+    ),
+    web.NameValuePairArgs(
+        name="APPLICATIONINSIGHTS_CONNECTION_STRING",
+        value=app_insights.instrumentation_key.apply(
+            lambda key: "InstrumentationKey=" + key
+        ),
+    ),
+    web.NameValuePairArgs(name="FUNCTIONS_EXTENSION_VERSION", value="~4"),
+    web.NameValuePairArgs(
+        name="CROP_SQL_HOST", value=f"{sql_server_name}.postgres.database.azure.com"
+    ),
+    web.NameValuePairArgs(name="CROP_SQL_PASS", value=sql_server_password),
+    web.NameValuePairArgs(name="CROP_SQL_PORT", value="5432"),
+    web.NameValuePairArgs(
+        name="CROP_SQL_USER", value=f"{sql_server_user}@{sql_server_name}"
+    ),
+    web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=sql_server_user),
+    web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=sql_db_name),
+    web.NameValuePairArgs(name="CROP_DATA_DIR", value="/ges-data"),
+    web.NameValuePairArgs(name="CROP_DELTA_H", value=3),
+    web.NameValuePairArgs(name="CROP_LIGHTING_FACTOR", value=0.7),
+    web.NameValuePairArgs(name="CROP_NUM_DATA_POINTS", value=81),
+    web.NameValuePairArgs(name="ENABLE_ORYX_BUILD", value=True),
+    web.NameValuePairArgs(name="FUNCTIONS_WORKER_RUNTIME", value="python"),
+    web.NameValuePairArgs(name="WEBSITE_CONTENTAZUREFILECONNECTIONSTRING", value=None),
+    web.NameValuePairArgs(name="WEBSITE_CONTENTSHARE", value=None),
+]
+models_app = web.WebApp(
+    f"{resource_name_prefix}-models-fa",
+    resource_group_name=resource_group.name,
+    kind="functionapp",
+    server_farm_id=app_service_plan.id,
+    site_config=web.SiteConfigArgs(
+        app_settings=models_fa_settings,
+        linux_fx_version=f"DOCKER|{functionapp_docker_url}",
+    ),
+    https_only=True,
+)
+
+
 firewall_ips = []
 
 
