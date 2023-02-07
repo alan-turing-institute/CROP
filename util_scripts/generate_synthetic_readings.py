@@ -69,6 +69,21 @@ def add_const_offset(df, colname, value):
 
 
 def add_sinusoid(df, colname, amplitude, period, offset=0):
+    """
+    Add a sinusoidal oscillation to a specified column
+
+    Parameters
+    ==========
+    df: pandas.DataFrame containing one or more measurement columns
+    colname: str, name of column to modify values of
+    amplitude: float, amplitude of sinusoidal oscillation
+    period: float, period of oscillation, in seconds
+    offset: float, phase of oscillation, in seconds
+
+    Returns
+    =======
+    df: pandas.DataFrame, same format as input
+    """
     start_time = df.timestamp.values[0]
     offsets = df.timestamp.values - df.timestamp.values[0]
     values = amplitude * np.sin(2 * np.pi * (offsets + offset) / period)
@@ -78,7 +93,7 @@ def add_sinusoid(df, colname, amplitude, period, offset=0):
 
 def add_gaussian_noise(df, colname, mean, std):
     """
-    Add Gaussian offset to each value in the dataframe
+    Add Gaussian offset to each value of a specified column in the dataframe
     """
     offsets = np.random.normal(mean, std, len(df.index))
     df[colname] = df[colname] + offsets
@@ -199,4 +214,54 @@ def generate_airvelocity_readings(sensor_ids=list(range(11, 15))):
         df["sensor_id"] = sensor_id
         dfs.append(df)
     df = pd.concat(dfs)
+    return df
+
+
+def generate_weather(start_time=None, end_time=None):
+    """
+    Generate hourly weather history or forecasts going back/forward 10 days.
+    For now, just include temperature and humidity.
+
+    Parameters
+    ==========
+    start_time, end_time: datetime.datetime.
+                If None, do weather history for past 10 days.
+                Can also set times to do weather forecast
+    """
+    if not end_time:
+        end_time = datetime.now()
+    if not start_time:
+        start_time = end_time - timedelta(days=10)
+    sampling_period = 3600  # 1 hour
+    df = initial_dataframe(
+        start_time,
+        end_time,
+        sampling_period,
+        colnames=["temperature", "relative_humidity"],
+    )
+    df = add_const_offset(df, "temperature", 10.0)
+    df = add_const_offset(df, "relative_humidity", 50.0)
+    # daily oscillation
+    df = add_sinusoid(df, "temperature", 5.0, 60 * 60 * 24)
+    df = add_sinusoid(df, "relative_humidity", -10, 60 * 60 * 24)
+    # yearly oscillation for temperature
+    df = add_sinusoid(df, "temperature", 10.0, 60 * 60 * 24 * 365)
+    # random noise
+    df = add_gaussian_noise(df, "temperature", 0.0, 2.0)
+    df = add_gaussian_noise(df, "relative_humidity", 0.0, 5.0)
+    df = convert_timestamp_column(df)
+    # round times to nearest hour
+    df["timestamp"] = df["timestamp"].round("60min")
+    df["sensor_id"] = 15  # don't think this matters, but column is non-nullable
+    return df
+
+
+def generate_weather_forecast():
+    """
+    Generate hourly weather forecasts going forward 10 days.
+    For now, just include temperature and humidity.
+    """
+    start_time = datetime.now()
+    end_time = start_time + timedelta(days=10)
+    df = generate_weather(start_time, end_time)
     return df

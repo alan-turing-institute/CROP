@@ -25,13 +25,14 @@ from scipy.integrate import solve_ivp
 from pathlib import Path
 
 from inversion import *
-from .dataAccess import getDaysWeather
+from .dataAccess import get_days_weather
 from .config import config
 
 path_conf = config(section="paths")
 cal_conf = config(section="calibration")
 
 lighting_factor = float(cal_conf["lighting_factor"])
+
 
 def climterp_linear(h1, h2, ExternalWeather):
     temp_in = None
@@ -41,7 +42,7 @@ def climterp_linear(h1, h2, ExternalWeather):
     #    temp_in = ExternalWeather[h1:h2+1,1] # +1 to ensure correct end point
     #    rh_in = ExternalWeather[h1:h2+1,2] # +1 to ensure correct end point
     # else:
-    #    ExternalWeather = np.asarray(getDaysWeather(numDays, numRows=numDays*24))
+    #    ExternalWeather = np.asarray(get_days_weather(numDays, numRows=numDays*24))
     #    temp_in = ExternalWeather[h1:h2+1,1].astype(np.float64) # +1 to ensure correct end point
     #    rh_in = ExternalWeather[h1:h2+1,2].astype(np.float64) # +1 to ensure correct end point
 

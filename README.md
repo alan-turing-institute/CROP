@@ -136,6 +136,17 @@ The Azure services for the webapp and the ingress functions listen to updates on
 
 The `main` and `develop` branches are deployed to production and testing versions of the platform, respectively. The former is relatively stable, the latter may be broken in the course of development.
 
+## Developer instructions/running locally
+
+When developing the code for the CROP platform, it may be useful/necessary to run the webapp locally.  To do this:
+* Clone this repo, and change directory to it.
+* (Recommended) create and activate a new Python environment, using conda or venv, or your favourite virtual environment tool.
+* Run `pip install .`.   This will install the contents of the `core/` directory (which contains database-related schema and code, and many of the queries) as a python package called `cropcore`.  It will also install all the dependencies listed in `requirements.txt`.
+* You will need to set several environment variables, containing e.g. database credentials, and API keys.   These will be in a file called `.secrets/crop.sh`.  There is a template file called `.secrets/template_crop.sh` where you can fill in the info as you have it (then copy to `crop.sh`), or you can ask for a copy of this file from an existing developer.
+* Once you have it, run `source .secrets/crop.sh`.
+* Ensure that you have `npm` (node package manager) installed.  To install this on MacOS, you can do `brew install npm`.
+* Change to the `webapp/` directory, and run the command `./run.sh`.   You should then be able to navigate to the webapp by pointing your browser to `http://localhost:5000`.
+
 ## Getting help
 
 If you found a bug or need support, please submit an issue [here](https://github.com/alan-turing-institute/CROP/issues/new).
