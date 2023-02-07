@@ -37,8 +37,11 @@ ENV PATH="/usr/local/bin/chromedriver:${PATH}"
 RUN pip install --upgrade pip
 COPY ingress_functions/requirements.txt /
 RUN pip install -r /requirements.txt
-RUN pip install .
+
 
 # . Copy python code to image
 COPY core /home/site/wwwroot/core
+COPY setup.py /home/site/wwwroot/setup.py
+COPY requirements.txt /home/site/wwwroot/requirements.txt
+RUN cd /home/site/wwwroot; pip install .; cd -;
 COPY ingress_functions/. /home/site/wwwroot
