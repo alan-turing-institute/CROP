@@ -18,15 +18,15 @@ jobs:
       - name: 'Build main'
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          docker build -f Dockerfile_models_functions -t turingcropapp/modelfunctions:prod . ;
+          docker build -f Dockerfile_model_functions -t turingcropapp/modelfunctions:prod . ;
           docker push turingcropapp/modelfunctions:prod ;
       - name: 'Build dev'
         if: ${{ github.ref == 'refs/heads/develop' }}
         run: |
-          docker build -f Dockerfile_models_functions -t turingcropapp/modelfunctions:dev . ;
+          docker build -f Dockerfile_model_functions -t turingcropapp/modelfunctions:dev . ;
           docker push turingcropapp/modelfunctions:dev ;
       - name: 'Build test-actions'
         if: ${{ github.ref == 'refs/heads/test-actions' }}
         run: |
-          docker build -f Dockerfile_models_functions -t turingcropapp/modelfunctions:test-actions . ;
+          docker build -f Dockerfile_model_functions -t turingcropapp/modelfunctions:test-actions . ;
           docker push turingcropapp/modelfunctions:test-actions ;
