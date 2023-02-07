@@ -35,7 +35,7 @@ ENV PATH="/usr/local/bin/chromedriver:${PATH}"
 
 # . Install requirements
 RUN pip install --upgrade pip
-COPY ingress_functions/requirements.txt /
+COPY requirements.txt /
 RUN pip install -r /requirements.txt
 
 
