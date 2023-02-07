@@ -1,0 +1,26 @@
+FROM mcr.microsoft.com/azure-functions/python:3.0-python3.8
+
+ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
+    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+
+# Install essential packages
+RUN apt-get update \
+    && apt-get install -y \
+        build-essential \
+        cmake \
+        git \
+        wget \
+        unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install requirements
+RUN pip install --upgrade pip
+COPY requirements.txt /
+RUN pip install -r /requirements.txt
+
+# Copy python code to image
+COPY core /home/site/wwwroot/core
+COPY setup.py /home/site/wwwroot/setup.py
+COPY requirements.txt /home/site/wwwroot/requirements.txt
+RUN cd /home/site/wwwroot; pip install .; cd -;
+COPY models/ges/. /home/site/wwwroot

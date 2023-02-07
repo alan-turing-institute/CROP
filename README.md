@@ -111,6 +111,7 @@ All of `tests`, `webapp`, `ingress_functions`, `util_scripts`, and `models` impo
 
 The repository root also has three Docker files:
 * `Dockerfile_ingress_functions` builds a container that holds all the functions in `ingress_functions`, in an environment to run them on an Azure function app.
+* `Dockerfile_models_functions` builds a similar container that holds the functions in `models`, for running the predictive models on an Azure function app.
 * `Dockerfile_webapp` builds the webapp, ready to be deployed as an Azure app service. It builds on `webappbase`.
 * `Dockerfile_webappbase` is a container that installs some of the dependencies needed by the webapp.
 It's separated from `webapp` to improve build times, and shouldn't need to be rebuilt except in rare circumstances.
