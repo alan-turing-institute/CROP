@@ -1,0 +1,32 @@
+name: "Build and push model functions to DockerHub"
+
+on:
+  push:
+    branches: [main, develop, test-actions]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - uses: actions/checkout@v3
+      - name: 'Build main'
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          docker build -f Dockerfile_model_functions -t turingcropapp/modelfunctions:prod . ;
+          docker push turingcropapp/modelfunctions:prod ;
+      - name: 'Build dev'
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        run: |
+          docker build -f Dockerfile_model_functions -t turingcropapp/modelfunctions:dev . ;
+          docker push turingcropapp/modelfunctions:dev ;
+      - name: 'Build test-actions'
+        if: ${{ github.ref == 'refs/heads/test-actions' }}
+        run: |
+          docker build -f Dockerfile_model_functions -t turingcropapp/modelfunctions:test-actions . ;
+          docker push turingcropapp/modelfunctions:test-actions ;

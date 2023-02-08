@@ -25,9 +25,13 @@ from .parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from .parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from scipy.integrate import solve_ivp
 from .config import config
+from .dataAccess import get_days_weather, get_days_weather_forecast
 
-from inversion import *
-from .dataAccess import getDaysWeather, getDaysWeatherForecast
+# import will be different depending on where we run from
+try:
+    from ..inversion import *
+except ValueError:
+    from inversion import *
 
 path_conf = config(section="paths")
 
@@ -55,7 +59,6 @@ def TimestampToDatetime(d):
     Uses datetime module to convert epoch to Python datetime (UTC)
     """
     return datetime.datetime.utcfromtimestamp(d)
-
 
 
 def StringToDatetime(d):
@@ -88,7 +91,7 @@ def climterp_linear(h1, h2, numDays, filepath_weather=None):
         rh_in = rh_in.to_numpy().astype(np.float64)
     else:
         ExternalWeather = np.asarray(
-            getDaysWeather(numDays + 1, numRows=(numDays + 1) * 24)
+            get_days_weather(numDays + 1, numRows=(numDays + 1) * 24)
         )
         timestamp = ExternalWeather[:, 0]
         temp_in = ExternalWeather[:, 1].astype(
@@ -163,7 +166,7 @@ def climterp_forecast_linear(numDays=2, filepath_weather_forecast=None):
         rh_in = ExternalWeather.RH_e
         rh_in = rh_in.to_numpy().astype(np.float64)
     else:
-        ExternalWeather = getDaysWeatherForecast(numDays)
+        ExternalWeather = get_days_weather_forecast(numDays)
         ExternalWeather = np.asarray(ExternalWeather)
         timestamp = ExternalWeather[:, 0]
         temp_in = ExternalWeather[:, 1].astype(

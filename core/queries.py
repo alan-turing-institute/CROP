@@ -4,9 +4,9 @@ Each function return a SQLAlchemy Query object. Turning these into subqueries or
 the responsibility of the caller.
 """
 from sqlalchemy import and_, case, func
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, Query
 
-from core.structure import (
+from .structure import (
     BatchClass,
     BatchEventClass,
     CropTypeClass,
@@ -167,7 +167,9 @@ def trh_with_vpd(session):
 def trh_sensors_by_zone(session, zone_name, latest_trh_locations_q=None):
     """Query with one column, `id`, for the ids of all the sensors in zone zone_name."""
     if latest_trh_locations_q is None:
-        latest_trh_locations_q = latest_trh_locations(session)
+        latest_trh_locations_q = latest_trh_locations(session).subquery()
+    elif isinstance(latest_trh_locations_q, Query):
+        latest_trh_locations_q = latest_trh_locations_q.subquery()
     query = (
         session.query(SensorClass.id)
         .join(
@@ -340,7 +342,7 @@ def batch_list_with_trh(session):
     and T&RH growing and propagation conditions.
 
     The added columns are called closest_sensor_name, sensor_location_summary,
-    avg_grow_temperature avg_grow_humidity, avg_grow_vpd, avg_propagate_temperature,
+    avg_grow_temperature, avg_grow_humidity, avg_grow_vpd, avg_propagate_temperature,
     avg_propagate_humidity, and avg_propagate_vpd.
     """
     batch_list_sq = batch_list(session).subquery("batch_list")
@@ -478,6 +480,7 @@ def batch_list(session):
             transfer_events_sq.c.event_time.label("transfer_time"),
             transfer_events_sq.c.next_action_time.label("expected_harvest_time"),
             harvest_events_sq.c.event_time.label("harvest_time"),
+            transfer_events_sq.c.next_action_time.label("expected_harvest_time"),
             locations_sq.c.id.label("location_id"),
             locations_sq.c.zone,
             locations_sq.c.aisle,

@@ -49,6 +49,7 @@ from .constants import (
     WEATHER_TABLE_NAME,
     WEATHER_FORECAST_TABLE_NAME,
     MODEL_TABLE_NAME,
+    MODEL_SCENARIO_TABLE_NAME,
     MODEL_MEASURE_TABLE_NAME,
     MODEL_RUN_TABLE_NAME,
     MODEL_PRODUCT_TABLE_NAME,
@@ -78,6 +79,51 @@ class ModelClass(BASE):
     author = Column(String(100), nullable=False, unique=False)
 
 
+class ScenarioType(enum.Enum):
+    """
+    Distinguish between the "Business As Usual" scenario, which will have
+    measures for upper lower bounds as well as the mean, and "Test" scenarios,
+    where we will only have measures for the mean.
+    """
+
+    BAU = 0
+    Test = 1
+
+
+class ModelScenarioClass(BASE):
+    """
+    This class allows us to vary some parameters in a Model.
+    If we were to generalize this, we could have the variables and their
+    values in separate tables, but lets keep it simple for now.
+    """
+
+    __tablename__ = MODEL_SCENARIO_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    model_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    ventilation_rate = Column(Float, nullable=False)
+    num_dehumidifiers = Column(Integer, nullable=False)
+    lighting_shift = Column(Float, nullable=False)
+    lighting_on_duration = Column(Float, nullable=True)
+    scenario_type = Column(Enum(ScenarioType), nullable=False)
+    # arguments
+    __table_args__ = (
+        UniqueConstraint(
+            "model_id",
+            "ventilation_rate",
+            "num_dehumidifiers",
+            "lighting_shift",
+            "lighting_on_duration",
+            "scenario_type",
+        ),
+    )
+
+
 class ModelMeasureClass(BASE):
     """
     This class contains the names of all columns in models
@@ -87,8 +133,15 @@ class ModelMeasureClass(BASE):
 
     # columns
     id = Column(Integer, primary_key=True)
-    measure_name = Column(String(100), nullable=False, unique=True)
+    measure_name = Column(String(100), nullable=False, unique=False)
     measure_description = Column(String(100), nullable=True, unique=False)
+    scenario_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_SCENARIO_TABLE_NAME, ID_COL_NAME)),
+        nullable=True,
+    )
+    # arguments
+    __table_args__ = (UniqueConstraint("measure_name", "scenario_id"),)
 
 
 class ModelRunClass(BASE):
@@ -114,34 +167,13 @@ class ModelRunClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
 
     # arguments
-    __table_args__ = (UniqueConstraint("sensor_id", "model_id"),)
-
-
-class ModelValueClass(BASE):
-    """
-    This class contains the outputs of model runs
-    """
-
-    __tablename__ = MODEL_VALUE_TABLE_NAME
-
-    # columns
-    id = Column(Integer, primary_key=True)
-    product_id = Column(
-        Integer,
-        ForeignKey("{}.{}".format(MODEL_PRODUCT_TABLE_NAME, ID_COL_NAME)),
-        nullable=False,
-    )
-    prediction_value = Column(Float, nullable=False)
-    prediction_index = Column(Integer, nullable=False)
-    measure_description = Column(String(100), nullable=True, unique=False)
-
-    # arguments
-    __table_args__ = (UniqueConstraint("product_id"),)
+    __table_args__ = (UniqueConstraint("sensor_id", "model_id", "time_forecast"),)
 
 
 class ModelProductClass(BASE):
     """
-    This class contains the relationships of all model outputs
+    This class contains the relationships of all model outputs.
+    There will be one row in this table for every (run x measure)
     """
 
     __tablename__ = MODEL_PRODUCT_TABLE_NAME
@@ -161,6 +193,28 @@ class ModelProductClass(BASE):
 
     # arguments
     __table_args__ = (UniqueConstraint("run_id", "measure_id"),)
+
+
+class ModelValueClass(BASE):
+    """
+    This class contains the outputs of model runs.
+    Every ModelProduct (i.e. run x measure) will have a set of ModelValues
+    corresponding to the value of that measure at each timepoint.
+    """
+
+    __tablename__ = MODEL_VALUE_TABLE_NAME
+
+    # columns
+    id = Column(Integer, primary_key=True)
+    product_id = Column(
+        Integer,
+        ForeignKey("{}.{}".format(MODEL_PRODUCT_TABLE_NAME, ID_COL_NAME)),
+        nullable=False,
+    )
+    prediction_value = Column(Float, nullable=False)
+    prediction_index = Column(Integer, nullable=False)
+    # arguments
+    __table_args__ = (UniqueConstraint("product_id", "prediction_index"),)
 
 
 class TypeClass(BASE):
@@ -528,9 +582,13 @@ class UserClass(BASE, UserMixin):
             if hasattr(value, "__iter__") and not isinstance(value, str):
                 # the ,= unpack of a singleton fails PEP8 (travis flake8 test)
                 value = value[0]
-            if prop == "password":
-                value = hashpw(value.encode("utf8"), gensalt())
             setattr(self, prop, value)
+
+    def __setattr__(self, prop, value):
+        """Like setattr, but if the property we are setting is the password, hash it."""
+        if prop == "password":
+            value = hashpw(value.encode("utf8"), gensalt())
+        super().__setattr__(prop, value)
 
     def __repr__(self):
         """

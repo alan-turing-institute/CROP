@@ -3,13 +3,22 @@ from flask_login import login_required
 
 
 from app.users import blueprint
-from core.structure import UserClass
-from core import utils
+from cropcore.structure import SQLA as db
+from cropcore.structure import UserClass
+from cropcore import utils
 
 
-@blueprint.route("/users", methods=["GET"])
+@blueprint.route("/users", methods=["GET", "POST"])
 @login_required
 def users():
+    if request.method == "POST":
+        # TODO This should now use utils.delete_user. The reason this is a tiny bit
+        # non-trivial is that that one takes an email and a password, this one takes an
+        # id.
+        user_id = request.values.get("user_id")
+        user = db.session.get(UserClass, user_id)
+        db.session.delete(user)
+        db.session.commit()
     users = UserClass.query.all()
     return render_template("users.html", users=users)
 

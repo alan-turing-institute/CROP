@@ -5,13 +5,11 @@ RUN apt update; apt install -y nginx
 COPY webapp/server_config/nginx.conf.template nginx.conf.template
 RUN sed "s/<PATH_TO_CROP>//g" nginx.conf.template > /etc/nginx/nginx.conf
 # Upgrading python and installing python libraries
-COPY requirements.txt /
 RUN apt update
 RUN apt install -y python3.8 python3.8-dev libpython3.8 python3.8-venv
 RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.8 /usr/bin/python3
 RUN ls -l /usr/bin | grep python
 RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install -r /requirements.txt && rm -rf ~/.cache/pip /requirements.txt
 
 # install nodejs/npm (requires first installing CURL
 RUN apt-get install -y curl
@@ -29,6 +27,11 @@ ADD webapp webapp
 
 # Adding secrets
 ADD .secrets .secrets
+
+# Use setup.py to install cropcore
+ADD setup.py setup.py
+ADD requirements.txt requirements.txt
+RUN python3 -m pip install .
 
 # launch the webapp
 WORKDIR /CROP/webapp

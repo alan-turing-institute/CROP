@@ -272,3 +272,75 @@ def create_user(username, email, password):
     except exc.SQLAlchemyError as e:
         db.session.rollback()
         return False, str(e)
+
+
+def insert_to_db_from_df(engine, df, DbClass):
+    """
+    Read a CSV file into a pandas dataframe, and then upload to
+    database table
+
+    Parameters
+    ==========
+    engine: SQL engine object
+    df:pandas.DataFrame, input data
+    DbClass:class from core.structure.py
+    """
+    assert not df.empty
+
+    # Creates/Opens a new connection to the db and binds the engine
+    session = session_open(engine)
+
+    # Check if table is empty and bulk inserts if it is
+    first_entry = session.query(DbClass).first()
+
+    if first_entry is None:
+        session.bulk_insert_mappings(DbClass, df.to_dict(orient="records"))
+        session_close(session)
+        assert session.query(DbClass).count() == len(df.index)
+    else:
+        records = df.to_dict(orient="records")
+        for record in records:
+            try:
+                session.add(DbClass(**record))
+                session.commit()
+            except exc.SQLAlchemyError as e:
+                session.rollback()
+    session_close(session)
+    print(f"Inserted {len(df.index)} rows to table {DbClass.__tablename__}")
+
+
+def delete_user(username, email):
+    """Delete the user with this username and email.
+
+    Return (True, user_id) if successful, (False, error_message) if not.
+    """
+    try:
+        user = UserClass.query.filter_by(username=username, email=email).first()
+        db.session.delete(user)
+        db.session.flush()
+        db.session.commit()
+        return True, user.id
+    except exc.SQLAlchemyError as e:
+        db.session.rollback()
+        return False, str(e)
+
+
+def change_user_password(username, email, password):
+    """Change the password of a given user.
+
+    Return (True, user_id) if successful, (False, error_message) if not.
+    """
+    try:
+        user = UserClass.query.filter_by(username=username, email=email).first()
+        old_hashed_password = user.password
+        user.password = password
+        new_hashed_password = user.password
+        if old_hashed_password != new_hashed_password:
+            db.session.flush()
+            db.session.commit()
+            return True, user.id
+        else:
+            return False, f"Password already up-to-date for {username}"
+    except exc.SQLAlchemyError as e:
+        db.session.rollback()
+        return False, str(e)

@@ -6,8 +6,15 @@ from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 
-from core.structure import SQLA as db
-from core.structure import UserClass
+from cropcore.constants import (
+    DEFAULT_USER_USERNAME,
+    DEFAULT_USER_EMAIL,
+    DEFAULT_USER_PASS,
+)
+from cropcore.structure import SQLA as db
+from cropcore.structure import UserClass
+from cropcore.utils import change_user_password, create_user, delete_user
+
 
 login_manager = LoginManager()
 
@@ -107,6 +114,23 @@ def apply_themes(app):
         return url_for(endpoint, **values)
 
 
+def add_default_user(app):
+    """Ensure that there's a default user from CROP, with the right credentials."""
+    with app.app_context():
+        if DEFAULT_USER_PASS is None:
+            delete_user(username=DEFAULT_USER_USERNAME, email=DEFAULT_USER_EMAIL)
+        else:
+            user_info = {
+                "username": DEFAULT_USER_USERNAME,
+                "email": DEFAULT_USER_EMAIL,
+                "password": DEFAULT_USER_PASS,
+            }
+            success, _ = create_user(**user_info)
+            if not success:
+                # Presumably the user exists already, so change their password.
+                change_user_password(**user_info)
+
+
 def create_app(config, selenium=False):
     app = Flask(__name__, static_folder="base/static")
     app.config.from_object(config)
@@ -120,4 +144,5 @@ def create_app(config, selenium=False):
     configure_logs(app)
     apply_themes(app)
     CORS(app)
+    add_default_user(app)
     return app

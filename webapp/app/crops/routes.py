@@ -10,9 +10,9 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.crops import blueprint
-from core import queries
-from core.structure import SQLA as db
-from core.utils import (
+from cropcore import queries
+from cropcore.structure import SQLA as db
+from cropcore.utils import (
     download_csv,
     parse_date_range_argument,
 )
@@ -95,8 +95,7 @@ def harvest_list():
         .order_by(subquery.c.harvest_time.desc())
     )
     df = pd.read_sql(query.statement, query.session.bind)
-
-    if "grow_time" in df:
+    if "grow_time" in df and len(df["grow_time"]) > 0:
         df["grow_time"] = df["grow_time"].round("s")
     results_arr = df.to_dict("records")
 

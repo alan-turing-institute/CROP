@@ -15,10 +15,10 @@ from sqlalchemy import and_
 
 from app.home import blueprint
 
-from core.constants import CONST_TIMESTAMP_FORMAT
-from core import queries
-from core.structure import SQLA as db
-from core.structure import (
+from cropcore.constants import CONST_TIMESTAMP_FORMAT
+from cropcore import queries
+from cropcore.structure import SQLA as db
+from cropcore.structure import (
     LocationClass,
     ReadingsAranetTRHClass,
     SensorClass,
@@ -381,8 +381,10 @@ def get_warnings(time_from):
         )
     )
     warnings = pd.read_sql(query.statement, query.session.bind)
-    warnings["time_created"] = warnings["time_created"].dt.tz_localize(dt.timezone.utc)
     if len(warnings) > 0:
+        warnings["time_created"] = warnings["time_created"].dt.tz_localize(
+            dt.timezone.utc
+        )
         warnings["description"] = warnings.apply(
             lambda row: row["short_description"].format(
                 sensor_id=row["sensor_id"],
