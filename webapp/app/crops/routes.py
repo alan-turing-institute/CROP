@@ -10,9 +10,9 @@ import pandas as pd
 from sqlalchemy import and_
 
 from app.crops import blueprint
-from core import queries
-from core.structure import SQLA as db
-from core.utils import (
+from cropcore import queries
+from cropcore.structure import SQLA as db
+from cropcore.utils import (
     download_csv,
     parse_date_range_argument,
 )

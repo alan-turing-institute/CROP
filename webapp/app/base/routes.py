@@ -10,9 +10,9 @@ from app import login_manager
 from app.base import blueprint
 from app.base.forms import LoginForm, CreateAccountForm
 
-from core.structure import SQLA as db
-from core.structure import UserClass
-from core import utils
+from cropcore.structure import SQLA as db
+from cropcore.structure import UserClass
+from cropcore import utils
 
 
 @blueprint.route("/")

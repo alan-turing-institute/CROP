@@ -6,32 +6,33 @@ import datetime as dt
 import json
 import logging
 
-from flask import render_template
+from flask import render_template, request
 from flask_login import login_required
 import pandas as pd
 from sqlalchemy import and_
 
 from app.predictions import blueprint
-from core.constants import (
+from cropcore.constants import (
     CONST_TIMESTAMP_FORMAT,
     ARIMA_MODEL_ID,
     BSTS_MODEL_ID,
     GES_MODEL_ID,
     GES_SENSOR_ID,
 )
-from core import queries
-from core.structure import (
+from cropcore import queries
+from cropcore.structure import (
     ModelClass,
     ModelMeasureClass,
     ModelRunClass,
     ModelValueClass,
     ModelProductClass,
+    ModelScenarioClass,
     ReadingsAranetTRHClass,
     SensorLocationClass,
     LocationClass,
     SensorClass,
 )
-from core.structure import SQLA as db
+from cropcore.structure import SQLA as db
 
 
 def aranet_trh_query(dt_from, dt_to):
@@ -84,8 +85,9 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
         df: a df with the queried data
     """
     logging.info(
-        "Calling arima model with parameters %s %s"
+        "Calling model %i with parameters %s %s"
         % (
+            model_id,
             dt_from.strftime(CONST_TIMESTAMP_FORMAT),
             dt_to.strftime(CONST_TIMESTAMP_FORMAT),
         )
@@ -115,6 +117,10 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
         ModelProductClass.run_id,
         ModelRunClass.time_created,
         ModelRunClass.time_forecast,
+        ModelScenarioClass.ventilation_rate,
+        ModelScenarioClass.num_dehumidifiers,
+        ModelScenarioClass.lighting_shift,
+        ModelScenarioClass.scenario_type,
     ).filter(
         and_(
             ModelClass.id == model_id,
@@ -126,11 +132,12 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
             ModelRunClass.sensor_id == sensor_id,
             ModelRunClass.time_created >= dt_from,
             ModelRunClass.time_created <= dt_to,
+            ModelMeasureClass.scenario_id == ModelScenarioClass.id,
         )
     )
 
     df = pd.read_sql(query.statement, query.session.bind)
-
+    df["scenario_type"] = df["scenario_type"].astype(str)
     logging.info("Total number of records found: %d" % (len(df.index)))
 
     if df.empty:
@@ -242,8 +249,20 @@ def json_temp_ges(df):
     Function to return the JSON for the temperature related charts in the GES
     model run.
     """
+
     json_str = (
-        df.groupby(["sensor_id", "measure_name", "run_id"], as_index=True)
+        df.groupby(
+            [
+                "sensor_id",
+                "measure_name",
+                "run_id",
+                "ventilation_rate",
+                "num_dehumidifiers",
+                "lighting_shift",
+                "scenario_type",
+            ],
+            as_index=True,
+        )
         .apply(
             lambda x: x[
                 [
@@ -263,7 +282,7 @@ def json_temp_ges(df):
 
 
 def recent_arima_sensors(timerange=dt.timedelta(days=5)):
-    """Get the IDs of sensors for which there has been an Ariam run in the last some
+    """Get the IDs of sensors for which there has been an Arima run in the last some
     time.
     """
     dt_from = dt.datetime.now() - timerange
@@ -287,7 +306,7 @@ def arima_template():
     for sensor_id in sensor_ids:
         # Model number 1 is Arima, 2 is BSTS, 3 is for GES.
         df_arima = model_query(dt_from, dt_to, ARIMA_MODEL_ID, sensor_id)
-        if len(df_arima) > 0:
+        if df_arima is not None and len(df_arima) > 0:
             json_arima = json_temp_arima(df_arima)
             # Get TRH data for the relevant period
             times = pd.to_datetime(df_arima["timestamp"])
@@ -332,7 +351,6 @@ def ges_template():
     else:
         json_ges = {}
         json_trh = {}
-
     return render_template(
         "ges.html",
         json_ges_f=json_ges,

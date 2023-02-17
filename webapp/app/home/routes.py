@@ -15,10 +15,10 @@ from sqlalchemy import and_
 
 from app.home import blueprint
 
-from core.constants import CONST_TIMESTAMP_FORMAT
-from core import queries
-from core.structure import SQLA as db
-from core.structure import (
+from cropcore.constants import CONST_TIMESTAMP_FORMAT
+from cropcore import queries
+from cropcore.structure import SQLA as db
+from cropcore.structure import (
     LocationClass,
     ReadingsAranetTRHClass,
     SensorClass,

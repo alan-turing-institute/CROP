@@ -6,10 +6,15 @@ from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 
-from core.constants import DEFAULT_USER_USERNAME, DEFAULT_USER_EMAIL, DEFAULT_USER_PASS
-from core.structure import SQLA as db
-from core.structure import UserClass
-from core.utils import change_user_password, create_user, delete_user
+from cropcore.constants import (
+    DEFAULT_USER_USERNAME,
+    DEFAULT_USER_EMAIL,
+    DEFAULT_USER_PASS,
+)
+from cropcore.structure import SQLA as db
+from cropcore.structure import UserClass
+from cropcore.utils import change_user_password, create_user, delete_user
+
 
 login_manager = LoginManager()
 

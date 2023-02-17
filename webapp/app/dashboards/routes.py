@@ -21,15 +21,15 @@ from sqlalchemy import and_
 
 from app.dashboards import blueprint
 
-from core import queries
-from core.utils import (
+from cropcore import queries
+from cropcore.utils import (
     download_csv,
     parse_date_range_argument,
     query_result_to_array,
 )
 
-from core.structure import SQLA as db
-from core.structure import (
+from cropcore.structure import SQLA as db
+from cropcore.structure import (
     SensorClass,
     TypeClass,
     ReadingsAegisIrrigationClass,
@@ -38,7 +38,7 @@ from core.structure import (
     ReadingsAranetTRHClass,
     ReadingsAranetAirVelocityClass,
 )
-from core.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
+from cropcore.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
 
 
 # Temperature constants

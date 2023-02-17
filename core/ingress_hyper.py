@@ -129,7 +129,6 @@ def get_api_sensor_data(api_key, dt_from, dt_to, columns):
         error: error message
         data_df_dict: dictionary of {aranet_pro_id (str): DataFrame of sensor_data}
     """
-
     success = True
     error = ""
     data_df_dict = {}
@@ -153,7 +152,7 @@ def get_api_sensor_data(api_key, dt_from, dt_to, columns):
         "resolution": "10m",
         "metadata": "true",
     }
-    response = requests.get(url, headers=headers, params=params, verify=False)
+    response = requests.get(url, headers=headers, params=params)
 
     if response.status_code != 200:
         error = "Request's [%s] status code: %d" % (url[:70], response.status_code)
@@ -169,7 +168,11 @@ def get_api_sensor_data(api_key, dt_from, dt_to, columns):
     for value_dict in value_dicts:
         hyper_id = value_dict["device_id"]
         aranet_pro_id = device_mapping[hyper_id]["vendor_device_id"]
+        device_name = device_mapping[hyper_id]["name"]
         metric_name = value_dict["metric"]
+        # TODO This is ad hoc, how do we do this more robustly?
+        if "aegis" in device_name.lower():
+            aranet_pro_id = "AegisII"
         # what if we don't have an aranet_pro_id for this sensor?
         if not aranet_pro_id:
             # it could be AegisII irrigation data
@@ -193,17 +196,24 @@ def get_api_sensor_data(api_key, dt_from, dt_to, columns):
     return success, error, data_df_dict
 
 
-def _get_sensor_id(aranet_pro_id, engine):
-    """Get the CROP sensor ID, from the CROP database, based on the Aranet Pro ID."""
+def _get_sensor_id_and_type(aranet_pro_id, engine):
+    """Get the CROP sensor ID and sensor type from the CROP database, based on the
+    Aranet Pro ID.
+    """
     session = session_open(engine)
-    query = session.query(
-        SensorClass.id,
-    ).filter(SensorClass.aranet_pro_id == aranet_pro_id)
-    sensor_id = session.execute(query).fetchone()
-    if isinstance(sensor_id, Iterable):
-        sensor_id = sensor_id[0]
+    query = session.query(SensorClass.id, TypeClass.sensor_type).filter(
+        and_(
+            SensorClass.aranet_pro_id == aranet_pro_id,
+            SensorClass.type_id == TypeClass.id,
+        )
+    )
+    result = session.execute(query).fetchone()
+    if result is None:
+        sensor_id, sensor_type = None, None
+    else:
+        sensor_id, sensor_type = result
     session_close(session)
-    return sensor_id
+    return sensor_id, sensor_type
 
 
 def import_hyper_metric(
@@ -252,9 +262,17 @@ def import_hyper_metric(
         logging.info(f"Writing data for sensor with Aranet Pro ID {aranet_pro_id}")
         # Find the sensor_id that CROP uses for this sensor, and fetch existing data for
         # this sensor.
-        sensor_id = _get_sensor_id(aranet_pro_id, engine)
+        sensor_id, this_sensor_type = _get_sensor_id_and_type(aranet_pro_id, engine)
         if sensor_id is None:
             logging.info(f"Sensor {aranet_pro_id} does not exist in the CROP database")
+            continue
+        if this_sensor_type != sensor_type:
+            msg = (
+                f"While requesting data for {sensor_type} sensors,"
+                f" also received data for sensor {sensor_id}"
+                f" that is of type {this_sensor_type}."
+            )
+            logging.warning(msg)
             continue
 
         session = session_open(engine)
