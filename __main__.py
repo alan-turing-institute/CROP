@@ -1,5 +1,6 @@
 import hashlib
 
+import pulumi_azure as azure_legacy
 import pulumi_azure_native.dbforpostgresql as postgresql
 import pulumi_azure_native.insights as insights
 import pulumi_azure_native.resources as resource
@@ -18,7 +19,7 @@ resource_name_prefix = "cropdev"
 sql_server_user = "cropdbadmin"
 sql_db_name = "app_db"
 models_fileshare_name = "models-share"
-ges_data_dir = "/ges-data"
+ges_data_dir = "ges-data"
 sql_server_password = config.require("sql-server-password")
 default_user_password = config.require("default-user-password")
 hyper_apikey = config.require("hyper-apikey")
@@ -213,6 +214,18 @@ models_fa_fileshare = storage.FileShare(
     share_name=models_fileshare_name,
 )
 
+# Note that this uses an resource type from the old pulumi_azure package, rather than
+# the new pulumi_azure_native, unlike all the other resources. The new package doesn't
+# seem to (yet?) have equivalent functionality.
+# TODO Is the file share even getting used by GES? There seems to be nothing there, but
+# I don't know where GES is writing its files.
+models_share_dir = azure_legacy.storage.ShareDirectory(
+    f"{resource_name_prefix}-models-share-dir",
+    share_name=models_fa_fileshare.name,
+    storage_account_name=storage_account.name,
+    name=ges_data_dir,
+)
+
 
 models_fa_settings = [
     web.NameValuePairArgs(name="AzureWebJobsStorage", value=sa_connection_string),
@@ -241,7 +254,7 @@ models_fa_settings = [
     ),
     web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=sql_server_user),
     web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=sql_db_name),
-    web.NameValuePairArgs(name="CROP_DATA_DIR", value=ges_data_dir),
+    web.NameValuePairArgs(name="CROP_DATA_DIR", value=f"/{ges_data_dir}"),
     # web.NameValuePairArgs(name="WEBSITE_CONTENTAZUREFILECONNECTIONSTRING", value=None),
     # web.NameValuePairArgs(name="WEBSITE_CONTENTSHARE", value=None),
 ]
@@ -256,7 +269,7 @@ models_app = web.WebApp(
         azure_storage_accounts=web.AzureStorageInfoValueArgs(
             account_name=storage_account.name,
             share_name=models_fa_fileshare.name,
-            mount_path=ges_data_dir,
+            mount_path=models_share_dir.name,
             type=web.AzureStorageType.AZURE_FILES,
         ),
     ),
