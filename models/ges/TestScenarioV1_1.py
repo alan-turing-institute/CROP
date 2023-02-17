@@ -210,8 +210,9 @@ def setScenarios(
         ScenEval[:, 0, 3 + i] = row.ventilation_rate
         ScenEval[:, 1, 3 + i] = np.tile(ias_day, 4)
         ScenEval[:, 2, 3 + i] = int(
-            row.num_dehumidifiers / 2
-        )  # ndh input from slider (integer) (/2 as half farm modelled)
+            row.num_dehumidifiers
+        )  # ndh input from slider (integer) corresponding to
+           # number of dehumidifiers in the half-farm we are simulating
         ScenEval[:, 3, 3 + i] = row.lighting_shift
         pass
 
