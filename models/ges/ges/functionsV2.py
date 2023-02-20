@@ -20,10 +20,6 @@ from .parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
 from .parameters import T_ss, T_al
 from .parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from .parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
-<<<<<<< HEAD
-=======
-from .parameters import ndh
->>>>>>> 7c1750e6f3923d23661a72fb192b98413191b541
 from scipy.integrate import solve_ivp
 from pathlib import Path
 
@@ -35,10 +31,7 @@ path_conf = config(section="paths")
 cal_conf = config(section="calibration")
 
 lighting_factor = float(cal_conf["lighting_factor"])
-<<<<<<< HEAD
 ndh = float(cal_conf["ndh"])
-=======
->>>>>>> 7c1750e6f3923d23661a72fb192b98413191b541
 
 def climterp_linear(h1, h2, ExternalWeather):
     temp_in = None
@@ -227,7 +220,7 @@ def model(t, z, climate, ACHvec, iasvec, daynum, h1, h2, LatestTimeHourValue):
     (QV_i_v, QP_i_v) = convection(d_v, A_v_exp, T_i, T_v, ias)
 
     # Convection internal air -> mat
-    A_m_exp = A_m * (1 - AF_g)
+    A_m_exp = A_m * lighting_factor * (1 - AF_g)
     (QV_i_m, QP_i_m) = convection(d_m, A_m_exp * 0.6, T_i, T_m, ias)
 
     # QP_i_m non-zero so calculate here
@@ -252,6 +245,23 @@ def model(t, z, climate, ACHvec, iasvec, daynum, h1, h2, LatestTimeHourValue):
     # Convection internal air -> tray
 
     (QV_i_p, QP_i_p) = convection(d_p, A_p, T_i, T_p, ias)
+
+    # QP_i_p potentially non-zero if lights not fully on so calculate here
+    g = 9.81
+    nu = 15.1e-6
+    lam = 0.025
+    Gr = (g * d_p**3) / (T_i * nu**2) * abs(T_i - T_p)
+    Re = ias * d_p / nu
+    (Nu, Sh) = lamorturb(Gr, Re)
+
+    QP_i_p = (
+        A_p*(1-lighting_factor)
+        * H_fg
+        / (rho_i * c_i)
+        * (Sh / Le)
+        * (lam / d_m)
+        * (C_w - sat_conc(T_p))
+    )
 
     ## Radiation
     # Radiation cover to floor
