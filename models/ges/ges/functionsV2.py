@@ -20,6 +20,10 @@ from .parameters import lam_c, l_c, rhod_c, c_c, lam_f, l_f, lam_p, l_m
 from .parameters import T_ss, T_al
 from .parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from .parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
+<<<<<<< HEAD
+=======
+from .parameters import ndh
+>>>>>>> 7c1750e6f3923d23661a72fb192b98413191b541
 from scipy.integrate import solve_ivp
 from pathlib import Path
 
@@ -31,7 +35,10 @@ path_conf = config(section="paths")
 cal_conf = config(section="calibration")
 
 lighting_factor = float(cal_conf["lighting_factor"])
+<<<<<<< HEAD
 ndh = float(cal_conf["ndh"])
+=======
+>>>>>>> 7c1750e6f3923d23661a72fb192b98413191b541
 
 def climterp_linear(h1, h2, ExternalWeather):
     temp_in = None
