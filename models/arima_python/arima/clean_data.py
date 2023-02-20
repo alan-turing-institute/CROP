@@ -282,14 +282,14 @@ def clean_data(env_data, energy_data):
             (the observations are averaged based on the proximity of the timestamp
             to the full hour - use the "mins_from_the_hour" parameter in "config.ini"
             to specify what timestamps to average together). The processed data is
-            time-ordered.
+            time-ordered. The dataframes are indexed by timestamp.
         energy_data: a pandas dataframe containing processed electricity consumption
             for each sensor. "EnergyCC" refers to electricity consumption at Clapham
             Common, and EnergyCP refers to electricity consumption at Carpenter's Place.
             Based on the timestamp of the observations, standard averages and centered
             moving averages are returned (the latter have the subscript "_MA").
             The data is time-ordered. Only timestamps contained in the processed
-            "env_data" are returned.
+            "env_data" are returned. The dataframe is indexed by timestamp.
     """
     if processing_params["mins_from_the_hour"] != 15:
         logger.warning(
@@ -313,4 +313,10 @@ def clean_data(env_data, energy_data):
         energy_data,
         how="left",
     )
+    # set the timestamp column of the dataframes to index
+    keys = list(env_data.keys())
+    for key in keys:
+        env_data[key].set_index("timestamp", inplace=True)
+    energy_data.set_index("timestamp", inplace=True)
+
     return env_data, energy_data
