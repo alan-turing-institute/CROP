@@ -274,6 +274,41 @@ def create_user(username, email, password):
         return False, str(e)
 
 
+def insert_to_db_from_df(engine, df, DbClass):
+    """
+    Read a CSV file into a pandas dataframe, and then upload to
+    database table
+
+    Parameters
+    ==========
+    engine: SQL engine object
+    df:pandas.DataFrame, input data
+    DbClass:class from core.structure.py
+    """
+    assert not df.empty
+
+    # Creates/Opens a new connection to the db and binds the engine
+    session = session_open(engine)
+
+    # Check if table is empty and bulk inserts if it is
+    first_entry = session.query(DbClass).first()
+
+    if first_entry is None:
+        session.bulk_insert_mappings(DbClass, df.to_dict(orient="records"))
+        session_close(session)
+        assert session.query(DbClass).count() == len(df.index)
+    else:
+        records = df.to_dict(orient="records")
+        for record in records:
+            try:
+                session.add(DbClass(**record))
+                session.commit()
+            except exc.SQLAlchemyError as e:
+                session.rollback()
+    session_close(session)
+    print(f"Inserted {len(df.index)} rows to table {DbClass.__tablename__}")
+
+
 def delete_user(username, email):
     """Delete the user with this username and email.
 

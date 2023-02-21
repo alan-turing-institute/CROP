@@ -13,6 +13,7 @@ from sqlalchemy import and_
 from .db import connect_db, session_open, session_close
 from .structure import (
     ReadingsWeatherClass,
+    SensorClass,
 )
 from .utils import query_result_to_array, log_upload_event
 from .constants import (
@@ -21,6 +22,12 @@ from .constants import (
     CONST_OPENWEATHERMAP_HISTORICAL_URL,
 )
 from .sensors import get_db_weather_data
+
+
+def get_openweathermap_sensor_id(session):
+    query = session.query(SensorClass.id).filter(SensorClass.name == "OpenWeatherMap")
+    sensor_id = session.execute(query).fetchone()[0]
+    return sensor_id
 
 
 def upload_openweathermap_data(
@@ -53,6 +60,7 @@ def upload_openweathermap_data(
     # filter out the rows that are already in the db data
     new_data_df = df_api[~df_api.index.isin(df_db.index)]
 
+    sensor_id = get_openweathermap_sensor_id(session)
     logging.info("new data with size len(new_data_df): {}\n\n".format(len(new_data_df)))
     if len(new_data_df) > 0:
         # this is the current time in seconds since epoch
@@ -60,7 +68,7 @@ def upload_openweathermap_data(
         session = session_open(engine)
         for idx, row in new_data_df.iterrows():
             data = ReadingsWeatherClass(
-                sensor_id=0,
+                sensor_id=sensor_id,
                 timestamp=idx,
                 temperature=row["temperature"],
                 rain_probability=None,  # not in openweathermap data

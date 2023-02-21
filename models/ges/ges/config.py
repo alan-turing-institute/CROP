@@ -2,13 +2,14 @@
 Python module to read the parameters specified in the configuration file,
 including parameters required to connect to the PostgreSQL database server
 """
-
-from configparser import ConfigParser
 import os
+from configparser import ConfigParser
 
 
 def config(
-    filename="./config.ini",
+    filename=os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "config.ini"
+    ),
     section="postgresql",
 ):
     # check that configuration file exists

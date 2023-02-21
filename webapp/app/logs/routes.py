@@ -8,11 +8,11 @@ from flask_login import login_required
 from sqlalchemy import and_, desc
 
 from app.logs import blueprint
-from core.utils import query_result_to_array
 
-from core.structure import SQLA as db
-from core.structure import DataUploadLogClass, TypeClass
-from core.constants import CONST_MAX_RECORDS
+from cropcore.utils import query_result_to_array
+from cropcore.structure import SQLA as db
+from cropcore.structure import DataUploadLogClass, TypeClass
+from cropcore.constants import CONST_MAX_RECORDS
 
 
 @blueprint.route("/<template>")
