@@ -299,6 +299,23 @@ def model(
 
     (QV_i_p, QP_i_p) = convection(d_p, A_p, T_i, T_p, ias)
 
+    # QP_i_p potentially non-zero if lights not fully on so calculate here
+    g = 9.81
+    nu = 15.1e-6
+    lam = 0.025
+    Gr = (g * d_p**3) / (T_i * nu**2) * abs(T_i - T_p)
+    Re = ias * d_p / nu
+    (Nu, Sh) = lamorturb(Gr, Re)
+
+    QP_i_p = (
+        A_p*(1-lighting_factor)
+        * H_fg
+        / (rho_i * c_i)
+        * (Sh / Le)
+        * (lam / d_m)
+        * (C_w - sat_conc(T_p))
+    )
+
     ## Radiation
     # Radiation cover to floor
     QR_c_f = radiation(eps_c, eps_f, rho_c, rho_f, F_c_f, F_f_c, A_c, T_c, T_f)
