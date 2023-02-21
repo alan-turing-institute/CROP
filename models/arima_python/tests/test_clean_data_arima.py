@@ -44,6 +44,13 @@ def test_format_clean_data():
     assert isinstance(energy_data, pd.DataFrame)
     # check that the keys are the expected ones, regardless of order
     assert sorted(keys) == sorted(keys_clean)
+    # check that all dataframes are indexed by "timestamp", and that
+    # this is a pandas.DatetimeIndex
+    for sensor in keys:
+        assert env_data[sensor].index.name == "timestamp"
+        assert isinstance(env_data[sensor].index, pd.DatetimeIndex)
+    assert energy_data.index.name == "timestamp"
+    assert isinstance(energy_data.index, pd.DatetimeIndex)
 
 
 def test_columns_clean_data():
@@ -66,17 +73,20 @@ def test_timestamps_clean_data():
     have the same timestamps, that the timestamp vector is
     monotonically increasing and that timedelta between
     timestamps is unique.
+    This function expects the dataframes to be indexed by
+    timestamp.
     """
     # check that the timestamp vector is the same for all dataframes
     for ii in range(1, len(keys)):
-        timestamp1 = env_data[keys[ii - 1]].timestamp
-        timestamp2 = env_data[keys[ii]].timestamp
+        timestamp1 = env_data[keys[ii - 1]].index
+        timestamp2 = env_data[keys[ii]].index
         assert timestamp2.equals(timestamp1)
-    timestamp1 = energy_data.timestamp
+    timestamp1 = energy_data.index
     assert timestamp2.equals(timestamp1)
     # check that the timestamp vector is monotonically increasing
     assert timestamp2.is_monotonic
     # check that the timedelta is unique
+    timestamp2 = timestamp2.to_series()
     time_delta = timestamp2.diff()[1:]
     time_delta = pd.unique(time_delta)
     assert len(time_delta) == 1
@@ -89,7 +99,13 @@ def test_data_clean_data():
     """
     # compare sensor by sensor and column by column
     for sensor in keys:
+        # compare timestamps (the dataframes are indexed by timestamp)
+        assert env_data[sensor].index.equals(env_clean[sensor].index)
+        # compare columns
         for column in colnames_env:
             assert env_data[sensor][column].equals(env_clean[sensor][column])
+    # compare timestamps (the dataframes are indexed by timestamp)
+    assert energy_data.index.equals(energy_clean.index)
+    # compare columns
     for column in colnames_energy:
         assert energy_data[column].equals(energy_clean[column])
