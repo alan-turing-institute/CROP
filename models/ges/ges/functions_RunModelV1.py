@@ -27,10 +27,7 @@ from .config import config
 cal_conf = config(section="calibration")
 
 lighting_factor = float(cal_conf["lighting_factor"])
-<<<<<<< HEAD
 ndh = float(cal_conf["ndh"])
-=======
->>>>>>> 7c1750e6f3923d23661a72fb192b98413191b541
 
 INVERSION_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "Inversion")
 sys.path.append(INVERSION_DIR)
