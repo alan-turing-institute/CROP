@@ -146,7 +146,8 @@ def clean_env_data(env_data: pd.DataFrame):
         time_vector: a pandas dataframe with a single column named "timestamp",
             containing a vector of increasing timestamps, ranging between the
             oldest and most recent timestamps in the input dataframe, with a
-            deltatime between successive timestamps of one hour.
+            timedelta between successive timestamps specified by the "time_delta"
+            parameter in "config.ini".
     """
     logger.info("Cleaning temperature/rel humidity data...")
     # insert a new column at the end of the dataframe, named "timestamp_hour_floor",
@@ -282,14 +283,18 @@ def clean_data(env_data, energy_data):
             (the observations are averaged based on the proximity of the timestamp
             to the full hour - use the "mins_from_the_hour" parameter in "config.ini"
             to specify what timestamps to average together). The processed data is
-            time-ordered. The dataframes are indexed by timestamp.
+            time-ordered. The dataframes are indexed by timestamp. Specify the
+            timedelta between successive timestamps using the "time_delta" parameter
+            in "config.ini".
         energy_data: a pandas dataframe containing processed electricity consumption
             for each sensor. "EnergyCC" refers to electricity consumption at Clapham
             Common, and EnergyCP refers to electricity consumption at Carpenter's Place.
             Based on the timestamp of the observations, standard averages and centered
             moving averages are returned (the latter have the subscript "_MA").
             The data is time-ordered. Only timestamps contained in the processed
-            "env_data" are returned. The dataframe is indexed by timestamp.
+            "env_data" are returned. The dataframe is indexed by timestamp. Specify the
+            timedelta between successive timestamps using the "time_delta" parameter in
+            "config.ini".
     """
     if processing_params["mins_from_the_hour"] != 15:
         logger.warning(
