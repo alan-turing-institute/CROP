@@ -436,7 +436,7 @@ class ReadingsWeatherClass(BASE):
     )
 
     timestamp = Column(DateTime, nullable=False, index=True)
-    temperature = Column(Float, nullable=False)
+    temperature = Column(Float, nullable=True)
     rain_probability = Column(Float, nullable=True)
     rain = Column(Float, nullable=True)
     relative_humidity = Column(Float, nullable=True)
