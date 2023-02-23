@@ -121,14 +121,16 @@ def create_storage_account(resource_group):
 
 def create_webapp(resource_group, app_service_plan, sql_server, app_insights):
     crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
-    crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
+    crop_sql_user = Output.format("{0}@{1}", SQL_SERVER_USER, sql_server.name)
     webapp_settings = [
         web.NameValuePairArgs(name=name, value=value)
         for name, value in (
             ("APPINSIGHTS_INSTRUMENTATIONKEY", app_insights.instrumentation_key),
-            "APPLICATIONINSIGHTS_CONNECTION_STRING",
-            app_insights.instrumentation_key.apply(
-                lambda key: "InstrumentationKey=" + key
+            (
+                "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                app_insights.instrumentation_key.apply(
+                    lambda key: "InstrumentationKey=" + key
+                ),
             ),
             ("ApplicationInsightsAgent_EXTENSION_VERSION", "~2"),
             ("WEBSITES_ENABLE_APP_SERVICE_STORAGE", "false"),
@@ -161,7 +163,7 @@ def create_ingress_fa(
     resource_group, app_service_plan, sql_server, app_insights, sa_connection_string
 ):
     crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
-    crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
+    crop_sql_user = Output.format("{0}@{1}", SQL_SERVER_USER, sql_server.name)
     ingress_fa_settings = [
         web.NameValuePairArgs(name=name, value=value)
         for name, value in (
@@ -247,7 +249,7 @@ def create_models_fa(
     models_share_dir,
 ):
     crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
-    crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
+    crop_sql_user = Output.format("{0}@{1}", SQL_SERVER_USER, sql_server.name)
     models_fa_settings = [
         web.NameValuePairArgs(name=name, value=value)
         for name, value in (
