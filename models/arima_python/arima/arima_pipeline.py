@@ -30,6 +30,7 @@ def train_arima(train_data):
         train_data,
         order=arima_config["arima_order"],
         seasonal_order=arima_config["seasonal_order"],
+        trend=arima_config["trend"],
     )
     model_fit = model.fit()  # fits the model by maximum likelihood via Kalman filter
     return model_fit
