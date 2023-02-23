@@ -68,10 +68,7 @@ def create_sql_server(resource_group):
             ),
         ),
         sku=postgresql.SkuArgs(
-            capacity=2,
-            family="Gen5",
-            name="B_Gen5_2",
-            tier="Basic",
+            capacity=2, family="Gen5", name="B_Gen5_2", tier="Basic"
         ),
     )
     return sql_server
@@ -95,10 +92,7 @@ def create_app_service_plan(resource_group):
         resource_group_name=resource_group.name,
         kind="Linux",
         reserved=True,
-        sku=web.SkuDescriptionArgs(
-            tier="Premium",
-            name="P1v2",
-        ),
+        sku=web.SkuDescriptionArgs(tier="Premium", name="P1v2"),
     )
     return app_service_plan
 
@@ -129,35 +123,25 @@ def create_webapp(resource_group, app_service_plan, sql_server, app_insights):
     crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
     crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
     webapp_settings = [
-        web.NameValuePairArgs(
-            name="APPINSIGHTS_INSTRUMENTATIONKEY",
-            value=app_insights.instrumentation_key,
-        ),
-        web.NameValuePairArgs(
-            name="APPLICATIONINSIGHTS_CONNECTION_STRING",
-            value=app_insights.instrumentation_key.apply(
+        web.NameValuePairArgs(name=name, value=value)
+        for name, value in (
+            ("APPINSIGHTS_INSTRUMENTATIONKEY", app_insights.instrumentation_key),
+            "APPLICATIONINSIGHTS_CONNECTION_STRING",
+            app_insights.instrumentation_key.apply(
                 lambda key: "InstrumentationKey=" + key
             ),
-        ),
-        web.NameValuePairArgs(
-            name="ApplicationInsightsAgent_EXTENSION_VERSION", value="~2"
-        ),
-        web.NameValuePairArgs(
-            name="WEBSITES_ENABLE_APP_SERVICE_STORAGE", value="false"
-        ),
-        web.NameValuePairArgs(
-            name="DOCKER_REGISTRY_SERVER_URL", value="https://index.docker.io/v1"
-        ),
-        web.NameValuePairArgs(name="DOCKER_ENABLE_CI", value="true"),
-        web.NameValuePairArgs(name="CROP_SQL_HOST", value=crop_sql_host),
-        web.NameValuePairArgs(name="CROP_SQL_PASS", value=SQL_SERVER_PASSWORD),
-        web.NameValuePairArgs(name="CROP_SQL_PORT", value="5432"),
-        web.NameValuePairArgs(name="CROP_SQL_USER", value=crop_sql_user),
-        web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=SQL_SERVER_USER),
-        web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=SQL_DB_NAME),
-        web.NameValuePairArgs(
-            name="CROP_DEFAULT_USER_PASS", value=f"{DEFAULT_USER_PASSWORD}"
-        ),
+            ("ApplicationInsightsAgent_EXTENSION_VERSION", "~2"),
+            ("WEBSITES_ENABLE_APP_SERVICE_STORAGE", "false"),
+            ("DOCKER_REGISTRY_SERVER_URL", "https://index.docker.io/v1"),
+            ("DOCKER_ENABLE_CI", "true"),
+            ("CROP_SQL_HOST", crop_sql_host),
+            ("CROP_SQL_PASS", SQL_SERVER_PASSWORD),
+            ("CROP_SQL_PORT", "5432"),
+            ("CROP_SQL_USER", crop_sql_user),
+            ("CROP_SQL_USERNAME", SQL_SERVER_USER),
+            ("CROP_SQL_DBNAME", SQL_DB_NAME),
+            ("CROP_DEFAULT_USER_PASS", f"{DEFAULT_USER_PASSWORD}"),
+        )
     ]
     webapp = web.WebApp(
         f"{RESOURCE_NAME_PREFIX}-webapp",
@@ -179,42 +163,39 @@ def create_ingress_fa(
     crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
     crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
     ingress_fa_settings = [
-        web.NameValuePairArgs(name="AzureWebJobsStorage", value=sa_connection_string),
-        web.NameValuePairArgs(
-            name="APPINSIGHTS_INSTRUMENTATIONKEY",
-            value=app_insights.instrumentation_key,
-        ),
-        web.NameValuePairArgs(
-            name="APPLICATIONINSIGHTS_CONNECTION_STRING",
-            value=app_insights.instrumentation_key.apply(
-                lambda key: "InstrumentationKey=" + key
+        web.NameValuePairArgs(name=name, value=value)
+        for name, value in (
+            ("AzureWebJobsStorage", sa_connection_string),
+            (
+                "APPINSIGHTS_INSTRUMENTATIONKEY",
+                app_insights.instrumentation_key,
             ),
-        ),
-        web.NameValuePairArgs(name="FUNCTIONS_EXTENSION_VERSION", value="~3"),
-        web.NameValuePairArgs(
-            name="WEBSITES_ENABLE_APP_SERVICE_STORAGE", value="false"
-        ),
-        web.NameValuePairArgs(
-            name="DOCKER_REGISTRY_SERVER_URL", value="https://index.docker.io/v1"
-        ),
-        web.NameValuePairArgs(name="DOCKER_ENABLE_CI", value="true"),
-        web.NameValuePairArgs(name="CROP_SQL_HOST", value=crop_sql_host),
-        web.NameValuePairArgs(name="CROP_SQL_PASS", value=SQL_SERVER_PASSWORD),
-        web.NameValuePairArgs(name="CROP_SQL_PORT", value="5432"),
-        web.NameValuePairArgs(name="CROP_SQL_USER", value=crop_sql_user),
-        web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=SQL_SERVER_USER),
-        web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=SQL_DB_NAME),
-        web.NameValuePairArgs(name="CROP_HYPER_APIKEY", value=HYPER_APIKEY),
-        web.NameValuePairArgs(
-            name="CROP_OPENWEATHERMAP_APIKEY", value=OPENWEATHERMAP_APIKEY
-        ),
-        web.NameValuePairArgs(name="CROP_STARK_PASS", value=STARK_PASSWORD),
-        web.NameValuePairArgs(name="CROP_STARK_USERNAME", value=STARK_USERNAME),
-        web.NameValuePairArgs(name="GROWAPP_DATABASE", value=GROWAPP_DATABASE),
-        web.NameValuePairArgs(name="GROWAPP_IP", value=GROWAPP_IP),
-        web.NameValuePairArgs(name="GROWAPP_PASS", value=GROWAPP_PASSWORD),
-        web.NameValuePairArgs(name="GROWAPP_SCHEMA", value=GROWAPP_SCHEMA),
-        web.NameValuePairArgs(name="GROWAPP_USERNAME", value=GROWAPP_USERNAME),
+            (
+                "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                app_insights.instrumentation_key.apply(
+                    lambda key: "InstrumentationKey=" + key
+                ),
+            ),
+            ("FUNCTIONS_EXTENSION_VERSION", "~3"),
+            ("WEBSITES_ENABLE_APP_SERVICE_STORAGE", "false"),
+            ("DOCKER_REGISTRY_SERVER_URL", "https://index.docker.io/v1"),
+            ("DOCKER_ENABLE_CI", "true"),
+            ("CROP_SQL_HOST", crop_sql_host),
+            ("CROP_SQL_PASS", SQL_SERVER_PASSWORD),
+            ("CROP_SQL_PORT", "5432"),
+            ("CROP_SQL_USER", crop_sql_user),
+            ("CROP_SQL_USERNAME", SQL_SERVER_USER),
+            ("CROP_SQL_DBNAME", SQL_DB_NAME),
+            ("CROP_HYPER_APIKEY", HYPER_APIKEY),
+            ("CROP_OPENWEATHERMAP_APIKEY", OPENWEATHERMAP_APIKEY),
+            ("CROP_STARK_PASS", STARK_PASSWORD),
+            ("CROP_STARK_USERNAME", STARK_USERNAME),
+            ("GROWAPP_DATABASE", GROWAPP_DATABASE),
+            ("GROWAPP_IP", GROWAPP_IP),
+            ("GROWAPP_PASS", GROWAPP_PASSWORD),
+            ("GROWAPP_SCHEMA", GROWAPP_SCHEMA),
+            ("GROWAPP_USERNAME", GROWAPP_USERNAME),
+        )
     ]
     ingress_app = web.WebApp(
         f"{RESOURCE_NAME_PREFIX}-ingress-fa",
@@ -268,32 +249,31 @@ def create_models_fa(
     crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
     crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
     models_fa_settings = [
-        web.NameValuePairArgs(name="AzureWebJobsStorage", value=sa_connection_string),
-        web.NameValuePairArgs(
-            name="APPINSIGHTS_INSTRUMENTATIONKEY",
-            value=app_insights.instrumentation_key,
-        ),
-        web.NameValuePairArgs(
-            name="APPLICATIONINSIGHTS_CONNECTION_STRING",
-            value=app_insights.instrumentation_key.apply(
-                lambda key: "InstrumentationKey=" + key
+        web.NameValuePairArgs(name=name, value=value)
+        for name, value in (
+            ("AzureWebJobsStorage", sa_connection_string),
+            (
+                "APPINSIGHTS_INSTRUMENTATIONKEY",
+                app_insights.instrumentation_key,
             ),
-        ),
-        web.NameValuePairArgs(name="FUNCTIONS_EXTENSION_VERSION", value="~3"),
-        web.NameValuePairArgs(
-            name="WEBSITES_ENABLE_APP_SERVICE_STORAGE", value="false"
-        ),
-        web.NameValuePairArgs(
-            name="DOCKER_REGISTRY_SERVER_URL", value="https://index.docker.io/v1"
-        ),
-        web.NameValuePairArgs(name="DOCKER_ENABLE_CI", value="true"),
-        web.NameValuePairArgs(name="CROP_SQL_HOST", value=crop_sql_host),
-        web.NameValuePairArgs(name="CROP_SQL_PASS", value=SQL_SERVER_PASSWORD),
-        web.NameValuePairArgs(name="CROP_SQL_PORT", value="5432"),
-        web.NameValuePairArgs(name="CROP_SQL_USER", value=crop_sql_user),
-        web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=SQL_SERVER_USER),
-        web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=SQL_DB_NAME),
-        web.NameValuePairArgs(name="CROP_DATA_DIR", value=f"/{GES_DATA_DIR}"),
+            (
+                "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                app_insights.instrumentation_key.apply(
+                    lambda key: "InstrumentationKey=" + key
+                ),
+            ),
+            ("FUNCTIONS_EXTENSION_VERSION", "~3"),
+            ("WEBSITES_ENABLE_APP_SERVICE_STORAGE", "false"),
+            ("DOCKER_REGISTRY_SERVER_URL", "https://index.docker.io/v1"),
+            ("DOCKER_ENABLE_CI", "true"),
+            ("CROP_SQL_HOST", crop_sql_host),
+            ("CROP_SQL_PASS", SQL_SERVER_PASSWORD),
+            ("CROP_SQL_PORT", "5432"),
+            ("CROP_SQL_USER", crop_sql_user),
+            ("CROP_SQL_USERNAME", SQL_SERVER_USER),
+            ("CROP_SQL_DBNAME", SQL_DB_NAME),
+            ("CROP_DATA_DIR", f"/{GES_DATA_DIR}"),
+        )
     ]
     models_app = web.WebApp(
         f"{RESOURCE_NAME_PREFIX}-models-fa",
