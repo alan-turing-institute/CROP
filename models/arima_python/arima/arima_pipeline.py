@@ -32,14 +32,18 @@ def train_arima(train_data):
         seasonal_order=arima_config["seasonal_order"],
         trend=arima_config["trend"],
     )
-    model_fit = model.fit()  # fits the model by maximum likelihood via Kalman filter
+    model_fit = model.fit(
+        disp=False
+    )  # fits the model by maximum likelihood via Kalman filter
     return model_fit
 
 
 def forecast_arima(model_fit, forecast_timestamp):
-    forecast = model_fit.get_forecast(steps=forecast_timestamp)
-    mean_forecast = forecast.predicted_mean  # forecast mean
-    conf_int = forecast.conf_int()  # get confidence intervals of forecasts
+    forecast = model_fit.get_forecast(steps=forecast_timestamp).summary_frame()
+    mean_forecast = forecast["mean"]  # forecast mean
+    conf_int = forecast[
+        ["mean_ci_lower", "mean_ci_upper"]
+    ]  # get confidence intervals of forecasts
     return mean_forecast, conf_int
 
 
@@ -48,7 +52,7 @@ def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
     n_obs_test = n_obs * (
         1 - train_fraction
     )  # total number of observations used for testing
-    test_size = (
+    test_size = int(
         n_obs_test // n_splits
     )  # number of test observations employed in each fold
     tscv = TimeSeriesSplit(
