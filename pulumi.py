@@ -126,6 +126,8 @@ def create_storage_account(resource_group):
 
 
 def create_webapp(resource_group, app_service_plan, sql_server, app_insights):
+    crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
+    crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
     webapp_settings = [
         web.NameValuePairArgs(
             name="APPINSIGHTS_INSTRUMENTATIONKEY",
@@ -147,14 +149,10 @@ def create_webapp(resource_group, app_service_plan, sql_server, app_insights):
             name="DOCKER_REGISTRY_SERVER_URL", value="https://index.docker.io/v1"
         ),
         web.NameValuePairArgs(name="DOCKER_ENABLE_CI", value="true"),
-        web.NameValuePairArgs(
-            name="CROP_SQL_HOST", value=f"{sql_server.name}.postgres.database.azure.com"
-        ),
+        web.NameValuePairArgs(name="CROP_SQL_HOST", value=crop_sql_host),
         web.NameValuePairArgs(name="CROP_SQL_PASS", value=SQL_SERVER_PASSWORD),
         web.NameValuePairArgs(name="CROP_SQL_PORT", value="5432"),
-        web.NameValuePairArgs(
-            name="CROP_SQL_USER", value=f"{SQL_SERVER_USER}@{sql_server.name}"
-        ),
+        web.NameValuePairArgs(name="CROP_SQL_USER", value=crop_sql_user),
         web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=SQL_SERVER_USER),
         web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=SQL_DB_NAME),
         web.NameValuePairArgs(
@@ -178,6 +176,8 @@ def create_webapp(resource_group, app_service_plan, sql_server, app_insights):
 def create_ingress_fa(
     resource_group, app_service_plan, sql_server, app_insights, sa_connection_string
 ):
+    crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
+    crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
     ingress_fa_settings = [
         web.NameValuePairArgs(name="AzureWebJobsStorage", value=sa_connection_string),
         web.NameValuePairArgs(
@@ -198,15 +198,10 @@ def create_ingress_fa(
             name="DOCKER_REGISTRY_SERVER_URL", value="https://index.docker.io/v1"
         ),
         web.NameValuePairArgs(name="DOCKER_ENABLE_CI", value="true"),
-        web.NameValuePairArgs(
-            name="CROP_SQL_HOST",
-            value=f"{sql_server.name}.postgres.database.azure.com",
-        ),
+        web.NameValuePairArgs(name="CROP_SQL_HOST", value=crop_sql_host),
         web.NameValuePairArgs(name="CROP_SQL_PASS", value=SQL_SERVER_PASSWORD),
         web.NameValuePairArgs(name="CROP_SQL_PORT", value="5432"),
-        web.NameValuePairArgs(
-            name="CROP_SQL_USER", value=f"{SQL_SERVER_USER}@{sql_server.name}"
-        ),
+        web.NameValuePairArgs(name="CROP_SQL_USER", value=crop_sql_user),
         web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=SQL_SERVER_USER),
         web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=SQL_DB_NAME),
         web.NameValuePairArgs(name="CROP_HYPER_APIKEY", value=HYPER_APIKEY),
@@ -270,6 +265,8 @@ def create_models_fa(
     models_fa_fileshare,
     models_share_dir,
 ):
+    crop_sql_host = Output.format("{0}.postgres.database.azure.com", sql_server.name)
+    crop_sql_user = Output.format(f"{SQL_SERVER_USER}@{0}", sql_server.name)
     models_fa_settings = [
         web.NameValuePairArgs(name="AzureWebJobsStorage", value=sa_connection_string),
         web.NameValuePairArgs(
@@ -290,14 +287,10 @@ def create_models_fa(
             name="DOCKER_REGISTRY_SERVER_URL", value="https://index.docker.io/v1"
         ),
         web.NameValuePairArgs(name="DOCKER_ENABLE_CI", value="true"),
-        web.NameValuePairArgs(
-            name="CROP_SQL_HOST", value=f"{sql_server.name}.postgres.database.azure.com"
-        ),
+        web.NameValuePairArgs(name="CROP_SQL_HOST", value=crop_sql_host),
         web.NameValuePairArgs(name="CROP_SQL_PASS", value=SQL_SERVER_PASSWORD),
         web.NameValuePairArgs(name="CROP_SQL_PORT", value="5432"),
-        web.NameValuePairArgs(
-            name="CROP_SQL_USER", value=f"{SQL_SERVER_USER}@{sql_server.name}"
-        ),
+        web.NameValuePairArgs(name="CROP_SQL_USER", value=crop_sql_user),
         web.NameValuePairArgs(name="CROP_SQL_USERNAME", value=SQL_SERVER_USER),
         web.NameValuePairArgs(name="CROP_SQL_DBNAME", value=SQL_DB_NAME),
         web.NameValuePairArgs(name="CROP_DATA_DIR", value=f"/{GES_DATA_DIR}"),
