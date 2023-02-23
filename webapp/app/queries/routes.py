@@ -36,6 +36,10 @@ from cropcore.utils import (
     jsonify_query_result,
     parse_date_range_argument,
 )
+from cropcore.generate_synthetic_data import (
+    generate_batches_in_farm,
+    generate_shelf_history
+)
 
 
 @blueprint.route("/getallsensors", methods=["GET"])
@@ -512,4 +516,10 @@ def get_closest_sensors():
     ).join(closest_trh_squery, closest_trh_squery.c.location_id == LocationClass.id)
     execute_result = db.session.execute(query).fetchall()
     result = query_result_to_array(execute_result)
+    return json.dumps(result)
+
+
+@blueprint.route("/shelfhistory_synthetic", methods=["GET"])
+def get_shelf_history_synthetic():
+    result = generate_shelf_history()
     return json.dumps(result)
