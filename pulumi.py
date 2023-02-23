@@ -36,7 +36,7 @@ POSTGRES_ALLOWED_IPS = CONFIG.get("postgres-allowed-ips")
 
 
 def get_connection_string(account_name, resource_group_name):
-    storage_account_keys = storage.list_storage_account_keys(
+    storage_account_keys = storage.list_storage_account_keys_output(
         account_name=account_name, resource_group_name=resource_group_name
     )
     primary_storage_key = storage_account_keys.keys[0].value
@@ -249,8 +249,8 @@ def create_share_directory(storage_account, models_fa_fileshare):
     # Note that this uses an resource type from the old pulumi_azure package, rather
     # than the new pulumi_azure_native, unlike all the other resources. The new package
     # doesn't seem to (yet?) have equivalent functionality.
-    # TODO Is the file share even getting used by GES? There seems to be nothing there,
-    # but I don't know where GES is writing its files.
+    # TODO The idea is that GES would write its files in this directory. Currently
+    # that's not happening though, this feature is unfinished.
     models_share_dir = azure_legacy.storage.ShareDirectory(
         f"{RESOURCE_NAME_PREFIX}-models-share-dir",
         share_name=models_fa_fileshare.name,
@@ -366,7 +366,7 @@ def main():
         resource_group, app_service_plan, sql_server, app_insights, sa_connection_string
     )
     fileshare = create_fileshare(resource_group, storage_account)
-    share_dir = create_share_directory(resource_group, fileshare)
+    share_dir = create_share_directory(storage_account, fileshare)
     create_models_fa(
         resource_group,
         app_service_plan,
