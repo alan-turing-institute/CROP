@@ -228,9 +228,9 @@ class TypeClass(BASE):
     # columns
     id = Column(Integer, primary_key=True)
     sensor_type = Column(String(100), nullable=False, unique=True)
-    source = Column(String(100), nullable=True)
-    origin = Column(String(100), nullable=True)
-    frequency = Column(String(100), nullable=True)
+    source = Column(Text, nullable=True)
+    origin = Column(Text, nullable=True)
+    frequency = Column(Text, nullable=True)
     data = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
 
