@@ -84,7 +84,7 @@ def test_timestamps_clean_data():
     timestamp1 = energy_data.index
     assert timestamp2.equals(timestamp1)
     # check that the timestamp vector is monotonically increasing
-    assert timestamp2.is_monotonic
+    assert timestamp2.is_monotonic_increasing
     # check that the timedelta is unique
     timestamp2 = timestamp2.to_series()
     time_delta = timestamp2.diff()[1:]
