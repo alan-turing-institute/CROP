@@ -38,7 +38,7 @@ from cropcore.utils import (
 )
 from cropcore.generate_synthetic_data import (
     generate_batches_in_farm,
-    generate_shelf_history
+    generate_shelf_history,
 )
 
 
