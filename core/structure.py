@@ -167,7 +167,7 @@ class ModelRunClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
 
     # arguments
-    __table_args__ = (UniqueConstraint("sensor_id", "model_id", "time_forecast"),)
+    __table_args__ = (UniqueConstraint("sensor_id", "model_id", "time_created"),)
 
 
 class ModelProductClass(BASE):
