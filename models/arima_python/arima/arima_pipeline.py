@@ -83,7 +83,7 @@ def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
             steps=test_size
         )  # compute the forecast for the test sample of the current fold
         rmse.append(
-            np.sqrt(mean_squared_error(cv_test.values, forecast.values))
+            mean_squared_error(cv_test.values, forecast.values, squared=False)
         )  # compute the RMSE for the current fold
         r2.append(
             r2_score(cv_test.values, forecast.values)
