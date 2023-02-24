@@ -2,7 +2,7 @@ from arima.config import config
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from datetime import timedelta
 from sklearn.model_selection import TimeSeriesSplit
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
 from copy import deepcopy
 import logging
@@ -48,6 +48,7 @@ def forecast_arima(model_fit, forecast_timestamp):
 
 
 def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
+    metrics = dict.fromkeys(["RMSE", "R2"])
     n_obs = len(data)  # total number of observations
     n_obs_test = n_obs * (
         1 - train_fraction
@@ -59,6 +60,7 @@ def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
         n_splits=n_splits, test_size=test_size
     )  # construct the time series cross-validator
     rmse = []  # this will hold the RMSE at each fold
+    r2 = []  # this will hold the R2 score at each fold
     # loop through all folds
     for fold, (train_index, test_index) in enumerate(tscv.split(data)):
         cv_train, cv_test = (
@@ -83,10 +85,16 @@ def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
         rmse.append(
             np.sqrt(mean_squared_error(cv_test.values, forecast.values))
         )  # compute the RMSE for the current fold
+        r2.append(
+            r2_score(cv_test.values, forecast.values)
+        )  # compute the R2 for the current fold
         cv_test_old = deepcopy(cv_test)
 
-    rmse = np.mean(rmse)  # the cross-validated RMSE: the mean RMSE across all folds
-    return rmse
+    metrics["RMSE"] = np.mean(
+        rmse
+    )  # the cross-validated RMSE: the mean RMSE across all folds
+    metrics["R2"] = np.mean(r2)  # the cross-validated R2: the mean R2 across all folds
+    return metrics
 
 
 def arima_pipeline(data):
@@ -112,14 +120,14 @@ def arima_pipeline(data):
             logger.info(
                 "Running time series cross-validation WITHOUT parameter refit..."
             )
-        rmse = cross_validate_arima(data, refit=refit)
+        metrics = cross_validate_arima(data, refit=refit)
         logger.info(
-            "Done running cross-validation. The CV root-mean-square-error is: {0:.2f}".format(
-                rmse
+            "Done running cross-validation. The CV root-mean-square-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
+                metrics["RMSE"], metrics["R2"]
             )
         )
     else:
-        rmse = []
+        metrics = []
     # fit the model and compute the forecast
     logger.info("Fitting the model...")
     model_fit = train_arima(data)
@@ -131,4 +139,4 @@ def arima_pipeline(data):
     mean_forecast, conf_int = forecast_arima(model_fit, forecast_timestamp)
     logger.info("Done forecasting.")
 
-    return mean_forecast, conf_int, rmse
+    return mean_forecast, conf_int, metrics
