@@ -56,7 +56,7 @@ from cropcore.db import (
 
 from cropcore.utils import insert_to_db_from_df
 
-from util_scripts.generate_synthetic_readings import (
+from cropcore.generate_synthetic_data import (
     generate_trh_readings,
     generate_co2_readings,
     generate_airvelocity_readings,
