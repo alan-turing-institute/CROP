@@ -519,6 +519,12 @@ def get_closest_sensors():
     return json.dumps(result)
 
 
+@blueprint.route("/batchesinfarm_synthetic", methods=["GET"])
+def get_growing_batches_synthetic():
+    result = generate_batches_in_farm()
+    return json.dumps(result)
+
+
 @blueprint.route("/shelfhistory_synthetic", methods=["GET"])
 def get_shelf_history_synthetic():
     result = generate_shelf_history()
