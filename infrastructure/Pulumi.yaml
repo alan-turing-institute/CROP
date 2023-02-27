@@ -1,4 +1,3 @@
 name: crop-azure
 runtime: python
-main: pulumi.py
 description: CROP on Azure
