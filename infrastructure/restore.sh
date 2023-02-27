@@ -29,5 +29,14 @@ do
     else
         echo Restored $table
     fi
+    id_seq=${table}_id_seq
+    echo Resetting the id sequence for $table
+    reset_cmd="SELECT SETVAL('\"${table}_id_seq\"', (SELECT MAX(\"id\") FROM \"${table}\"));"
+    psql "host=${host} port=${port} dbname=${dbname} user=${username} password=${password}" -c "$reset_cmd"
+    if [ $success != 0 ]; then
+        echo Failed to reset id sequence for $table
+    else
+        echo Reset id sequence for $table
+    fi
 done
 exit 0
