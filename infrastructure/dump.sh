@@ -1,5 +1,5 @@
 #!/bin/bash
-# A script for restoring a dump of the CROP data. The result can be restored
+# A script for creating a dump of the CROP data. The result can be restored
 # with restore.sh.
 # Arguments, in order:
 #   postgres server host
