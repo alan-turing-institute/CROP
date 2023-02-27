@@ -34,5 +34,5 @@ def test_get_forecast_timestamp():
 
 def test_arima_model_fit():
     train_data = airline_dataset["lnair"].iloc[train_index]
-    model_fit = arima_pipeline.train_arima(train_data)
+    model_fit = arima_pipeline.fit_arima(train_data)
     assert isinstance(model_fit, SARIMAXResultsWrapper)

@@ -25,7 +25,7 @@ def get_forecast_timestamp(data):
     return forecast_timestamp
 
 
-def train_arima(train_data):
+def fit_arima(train_data):
     model = SARIMAX(
         train_data,
         order=arima_config["arima_order"],
@@ -73,7 +73,7 @@ def cross_validate_arima(data, tscv, refit=False):
         )  # train/test split for the current fold
         # only force model fitting in the first fold
         if fold == 0:
-            model_fit = train_arima(cv_train)
+            model_fit = fit_arima(cv_train)
         # in all other folds, the model is refitted only if requested by the user
         # here we append to the current train set the test set of the previous fold
         else:
@@ -135,7 +135,7 @@ def arima_pipeline(data):
         metrics = []
     # fit the model and compute the forecast
     logger.info("Fitting the model...")
-    model_fit = train_arima(data)
+    model_fit = fit_arima(data)
     logger.info("Done fitting the model.")
     forecast_timestamp = get_forecast_timestamp(data)
     logger.info(
