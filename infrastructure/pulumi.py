@@ -14,7 +14,7 @@ CONFIG = Config()
 WEBAPP_DOCKER_URL = "turingcropapp/webapp:dev"
 INGRESSFUNCTIONS_DOCKER_URL = "turingcropapp/functions:dev"
 MODELFUNCTIONS_DOCKER_URL = "turingcropapp/modelfunctions:dev"
-RESOURCE_NAME_PREFIX = "cropdev"
+RESOURCE_NAME_PREFIX = CONFIG.get("resource-name-prefix")
 SQL_SERVER_USER = "cropdbadmin"
 SQL_DB_NAME = "app_db"
 MODELS_FILESHARE_NAME = "models-share"
@@ -28,8 +28,8 @@ STARK_USERNAME = CONFIG.require("stark-username")
 GROWAPP_DATABASE = CONFIG.require("growapp-database")
 GROWAPP_IP = CONFIG.require("growapp-ip")
 GROWAPP_PASSWORD = CONFIG.require("growapp-password")
-GROWAPP_SCHEMA = CONFIG.require("growapp-schema")
 GROWAPP_USERNAME = CONFIG.require("growapp-username")
+GROWAPP_SCHEMA = CONFIG.require("growapp-schema")
 POSTGRES_ALLOWED_IPS = CONFIG.get("postgres-allowed-ips")
 
 

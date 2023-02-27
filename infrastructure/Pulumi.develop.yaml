@@ -20,6 +20,7 @@ config:
     secure: v1:+XSjooY+kq3jJqCD:aO10mFocuO5Yqa38/J+9RBxYaS//3iaGjcf737LEXxlLUhyptQnoBIxipqqwTRyG
   crop-azure:postgres-allowed-ips:
     secure: v1:0OlUuu2yHKj+a1GZ:SAHAYHEfxONTktBVNgLKyj0fiT/i+BSFLLHFaHgp
+  crop-azure:resource-name-prefix: cropdev
   crop-azure:sql-server-password:
     secure: v1:6yZkGrr6ewMyNnrF:UcwnhqpaD+8VeK/2IiKPz2lcXcJnrEyLXwF7sMYl6Fw=
   crop-azure:stark-password:
