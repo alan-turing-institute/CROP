@@ -1,5 +1,6 @@
 import pandas as pd
 import arima.arima_pipeline as arima_pipeline
+from statsmodels.tsa.statespace.sarimax import SARIMAXResultsWrapper
 
 # import the pickle file used for ARIMA code testing
 # the pickle file contains a dictionary - see tests/data/README.md for details
@@ -29,3 +30,9 @@ def test_get_forecast_timestamp():
         airline_dataset.iloc[train_index]
     )
     assert forecast_timestamp == end_timestamp
+
+
+def test_arima_model_fit():
+    train_data = airline_dataset["lnair"].iloc[train_index]
+    model_fit = arima_pipeline.train_arima(train_data)
+    assert isinstance(model_fit, SARIMAXResultsWrapper)
