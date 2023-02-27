@@ -2,7 +2,7 @@
 ## Airline Dataset
 The file `airline_dataset_arima.pkl` contains an airline dataset downloaded from: 'https://www.stata-press.com/data/r12/air2.dta'.
 It is used to test the ARIMA code.
-An ARIMA time series model is fit to the data.
+A seasonal ARIMA time series model is fit to the data, with non-seasonal order = (2, 1, 0) and seasonal order = (1, 1, 0, 12).
 Details can be found in this notebook: `../../prepare_airline_dataset.ipynb`.
 
 More specifically, the pickle file contains a dictionary with keys:
