@@ -47,8 +47,7 @@ def forecast_arima(model_fit, forecast_timestamp):
     return mean_forecast, conf_int
 
 
-def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
-    metrics = dict.fromkeys(["RMSE", "R2"])
+def construct_cross_validator(data, train_fraction=0.8, n_splits=4):
     n_obs = len(data)  # total number of observations
     n_obs_test = n_obs * (
         1 - train_fraction
@@ -59,6 +58,11 @@ def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
     tscv = TimeSeriesSplit(
         n_splits=n_splits, test_size=test_size
     )  # construct the time series cross-validator
+    return tscv
+
+
+def cross_validate_arima(data, tscv, refit=False):
+    metrics = dict.fromkeys(["RMSE", "R2"])
     rmse = []  # this will hold the RMSE at each fold
     r2 = []  # this will hold the R2 score at each fold
     # loop through all folds
@@ -80,7 +84,7 @@ def cross_validate_arima(data, train_fraction=0.8, n_splits=4, refit=False):
                     cv_test_old
                 )  # extend is faster than append with refit=False
         forecast = model_fit.forecast(
-            steps=test_size
+            steps=len(test_index)
         )  # compute the forecast for the test sample of the current fold
         rmse.append(
             mean_squared_error(cv_test.values, forecast.values, squared=False)
@@ -120,7 +124,8 @@ def arima_pipeline(data):
             logger.info(
                 "Running time series cross-validation WITHOUT parameter refit..."
             )
-        metrics = cross_validate_arima(data, refit=refit)
+        tscv = construct_cross_validator(data)
+        metrics = cross_validate_arima(data, tscv, refit=refit)
         logger.info(
             "Done running cross-validation. The CV root-mean-square-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
                 metrics["RMSE"], metrics["R2"]
