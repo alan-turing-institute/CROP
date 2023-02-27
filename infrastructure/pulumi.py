@@ -5,14 +5,12 @@ import pulumi_azure as azure_legacy
 import pulumi_azure_native.dbforpostgresql as postgresql
 import pulumi_azure_native.insights as insights
 import pulumi_azure_native.resources as resource
-import pulumi_azure_native.sql as sql
 import pulumi_azure_native.storage as storage
 import pulumi_azure_native.web as web
 from pulumi import Config, Output, export
 
 CONFIG = Config()
 
-USERNAME = "pulumi"
 WEBAPP_DOCKER_URL = "turingcropapp/webapp:dev"
 INGRESSFUNCTIONS_DOCKER_URL = "turingcropapp/functions:dev"
 MODELFUNCTIONS_DOCKER_URL = "turingcropapp/modelfunctions:dev"
