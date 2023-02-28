@@ -48,3 +48,8 @@ export GROWAPP_DATABASE="<<replaceme>>"
 export GROWAPP_SCHEMA="<<replaceme>>"
 export GROWAPP_USERNAME="<<replaceme>>"
 export GROWAPP_PASS="<<replaceme>>"
+
+# Needed for storing Pulumi stack information on Azure
+export AZURE_STORAGE_KEY="<<replaceme>>"
+export AZURE_STORAGE_ACCOUNT="<<replaceme>>"
+export AZURE_KEYVAULT_AUTH_VIA_CLI="true"
