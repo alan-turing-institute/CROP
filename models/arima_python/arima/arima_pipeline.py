@@ -134,13 +134,26 @@ def arima_pipeline(data):
             logger.info(
                 "Running time series cross-validation WITHOUT parameter refit..."
             )
-        tscv = construct_cross_validator(data)
-        metrics = cross_validate_arima(data, tscv, refit=refit)
-        logger.info(
-            "Done running cross-validation. The CV root-mean-square-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
-                metrics["RMSE"], metrics["R2"]
+        try:
+            tscv = construct_cross_validator(data)
+            try:
+                metrics = cross_validate_arima(data, tscv, refit=refit)
+            except:
+                logger.warning(
+                    "Could not perform cross-validation. Continuing without ARIMA model testing."
+                )
+                metrics = []
+            else:
+                logger.info(
+                    "Done running cross-validation. The CV root-mean-square-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
+                        metrics["RMSE"], metrics["R2"]
+                    )
+                )
+        except:
+            logger.warning(
+                "Could not build a valid cross-validator. Continuing without ARIMA model testing."
             )
-        )
+            metrics = []
     else:
         metrics = []
     # fit the model and compute the forecast
