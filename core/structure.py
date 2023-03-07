@@ -167,7 +167,7 @@ class ModelRunClass(BASE):
     time_created = Column(DateTime(), server_default=func.now())
 
     # arguments
-    __table_args__ = (UniqueConstraint("sensor_id", "model_id", "time_forecast"),)
+    __table_args__ = (UniqueConstraint("sensor_id", "model_id", "time_created"),)
 
 
 class ModelProductClass(BASE):
@@ -228,11 +228,11 @@ class TypeClass(BASE):
     # columns
     id = Column(Integer, primary_key=True)
     sensor_type = Column(String(100), nullable=False, unique=True)
-    source = Column(String(100), nullable=False)
-    origin = Column(String(100), nullable=False)
-    frequency = Column(String(100), nullable=False)
-    data = Column(String(100), nullable=False)
-    description = Column(Text)
+    source = Column(Text, nullable=True)
+    origin = Column(Text, nullable=True)
+    frequency = Column(Text, nullable=True)
+    data = Column(Text, nullable=True)
+    description = Column(Text, nullable=True)
 
     time_created = Column(DateTime(), server_default=func.now())
     time_updated = Column(DateTime(), onupdate=func.now())
@@ -436,7 +436,7 @@ class ReadingsWeatherClass(BASE):
     )
 
     timestamp = Column(DateTime, nullable=False, index=True)
-    temperature = Column(Float, nullable=False)
+    temperature = Column(Float, nullable=True)
     rain_probability = Column(Float, nullable=True)
     rain = Column(Float, nullable=True)
     relative_humidity = Column(Float, nullable=True)
