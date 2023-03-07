@@ -48,6 +48,11 @@ def forecast_arima(model_fit, forecast_timestamp):
 
 
 def construct_cross_validator(data, train_fraction=0.8, n_splits=4):
+    if (train_fraction < 0.5) or (train_fraction >= 1):
+        logger.error(
+            "The fraction of training data for cross-validation must be >= 0.5 and < 1."
+        )
+        raise Exception
     n_obs = len(data)  # total number of observations
     n_obs_test = n_obs * (
         1 - train_fraction
@@ -55,6 +60,11 @@ def construct_cross_validator(data, train_fraction=0.8, n_splits=4):
     test_size = int(
         n_obs_test // n_splits
     )  # number of test observations employed in each fold
+    if test_size < 1:
+        logger.error(
+            "A valid cross-validator cannot be built. The size of the test set is less than 1."
+        )
+        raise Exception
     tscv = TimeSeriesSplit(
         n_splits=n_splits, test_size=test_size
     )  # construct the time series cross-validator
