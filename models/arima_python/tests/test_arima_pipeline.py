@@ -85,7 +85,7 @@ def test_arima_fit_forecast():
     )
 
 
-def test_arima_cross_validation():
+def test_construct_cross_validator():
     # check that the cross-validator constructor returns the expected train/test split
     n_obs = 100
     train_fraction = 0.6
@@ -113,45 +113,55 @@ def test_arima_cross_validation():
     np.testing.assert_equal(actual_train_index, expected_train_index, verbose=False)
     np.testing.assert_equal(actual_test_index, expected_test_index, verbose=False)
 
+
+def compute_model_metrics(data, model_fit, train_index, test_index):
+    forecasts = dict.fromkeys(list(test_index.keys()))
+    rmse = []
+    r2 = []
+    for fold in list(forecasts.keys()):
+        forecasts[fold] = model_fit.forecast(steps=len(test_index[fold]))
+        model_fit = model_fit.extend(data.iloc[test_index[fold]])
+        rmse.append(
+            mean_squared_error(
+                data.iloc[test_index[fold]].values,
+                forecasts[fold].values,
+                squared=False,
+            )
+        )
+        r2.append(
+            r2_score(
+                data.iloc[test_index[fold]].values,
+                forecasts[fold].values,
+            )
+        )
+    rmse = np.mean(rmse)
+    r2 = np.mean(r2)
+    return rmse, r2
+
+
+def test_cross_validate_arima():
     # now test that the returned model metrics are correct
-    train_index = expected_train_index
-    test_index = expected_test_index
+    data = airline_dataset["lnair"]
+    train_fraction = 0.7
+    n_splits = 3
+    # build the cross-validator
+    tscv = arima_pipeline.construct_cross_validator(
+        data, train_fraction=train_fraction, n_splits=n_splits
+    )
+    train_index = dict()
+    test_index = dict()
+    for fold, (train_index_fold, test_index_fold) in enumerate(tscv.split(data)):
+        train_index[fold] = train_index_fold
+        test_index[fold] = test_index_fold
+    # create and fit the SARIMAX model with the 0-fold training set
     model = SARIMAX(
-        data["lnair"].iloc[train_index[0]],
+        data.iloc[train_index[0]],
         order=arima_order,
         seasonal_order=seasonal_order,
         trend=trend,
     )
     model_fit = model.fit(disp=False)
-    forecast_fold_0 = model_fit.forecast(steps=len(test_index[0]))
-    model_fit = model_fit.extend(data["lnair"].iloc[test_index[0]])
-    forecast_fold_1 = model_fit.forecast(steps=len(test_index[1]))
-    rmse = np.mean(
-        [
-            mean_squared_error(
-                data["lnair"].iloc[test_index[0]],
-                forecast_fold_0,
-                squared=False,
-            ),
-            mean_squared_error(
-                data["lnair"].iloc[test_index[1]],
-                forecast_fold_1,
-                squared=False,
-            ),
-        ]
-    )
-    r2 = np.mean(
-        [
-            r2_score(
-                data["lnair"].iloc[test_index[0]],
-                forecast_fold_0,
-            ),
-            r2_score(
-                data["lnair"].iloc[test_index[1]],
-                forecast_fold_1,
-            ),
-        ]
-    )
-    metrics = arima_pipeline.cross_validate_arima(data["lnair"], tscv, refit=False)
+    rmse, r2 = compute_model_metrics(data, model_fit, train_index, test_index)
+    metrics = arima_pipeline.cross_validate_arima(data, tscv, refit=False)
     assert np.isclose(rmse, metrics["RMSE"], atol=1e-06)
     assert np.isclose(r2, metrics["R2"], atol=1e-06)
