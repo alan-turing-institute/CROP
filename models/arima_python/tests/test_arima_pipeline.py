@@ -1,7 +1,10 @@
 import pandas as pd
 import arima.arima_pipeline as arima_pipeline
-from statsmodels.tsa.statespace.sarimax import SARIMAXResultsWrapper
+from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 import pandas as pd
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
 
 # import the pickle file used for ARIMA code testing
 # the pickle file contains a dictionary - see tests/data/README.md for details
@@ -11,9 +14,12 @@ train_index = dataset["train_index"]  # indices of train data
 test_index = dataset["test_index"]  # indices of test data
 
 # set the ARIMA model parameters for the airline time-series
-arima_pipeline.arima_config["arima_order"] = (2, 1, 0)
-arima_pipeline.arima_config["seasonal_order"] = (1, 1, 0, 12)
-arima_pipeline.arima_config["trend"] = []
+arima_order = (2, 1, 0)
+seasonal_order = (1, 1, 0, 12)
+trend = []
+arima_pipeline.arima_config["arima_order"] = arima_order
+arima_pipeline.arima_config["seasonal_order"] = seasonal_order
+arima_pipeline.arima_config["trend"] = trend
 
 
 def test_get_forecast_timestamp():
@@ -77,3 +83,75 @@ def test_arima_fit_forecast():
             all(forecast[1]["mean_ci_upper"] > forecast[0].values),
         ]
     )
+
+
+def test_arima_cross_validation():
+    # check that the cross-validator constructor returns the expected train/test split
+    n_obs = 100
+    train_fraction = 0.6
+    n_splits = 2
+    data = airline_dataset.iloc[:n_obs]
+    # these are the indices of training data we would expect given the above parameters
+    expected_train_index = dict.fromkeys(list(range(n_splits)))
+    expected_train_index[0] = np.arange(60)
+    expected_train_index[1] = np.arange(80)
+    # these are the indices of testing data we would expect given the above parameters
+    expected_test_index = dict.fromkeys(list(range(n_splits)))
+    expected_test_index[0] = np.arange(60, 80)
+    expected_test_index[1] = np.arange(80, 100)
+    # construct the cross-validator
+    tscv = arima_pipeline.construct_cross_validator(
+        data, train_fraction=train_fraction, n_splits=n_splits
+    )
+    # these are the indices of test/train split returned by the cross-validator constructor
+    actual_train_index = dict()
+    actual_test_index = dict()
+    for fold, (train_index, test_index) in enumerate(tscv.split(data)):
+        actual_train_index[fold] = train_index
+        actual_test_index[fold] = test_index
+    # assert that the actual and expected indices are equal
+    np.testing.assert_equal(actual_train_index, expected_train_index, verbose=False)
+    np.testing.assert_equal(actual_test_index, expected_test_index, verbose=False)
+
+    # now test that the returned model metrics are correct
+    train_index = expected_train_index
+    test_index = expected_test_index
+    model = SARIMAX(
+        data["lnair"].iloc[train_index[0]],
+        order=arima_order,
+        seasonal_order=seasonal_order,
+        trend=trend,
+    )
+    model_fit = model.fit(disp=False)
+    forecast_fold_0 = model_fit.forecast(steps=len(test_index[0]))
+    model_fit = model_fit.extend(data["lnair"].iloc[test_index[0]])
+    forecast_fold_1 = model_fit.forecast(steps=len(test_index[1]))
+    rmse = np.mean(
+        [
+            mean_squared_error(
+                data["lnair"].iloc[test_index[0]],
+                forecast_fold_0,
+                squared=False,
+            ),
+            mean_squared_error(
+                data["lnair"].iloc[test_index[1]],
+                forecast_fold_1,
+                squared=False,
+            ),
+        ]
+    )
+    r2 = np.mean(
+        [
+            r2_score(
+                data["lnair"].iloc[test_index[0]],
+                forecast_fold_0,
+            ),
+            r2_score(
+                data["lnair"].iloc[test_index[1]],
+                forecast_fold_1,
+            ),
+        ]
+    )
+    metrics = arima_pipeline.cross_validate_arima(data["lnair"], tscv, refit=False)
+    assert np.isclose(rmse, metrics["RMSE"], atol=1e-06)
+    assert np.isclose(r2, metrics["R2"], atol=1e-06)
