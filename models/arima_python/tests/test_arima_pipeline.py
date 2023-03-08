@@ -22,17 +22,29 @@ arima_pipeline.arima_config["seasonal_order"] = seasonal_order
 arima_pipeline.arima_config["trend"] = trend
 
 
+def set_hours_forecast(start_timestamp, end_timestamp):
+    """
+    Given a starting and an ending timestamps, calculate
+    the timedelta between them and set this timedelta as
+    the "hours_forecast" parameter of config.ini.
+    """
+    delta_time = end_timestamp - start_timestamp
+    delta_time = delta_time.total_seconds()  # total timedetla in seconds
+    delta_time = delta_time / 3600  # total timedelta in hours
+    arima_pipeline.arima_config["hours_forecast"] = delta_time
+
+
 def test_get_forecast_timestamp():
     """
     Test that the returned end-of-forecast timestamp
     is the expected one.
     """
+    # first, set the number of hours to forecast into the future
     start_timestamp = airline_dataset.iloc[train_index].index[-1]
-    end_timestamp = airline_dataset.index[-1]
-    delta_time = end_timestamp - start_timestamp
-    delta_time = delta_time.total_seconds()  # total timedetla in seconds
-    delta_time = delta_time / 3600  # total timedelta in hours
-    arima_pipeline.arima_config["hours_forecast"] = delta_time
+    end_timestamp = airline_dataset.iloc[test_index].index[-1]
+    set_hours_forecast(start_timestamp, end_timestamp)
+    # now check if the end-of-forecast timestamp is produced
+    # correctly
     forecast_timestamp = arima_pipeline.get_forecast_timestamp(
         airline_dataset.iloc[train_index]
     )
