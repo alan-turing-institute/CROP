@@ -9,11 +9,15 @@ import numpy as np
 # import the pickle file used for ARIMA code testing
 # the pickle file contains a dictionary - see tests/data/README.md for details
 dataset = pd.read_pickle("tests/data/airline_dataset_arima.pkl")
-airline_dataset = dataset["dataset"]  # this is the airline dataset
-train_index = dataset["train_index"]  # indices of train data
-test_index = dataset["test_index"]  # indices of test data
+airline_dataset = dataset["dataset"]  # this is the full airline dataset
+train_index = dataset["train_index"]  # indices of train data (70%)
+test_index = dataset["test_index"]  # indices of test data (30%)
+airline_forecast = dataset[
+    "forecasts"
+]  # this is a pre-computed forecast of the test data
 
 # set the ARIMA model parameters for the airline time-series
+# see prepare_airline_dataset.ipynb for details
 arima_order = (2, 1, 0)
 seasonal_order = (1, 1, 0, 12)
 trend = []
@@ -202,3 +206,27 @@ def test_cross_validate_arima():
     # are positive values and that R2 is less than one
     assert metrics["R2"] > 0 and metrics["R2"] < 1
     assert metrics["RMSE"] > 0
+
+
+def test_arima_pipeline():
+    """
+    Test that the arima pipeline produces the
+    expected (pre-computed) forecasts.
+    """
+    # no need to perform cross-validation now - switch off
+    arima_pipeline.arima_config["perform_cv"] = False
+    # specify the training data and set the number of
+    # hours to forecast into the future
+    data = airline_dataset["lnair"].iloc[train_index]
+    start_timestamp = airline_dataset["lnair"].iloc[train_index].index[-1]
+    end_timestamp = airline_dataset["lnair"].iloc[test_index].index[-1]
+    set_hours_forecast(start_timestamp, end_timestamp)
+    # now run the arima pipeline on the training data
+    # to produce the forecast
+    mean_forecast, conf_int = arima_pipeline.arima_pipeline(data)[:2]
+    # assert that the mean forecast and the confidence
+    # intervals are the expected ones
+    assert np.isclose(mean_forecast.values, airline_forecast["mean"], atol=1e-06).all()
+    assert np.isclose(
+        conf_int, airline_forecast[["mean_ci_lower", "mean_ci_upper"]], atol=1e-06
+    ).all()
