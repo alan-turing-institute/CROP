@@ -86,24 +86,28 @@ def test_arima_fit_forecast():
 
 
 def test_construct_cross_validator():
-    # check that the cross-validator constructor returns the expected train/test split
+    """
+    Check that the cross-validator constructor
+    returns the expected train/test split of an
+    input dataset.
+    """
     n_obs = 100
-    train_fraction = 0.6
-    n_splits = 2
+    train_fraction = 0.6  # fraction of training data in the first CV fold (fold 0)
+    n_splits = 2  # number of splits/folds for CV
     data = airline_dataset.iloc[:n_obs]
-    # these are the indices of training data we would expect given the above parameters
+    # these are the indices of training data we would expect given the above specification
     expected_train_index = dict.fromkeys(list(range(n_splits)))
-    expected_train_index[0] = np.arange(60)
-    expected_train_index[1] = np.arange(80)
-    # these are the indices of testing data we would expect given the above parameters
+    expected_train_index[0] = np.arange(60)  # fold 0
+    expected_train_index[1] = np.arange(80)  # fold 1
+    # these are the indices of testing data we would expect given the above specification
     expected_test_index = dict.fromkeys(list(range(n_splits)))
-    expected_test_index[0] = np.arange(60, 80)
-    expected_test_index[1] = np.arange(80, 100)
+    expected_test_index[0] = np.arange(60, 80)  # fold 0
+    expected_test_index[1] = np.arange(80, 100)  # fold 1
     # construct the cross-validator
     tscv = arima_pipeline.construct_cross_validator(
         data, train_fraction=train_fraction, n_splits=n_splits
     )
-    # these are the indices of test/train split returned by the cross-validator constructor
+    # below are the indices of test/train split returned by the cross-validator constructor
     actual_train_index = dict()
     actual_test_index = dict()
     for fold, (train_index, test_index) in enumerate(tscv.split(data)):
@@ -114,7 +118,19 @@ def test_construct_cross_validator():
     np.testing.assert_equal(actual_test_index, expected_test_index, verbose=False)
 
 
-def compute_model_metrics(data, model_fit, train_index, test_index):
+def compute_model_metrics(data, model_fit, test_index):
+    """
+    Compute cross-validated model metrics (RMSE and R2 score).
+
+    Parameters:
+        data: pandas Series containing the time series.
+        model_fit: the fit to a SARIMAX statsmodels model.
+        test_index: dictionary containing indices of test
+            data at successive folds.
+    Returns:
+        rmse: root-mean-square-error, averaged across all CV folds.
+        r2: R2 score, averaged across all CV folds.
+    """
     forecasts = dict.fromkeys(list(test_index.keys()))
     rmse = []
     r2 = []
@@ -140,11 +156,14 @@ def compute_model_metrics(data, model_fit, train_index, test_index):
 
 
 def test_cross_validate_arima():
-    # now test that the returned model metrics are correct
+    """
+    Test that the calculation of cross-validated
+    model metrics (RMSE and R2 score) is done correctly.
+    """
     data = airline_dataset["lnair"]
-    train_fraction = 0.7
-    n_splits = 3
-    # build the cross-validator
+    train_fraction = 0.7  # fraction of training data in the first CV fold (fold 0)
+    n_splits = 3  # number of splits/folds for CV
+    # build the cross-validator, and get the train/test indices
     tscv = arima_pipeline.construct_cross_validator(
         data, train_fraction=train_fraction, n_splits=n_splits
     )
@@ -161,7 +180,13 @@ def test_cross_validate_arima():
         trend=trend,
     )
     model_fit = model.fit(disp=False)
-    rmse, r2 = compute_model_metrics(data, model_fit, train_index, test_index)
+    # compute the model metrics, and check that they are close
+    # to the values returned by the arima pipeline
+    rmse, r2 = compute_model_metrics(data, model_fit, test_index)
     metrics = arima_pipeline.cross_validate_arima(data, tscv, refit=False)
     assert np.isclose(rmse, metrics["RMSE"], atol=1e-06)
     assert np.isclose(r2, metrics["R2"], atol=1e-06)
+    # finally, just as a sanity check, verify that both RMSE and R2
+    # are positive values and that R2 is less than one
+    assert metrics["R2"] > 0 and metrics["R2"] < 1
+    assert metrics["RMSE"] > 0
