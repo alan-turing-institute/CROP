@@ -70,7 +70,9 @@ def test_fit_forecast_arima():
     assert isinstance(
         model_fit, SARIMAXResultsWrapper
     )  # check that model fit is of the correct type
-    forecast_timestamp = airline_dataset.index[-1]  # perform forecast up to this date
+    forecast_timestamp = airline_dataset.iloc[test_index].index[
+        -1
+    ]  # perform forecast up to this date
     forecast = arima_pipeline.forecast_arima(
         model_fit, forecast_timestamp
     )  # compute the forecast
@@ -85,7 +87,7 @@ def test_fit_forecast_arima():
     assert list(forecast[1].columns) == [
         "mean_ci_lower",
         "mean_ci_upper",
-    ]  # lower and upper bounds
+    ]  # lower and upper bounds of the confidence intervals
     assert isinstance(
         forecast[0].index, pd.DatetimeIndex
     )  # should be indexed by timestamp
@@ -196,7 +198,7 @@ def test_cross_validate_arima():
         trend=trend,
     )
     model_fit = model.fit(disp=False)
-    # compute the model metrics, and check that they are close
+    # compute the CV model metrics, and check that they are close
     # to the values returned by the arima pipeline
     rmse, r2 = compute_model_metrics(data, model_fit, test_index)
     metrics = arima_pipeline.cross_validate_arima(data, tscv, refit=False)
@@ -217,16 +219,16 @@ def test_arima_pipeline():
     arima_pipeline.arima_config["perform_cv"] = False
     # specify the training data and set the number of
     # hours to forecast into the future
-    data = airline_dataset["lnair"].iloc[train_index]
+    train_data = airline_dataset["lnair"].iloc[train_index]
     start_timestamp = airline_dataset["lnair"].iloc[train_index].index[-1]
     end_timestamp = airline_dataset["lnair"].iloc[test_index].index[-1]
     set_hours_forecast(start_timestamp, end_timestamp)
     # now run the arima pipeline on the training data
     # to produce the forecast
-    mean_forecast, conf_int = arima_pipeline.arima_pipeline(data)[:2]
+    mean_forecast, conf_int = arima_pipeline.arima_pipeline(train_data)[:2]
     # assert that the mean forecast and the confidence
-    # intervals are the expected ones
-    assert np.isclose(mean_forecast.values, airline_forecast["mean"], atol=1e-06).all()
+    # intervals are the expected (pre-computed) ones
+    assert np.isclose(mean_forecast, airline_forecast["mean"], atol=1e-06).all()
     assert np.isclose(
         conf_int, airline_forecast[["mean_ci_lower", "mean_ci_upper"]], atol=1e-06
     ).all()
