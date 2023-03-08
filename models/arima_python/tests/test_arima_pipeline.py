@@ -39,7 +39,7 @@ def test_get_forecast_timestamp():
     assert forecast_timestamp == end_timestamp
 
 
-def test_arima_fit_forecast():
+def test_fit_forecast_arima():
     """
     Test that the model fit is a valid SARIMAX results object,
     and that a valid forecast mean and confidence intervals
