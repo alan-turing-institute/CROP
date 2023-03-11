@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
+import pytest
 
 # import the pickle file used for ARIMA code testing
 # the pickle file contains a dictionary - see tests/data/README.md for details
@@ -232,3 +233,8 @@ def test_arima_pipeline():
     assert np.isclose(
         conf_int, airline_forecast[["mean_ci_lower", "mean_ci_upper"]], atol=1e-06
     ).all()
+    # finally check that a ValueError is raised if the input
+    # time series is not indexed by timestamp
+    with pytest.raises(ValueError):
+        train_data.reset_index(drop=True, inplace=True)
+        arima_pipeline.arima_pipeline(train_data)
