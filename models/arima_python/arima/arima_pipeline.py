@@ -249,7 +249,7 @@ def arima_pipeline(data: pd.Series) -> tuple[pd.Series, pd.DataFrame, dict | Non
                 logger.warning(
                     "Could not perform cross-validation. Continuing without ARIMA model testing."
                 )
-                metrics = []
+                metrics = None
             else:
                 logger.info(
                     "Done running cross-validation. The CV root-mean-squared-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
@@ -260,9 +260,9 @@ def arima_pipeline(data: pd.Series) -> tuple[pd.Series, pd.DataFrame, dict | Non
             logger.warning(
                 "Could not build a valid cross-validator. Continuing without ARIMA model testing."
             )
-            metrics = []
+            metrics = None
     else:
-        metrics = []
+        metrics = None
     # fit the model and compute the forecast
     logger.info("Fitting the model...")
     model_fit = fit_arima(data)
