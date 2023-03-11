@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 arima_config = config(section="arima")
 
 
-def get_forecast_timestamp(data: pd.Series):
+def get_forecast_timestamp(data: pd.Series) -> pd.Timestamp:
     """
     Return the end-of-forecast timestamp.
 
@@ -39,7 +39,7 @@ def get_forecast_timestamp(data: pd.Series):
     return forecast_timestamp
 
 
-def fit_arima(train_data: pd.Series):
+def fit_arima(train_data: pd.Series) -> SARIMAXResultsWrapper:
     """
     Fit a SARIMAX statsmodels model to a
     training dataset (time series).
@@ -67,7 +67,9 @@ def fit_arima(train_data: pd.Series):
     return model_fit
 
 
-def forecast_arima(model_fit: SARIMAXResultsWrapper, forecast_timestamp: pd.Timestamp):
+def forecast_arima(
+    model_fit: SARIMAXResultsWrapper, forecast_timestamp: pd.Timestamp
+) -> tuple[pd.Series, pd.DataFrame]:
     """
     Produce a forecast given a trained SARIMAX model.
 
@@ -93,7 +95,7 @@ def forecast_arima(model_fit: SARIMAXResultsWrapper, forecast_timestamp: pd.Time
 
 def construct_cross_validator(
     data: pd.Series, train_fraction: float = 0.8, n_splits: int = 4
-):
+) -> TimeSeriesSplit:
     """
     Construct a time series cross validator (TSCV) object.
 
@@ -132,7 +134,9 @@ def construct_cross_validator(
     return tscv
 
 
-def cross_validate_arima(data: pd.Series, tscv: TimeSeriesSplit, refit: bool = False):
+def cross_validate_arima(
+    data: pd.Series, tscv: TimeSeriesSplit, refit: bool = False
+) -> dict:
     """
     Cross-validate a SARIMAX statsmodel model.
 
@@ -191,7 +195,7 @@ def cross_validate_arima(data: pd.Series, tscv: TimeSeriesSplit, refit: bool = F
     return metrics
 
 
-def arima_pipeline(data):
+def arima_pipeline(data: pd.Series) -> tuple[pd.Series, pd.DataFrame, dict | None]:
     """
     Run the ARIMA model pipeline, using the SARIMAX model provided
     by the `statsmodels` library. This is the parent function of
