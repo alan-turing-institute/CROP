@@ -219,6 +219,11 @@ def arima_pipeline(data: pd.Series) -> tuple[pd.Series, pd.DataFrame, dict | Non
             cross-validation through the `config.ini` file, `metrics`
             is assigned `None`.
     """
+    if not isinstance(data.index, pd.DatetimeIndex):
+        logger.error(
+            "The time series on which to train the ARIMA model must be indexed by timestamp."
+        )
+        raise ValueError
     if arima_config["arima_order"] != (4, 1, 2):
         logger.warning(
             "The 'arima_order' setting in config.ini has been set to something different than (4, 1, 2)."
