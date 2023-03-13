@@ -24,7 +24,7 @@ colnames_energy = list(energy_clean.columns)
 # via the config file, so here we are simply overwriting them.
 clean_data.sensors_list = keys_clean
 clean_data.processing_params["mins_from_the_hour"] = 15
-clean_data.processing_params["time_delta"] = "1H"
+clean_data.processing_params["time_delta"] = "1h0m0s"
 clean_data.processing_params["window"] = 3
 
 # now call the function to process the raw data
