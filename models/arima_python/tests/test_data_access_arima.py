@@ -1,4 +1,5 @@
 import arima.data_access as data_access
+import pytest
 
 
 def test_connection():
@@ -71,3 +72,13 @@ def test_get_training_data():
     assert all(
         [energy_data[item].dtypes == datatypes[item] for item in datatypes.keys()]
     )
+
+
+def test_num_days_training():
+    """
+    Test that a ValueError is raised if the `num_days_training`
+    parameter in config.ini is set to a value greater than 365.
+    """
+    with pytest.raises(ValueError):
+        data_access.data_config["num_days_training"] = 366
+        data_access.get_training_data(num_rows=50)
