@@ -9,6 +9,8 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+data_config = config(section="data")
+
 
 def open_connection():
     """
@@ -230,14 +232,19 @@ def get_training_data(num_rows=None):
             to a different row in the utc_energy_data table. Organised
             by the timestamp column of the utc_energy_data table.
     """
-    params = config(section="data")
-    num_days_training = params["num_days_training"]
-    if num_days_training != 200:
+    if data_config["num_days_training"] > 365:
+        logger.error(
+            "The 'num_days_training' setting in config.ini cannot be set to a value greater than 365."
+        )
+        raise ValueError
+    if data_config["num_days_training"] != 200:
         logger.warning(
             "The 'num_days_training' setting in config.ini has been set to something different than 200."
         )
     env_data = get_temperature_humidity_data(
-        delta_days=num_days_training, num_rows=num_rows
+        delta_days=data_config["num_days_training"], num_rows=num_rows
     )
-    energy_data = get_energy_data(delta_days=num_days_training, num_rows=num_rows)
+    energy_data = get_energy_data(
+        delta_days=data_config["num_days_training"], num_rows=num_rows
+    )
     return env_data, energy_data
