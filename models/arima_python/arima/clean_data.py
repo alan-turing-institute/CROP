@@ -183,11 +183,16 @@ def clean_env_data(env_data: pd.DataFrame):
     frequency = timedelta(
         hours=frequency.hour, minutes=frequency.minute, seconds=frequency.second
     )
-    frequency = frequency.total_seconds()
+    frequency = int(frequency.total_seconds())
+    if frequency != constants["secs_per_min"] * constants["mins_per_hr"]:
+        logger.warning(
+            "The 'time_delta' setting in config.ini has been set to something different than one hour."
+        )
+    # now create the time vector
     time_vector = get_time_vector(
         start=min(env_data["timestamp_hour_floor"]),
         end=max(env_data["timestamp_hour_floor"]),
-        frequency=str(int(frequency)) + "S",  # S for seconds
+        frequency=str(frequency) + "S",  # S for seconds
     )
     # calculate the hourly-averaged data
     env_data = hourly_average_sensor(
@@ -307,10 +312,6 @@ def clean_data(env_data, energy_data):
     if processing_params["mins_from_the_hour"] != 15:
         logger.warning(
             "The 'mins_from_the_hour' setting in config.ini has been set to something different than 15."
-        )
-    if processing_params["time_delta"] != "1H":
-        logger.warning(
-            "The 'time_delta' setting in config.ini has been set to something different than '1H'."
         )
     if processing_params["window"] != 3:
         logger.warning(
