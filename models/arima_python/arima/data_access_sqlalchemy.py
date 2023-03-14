@@ -13,6 +13,7 @@ from cropcore.structure import (
 )
     
 from .arima_utils import get_sqlalchemy_session
+#from ..ges.ges.ges_utils import get_sqlalchemy_session
 
 logger = logging.getLogger(__name__)
 
@@ -116,11 +117,6 @@ def get_energy_data(delta_days, num_rows=None, session=None):
     )
     data = pd.read_sql(query.statement, query.session.bind)
     # convert timestamp column to datetime and remove timezone
-    # data['timestamp'] = pd.to_datetime(
-    #     data['timestamp'], 
-    #     format='%Y-%m-%d %H:%M:%S', 
-    #     utc=True
-    #     ).dt.tz_localize(None)
     remove_time_zone(data)
     logger.info("Energy data - head/tail:")
     logger.info(data.head(5))
@@ -129,16 +125,33 @@ def get_energy_data(delta_days, num_rows=None, session=None):
     session_close(session)
     return data
 
-#df = get_energy_data(100, 20)
-df2 = get_temperature_humidity_data(100, 20)
-# check data types
-print(df2.head(5))
-print(df2.dtypes)
+def get_training_data(num_rows=None):
+    """
+    Fetch temperature and humidity data from the aranet_trh_data table
+    and energy data from the utc_energy_data table for training of the
+    ARIMA model.
+    The number of days into the past for which to retrieve data from the
+    DB is specified through "num_days_training" in the config.ini file.
 
-# params = config(section="data")
-# print(params)
-# num_days_training = params["num_days_training"]
-# if num_days_training != 200:
-#         logger.warning(
-#             "The 'num_days_training' setting in config.ini has been set to something different than 200."
-#         )
+    Parameters:
+        numRows: upper limit of number of rows to retrieve. Default is None (no
+            upper limit is set).
+    Returns:
+        env_data: pandas DataFrame containing the temperature and humidity data. Each row
+            corresponds to a different row in the aranet_trh_data table. Organised
+            by the timestamp column of the aranet_trh_data table.
+        energy_data: pandas DataFrame containing the energy data. Each row corresponds
+            to a different row in the utc_energy_data table. Organised
+            by the timestamp column of the utc_energy_data table.
+    """
+    params = config(section="data")
+    num_days_training = params["num_days_training"]
+    if num_days_training != 200:
+        logger.warning(
+            "The 'num_days_training' setting in config.ini has been set to something different than 200."
+        )
+    env_data = get_temperature_humidity_data(
+        delta_days=num_days_training, num_rows=num_rows
+    )
+    energy_data = get_energy_data(delta_days=num_days_training, num_rows=num_rows)
+    return env_data, energy_data
