@@ -52,20 +52,20 @@ def standardize_timestamp(timestamp: datetime) -> datetime:
     return timestamp
 
 
-def prepare_data(env_clean: dict, energy_clean: pd.DataFrame):
+def prepare_data(env_data: dict, energy_data: pd.DataFrame):
     # obtain the standardized timestamp.
     # note that both `env_clean` and `energy_clean` are indexed by the same timestamps.
-    timestamp_standardized = standardize_timestamp(energy_clean.index[-1])
+    timestamp_standardized = standardize_timestamp(energy_data.index[-1])
     # keep only the observations whose timestamp is smaller or equal to the
     # standardized timestamp
-    keys = list(env_clean.keys())
+    keys = list(env_data.keys())
     for key in keys:
-        env_clean[key].drop(
-            env_clean[key][env_clean[key].index > timestamp_standardized].index,
+        env_data[key].drop(
+            env_data[key][env_data[key].index > timestamp_standardized].index,
             inplace=True,
         )
-    energy_clean.drop(
-        energy_clean[energy_clean.index > timestamp_standardized].index,
+    energy_data.drop(
+        energy_data[energy_data.index > timestamp_standardized].index,
         inplace=True,
     )
     # compute the total hourly energy consumption, given the sampling frequency
@@ -85,4 +85,4 @@ def prepare_data(env_clean: dict, energy_clean: pd.DataFrame):
     hourly_consumption_factor = (
         constants["secs_per_min"] * constants["mins_per_hr"] / freq_energy_data
     )
-    energy_clean["EnergyCP"] = energy_clean["EnergyCP"] * hourly_consumption_factor
+    energy_data["EnergyCP"] = energy_data["EnergyCP"] * hourly_consumption_factor
