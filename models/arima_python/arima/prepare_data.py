@@ -1,5 +1,6 @@
 from .config import config
 from datetime import datetime, timedelta
+import pandas as pd
 
 constants = config(section="constants")
 data_config = config(section="data")
@@ -51,7 +52,7 @@ def standardize_timestamp(timestamp: datetime) -> datetime:
     return timestamp
 
 
-def prepare_data(env_clean, energy_clean):
+def prepare_data(env_clean: dict, energy_clean: pd.DataFrame):
     # obtain the standardized timestamp.
     # note that both `env_clean` and `energy_clean` are indexed by the same timestamps.
     timestamp_standardized = standardize_timestamp(energy_clean.index[-1])
@@ -70,4 +71,18 @@ def prepare_data(env_clean, energy_clean):
     # compute the total hourly energy consumption, given the sampling frequency
     # of the `utc_energy_data` table
     freq_energy_data = data_config["freq_energy_data"]
+    # parse string into datetime object
     freq_energy_data = datetime.strptime(freq_energy_data, "%Hh%Mm%Ss")
+    # calculate total time between samples in seconds
+    freq_energy_data = timedelta(
+        hours=freq_energy_data.hour,
+        minutes=freq_energy_data.minute,
+        seconds=freq_energy_data.second,
+    )
+    freq_energy_data = freq_energy_data.total_seconds()
+    # now calculate the total hourly consumption, which in the original
+    # R code only affected the `EnergyCP` column of `energy_clean`
+    hourly_consumption_factor = (
+        constants["secs_per_min"] * constants["mins_per_hr"] / freq_energy_data
+    )
+    energy_clean["EnergyCP"] = energy_clean["EnergyCP"] * hourly_consumption_factor
