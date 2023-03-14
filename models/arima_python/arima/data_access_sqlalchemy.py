@@ -16,6 +16,7 @@ from .arima_utils import get_sqlalchemy_session
 
 logger = logging.getLogger(__name__)
 
+
 def get_energy_data(delta_days=100, num_rows=20, session=None):
     """ Fetch energy data from the utc_energy_data table
     over the specified time period, limited by the specified
@@ -38,7 +39,7 @@ def get_energy_data(delta_days=100, num_rows=20, session=None):
     query = (
         # retrieve all columns from the ReadingsEnergyClass table
         session.query(
-            func.to_char(ReadingsEnergyClass.timestamp, 'YYYY-MM-DD HH24:MI:SS').label('timestamp'),
+            ReadingsEnergyClass.timestamp,
             ReadingsEnergyClass.electricity_consumption,
             ReadingsEnergyClass.time_created,
             ReadingsEnergyClass.time_updated,
@@ -49,9 +50,22 @@ def get_energy_data(delta_days=100, num_rows=20, session=None):
         .order_by(asc(ReadingsEnergyClass.timestamp))
         .limit(num_rows)
     )
-    result = query.all()
+    data = pd.read_sql(query.statement, query.session.bind)
+    # convert timestamp column to datetime and remove timezone
+    data['timestamp'] = pd.to_datetime(
+        data['timestamp'], 
+        format='%Y-%m-%d %H:%M:%S', 
+        utc=True
+        ).dt.tz_localize(None)
+    
+    logger.info("Energy data - head/tail:")
+    logger.info(data.head(5))
+    logger.info(data.tail(5))
+    
     session_close(session)
-    return result
+    return data
 
-df = pd.DataFrame(get_energy_data())
-print(df.head(5))
+df = get_energy_data()
+
+# check data types
+print(df.dtypes)
