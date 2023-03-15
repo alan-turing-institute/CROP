@@ -99,6 +99,8 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
         .filter(
             ModelRunClass.model_id == model_id,
             ModelRunClass.sensor_id == sensor_id,
+            ModelRunClass.time_created >= dt_from,
+            ModelRunClass.time_created <= dt_to,
         )
         .all()
     )
@@ -129,9 +131,6 @@ def model_query(dt_from, dt_to, model_id, sensor_id):
             ModelProductClass.run_id == ModelRunClass.id,
             ModelProductClass.measure_id == ModelMeasureClass.id,
             ModelValueClass.product_id == ModelProductClass.id,
-            ModelRunClass.sensor_id == sensor_id,
-            ModelRunClass.time_created >= dt_from,
-            ModelRunClass.time_created <= dt_to,
             ModelMeasureClass.scenario_id == ModelScenarioClass.id,
         )
     )
@@ -281,11 +280,11 @@ def json_temp_ges(df):
     return json_str
 
 
-def recent_arima_sensors(timerange=dt.timedelta(days=5)):
+def recent_arima_sensors(now=dt.datetime.now(), timerange=dt.timedelta(days=5)):
     """Get the IDs of sensors for which there has been an Arima run in the last some
     time.
     """
-    dt_from = dt.datetime.now() - timerange
+    dt_from = now - timerange
     query = (
         db.session.query(ModelRunClass.sensor_id)
         .filter(ModelRunClass.time_created >= dt_from)
@@ -297,8 +296,9 @@ def recent_arima_sensors(timerange=dt.timedelta(days=5)):
 
 
 def arima_template():
-    sensor_ids = recent_arima_sensors()
-    dt_to = dt.datetime.now()
+    now = dt.datetime.now()
+    sensor_ids = recent_arima_sensors(now=now)
+    dt_to = now
     dt_from = dt_to - dt.timedelta(days=3)
 
     data = {}
