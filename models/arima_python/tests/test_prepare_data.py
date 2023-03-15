@@ -1,7 +1,10 @@
 import arima.prepare_data as prepare_data
 from datetime import datetime
+import pandas as pd
+import numpy as np
 
 prepare_data.arima_config["farm_cycle_start"] = "16h0m0s"
+prepare_data.arima_config["days_interval"] = 30
 
 
 def test_standardize_timestamp():
@@ -36,3 +39,25 @@ def test_standardize_timestamp():
         # convert datetime objects to strings
         output_timestamp = datetime.strftime(output_timestamp, "%Y-%m-%d %H:%M:%S")
         assert output_timestamp == expect_output_timestamps[ii]
+
+
+def test_impute_missing_values():
+    """
+    Test that the replacement of missing values is performed
+    correctly. This function reads a CSV file where missing
+    values have been replaced manually and checks that the
+    function `impute_missing_values` produces the same output.
+    """
+    date_parser = lambda x: datetime.strptime(x, "%d/%m/%Y %H:%M:%S")
+    df = pd.read_csv(
+        "tests/data/test_impute_missing_values.csv",
+        parse_dates=["timestamp"],
+        date_parser=date_parser,
+    )
+    df.set_index("timestamp", inplace=True)
+    temperature = df["temperature"]  # with missing values
+    temperature_expected = df[
+        "expected_temperature"
+    ]  # without missing values (replaced manually)
+    temperature_impute_missing = prepare_data.impute_missing_values(temperature)
+    assert np.isclose(temperature_expected, temperature_impute_missing).all()
