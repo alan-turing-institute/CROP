@@ -83,9 +83,34 @@ def break_up_timestamp(data: pd.DataFrame, days_interval: int) -> pd.DataFrame:
     return data
 
 
+def impute_missing_values(data: pd.Series) -> pd.Series:
+    index_name = data.index.name  # get the index name - should be `timestamp`
+    data = data.to_frame()  # first convert Series to DataFrame
+    days_interval = arima_config["days_interval"]
+    data = break_up_timestamp(data, days_interval)
+    # compute the mean value for the groups, excluding missing values.
+    # the resulting DataFrame will be multi-indexed by `pseudo-season`,
+    # `weekday` and `time`.
+    mean_values = data.groupby(["pseudo_season", "weekday", "time"]).mean()
+    # elevate the index (the timestamps) of the input data to a column
+    data = data.reset_index()
+    # set the index to `pseudo_season`, `weekday` and `time`
+    data.set_index(["pseudo_season", "weekday", "time"], inplace=True)
+    # fill missing values with the computed mean values.
+    # When filling using a DataFrame, replacement happens
+    # along the same column names and same indices.
+    data.fillna(mean_values, inplace=True)
+    # now reset the index to be the timestamp column and make
+    # sure that the rows are sorted in ascending order of index
+    data.set_index(index_name, inplace=True)
+    data.sort_index(ascending=True, inplace=True)
+    data = data.squeeze()  # convert DataFrame back to Series
+    return data
+
+
 def prepare_data(env_data: dict, energy_data: pd.DataFrame):
     # obtain the standardized timestamp.
-    # note that both `env_clean` and `energy_clean` are indexed by the same timestamps.
+    # note that both `env_data` and `energy_data` are indexed by the same timestamps.
     timestamp_standardized = standardize_timestamp(energy_data.index[-1])
     # keep only the observations whose timestamp is smaller or equal to the
     # standardized timestamp
@@ -112,7 +137,7 @@ def prepare_data(env_data: dict, energy_data: pd.DataFrame):
     )
     freq_energy_data = freq_energy_data.total_seconds()
     # now calculate the total hourly consumption, which in the original
-    # R code only affected the `EnergyCP` column of `energy_clean`
+    # R code only affected the `EnergyCP` column of `energy_data`
     hourly_consumption_factor = (
         constants["secs_per_min"] * constants["mins_per_hr"] / freq_energy_data
     )
