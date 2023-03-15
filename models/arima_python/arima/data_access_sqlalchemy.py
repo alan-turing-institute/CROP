@@ -52,7 +52,6 @@ def get_temperature_humidity_data(delta_days, num_rows=None, session=None):
     data_from = date_to - delta
     query = (
         session.query(
-            SensorClass.id,
             SensorClass.name,
             ReadingsAranetTRHClass.id,
             ReadingsAranetTRHClass.sensor_id,
@@ -67,11 +66,8 @@ def get_temperature_humidity_data(delta_days, num_rows=None, session=None):
         .order_by(asc(ReadingsAranetTRHClass.timestamp))
         .limit(num_rows)
     )
-    data = (pd
-            .read_sql(query.statement, query.session.bind)
-            .drop(columns=["id"])
-            .rename(columns={"id_1": "id"})
-    )
+    data = pd.read_sql(query.statement, query.session.bind)
+          
     remove_time_zone(data)
     
     logger.info("Temperature and humidity data - head/tail:")
@@ -80,7 +76,6 @@ def get_temperature_humidity_data(delta_days, num_rows=None, session=None):
     
     session_close(session)
     return data
-
             
 def get_energy_data(delta_days, num_rows=None, session=None):
     """ Fetch energy data from the utc_energy_data table
