@@ -13,7 +13,7 @@ from cropcore.structure import (
 )
     
 from .arima_utils import get_sqlalchemy_session
-#from ..ges.ges.ges_utils import get_sqlalchemy_session
+#from models.ges.ges.ges_utils import get_sqlalchemy_session
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ def get_temperature_humidity_data(delta_days, num_rows=None, session=None):
     over the specified time period, limited by the specified number of rows.
 
      Args:
-        delta_days (int, optional): Number of days in the past from which to retrieve data. Defaults to 100.
-        num_rows (int, optional): Number of rows to limit the data to. 
-        session (_type_, optional): _description_. Defaults to None.
+        delta_days (int): Number of days in the past from which to retrieve data. Defaults to 100.
+        num_rows (int): Number of rows to limit the data to. 
+        session (_type_): _description_. Defaults to None.
 
     Returns:
         data: A pandas dataframe with each row corresponding to a different row of the DB table, 
@@ -67,7 +67,6 @@ def get_temperature_humidity_data(delta_days, num_rows=None, session=None):
         .limit(num_rows)
     )
     data = pd.read_sql(query.statement, query.session.bind)
-          
     remove_time_zone(data)
     
     logger.info("Temperature and humidity data - head/tail:")
@@ -83,9 +82,9 @@ def get_energy_data(delta_days, num_rows=None, session=None):
     number of rows.
 
     Args:
-        delta_days (int, optional): Number of days in the past from which to retrieve data. Defaults to 100.
-        num_rows (int, optional): Number of rows to limit the data to.
-        session (_type_, optional): _description_. Defaults to None.
+        delta_days (int): Number of days in the past from which to retrieve data. Defaults to 100.
+        num_rows (int): Number of rows to limit the data to.
+        session (_type_): _description_. Defaults to None.
 
     Returns:
         data: A pandas dataframe with each row corresponding to a different row of the DB table, 
@@ -97,7 +96,6 @@ def get_energy_data(delta_days, num_rows=None, session=None):
     delta = datetime.timedelta(days=delta_days)
     data_from = date_to - delta
     query = (
-        # retrieve all columns from the ReadingsEnergyClass table
         session.query(
             ReadingsEnergyClass.timestamp,
             ReadingsEnergyClass.electricity_consumption,
@@ -111,8 +109,8 @@ def get_energy_data(delta_days, num_rows=None, session=None):
         .limit(num_rows)
     )
     data = pd.read_sql(query.statement, query.session.bind)
-    # convert timestamp column to datetime and remove timezone
     remove_time_zone(data)
+    
     logger.info("Energy data - head/tail:")
     logger.info(data.head(5))
     logger.info(data.tail(5))
