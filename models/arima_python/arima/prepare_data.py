@@ -96,10 +96,9 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
     data = data.reset_index()
     # set the index to `pseudo_season`, `weekday` and `time`
     data.set_index(["pseudo_season", "weekday", "time"], inplace=True)
-    # fill missing values with the computed mean values.
-    # When filling using a DataFrame, replacement happens
-    # along the same column names and same indices.
-    data.fillna(mean_values, inplace=True)
+    # replace missing values with the computed mean values.
+    # `DataFrame.update` modifies in-place, and aligns on indices.
+    data.update(mean_values, overwrite=False)
     # now reset the index to be the timestamp column and make
     # sure that the rows are sorted in ascending order of index
     data.set_index(index_name, inplace=True)
