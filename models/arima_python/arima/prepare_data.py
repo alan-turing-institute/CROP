@@ -52,6 +52,37 @@ def standardize_timestamp(timestamp: datetime) -> datetime:
     return timestamp
 
 
+def break_up_timestamp(data: pd.DataFrame, days_interval: int) -> pd.DataFrame:
+    """
+    Given an input pandas DataFrame indexed by timestamp
+    and a time interval in days, break up the timestamps into
+    time of the day, day of the week and a pseudo-season.
+
+    Parameters:
+        data: pandas DataFrame indexed by timestamp.
+        days_interval: number of days of the time interval that
+            defines the pseudo-season.
+
+    Returns:
+        data: the input pandas DataFrame with additional columns:
+            - `time`: the time of the day, as a `datetime.time` object.
+            - `weekday`: the day of the week with Monday=0, Sunday=6.
+            - `pseudo_season`: identifies timestamps belonging to the
+                same pseudo season based on the interval specified through
+                `days_interval`.
+    """
+    # create the time-of-the-day and day-of-the-week columns
+    timestamps = data.index
+    data["time"] = timestamps.time
+    data["weekday"] = timestamps.weekday
+    # now create the pseudo-season, based on the specified interval
+    delta_time = timestamps - timestamps[0]
+    delta_time = delta_time.to_pytimedelta()
+    interval = timedelta(days=days_interval)
+    data["pseudo_season"] = delta_time // interval  # floor division
+    return data
+
+
 def prepare_data(env_data: dict, energy_data: pd.DataFrame):
     # obtain the standardized timestamp.
     # note that both `env_clean` and `energy_clean` are indexed by the same timestamps.
