@@ -87,6 +87,25 @@ def break_up_timestamp(data: pd.DataFrame, days_interval: int) -> pd.DataFrame:
 
 
 def impute_missing_values(data: pd.Series) -> pd.Series:
+    """
+    Replace missing values in a time series with "typically observed"
+    values. This function makes use of the `days_interval` and
+    `weekly_seasonality` parameters in config.ini.
+    Three different seasonalities are assumed in the data by default:
+    daily, weekly, and pseudo-season. These seasonalities are employed
+    to compute the typically-observed values that will replace missing
+    values. The `weekly_seasonality` parameter can be set to `False` in
+    order to remove the weekly-seasonality assumption, and the time
+    interval of the pseudo-season can be modified through `days_interval`.
+
+    Parameters:
+        data: a time series as a pandas Series, potentially containing
+            missing values. Must be indexed by timestamp.
+
+    Returns:
+        data: the input time series as a pandas Series, where any missing
+            values have been replaced with typically-observed values.
+    """
     index_name = data.index.name  # get the index name - should be `timestamp`
     data = data.to_frame()  # first convert Series to DataFrame
     days_interval = arima_config["days_interval"]
@@ -110,7 +129,7 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
         data = data.reset_index()
         # set the index to `pseudo_season`, `weekday` and `time`
         data.set_index(["pseudo_season", "weekday", "time"], inplace=True)
-    # otherwise, only consider hourly and pseudo-season seasonality
+    # otherwise, only consider daily and pseudo-season seasonality
     else:
         data.drop(columns="weekday", inplace=True)
         # the resulting DataFrame will be multi-indexed by `pseudo-season`
