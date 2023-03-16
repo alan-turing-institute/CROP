@@ -3,14 +3,15 @@ import logging
 import pandas as pd
 from pathlib import Path
 
+from cropcore.model_data_access import(
+    insert_model_run,
+    insert_model_product,
+    insert_model_predictions,
+)
+
 # relative or non-relative imports, depending on where we run from :-/
 if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
     from TestScenarioV1_1 import runScenarios, FILEPATH_WEATHER
-    from ges.dataAccess import (
-        insert_model_run,
-        insert_model_product,
-        insert_model_predictions,
-    )
     from ges.config import config
     from ges.ges_utils import (
         get_ges_model_id,
@@ -20,11 +21,6 @@ if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
     )
 else:
     from .TestScenarioV1_1 import runScenarios, FILEPATH_WEATHER
-    from .ges.dataAccess import (
-        insert_model_run,
-        insert_model_product,
-        insert_model_predictions,
-    )
     from .ges.config import config
     from .ges.ges_utils import (
         get_ges_model_id,
