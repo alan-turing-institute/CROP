@@ -29,7 +29,7 @@ CROP.pyproj.user
 /versioning/Data_model/test_model/mlruns/
 /versioning/Data_model/test_model/static/data/
 *.csv
-!test_impute_missing_values.csv
+!*weekly_seasonality.csv
 *.tgz
 *.tar.gz
 /versioning/Data_model/models/static/data
