@@ -9,7 +9,10 @@ import ast
 
 
 def config(
-    filename="./config.ini",
+    # gets config.ini file from the parent directory, no matter where the script is run from
+    filename=os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "config.ini"
+    ),
     section="postgresql",
 ):
 
