@@ -170,3 +170,5 @@ renv/
 
 # Data dump for testing ARIMA Python
 models/arima_python/dump
+# no matter where it is
+**/dump/
