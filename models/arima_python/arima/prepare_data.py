@@ -1,6 +1,9 @@
 from .config import config
 from datetime import datetime, timedelta
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 constants = config(section="constants")
 data_config = config(section="data")
@@ -89,13 +92,34 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
     days_interval = arima_config["days_interval"]
     data = break_up_timestamp(data, days_interval)
     # compute the mean value for the groups, excluding missing values.
-    # the resulting DataFrame will be multi-indexed by `pseudo-season`,
-    # `weekday` and `time`.
-    mean_values = data.groupby(["pseudo_season", "weekday", "time"]).mean()
-    # elevate the index (the timestamps) of the input data to a column
-    data = data.reset_index()
-    # set the index to `pseudo_season`, `weekday` and `time`
-    data.set_index(["pseudo_season", "weekday", "time"], inplace=True)
+    weekly_seasonality = arima_config["weekly_seasonality"]
+    # if the user has requested to consider weekly seasonality:
+    if weekly_seasonality:
+        if days_interval < 30:
+            logger.error(
+                """
+                If the 'weekly_seasonality' parameter in config.ini is set to `True`,
+                the 'days_interval' parameter must be >= 30.
+                """
+            )
+            raise ValueError
+        # the resulting DataFrame will be multi-indexed by `pseudo-season`,
+        # `weekday` and `time`.
+        mean_values = data.groupby(["pseudo_season", "weekday", "time"]).mean()
+        # elevate the index (the timestamps) of the input data to a column
+        data = data.reset_index()
+        # set the index to `pseudo_season`, `weekday` and `time`
+        data.set_index(["pseudo_season", "weekday", "time"], inplace=True)
+    # otherwise, only consider hourly and pseudo-season seasonality
+    else:
+        data.drop(columns="weekday")
+        # the resulting DataFrame will be multi-indexed by `pseudo-season`
+        # and `time`
+        mean_values = data.groupby(["pseudo_season", "time"]).mean()
+        # elevate the index (the timestamps) of the input data to a column
+        data = data.reset_index()
+        # set the index to `pseudo_season` and `time`
+        data.set_index(["pseudo_season", "time"], inplace=True)
     # replace missing values with the computed mean values.
     # `DataFrame.update` modifies in-place, and aligns on indices.
     data.update(mean_values, overwrite=False)
