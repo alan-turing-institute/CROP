@@ -106,6 +106,11 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
         data: the input time series as a pandas Series, where any missing
             values have been replaced with typically-observed values.
     """
+    if not (isinstance(data, pd.Series) and isinstance(data.index, pd.DatetimeIndex)):
+        logger.error(
+            "The input time series must be a pandas Series indexed by timestamp."
+        )
+        raise ValueError
     index_name = data.index.name  # get the index name - should be `timestamp`
     data = data.to_frame()  # first convert Series to DataFrame
     days_interval = arima_config["days_interval"]
