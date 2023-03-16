@@ -112,7 +112,7 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
         data.set_index(["pseudo_season", "weekday", "time"], inplace=True)
     # otherwise, only consider hourly and pseudo-season seasonality
     else:
-        data.drop(columns="weekday")
+        data.drop(columns="weekday", inplace=True)
         # the resulting DataFrame will be multi-indexed by `pseudo-season`
         # and `time`
         mean_values = data.groupby(["pseudo_season", "time"]).mean()
