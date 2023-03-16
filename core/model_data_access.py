@@ -13,6 +13,7 @@ from sqlalchemy import desc, asc, exc, func
 
 from models.ges.ges.config import config as ges_config
 from models.arima_python.arima.config import config as arima_config
+from models.ges.ges.ges_utils import get_sqlalchemy_session
 
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.structure import (
@@ -28,7 +29,6 @@ from cropcore.structure import (
     ModelValueClass,
 )
 from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
-from models.ges.ges.ges_utils import get_sqlalchemy_session
 
 logger = logging.getLogger(__name__)
 

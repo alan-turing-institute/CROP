@@ -1,18 +1,19 @@
-import arima.arima_utils as arima_utils
+from arima.arima_utils import get_sqlalchemy_session
 #from models.ges.ges.ges_utils import get_sqlalchemy_session
-from arima.data_access import (
+from cropcore.db import connect_db, session_open, session_close
+from cropcore.model_data_access import (
     get_energy_data,
     get_temperature_humidity_data,
-    get_training_data,
+    get_training_data
 )
 
 def test_connection():
     """
     Test PostgreSQL connection
     """
-    conn = arima_utils.get_sqlalchemy_session()
+    conn = get_sqlalchemy_session()
     assert conn is not None
-    arima_utils.session_close(conn)
+    session_close(conn)
     
 def test_get_energy_data():
     """
