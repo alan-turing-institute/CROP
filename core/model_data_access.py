@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import desc, asc, exc, func
 
-from models.ges.ges.config import config as ges_config
 from models.arima_python.arima.config import config as arima_config
+from models.ges.ges.config import config as ges_config
 from models.ges.ges.ges_utils import get_sqlalchemy_session
 
 from cropcore.db import connect_db, session_open, session_close
@@ -32,8 +32,9 @@ from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 logger = logging.getLogger(__name__)
 
+# currently unused
 path_conf = ges_config(section="paths")
-data_dir_ges = Path(path_conf["data_dir"]) # unused
+data_dir_ges = Path(path_conf["data_dir"]) 
 
 # ges ---------------------------------------------------------------------
 
