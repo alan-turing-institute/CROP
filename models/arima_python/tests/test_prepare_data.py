@@ -113,11 +113,13 @@ def get_prepared_data(
 # import the data processed with `clean_data.clean_data`
 env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
 energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
+keys_env_clean = list(env_clean.keys())
 # get the prepared data
 env_prepared, energy_prepared = get_prepared_data(
     deepcopy(env_clean),
     deepcopy(energy_clean),
 )
+keys_env_prepared = list(env_prepared.keys())
 
 
 def test_timestamps_prepared_data():
@@ -125,10 +127,9 @@ def test_timestamps_prepared_data():
     Test the timestamps of the prepared data.
     """
     # check that the timestamp vector is the same for all dataframes
-    keys = list(env_prepared.keys())
-    for ii in range(1, len(keys)):
-        timestamp1 = env_prepared[keys[ii - 1]].index
-        timestamp2 = env_prepared[keys[ii]].index
+    for ii in range(1, len(keys_env_prepared)):
+        timestamp1 = env_prepared[keys_env_prepared[ii - 1]].index
+        timestamp2 = env_prepared[keys_env_prepared[ii]].index
         assert timestamp2.equals(timestamp1)
     timestamp1 = energy_prepared.index
     assert timestamp2.equals(timestamp1)
@@ -147,3 +148,16 @@ def test_timestamps_prepared_data():
         timestamp2[-1].time() == farm_cycle_start.time()
         or timestamp2[-1].time() == (farm_cycle_start - timedelta(hours=12)).time()
     )
+
+
+def test_columns_prepared_data():
+    """
+    Test that the processed dataframes contain the
+    expected columns.
+    """
+    colnames_env_clean = list(env_clean[keys_env_clean[0]].columns).sort()
+    colnames_env_prepared = list(env_prepared[keys_env_prepared[0]].columns).sort()
+    colnames_energy_clean = list(energy_clean.columns).sort()
+    colnames_energy_prepared = list(energy_prepared.columns).sort()
+    assert colnames_env_clean == colnames_env_prepared
+    assert colnames_energy_clean == colnames_energy_prepared
