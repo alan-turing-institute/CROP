@@ -8,8 +8,8 @@ env_raw = pd.read_pickle(
 energy_raw = pd.read_pickle("tests/data/utc_energy_raw.pkl")  # energy data
 
 # import the processed data - this is the baseline we compare against
-env_clean = pd.read_pickle("tests/data/aranet_trh_processed.pkl")
-energy_clean = pd.read_pickle("tests/data/utc_energy_processed.pkl")
+env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
+energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
 keys_clean = list(env_clean.keys())
 
 # column names TRH data should contain
