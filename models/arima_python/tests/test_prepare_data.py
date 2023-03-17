@@ -1,5 +1,5 @@
 import arima.prepare_data as prepare_data
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import pickle
@@ -111,7 +111,6 @@ env_prepared, energy_prepared = get_prepared_data(
 
 
 def test_timestamps_prepared_data():
-    # check the timestamps of the prepared data.
     # check that the timestamp vector is the same for all dataframes
     keys = list(env_prepared.keys())
     for ii in range(1, len(keys)):
@@ -127,3 +126,11 @@ def test_timestamps_prepared_data():
     time_delta = timestamp2.diff()[1:]
     time_delta = pd.unique(time_delta)
     assert len(time_delta) == 1
+    # check that the last timestamp has time `farm_cycle_start`
+    # or (`farm_cycle_start`- 12 hours)
+    farm_cycle_start = prepare_data.arima_config["farm_cycle_start"]
+    farm_cycle_start = datetime.strptime(farm_cycle_start, "%Hh%Mm%Ss")
+    assert (
+        timestamp2[-1].time() == farm_cycle_start.time()
+        or timestamp2[-1].time() == (farm_cycle_start - timedelta(hours=12)).time()
+    )
