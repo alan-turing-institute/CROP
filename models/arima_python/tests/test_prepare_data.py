@@ -2,7 +2,6 @@ import arima.prepare_data as prepare_data
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-import pickle
 from copy import deepcopy
 
 prepare_data.arima_config["farm_cycle_start"] = "16h0m0s"
@@ -82,44 +81,24 @@ def test_impute_missing_values():
     assert np.isclose(temperature_expected, temperature_impute_missing).all()
 
 
-def get_prepared_data(
-    env_data: dict, energy_data: pd.DataFrame, key: str
-) -> tuple[dict, pd.DataFrame]:
-    """
-    Given environment and energy data pre-processed with
-    `clean_data.clean_data`, artificially insert a missing
-    value in the `temperature` column of a DataFrame in `env_data`
-    (specified through `key`), and call the function
-    `prepare_data.prepare_data`. The missing observation is introduced
-    to test that it is successfully replaced with a typically-observed
-    value.
-    """
-    # artificially include a missing value in the `temperature`
-    # column of the first dataframe in `env_data`
-    nrows = env_data[key].shape[0]
-    env_data[key]["temperature"].iloc[int(nrows / 2)] = np.NaN
-    # switch off `weekly_seasonality` and set the `days_interval`
-    # parameter to 1 in order to successfully replace missing observations
-    prepare_data.arima_config["weekly_seasonality"] = False
-    prepare_data.arima_config["days_interval"] = 1
-    # now feed to `prepare_data.prepare_data`
-    env_data, energy_data = prepare_data.prepare_data(
-        env_data,
-        energy_data,
-    )
-    return env_data, energy_data
-
-
 # import the data processed with `clean_data.clean_data`
 env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
 energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
 keys_env_clean = list(env_clean.keys())
+# artificially include a missing value in the `temperature`
+# column of one of the DataFrames in `env_clean`, to test that it is
+# successfully replaced
 key_missing_value = keys_env_clean[0]
-# get the prepared data
-env_prepared, energy_prepared = get_prepared_data(
+nrows = env_clean[key_missing_value].shape[0]
+env_clean[key_missing_value]["temperature"].iloc[int(nrows / 2)] = None
+# switch off `weekly_seasonality` and set the `days_interval`
+# parameter to 1 in order to successfully replace the missing observation
+prepare_data.arima_config["weekly_seasonality"] = False
+prepare_data.arima_config["days_interval"] = 1
+# now feed to `prepare_data.prepare_data`
+env_prepared, energy_prepared = prepare_data.prepare_data(
     deepcopy(env_clean),
     deepcopy(energy_clean),
-    key_missing_value,
 )
 keys_env_prepared = list(env_prepared.keys())
 
