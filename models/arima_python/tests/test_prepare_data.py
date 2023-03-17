@@ -42,7 +42,7 @@ def test_standardize_timestamp():
         assert output_timestamp == expect_output_timestamps[ii]
 
 
-def return_temperatures(csv_path: str):
+def return_temperatures(csv_path: str) -> tuple[pd.Series, pd.Series]:
     """
     Given the path of a CSV file, read the "temperature" and
     "expected_temperature" columns and return these as pandas
@@ -82,7 +82,17 @@ def test_impute_missing_values():
     assert np.isclose(temperature_expected, temperature_impute_missing).all()
 
 
-def get_prepared_data(env_data: dict, energy_data: pd.DataFrame):
+def get_prepared_data(
+    env_data: dict, energy_data: pd.DataFrame
+) -> tuple[dict, pd.DataFrame]:
+    """
+    Given environment and energy data pre-processed with
+    `clean_data.clean_data`, artificially insert a missing
+    value in the `temperature` column of the first DataFrame
+    in `env_data`, and call the function `prepare_data.prepare_data`.
+    The missing observation is introduced to test that it is
+    successfully replaced with a typically-observed value.
+    """
     keys = list(env_data.keys())
     # artificially include a missing value in the `temperature`
     # column of the first dataframe in `env_data`
@@ -103,7 +113,7 @@ def get_prepared_data(env_data: dict, energy_data: pd.DataFrame):
 # import the data processed with `clean_data.clean_data`
 env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
 energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
-# prepare the data
+# get the prepared data
 env_prepared, energy_prepared = get_prepared_data(
     deepcopy(env_clean),
     deepcopy(energy_clean),
@@ -111,6 +121,9 @@ env_prepared, energy_prepared = get_prepared_data(
 
 
 def test_timestamps_prepared_data():
+    """
+    Test the timestamps of the prepared data.
+    """
     # check that the timestamp vector is the same for all dataframes
     keys = list(env_prepared.keys())
     for ii in range(1, len(keys)):
