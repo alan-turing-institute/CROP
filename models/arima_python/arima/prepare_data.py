@@ -158,7 +158,39 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
     return data
 
 
-def prepare_data(env_data: dict, energy_data: pd.DataFrame):
+def prepare_data(
+    env_data: dict, energy_data: pd.DataFrame
+) -> tuple[dict, pd.DataFrame]:
+    """
+    Parent function of this module. Prepares the data in order to feed it into
+    the ARIMA pipeline. Parameters relevant to this function in config.ini are
+    `farm_cycle_start`, `days_interval` and `weekly_seasonality`. The last two
+    are employed to replace missing observations.
+
+    Parameters:
+        env_data: this is the first output of `clean_data.clean_data`.
+            A dictionary containing temperature and humidity data for
+            each of the sensors, in the form of a pandas DataFrame.
+        energy_data: this is the second output of `clean_data.clean_data`.
+            A pandas DataFrame containing electricity consumption data.
+
+    Returns:
+        env_data: a dictionary with the same keys as the input `env_data`.
+            Each key is named after the corresponding sensor. The DataFrames
+            contained in this dictionary are indexed by timestamp and are
+            processed so that the timestamps are in agreement with the
+            start of the farm cycle, specified through the parameter
+            `farm_cycle_start` in config.ini. Missing observations will be
+            replaced by "typically observed" values if there is enough data
+            and the combination of parameters `days_interval` and `weekly_seasonality`
+            allows it.
+        energy_data: a pandas DataFrame, indexed by timestamp, containing the
+            electricity consumption data, and processed in the same way as
+            `env_data`. Additionally, the column `EnergyCP` will be multiplied
+            by an "hourly consumption factor", depending on the timedelta between
+            successive observations and the `freq_energy_data` parameter in
+            config.ini.
+    """
     # obtain the standardized timestamp.
     # note that both `env_data` and `energy_data` are indexed by the same timestamps.
     timestamp_standardized = standardize_timestamp(energy_data.index[-1])
