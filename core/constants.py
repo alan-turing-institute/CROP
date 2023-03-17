@@ -3,6 +3,7 @@ A module for constants
 """
 import logging
 from urllib import parse
+import datetime
 
 import os
 import pandas as pd
@@ -33,7 +34,8 @@ def make_conn_string(sql_engine, sql_user, sql_password, sql_host, sql_port):
     )
 
 # FOR AIUK, define time from which to get data
-CONST_NOWTIME = "2022-03-17"
+DAYS_AGO = int(os.environ["CROP_DAYS_AGO"]) if "CROP_DAYS_AGO" in os.environ else 365
+CONST_NOWTIME = str(datetime.datetime.now() - datetime.timedelta(days=DAYS_AGO))
 
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"

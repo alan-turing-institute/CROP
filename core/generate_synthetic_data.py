@@ -19,7 +19,7 @@ CROP_TYPES = [
     "purple radish",
     "garlic chive",
     "garlic chive",
-    "red_cabbage",
+    "red cabbage",
     None,
 ]
 

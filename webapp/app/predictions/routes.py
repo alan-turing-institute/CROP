@@ -3,6 +3,7 @@ A module for the prediction page actions
 """
 
 import datetime as dt
+from freezegun import freeze_time
 import json
 import logging
 
@@ -18,6 +19,7 @@ from cropcore.constants import (
     BSTS_MODEL_ID,
     GES_MODEL_ID,
     GES_SENSOR_ID,
+    CONST_NOWTIME,
 )
 from cropcore import queries
 from cropcore.structure import (
@@ -279,7 +281,7 @@ def json_temp_ges(df):
     )
     return json_str
 
-
+@freeze_time(CONST_NOWTIME)
 def recent_arima_sensors(now=dt.datetime.now(), timerange=dt.timedelta(days=5)):
     """Get the IDs of sensors for which there has been an Arima run in the last some
     time.
@@ -294,7 +296,7 @@ def recent_arima_sensors(now=dt.datetime.now(), timerange=dt.timedelta(days=5)):
     ids = [i[0] for i in ids]
     return ids
 
-
+@freeze_time(CONST_NOWTIME)
 def arima_template():
     now = dt.datetime.now()
     sensor_ids = recent_arima_sensors(now=now)
@@ -327,7 +329,7 @@ def arima_template():
         "arima.html", data=json.dumps(data), sensor_ids=valid_sensor_ids
     )
 
-
+@freeze_time(CONST_NOWTIME)
 def ges_template():
     # These dates only control the window within which the prediction time
     # should be, not the time window that gets plotted.
