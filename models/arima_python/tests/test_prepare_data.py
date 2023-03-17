@@ -83,21 +83,21 @@ def test_impute_missing_values():
 
 
 def get_prepared_data(
-    env_data: dict, energy_data: pd.DataFrame
+    env_data: dict, energy_data: pd.DataFrame, key: str
 ) -> tuple[dict, pd.DataFrame]:
     """
     Given environment and energy data pre-processed with
     `clean_data.clean_data`, artificially insert a missing
-    value in the `temperature` column of the first DataFrame
-    in `env_data`, and call the function `prepare_data.prepare_data`.
-    The missing observation is introduced to test that it is
-    successfully replaced with a typically-observed value.
+    value in the `temperature` column of a DataFrame in `env_data`
+    (specified through `key`), and call the function
+    `prepare_data.prepare_data`. The missing observation is introduced
+    to test that it is successfully replaced with a typically-observed
+    value.
     """
-    keys = list(env_data.keys())
     # artificially include a missing value in the `temperature`
     # column of the first dataframe in `env_data`
-    nrows = env_data[keys[0]].shape[0]
-    env_data[keys[0]]["temperature"].iloc[int(nrows / 2)] = np.NaN
+    nrows = env_data[key].shape[0]
+    env_data[key]["temperature"].iloc[int(nrows / 2)] = np.NaN
     # switch off `weekly_seasonality` and set the `days_interval`
     # parameter to 1 in order to successfully replace missing observations
     prepare_data.arima_config["weekly_seasonality"] = False
@@ -114,12 +114,35 @@ def get_prepared_data(
 env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
 energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
 keys_env_clean = list(env_clean.keys())
+key_missing_value = keys_env_clean[0]
 # get the prepared data
 env_prepared, energy_prepared = get_prepared_data(
     deepcopy(env_clean),
     deepcopy(energy_clean),
+    key_missing_value,
 )
 keys_env_prepared = list(env_prepared.keys())
+
+
+def test_keys_env_data():
+    """
+    Test that `env_clean` and `env_prepared` have
+    the same keys, which correspond to different sensors.
+    """
+    assert sorted(keys_env_clean) == sorted(keys_env_prepared)
+
+
+def test_columns_prepared_data():
+    """
+    Test that the processed dataframes contain the
+    expected columns.
+    """
+    colnames_env_clean = list(env_clean[keys_env_clean[0]].columns).sort()
+    colnames_env_prepared = list(env_prepared[keys_env_prepared[0]].columns).sort()
+    colnames_energy_clean = list(energy_clean.columns).sort()
+    colnames_energy_prepared = list(energy_prepared.columns).sort()
+    assert colnames_env_clean == colnames_env_prepared
+    assert colnames_energy_clean == colnames_energy_prepared
 
 
 def test_timestamps_prepared_data():
@@ -150,14 +173,9 @@ def test_timestamps_prepared_data():
     )
 
 
-def test_columns_prepared_data():
-    """
-    Test that the processed dataframes contain the
-    expected columns.
-    """
-    colnames_env_clean = list(env_clean[keys_env_clean[0]].columns).sort()
-    colnames_env_prepared = list(env_prepared[keys_env_prepared[0]].columns).sort()
-    colnames_energy_clean = list(energy_clean.columns).sort()
-    colnames_energy_prepared = list(energy_prepared.columns).sort()
-    assert colnames_env_clean == colnames_env_prepared
-    assert colnames_energy_clean == colnames_energy_prepared
+# def test_missing_values_prepared_data():
+#     """
+#     Test that artificially inserted missing observations
+#     are successfully replaced.
+#     """
+#     temperature = env_prepared[keyc]
