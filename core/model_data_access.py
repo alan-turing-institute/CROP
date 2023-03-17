@@ -67,7 +67,7 @@ def get_days_weather(num_days=2, num_rows=5, session=None):
         .order_by(asc(ReadingsWeatherClass.timestamp))
         .limit(num_rows)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     return result
 
@@ -96,7 +96,7 @@ def get_days_weather_forecast(num_days=2, session=None):
         )
         .distinct(WeatherForecastsClass.timestamp)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     # drop the time_created (the last element) from each row
     return [r[:3] for r in result]
@@ -120,7 +120,7 @@ def get_days_humidity_temperature(
         .filter(ReadingsAranetTRHClass.timestamp > date_from)
         .limit(num_rows)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     return result
 
@@ -143,7 +143,7 @@ def get_datapoint_humidity(sensor_id=27, num_rows=1, session=None):
         .order_by(desc(ReadingsAranetTRHClass.timestamp))
         .limit(num_rows)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     return result
 
