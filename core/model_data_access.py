@@ -359,7 +359,25 @@ def remove_time_zone(dataframe: pd.DataFrame):
 #     return env_data, energy_data
 
 
-def get_training_data(delta_days=None, num_rows=None, config_sections=None, session=None):
+def get_training_data(config_sections, delta_days=None, num_rows=None, session=None):
+    """Fetch data from one or more tables for training of the ARIMA model. The functions 
+    fetches tables and joins them based on configuration parameters provided in the config.ini file.
+
+    Args:
+        config_sections (list of strings): A list of section names in the config.ini file corresponding to the tables
+                                          and columns to fetch data from. Defaults to None. Example: ["table1", "table2"]
+        delta_days (int): Number of days in the past from which to retrieve data. Defaults to None.
+        num_rows (int, optional): Number of rows to limit the data to. Defaults to None.
+       
+        session (_type_, optional): _description_. Defaults to None.
+
+    Raises:
+        AttributeError: _description_
+
+    Returns:
+        tuple: A tuple of pandas DataFrames, each corresponding to the data fetched from one of the specified tables.
+            The DataFrames are sorted by the timestamp column.
+    """
     if config_sections is None:
         config_sections = ["table1", "table2"]
 
