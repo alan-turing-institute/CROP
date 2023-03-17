@@ -2,6 +2,7 @@
 Module (routes.py) to handle queries from the 3d model javascript application
 """
 from datetime import datetime, timedelta
+from freezegun import freeze_time
 import json
 
 from flask import request
@@ -81,6 +82,7 @@ def get_all_sensors():
 
 @blueprint.route("/getadvanticsysdata/<sensor_id>", methods=["GET"])
 # @login_required
+@freeze_time(CONST_NOWTIME)
 def get_advanticsys_data(sensor_id):
     """
     Produces a JSON with the Advanticsys sensor data for a specified sensor.
@@ -121,6 +123,7 @@ def get_advanticsys_data(sensor_id):
 
 @blueprint.route("/getstarkdata/<sensor_id>", methods=["GET"])
 # @login_required
+@freeze_time(CONST_NOWTIME)
 def get_stark_data(sensor_id):
     """
     Produces a JSON with Stark readings data for a specified sensor (meter).
@@ -159,6 +162,7 @@ def get_stark_data(sensor_id):
 
 @blueprint.route("/getaranettrhdata/<sensor_id>", methods=["GET"])
 # @login_required
+@freeze_time(CONST_NOWTIME)
 def get_aranet_trh_data(sensor_id):
     """
     Produces a JSON with the Aranet Temperature and Relative Humidity
@@ -199,6 +203,7 @@ def get_aranet_trh_data(sensor_id):
 
 @blueprint.route("/getaranetco2data/<sensor_id>", methods=["GET"])
 # @login_required
+@freeze_time(CONST_NOWTIME)
 def get_aranet_co2_data(sensor_id):
     """
     Produces a JSON with the Aranet CO2
@@ -238,6 +243,7 @@ def get_aranet_co2_data(sensor_id):
 
 @blueprint.route("/getaranetairvelocitydata/<sensor_id>", methods=["GET"])
 # @login_required
+@freeze_time(CONST_NOWTIME)
 def get_aranet_airvelocity_data(sensor_id):
     """
     Produces a JSON with the Aranet air velocity

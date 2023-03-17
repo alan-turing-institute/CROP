@@ -248,7 +248,9 @@ function create_charts(
   vpd_data_daily,
   stratification,
   hourly_data,
-  recent_minmax_data
+  recent_minmax_data,
+  dt_from,
+  dt_to
 ) {
   set_meanminmax_values(hourly_data, recent_minmax_data);
   // blue to red, and grey for missing
@@ -374,8 +376,8 @@ function create_charts(
     verticalVpdStratChart,
     horizontalTempStratChart,
     horizontalHumidityStratChart,
-    horizontalVpdStratChart,
-  ]);
+    horizontalVpdStratChart
+  ], dt_to);
 
   // Propagation
   const region3_name = temperature_data[3]["region"];
@@ -402,26 +404,28 @@ function create_charts(
   roundcharts(vpd_data_daily, 4, "vpd_roundchart14", colouramp_bluegrey);
 }
 
-function setMinTime(daysFromNow, charts) {
-  const minTime = moment().subtract(daysFromNow, "days");
+function setMinTime(daysBefore, currentTime, charts) {
+  const nowTime = Date.parse(currentTime);
+//    const minTime = nowTime.subtract(daysBefore, "days");
+  const minTime = nowTime - daysBefore*24*3600*1000;
   for (chart of charts) {
     chart.options.scales.x.min = minTime;
     chart.update();
   }
 }
 
-function createStratificationZoomListeners(charts) {
+function createStratificationZoomListeners(charts, currentTime) {
   const vertTimeRange = document.getElementById("vertTimeRange");
   const horzTimeRange = document.getElementById("horzTimeRange");
   const vertTimeNumber = document.getElementById("vertTimeNumber");
   const horzTimeNumber = document.getElementById("horzTimeNumber");
 
-  function onChangeMinTime(daysFromNow) {
-    setMinTime(daysFromNow, charts);
-    horzTimeRange.value = daysFromNow;
-    vertTimeRange.value = daysFromNow;
-    horzTimeNumber.value = daysFromNow;
-    vertTimeNumber.value = daysFromNow;
+  function onChangeMinTime(daysBefore) {
+    setMinTime(daysBefore, currentTime, charts);
+    horzTimeRange.value = daysBefore;
+    vertTimeRange.value = daysBefore;
+    horzTimeNumber.value = daysBefore;
+    vertTimeNumber.value = daysBefore;
   }
 
   vertTimeRange.oninput = (e) => onChangeMinTime(e.target.value);

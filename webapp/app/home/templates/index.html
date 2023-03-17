@@ -577,7 +577,8 @@
   const stratification_json = JSON.parse('{{stratification | safe}}');
   const hourly_data_json = JSON.parse('{{hourly_data | safe}}');
   const recent_minmax_data_json = JSON.parse('{{recent_minmax_data | safe}}');
-
+  const dt_from = "{{dt_from}}";
+  const dt_to = "{{dt_to}}";
   check_data(temperature_json);
   check_data(temperature_json_daily);
   check_data(humidity_json);
@@ -596,7 +597,9 @@
       vpd_json_daily,
       stratification_json,
       hourly_data_json,
-      recent_minmax_data_json
+      recent_minmax_data_json,
+      dt_from,
+      dt_to
     );
 
   setUpWarningTypeCheckboxListeners();

@@ -531,8 +531,8 @@ def index():
         humidity_data_daily=daily_hum_json,
         vpd_data_daily=daily_vpd_json,
         stratification=json_strat,
-        dt_from=dt_from_weekly.strftime("%B %d, %Y"),
-        dt_to=dt_to.strftime("%B %d, %Y"),
+        dt_from=str(dt_from_weekly),
+        dt_to=str(dt_to),
         warning_categories=warning_categories,
         warnings=warnings_json,
     )
