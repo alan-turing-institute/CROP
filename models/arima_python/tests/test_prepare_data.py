@@ -92,9 +92,10 @@ key_missing_value = keys_env_clean[0]
 nrows = env_clean[key_missing_value].shape[0]
 env_clean[key_missing_value]["temperature"].iloc[int(nrows / 2)] = None
 # switch off `weekly_seasonality` and set the `days_interval`
-# parameter to 1 in order to successfully replace the missing observation
+# parameter to a large number (e.g. 30) in order to successfully
+# replace the missing observation
 prepare_data.arima_config["weekly_seasonality"] = False
-prepare_data.arima_config["days_interval"] = 1
+prepare_data.arima_config["days_interval"] = 30
 # now feed to `prepare_data.prepare_data`
 env_prepared, energy_prepared = prepare_data.prepare_data(
     deepcopy(env_clean),
@@ -152,9 +153,10 @@ def test_timestamps_prepared_data():
     )
 
 
-# def test_missing_values_prepared_data():
-#     """
-#     Test that artificially inserted missing observations
-#     are successfully replaced.
-#     """
-#     temperature = env_prepared[keyc]
+def test_missing_value_prepared_data():
+    """
+    Test that the artificially inserted missing observation
+    is successfully replaced.
+    """
+    temperature = env_prepared[key_missing_value]["temperature"]
+    assert not temperature.isna().any()
