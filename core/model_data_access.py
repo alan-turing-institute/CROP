@@ -280,7 +280,7 @@ def get_training_data(config_sections=None, delta_days=None, num_rows=None, sess
         table_class_name = config_params["table_class"]
         if table_class_name not in globals():
             raise ImportError(f"Table class '{table_class_name}' not found. Make sure it's imported.")
-        
+        # get table class based on name
         table_class = globals()[table_class_name]
         
         columns = []
