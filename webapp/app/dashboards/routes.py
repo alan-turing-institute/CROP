@@ -8,6 +8,8 @@ except ImportError:
     from collections import Iterable
 import copy
 from datetime import datetime, timedelta
+from freezegun import freeze_time
+
 import json
 import logging
 import re
@@ -38,7 +40,11 @@ from cropcore.structure import (
     ReadingsAranetTRHClass,
     ReadingsAranetAirVelocityClass,
 )
-from cropcore.constants import CONST_MAX_RECORDS, CONST_TIMESTAMP_FORMAT
+from cropcore.constants import (
+    CONST_MAX_RECORDS,
+    CONST_TIMESTAMP_FORMAT,
+    CONST_NOWTIME
+)
 
 
 # Temperature constants
@@ -611,6 +617,7 @@ def fetch_sensor_data(dt_from, dt_to, sensor_type, sensor_ids):
 
 @blueprint.route("/aranet_trh_dashboard")
 @login_required
+@freeze_time(CONST_NOWTIME)
 def aranet_trh_dashboard():
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
     num_sensors, temperature_bins_json = aranet_trh_analysis(dt_from, dt_to)
@@ -625,6 +632,7 @@ def aranet_trh_dashboard():
 
 @blueprint.route("/energy_dashboard")
 @login_required
+@freeze_time(CONST_NOWTIME)
 def energy_dashboard():
     dt_from, dt_to = parse_date_range_argument(request.args.get("range"))
     energy_data = {}
@@ -716,6 +724,7 @@ def fetch_all_sensors(sensor_type):
 
 
 @blueprint.route("/timeseries_dashboard", methods=["GET", "POST"])
+@freeze_time(CONST_NOWTIME)
 @login_required
 def timeseries_dashboard():
     # Read query string

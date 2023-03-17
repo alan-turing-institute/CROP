@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import json
 import pytz
+from freezegun import freeze_time
 
 from flask import render_template, request
 from flask_login import login_required
@@ -15,7 +16,7 @@ from sqlalchemy import and_
 
 from app.home import blueprint
 
-from cropcore.constants import CONST_TIMESTAMP_FORMAT
+from cropcore.constants import CONST_TIMESTAMP_FORMAT, CONST_NOWTIME
 from cropcore import queries
 from cropcore.structure import SQLA as db
 from cropcore.structure import (
@@ -441,6 +442,7 @@ def format_warnings_json(warnings):
 
 @blueprint.route("/index")
 @login_required
+@freeze_time(CONST_NOWTIME)
 def index():
     """
     Index page
@@ -451,7 +453,7 @@ def index():
     dt_from_daily = dt_to - dt.timedelta(days=1)
     dt_from_6h = dt_to - dt.timedelta(hours=6)
     dt_from_hourly = dt_to - dt.timedelta(hours=2)
-
+    print(f"Getting data for homepage up to {dt_to}")
     # Get the largest timespan we need from the database. We can get the others by
     # slicing this, saving database queries.
     dt_from_min = min(

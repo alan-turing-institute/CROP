@@ -32,6 +32,8 @@ def make_conn_string(sql_engine, sql_user, sql_password, sql_host, sql_port):
         sql_port,
     )
 
+# FOR AIUK, define time from which to get data
+CONST_NOWTIME = "2022-11-01"
 
 # Sensor Type Names
 CONST_ADVANTICSYS = "Advanticsys"

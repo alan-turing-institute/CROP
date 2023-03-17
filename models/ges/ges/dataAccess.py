@@ -3,6 +3,8 @@ import logging
 from pathlib import Path
 from sqlalchemy import desc, asc, exc
 
+from freezegun import freeze_time
+
 import datetime
 
 import numpy as np
@@ -18,7 +20,7 @@ from cropcore.structure import (
     ModelProductClass,
     ModelValueClass,
 )
-from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME, CONST_NOWTIME
 from .ges_utils import get_sqlalchemy_session
 
 path_conf = config(section="paths")
@@ -34,7 +36,7 @@ def print_rows_head(rows, numrows=0):
         for row in rows[:numrows]:
             logging.info(row)
 
-
+@freeze_time(CONST_NOWTIME)
 def get_days_weather(num_days=2, num_rows=5, session=None):
     """
     Get 5 rows of weather data [(timestamp:datetime, temp:float, humid:float),...]
@@ -44,6 +46,7 @@ def get_days_weather(num_days=2, num_rows=5, session=None):
     date_to = datetime.datetime.now()
     delta = datetime.timedelta(days=num_days)
     date_from = date_to - delta
+    print(f"Getting weather data for {date_from} to {date_to}")
     query = (
         session.query(
             ReadingsWeatherClass.timestamp,
@@ -51,6 +54,7 @@ def get_days_weather(num_days=2, num_rows=5, session=None):
             ReadingsWeatherClass.relative_humidity,
         )
         .filter(ReadingsWeatherClass.timestamp > date_from)
+        .filter(ReadingsWeatherClass.timestamp < date_to)
         .order_by(asc(ReadingsWeatherClass.timestamp))
         .limit(num_rows)
     )
@@ -58,13 +62,14 @@ def get_days_weather(num_days=2, num_rows=5, session=None):
     session_close(session)
     return result
 
-
+@freeze_time(CONST_NOWTIME)
 def get_days_weather_forecast(num_days=2, session=None):
     if not session:
         session = get_sqlalchemy_session()
     date_from = datetime.datetime.now()
     delta = datetime.timedelta(days=num_days)
     date_to = date_from + delta
+    print(f"Getting weather forecast data for {date_from} to {date_to}")
     # allow for a delay of 24 hours from current time to ensure that there are
     # no gaps between historical weather data (retrieved from table iweather)
     # and forecast weather data (retrieved from table weather_forecast)
@@ -88,7 +93,7 @@ def get_days_weather_forecast(num_days=2, session=None):
     # drop the time_created (the last element) from each row
     return [r[:3] for r in result]
 
-
+@freeze_time(CONST_NOWTIME)
 def get_days_humidity_temperature(
     delta_days=10, num_rows=5, sensor_id=27, session=None
 ):
@@ -97,6 +102,7 @@ def get_days_humidity_temperature(
     date_to = datetime.datetime.now()
     delta = datetime.timedelta(days=delta_days)
     date_from = date_to - delta
+    print(f"Getting TRH data for {date_from} to {date_to}")
     query = (
         session.query(
             ReadingsAranetTRHClass.timestamp,
@@ -111,7 +117,7 @@ def get_days_humidity_temperature(
     session_close(session)
     return result
 
-
+@freeze_time(CONST_NOWTIME)
 def get_days_humidity(delta_days=10, num_rows=5, sensor_id=27, session=None):
     """
     almost the same as get_days_humidity - just run that and get the first
@@ -120,7 +126,7 @@ def get_days_humidity(delta_days=10, num_rows=5, sensor_id=27, session=None):
     result = get_days_humidity_temperature(delta_days, num_rows, sensor_id, session)
     return [(r[0], r[2]) for r in result]
 
-
+@freeze_time(CONST_NOWTIME)
 def get_datapoint_humidity(sensor_id=27, num_rows=1, session=None):
     if not session:
         session = get_sqlalchemy_session()
@@ -130,6 +136,7 @@ def get_datapoint_humidity(sensor_id=27, num_rows=1, session=None):
         .order_by(desc(ReadingsAranetTRHClass.timestamp))
         .limit(num_rows)
     )
+    print("Getting datapoint humidity. Why?")
     result = session.execute(query).fetchall()
     session_close(session)
     return result
@@ -137,6 +144,7 @@ def get_datapoint_humidity(sensor_id=27, num_rows=1, session=None):
 
 def get_datapoint(filepath=None, **kwargs):
     if filepath:
+        print("Getting datapoint from filepath")
         LastDataPoint = pd.read_csv(filepath)
         jj = np.size(LastDataPoint, 1)
         if jj > 1:
@@ -145,6 +153,7 @@ def get_datapoint(filepath=None, **kwargs):
             DataPoint = 0.5  # dummy value
         return DataPoint
     else:
+        print("Getting datapoint humidity from db")
         dp_database = np.asarray(get_datapoint_humidity(**kwargs))[0, 1]
         return dp_database
 
