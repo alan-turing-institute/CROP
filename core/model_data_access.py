@@ -242,8 +242,8 @@ def remove_time_zone(dataframe: pd.DataFrame):
 
 
 def get_training_data(config_sections=None, delta_days=None, num_rows=None, session=None):
-    """Fetch data from one or more tables for training of the ARIMA model. The functions 
-    fetches tables and joins them based on configuration parameters provided in the config.ini file.
+    """Fetch data from one or more tables for training of the ARIMA model. Each output DataFrame
+    can also be the result of joining two tables, as specified in the config.ini file.
 
     Args:
         config_sections (list of strings): A list of section names in the config.ini file corresponding to the tables
