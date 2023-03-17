@@ -2,9 +2,10 @@ import arima.prepare_data as prepare_data
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import pickle
+from copy import deepcopy
 
 prepare_data.arima_config["farm_cycle_start"] = "16h0m0s"
-prepare_data.arima_config["days_interval"] = 30
 
 
 def test_standardize_timestamp():
@@ -64,6 +65,9 @@ def test_impute_missing_values():
     values have been replaced manually and checks that the
     function `impute_missing_values` produces the same output.
     """
+    # make sure the `dyas_interval` parameter is set to 30 days,
+    # that's how the test CSV files have been set up.
+    prepare_data.arima_config["days_interval"] = 30
     # when weekly seasonality is considered
     prepare_data.arima_config["weekly_seasonality"] = True
     csv_path = "tests/data/test_impute_missing_values_weekly_seasonality.csv"
@@ -76,3 +80,50 @@ def test_impute_missing_values():
     temperature, temperature_expected = return_temperatures(csv_path)
     temperature_impute_missing = prepare_data.impute_missing_values(temperature)
     assert np.isclose(temperature_expected, temperature_impute_missing).all()
+
+
+def get_prepared_data(env_data: dict, energy_data: pd.DataFrame):
+    keys = list(env_data.keys())
+    # artificially include a missing value in the `temperature`
+    # column of the first dataframe in `env_data`
+    nrows = env_data[keys[0]].shape[0]
+    env_data[keys[0]]["temperature"].iloc[int(nrows / 2)] = np.NaN
+    # switch off `weekly_seasonality` and set the `days_interval`
+    # parameter to 1 in order to successfully replace missing observations
+    prepare_data.arima_config["weekly_seasonality"] = False
+    prepare_data.arima_config["days_interval"] = 1
+    # now feed to `prepare_data.prepare_data`
+    env_data, energy_data = prepare_data.prepare_data(
+        env_data,
+        energy_data,
+    )
+    return env_data, energy_data
+
+
+# import the data processed with `clean_data.clean_data`
+env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
+energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
+# prepare the data
+env_prepared, energy_prepared = get_prepared_data(
+    deepcopy(env_clean),
+    deepcopy(energy_clean),
+)
+
+
+def test_timestamps_prepared_data():
+    # check the timestamps of the prepared data.
+    # check that the timestamp vector is the same for all dataframes
+    keys = list(env_prepared.keys())
+    for ii in range(1, len(keys)):
+        timestamp1 = env_prepared[keys[ii - 1]].index
+        timestamp2 = env_prepared[keys[ii]].index
+        assert timestamp2.equals(timestamp1)
+    timestamp1 = energy_prepared.index
+    assert timestamp2.equals(timestamp1)
+    # check that the timestamp vector is monotonically increasing
+    assert timestamp2.is_monotonic_increasing
+    # check that the timedelta is unique
+    timestamp2 = timestamp2.to_series()
+    time_delta = timestamp2.diff()[1:]
+    time_delta = pd.unique(time_delta)
+    assert len(time_delta) == 1
