@@ -13,6 +13,7 @@ from sqlalchemy import and_, desc
 
 from app.queries import blueprint
 from cropcore import queries
+from cropcore.constants import CONST_NOWTIME
 from cropcore.structure import SQLA as db
 from cropcore.structure import (
     TypeClass,
