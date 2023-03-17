@@ -193,3 +193,17 @@ def prepare_data(env_data: dict, energy_data: pd.DataFrame):
         constants["secs_per_min"] * constants["mins_per_hr"] / freq_energy_data
     )
     energy_data["EnergyCP"] = energy_data["EnergyCP"] * hourly_consumption_factor
+
+    # if there are any missing values in the `temperature` time series of `env_data`
+    # or the `EnergyCP` time series of `energy_data`, replace them with typically
+    # observed values. Note that if there is not enough data to compute typically
+    # observed values, missing observations will not be replaced.
+    for key in keys_env_data:
+        temperature = env_data[key]["temperature"]
+        if temperature.isna().any():
+            env_data[key]["temperature"] = impute_missing_values(temperature)
+    energy = energy_data["EnergyCP"]
+    if energy.isna().any():
+        energy_data["EnergyCP"] = impute_missing_values(energy)
+
+    return env_data, energy_data
