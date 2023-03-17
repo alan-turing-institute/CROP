@@ -253,9 +253,6 @@ def get_training_data(config_sections=None, delta_days=None, num_rows=None, sess
         num_rows (int, optional): Number of rows to limit the data to. Defaults to None.
         session (_type_, optional): _description_. Defaults to None.
 
-    Raises:
-        AttributeError: _description_
-
     Returns:
         tuple: A tuple of pandas DataFrames, each corresponding to the data fetched from one of the specified tables.
             The DataFrames are sorted by the timestamp column.
@@ -263,25 +260,34 @@ def get_training_data(config_sections=None, delta_days=None, num_rows=None, sess
     if config_sections is None:
         config_sections = ["env_data", "energy_data"]
 
+    # get number of training days
     if delta_days is None:
         num_days_training = arima_config(section="data")["num_days_training"]
     else:
         num_days_training = delta_days
-        
     if num_days_training != 200:
         logger.warning(
             "The 'num_days_training' setting in config.ini has been set to something different than 200."
         )
-            
+
+    # get one table per section in the config.ini file. 
+    # each table can be produced by joining two tables, as specified in the config file.
     data_tables = []
     for section in config_sections:
         config_params = arima_config(section=section)
         
-        table_class = globals()[config_params["table_class"]]
+        # check that table class specified in config file is imported
+        table_class_name = config_params["table_class"]
+        if table_class_name not in globals():
+            raise ImportError(f"Table class '{table_class_name}' not found. Make sure it's imported.")
+        
+        table_class = globals()[table_class_name]
+        
         columns = []
         for col in config_params["columns"].split(","):
             try:
                 columns.append(getattr(table_class, col))
+            # if column not in table class, try to find it in the join class
             except AttributeError:
                 if "join_class" in config_params:
                     join_class = globals()[config_params["join_class"]]
