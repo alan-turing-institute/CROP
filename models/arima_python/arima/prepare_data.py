@@ -91,6 +91,9 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
     Replace missing values in a time series with "typically observed"
     values. This function makes use of the `days_interval` and
     `weekly_seasonality` parameters in config.ini.
+    Note that there needs to be sufficient data in the input time series
+    in order to compute typically-observed values. Otherwise, missing
+    observations will not be replaced.
     Three different seasonalities are assumed in the data by default:
     daily, weekly, and pseudo-season. These seasonalities are employed
     to compute the typically-observed values that will replace missing
@@ -161,8 +164,8 @@ def prepare_data(env_data: dict, energy_data: pd.DataFrame):
     timestamp_standardized = standardize_timestamp(energy_data.index[-1])
     # keep only the observations whose timestamp is smaller or equal to the
     # standardized timestamp
-    keys = list(env_data.keys())
-    for key in keys:
+    keys_env_data = list(env_data.keys())
+    for key in keys_env_data:
         env_data[key].drop(
             env_data[key][env_data[key].index > timestamp_standardized].index,
             inplace=True,
@@ -171,6 +174,7 @@ def prepare_data(env_data: dict, energy_data: pd.DataFrame):
         energy_data[energy_data.index > timestamp_standardized].index,
         inplace=True,
     )
+
     # compute the total hourly energy consumption, given the sampling frequency
     # of the `utc_energy_data` table
     freq_energy_data = data_config["freq_energy_data"]
