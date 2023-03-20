@@ -7,6 +7,7 @@ import numpy as np
 from copy import deepcopy
 import pandas as pd
 import logging
+from typing import Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ def fit_arima(train_data: pd.Series) -> SARIMAXResultsWrapper:
 
 def forecast_arima(
     model_fit: SARIMAXResultsWrapper, forecast_timestamp: pd.Timestamp
-) -> tuple[pd.Series, pd.DataFrame]:
+) -> Tuple[pd.Series, pd.DataFrame]:
     """
     Produce a forecast given a trained SARIMAX model.
 
@@ -195,7 +196,9 @@ def cross_validate_arima(
     return metrics
 
 
-def arima_pipeline(data: pd.Series) -> tuple[pd.Series, pd.DataFrame, dict | None]:
+def arima_pipeline(
+    data: pd.Series,
+) -> Tuple[pd.Series, pd.DataFrame, Union[dict, None]]:
     """
     Run the ARIMA model pipeline, using the SARIMAX model provided
     by the `statsmodels` library. This is the parent function of

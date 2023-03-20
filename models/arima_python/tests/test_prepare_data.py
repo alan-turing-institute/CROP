@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 from copy import deepcopy
+from typing import Tuple
 
 prepare_data.arima_config["farm_cycle_start"] = "16h0m0s"
 
@@ -41,7 +42,7 @@ def test_standardize_timestamp():
         assert output_timestamp == expect_output_timestamps[ii]
 
 
-def return_temperatures(csv_path: str) -> tuple[pd.Series, pd.Series]:
+def return_temperatures(csv_path: str) -> Tuple[pd.Series, pd.Series]:
     """
     Given the path of a CSV file, read the "temperature" and
     "expected_temperature" columns and return these as pandas

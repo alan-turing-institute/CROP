@@ -2,6 +2,7 @@ from .config import config
 from datetime import datetime, timedelta
 import pandas as pd
 import logging
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +161,7 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
 
 def prepare_data(
     env_data: dict, energy_data: pd.DataFrame
-) -> tuple[dict, pd.DataFrame]:
+) -> Tuple[dict, pd.DataFrame]:
     """
     Parent function of this module. Prepares the data in order to feed it into
     the ARIMA pipeline. Parameters relevant to this function in config.ini are
