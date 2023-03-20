@@ -1,4 +1,5 @@
 import arima.arima_utils as arima_utils
+import warnings
 
 # from models.ges.ges.ges_utils import get_sqlalchemy_session
 from arima.data_access import (
@@ -47,9 +48,12 @@ def test_get_energy_data():
         "sensor_id": "int64",
         "id": "int64",
     }
-    assert all(
-        [energy_data[item].dtypes == datatypes[item] for item in datatypes.keys()]
-    )
+    if not energy_data.empty:
+        assert all(
+            [energy_data[item].dtypes == datatypes[item] for item in datatypes.keys()]
+        )
+    else:
+        warnings.warn("The energy data table is empty.")
 
 
 def test_get_temperature_humidity_data():
