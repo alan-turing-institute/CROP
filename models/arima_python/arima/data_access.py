@@ -1,20 +1,201 @@
 import logging
+import psycopg2
 import datetime
-import pandas as pd
-
 from .config import config
-from sqlalchemy import desc, asc, exc, func
-
-from cropcore.db import connect_db, session_open, session_close
-from cropcore.structure import SensorClass, ReadingsAranetTRHClass, ReadingsEnergyClass
-
-from .arima_utils import get_sqlalchemy_session
-
-# from models.ges.ges.ges_utils import get_sqlalchemy_session
+from jinjasql import JinjaSql
+from six import string_types
+from copy import deepcopy
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 data_config = config(section="data")
+
+
+def open_connection():
+    """
+    Connect to the PostgreSQL database server.
+    Returns a psycopg2 connection object if
+    connection is successful.
+    """
+    conn = None
+    try:
+        # read DB connection parameters
+        params = config()
+
+        # connect to the PostreSQL server
+        logger.info("Connecting to the PostgreSQL database...")
+        conn = psycopg2.connect(**params)
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+    finally:
+        return conn
+
+
+def close_connection(conn):
+    """Close the PostgreSQL connection"""
+    if conn is not None:
+        conn.close()
+        logger.info("Database connection closed.")
+
+
+def get_data(query):
+    """
+    Fetch data from the DB based on the type of query.
+
+    Parameters:
+        query: JinjaSql.prepare_query object
+    Returns:
+        data: a pandas DataFrame where each row corresponds
+            to a different row of the DB table
+    """
+    conn = None
+    try:
+        conn = open_connection()
+        cur = conn.cursor()  # create a cursor
+        cur.execute(query)
+        data = cur.fetchall()
+        colnames = [desc[0] for desc in cur.description]  # get column names
+        cur.close()  # close the communication with the PostgreSQL
+        logger.info(f"Got data from {query} - returning {len(data)} rows")
+        # convert the fetched list to a pandas dataframe
+        data = pd.DataFrame(data, columns=colnames)
+        remove_time_zone(data)  # all timestamps in the DB should be in UTC
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(error)
+    finally:
+        close_connection(conn=conn)
+    return data
+
+
+def quote_sql_string(value):
+    """
+    If `value` is a string type, escapes single quotes in the string
+    and returns the string enclosed in single quotes.
+    """
+    if isinstance(value, string_types):
+        new_value = str(value)
+        new_value = new_value.replace("'", "''")
+        return "'{}'".format(new_value)
+    return value
+
+
+def get_sql_from_template(query, bind_params):
+    if not bind_params:
+        return query
+    params = deepcopy(bind_params)
+    for key, val in params.items():
+        params[key] = quote_sql_string(val)
+    return query % params
+
+
+def get_temperature_humidity_data(delta_days, num_rows=None):
+    """
+    Fetch temperature and humidity data from the aranet_trh_data table
+    of the DB over the specified time period, limited by the specified
+    number of rows.
+
+    Parameters:
+        deltaDays: number of days into the past for which to retrieve the data.
+        numRows: upper limit of number of rows to retrieve. Default is None (no
+            upper limit is set).
+    Returns:
+        data: a pandas DataFrame where each row corresponds to a different row of the DB
+            table, organised by the timestamp column of the aranet_trh_data table.
+    """
+    today = datetime.datetime.now(datetime.timezone.utc)
+    delta = datetime.timedelta(days=delta_days)
+    date_num_days_ago = today - delta
+    params = {
+        "timestamp": date_num_days_ago.strftime("%Y-%m-%d %H:%M:%S"),
+        "numRows": num_rows,
+    }
+    if num_rows:
+        transaction_template = """
+        select
+            sensors.name, aranet_trh_data.*
+        from
+            sensors, aranet_trh_data
+        where
+            (sensors.id = aranet_trh_data.sensor_id AND aranet_trh_data.timestamp >= {{ timestamp }})
+        order by
+            aranet_trh_data.timestamp asc
+        limit
+            {{ numRows }}
+        """
+    else:
+        transaction_template = """
+        select
+            sensors.name, aranet_trh_data.*
+        from
+            sensors, aranet_trh_data
+        where
+            (sensors.id = aranet_trh_data.sensor_id AND aranet_trh_data.timestamp >= {{ timestamp }})
+        order by
+            aranet_trh_data.timestamp asc
+        """
+    j = JinjaSql(param_style="pyformat")
+    query, bind_params = j.prepare_query(transaction_template, params)
+    data = get_data(get_sql_from_template(query=query, bind_params=bind_params))
+    logger.info("Temperature/Rel humidity data - head/tail:")
+    logger.info(data.head(5))
+    logger.info(data.tail(5))
+    return data
+
+
+def get_energy_data(delta_days, num_rows=None):
+    """
+    Fetch energy data from the utc_energy_data table
+    over the specified time period, limited by the specified
+    number of rows.
+
+    Parameters:
+        deltaDays: number of days into the past for which to retrieve the data.
+        numRows: upper limit of number of rows to retrieve. Default is None (no
+            upper limit is set).
+    Returns:
+        data: a pandas DataFrame where each row corresponds to a different row of the DB
+            table, organised by the timestamp column of the utc_energy_data table.
+    """
+    today = datetime.datetime.now(datetime.timezone.utc)
+    delta = datetime.timedelta(days=delta_days)
+    date_num_days_ago = today - delta
+    params = {
+        "timestamp": date_num_days_ago.strftime("%Y-%m-%d %H:%M:%S"),
+        "numRows": num_rows,
+    }
+    if num_rows:
+        transaction_template = """
+        select
+            *
+        from
+            utc_energy_data
+        where
+            utc_energy_data.timestamp >= {{ timestamp }}
+        order by
+            utc_energy_data.timestamp asc
+        limit
+            {{ numRows }}
+    """
+    else:
+        transaction_template = """
+        select
+            *
+        from
+            utc_energy_data
+        where
+            utc_energy_data.timestamp >= {{ timestamp }}
+        order by
+            utc_energy_data.timestamp asc
+    """
+    j = JinjaSql(param_style="pyformat")
+    query, bind_params = j.prepare_query(transaction_template, params)
+    data = get_data(get_sql_from_template(query=query, bind_params=bind_params))
+    logger.info("Energy data - head/tail:")
+    logger.info(data.head(5))
+    logger.info(data.tail(5))
+    return data
 
 
 def remove_time_zone(dataframe: pd.DataFrame):
@@ -30,95 +211,6 @@ def remove_time_zone(dataframe: pd.DataFrame):
         colnames = new_dataframe.columns.to_list()
         for column in colnames:
             dataframe[column] = pd.to_datetime(dataframe[column]).dt.tz_localize(None)
-
-
-def get_temperature_humidity_data(delta_days, num_rows=None, session=None):
-    """Fetch temperature and humidity data from the aranet_trh_data table
-    over the specified time period, limited by the specified number of rows.
-
-     Args:
-        delta_days (int): Number of days in the past from which to retrieve data. Defaults to 100.
-        num_rows (int): Number of rows to limit the data to.
-        session (_type_): _description_. Defaults to None.
-
-    Returns:
-        data: A pandas dataframe with each row corresponding to a different row of the DB table,
-        sorted by the timestamp column of the utc_energy_data table.
-    """
-
-    if not session:
-        session = get_sqlalchemy_session()
-    date_to = datetime.datetime.now()
-    delta = datetime.timedelta(days=delta_days)
-    data_from = date_to - delta
-    query = (
-        session.query(
-            SensorClass.name,
-            ReadingsAranetTRHClass.id,
-            ReadingsAranetTRHClass.sensor_id,
-            ReadingsAranetTRHClass.timestamp,
-            ReadingsAranetTRHClass.temperature,
-            ReadingsAranetTRHClass.humidity,
-            ReadingsAranetTRHClass.time_created,
-            ReadingsAranetTRHClass.time_updated,
-        )
-        .join(SensorClass, SensorClass.id == ReadingsAranetTRHClass.sensor_id)
-        .filter(ReadingsAranetTRHClass.timestamp > data_from)
-        .order_by(asc(ReadingsAranetTRHClass.timestamp))
-        .limit(num_rows)
-    )
-    data = pd.read_sql(query.statement, query.session.bind)
-    remove_time_zone(data)
-
-    logger.info("Temperature and humidity data - head/tail:")
-    logger.info(data.head(5))
-    logger.info(data.tail(5))
-
-    session_close(session)
-    return data
-
-
-def get_energy_data(delta_days, num_rows=None, session=None):
-    """Fetch energy data from the utc_energy_data table
-    over the specified time period, limited by the specified
-    number of rows.
-
-    Args:
-        delta_days (int): Number of days in the past from which to retrieve data. Defaults to 100.
-        num_rows (int): Number of rows to limit the data to.
-        session (_type_): _description_. Defaults to None.
-
-    Returns:
-        data: A pandas dataframe with each row corresponding to a different row of the DB table,
-        sorted by the timestamp column of the utc_energy_data table.
-    """
-    if not session:
-        session = get_sqlalchemy_session()
-    date_to = datetime.datetime.now()
-    delta = datetime.timedelta(days=delta_days)
-    data_from = date_to - delta
-    query = (
-        session.query(
-            ReadingsEnergyClass.timestamp,
-            ReadingsEnergyClass.electricity_consumption,
-            ReadingsEnergyClass.time_created,
-            ReadingsEnergyClass.time_updated,
-            ReadingsEnergyClass.sensor_id,
-            ReadingsEnergyClass.id,
-        )
-        .filter(ReadingsEnergyClass.timestamp > data_from)
-        .order_by(asc(ReadingsEnergyClass.timestamp))
-        .limit(num_rows)
-    )
-    data = pd.read_sql(query.statement, query.session.bind)
-    remove_time_zone(data)
-
-    logger.info("Energy data - head/tail:")
-    logger.info(data.head(5))
-    logger.info(data.tail(5))
-
-    session_close(session)
-    return data
 
 
 def get_training_data(num_rows=None):
