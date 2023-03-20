@@ -1,10 +1,11 @@
 from arima.config import config
-from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from datetime import timedelta
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
 from copy import deepcopy
+import pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,20 @@ logger = logging.getLogger(__name__)
 arima_config = config(section="arima")
 
 
-def get_forecast_timestamp(data):
+def get_forecast_timestamp(data: pd.Series) -> pd.Timestamp:
+    """
+    Return the end-of-forecast timestamp.
+
+    Parameters:
+        data: pandas Series containing a time series.
+            Must be indexed by timestamp.
+
+    Returns:
+        forecast_timestamp: end-of-forecast timestamp,
+            calculated by adding the `hours_forecast`
+            parameter of config.ini to the last timestamp
+            of `data`.
+    """
     if arima_config["hours_forecast"] <= 0:
         logger.error(
             "The 'hours_forecast' parameter in config.ini must be greater than zero."
@@ -25,7 +39,22 @@ def get_forecast_timestamp(data):
     return forecast_timestamp
 
 
-def fit_arima(train_data):
+def fit_arima(train_data: pd.Series) -> SARIMAXResultsWrapper:
+    """
+    Fit a SARIMAX statsmodels model to a
+    training dataset (time series).
+    The model parameters are specified through the
+    `arima_order`, `seasonal_order` and `trend`
+    settings in config.ini.
+
+    Parameters:
+        train_data: a pandas Series containing the
+            training data on which to fit the model.
+
+    Returns:
+        model_fit: the fitted model, which can now be
+            used for forecasting.
+    """
     model = SARIMAX(
         train_data,
         order=arima_config["arima_order"],
@@ -38,7 +67,24 @@ def fit_arima(train_data):
     return model_fit
 
 
-def forecast_arima(model_fit, forecast_timestamp):
+def forecast_arima(
+    model_fit: SARIMAXResultsWrapper, forecast_timestamp: pd.Timestamp
+) -> tuple[pd.Series, pd.DataFrame]:
+    """
+    Produce a forecast given a trained SARIMAX model.
+
+    Arguments:
+        model_fit: the SARIMAX model fitted to training data.
+            This is the output of `fit_arima`.
+        forecast_timestamp: the end-of-forecast timestamp.
+
+    Returns:
+        mean_forecast: the forecast mean. A pandas Series, indexed
+            by timestamp.
+        conf_int: the lower and upper bounds of the confidence
+            intervals of the forecasts. A pandas Dataframe, indexed
+            by timestamp.
+    """
     forecast = model_fit.get_forecast(steps=forecast_timestamp).summary_frame()
     mean_forecast = forecast["mean"]  # forecast mean
     conf_int = forecast[
@@ -47,7 +93,29 @@ def forecast_arima(model_fit, forecast_timestamp):
     return mean_forecast, conf_int
 
 
-def construct_cross_validator(data, train_fraction=0.8, n_splits=4):
+def construct_cross_validator(
+    data: pd.Series, train_fraction: float = 0.8, n_splits: int = 4
+) -> TimeSeriesSplit:
+    """
+    Construct a time series cross validator (TSCV) object.
+
+    Arguments:
+        data: time series for which to construct the TSCV,
+            as a pandas Series.
+        train_fraction: fraction of `data` to use as the
+            initial model training set. The remaining data
+            will be used as the testing set in cross-validation.
+        n_splits: number of splits/folds of the testing set
+            for cross-validation.
+    Returns:
+        tscv: the TSCV object, constructed with
+            sklearn.TimeSeriesSplit.
+    """
+    if (train_fraction < 0.5) or (train_fraction >= 1):
+        logger.error(
+            "The fraction of training data for cross-validation must be >= 0.5 and < 1."
+        )
+        raise ValueError
     n_obs = len(data)  # total number of observations
     n_obs_test = n_obs * (
         1 - train_fraction
@@ -55,13 +123,39 @@ def construct_cross_validator(data, train_fraction=0.8, n_splits=4):
     test_size = int(
         n_obs_test // n_splits
     )  # number of test observations employed in each fold
+    if test_size < 1:
+        logger.error(
+            "A valid cross-validator cannot be built. The size of the test set is less than 1."
+        )
+        raise Exception
     tscv = TimeSeriesSplit(
         n_splits=n_splits, test_size=test_size
     )  # construct the time series cross-validator
     return tscv
 
 
-def cross_validate_arima(data, tscv, refit=False):
+def cross_validate_arima(
+    data: pd.Series, tscv: TimeSeriesSplit, refit: bool = False
+) -> dict:
+    """
+    Cross-validate a SARIMAX statsmodel model.
+
+    Arguments:
+        data: pandas Series containing the time series
+            for which the SARIMAX model is built.
+        tscv: the time series cross-validator object,
+            returned by `construct_cross_validator`.
+        refit: specify whether to refit the model
+            parameters when new observations are added
+            to the training set in successive cross-
+            validation folds (True) or not (False).
+            The default is False, as this is faster for
+            large datasets.
+    Returns:
+        metrics: a dict containing two model metrics:
+            "RMSE": the cross-validated root-mean-squared-error.
+            "R2": the cross-validated R-squared score.
+    """
     metrics = dict.fromkeys(["RMSE", "R2"])
     rmse = []  # this will hold the RMSE at each fold
     r2 = []  # this will hold the R2 score at each fold
@@ -101,7 +195,35 @@ def cross_validate_arima(data, tscv, refit=False):
     return metrics
 
 
-def arima_pipeline(data):
+def arima_pipeline(data: pd.Series) -> tuple[pd.Series, pd.DataFrame, dict | None]:
+    """
+    Run the ARIMA model pipeline, using the SARIMAX model provided
+    by the `statsmodels` library. This is the parent function of
+    the `arima_pipeline` module.
+    The SARIMAX model parameters can be specified via the
+    `config.ini` file.
+
+    Arguments:
+        data: the time series on which to train the SARIMAX model,
+            as a pandas Series indexed by timestamp.
+    Returns:
+        mean_forecast: a pandas Series, indexed by timestamp,
+            containing the forecast mean. The number of hours to
+            forecast into the future can be specified through the
+            `config.ini` file.
+        conf_int: a pandas Dataframe, indexed by timestamp, containing
+            the lower an upper confidence intervals for the forecasts.
+        metrics: a dictionary containing the cross-validated root-mean-
+            squared-error (RMSE) and R-squared score (R2) for the
+            fitted SARIMAX model. If the user requests not to perform
+            cross-validation through the `config.ini` file, `metrics`
+            is assigned `None`.
+    """
+    if not isinstance(data.index, pd.DatetimeIndex):
+        logger.error(
+            "The time series on which to train the ARIMA model must be indexed by timestamp."
+        )
+        raise ValueError
     if arima_config["arima_order"] != (4, 1, 2):
         logger.warning(
             "The 'arima_order' setting in config.ini has been set to something different than (4, 1, 2)."
@@ -124,15 +246,28 @@ def arima_pipeline(data):
             logger.info(
                 "Running time series cross-validation WITHOUT parameter refit..."
             )
-        tscv = construct_cross_validator(data)
-        metrics = cross_validate_arima(data, tscv, refit=refit)
-        logger.info(
-            "Done running cross-validation. The CV root-mean-square-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
-                metrics["RMSE"], metrics["R2"]
+        try:
+            tscv = construct_cross_validator(data)
+            try:
+                metrics = cross_validate_arima(data, tscv, refit=refit)
+            except:
+                logger.warning(
+                    "Could not perform cross-validation. Continuing without ARIMA model testing."
+                )
+                metrics = None
+            else:
+                logger.info(
+                    "Done running cross-validation. The CV root-mean-squared-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
+                        metrics["RMSE"], metrics["R2"]
+                    )
+                )
+        except:
+            logger.warning(
+                "Could not build a valid cross-validator. Continuing without ARIMA model testing."
             )
-        )
+            metrics = None
     else:
-        metrics = []
+        metrics = None
     # fit the model and compute the forecast
     logger.info("Fitting the model...")
     model_fit = fit_arima(data)

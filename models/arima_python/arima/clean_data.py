@@ -1,6 +1,7 @@
 from .config import config
 import pandas as pd
 import numpy as np
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,8 +19,9 @@ def get_time_vector(start, end, frequency="1H", offset=1):
     Parameters:
         start: starting timestamp.
         end: end timestamp.
-        frequency: delta between successive timestamps.
-            The default is "1H".
+        frequency: timedelta between successive timestamps,
+            specified as a string. The default is "1H" (one hour).
+            Must comply with pandas frequency aliases.
         offset: date offset added to the starting timestamp,
             in hours. The default is 1, as this is what was
             done in the original ARIMA R code.
@@ -176,10 +178,21 @@ def clean_env_data(env_data: pd.DataFrame):
     # remove row entries that have been assigned None above
     env_data = env_data.dropna(subset="timestamp_hour_plus_minus")
     # create the time vector for which hourly-averaged data will be returned
+    # first, parse the `time_delta` parameter of `config.ini` into total seconds.
+    frequency = datetime.strptime(processing_params["time_delta"], "%Hh%Mm%Ss")
+    frequency = timedelta(
+        hours=frequency.hour, minutes=frequency.minute, seconds=frequency.second
+    )
+    frequency = int(frequency.total_seconds())
+    if frequency != constants["secs_per_min"] * constants["mins_per_hr"]:
+        logger.warning(
+            "The 'time_delta' setting in config.ini has been set to something different than one hour."
+        )
+    # now create the time vector
     time_vector = get_time_vector(
         start=min(env_data["timestamp_hour_floor"]),
         end=max(env_data["timestamp_hour_floor"]),
-        frequency=processing_params["time_delta"],
+        frequency=str(frequency) + "S",  # S for seconds
     )
     # calculate the hourly-averaged data
     env_data = hourly_average_sensor(
@@ -299,10 +312,6 @@ def clean_data(env_data, energy_data):
     if processing_params["mins_from_the_hour"] != 15:
         logger.warning(
             "The 'mins_from_the_hour' setting in config.ini has been set to something different than 15."
-        )
-    if processing_params["time_delta"] != "1H":
-        logger.warning(
-            "The 'time_delta' setting in config.ini has been set to something different than '1H'."
         )
     if processing_params["window"] != 3:
         logger.warning(
