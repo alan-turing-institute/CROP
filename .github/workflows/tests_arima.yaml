@@ -1,0 +1,33 @@
+name: "Unit tests"
+
+on:
+  push:
+    branches: rewrite-arima-python
+  pull_request:
+    branches: rewrite-arima-python
+
+jobs:
+  pytest-arima:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+          architecture: x64
+      - name: Set up PostgreSQL database
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '11'
+          postgresql db: cropdb
+          postgresql user: postgres
+          postgresql password: postgres
+      - run: git submodule update --init --recursive
+      - name: Set up environment
+        run: pip install .
+      - name: Test with pytest
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          cd models/arima_python
+          pytest -vv
