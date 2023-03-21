@@ -2,7 +2,7 @@ from arima.config import config
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from datetime import timedelta
 from sklearn.model_selection import TimeSeriesSplit
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import numpy as np
 from copy import deepcopy
 import pandas as pd
@@ -155,11 +155,13 @@ def cross_validate_arima(
     Returns:
         metrics: a dict containing two model metrics:
             "RMSE": the cross-validated root-mean-squared-error.
-            "R2": the cross-validated R-squared score.
+                See `sklearn.metrics.mean_squared_error`.
+            "MAPE": the cross-validated mean-absolute-percentage-error.
+                See `sklearn.metrics.mean_absolute_percentage_error`.
     """
-    metrics = dict.fromkeys(["RMSE", "R2"])
+    metrics = dict.fromkeys(["RMSE", "MAPE"])
     rmse = []  # this will hold the RMSE at each fold
-    r2 = []  # this will hold the R2 score at each fold
+    mape = []  # this will hold the MAPE score at each fold
     # loop through all folds
     for fold, (train_index, test_index) in enumerate(tscv.split(data)):
         cv_train, cv_test = (
@@ -184,15 +186,17 @@ def cross_validate_arima(
         rmse.append(
             mean_squared_error(cv_test.values, forecast.values, squared=False)
         )  # compute the RMSE for the current fold
-        r2.append(
-            r2_score(cv_test.values, forecast.values)
-        )  # compute the R2 for the current fold
+        mape.append(
+            mean_absolute_percentage_error(cv_test.values, forecast.values)
+        )  # compute the MAPE for the current fold
         cv_test_old = deepcopy(cv_test)
 
     metrics["RMSE"] = np.mean(
         rmse
     )  # the cross-validated RMSE: the mean RMSE across all folds
-    metrics["R2"] = np.mean(r2)  # the cross-validated R2: the mean R2 across all folds
+    metrics["MAPE"] = np.mean(
+        mape
+    )  # the cross-validated MAPE: the mean MAPE across all folds
     return metrics
 
 
@@ -217,8 +221,8 @@ def arima_pipeline(
         conf_int: a pandas Dataframe, indexed by timestamp, containing
             the lower an upper confidence intervals for the forecasts.
         metrics: a dictionary containing the cross-validated root-mean-
-            squared-error (RMSE) and R-squared score (R2) for the
-            fitted SARIMAX model. If the user requests not to perform
+            squared-error (RMSE) and mean-absolute-percentage-error (MAPE)
+            for the fitted SARIMAX model. If the user requests not to perform
             cross-validation through the `config.ini` file, `metrics`
             is assigned `None`.
     """
@@ -260,8 +264,8 @@ def arima_pipeline(
                 metrics = None
             else:
                 logger.info(
-                    "Done running cross-validation. The CV root-mean-squared-error is: {0:.2f}. The CV R-squared score is: {1:.2f}".format(
-                        metrics["RMSE"], metrics["R2"]
+                    "Done running cross-validation. The CV root-mean-squared-error is: {0:.2f}. The CV mean-absolute-percentage-error is: {1:.3f}".format(
+                        metrics["RMSE"], metrics["MAPE"]
                     )
                 )
         except:

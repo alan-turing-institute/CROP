@@ -105,7 +105,9 @@ def test_get_training_data():
     num_cols = 8
     assert env_data.shape == (num_rows, num_cols)
     num_cols = 6
-    assert energy_data.shape == (num_rows, num_cols)
+    assert (
+        energy_data.shape[-1] == num_cols
+    )  # num_rows not checked in case energy table empty
 
 
 def test_num_days_training():

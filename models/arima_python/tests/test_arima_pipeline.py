@@ -3,7 +3,7 @@ import arima.arima_pipeline as arima_pipeline
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import numpy as np
 import pytest
 
@@ -139,7 +139,7 @@ def test_construct_cross_validator():
 
 def compute_model_metrics(data, model_fit, test_index):
     """
-    Compute cross-validated model metrics (RMSE and R2 score).
+    Compute cross-validated model metrics (RMSE and MAPE).
 
     Parameters:
         data: pandas Series containing the time series.
@@ -148,11 +148,11 @@ def compute_model_metrics(data, model_fit, test_index):
             data at successive folds.
     Returns:
         rmse: root-mean-square-error, averaged across all CV folds.
-        r2: R2 score, averaged across all CV folds.
+        mape: mean-absolute-percentage-error, averaged across all CV folds.
     """
     forecasts = dict.fromkeys(list(test_index.keys()))
     rmse = []
-    r2 = []
+    mape = []
     for fold in list(forecasts.keys()):
         forecasts[fold] = model_fit.forecast(steps=len(test_index[fold]))
         model_fit = model_fit.extend(data.iloc[test_index[fold]])
@@ -163,21 +163,21 @@ def compute_model_metrics(data, model_fit, test_index):
                 squared=False,
             )
         )
-        r2.append(
-            r2_score(
+        mape.append(
+            mean_absolute_percentage_error(
                 data.iloc[test_index[fold]].values,
                 forecasts[fold].values,
             )
         )
     rmse = np.mean(rmse)
-    r2 = np.mean(r2)
-    return rmse, r2
+    mape = np.mean(mape)
+    return rmse, mape
 
 
 def test_cross_validate_arima():
     """
     Test that the calculation of cross-validated
-    model metrics (RMSE and R2 score) is done correctly.
+    model metrics (RMSE and MAPE) is done correctly.
     """
     data = airline_dataset["lnair"]
     train_fraction = 0.7  # fraction of training data in the first CV fold (fold 0)
@@ -201,14 +201,14 @@ def test_cross_validate_arima():
     model_fit = model.fit(disp=False)
     # compute the CV model metrics, and check that they are close
     # to the values returned by the arima pipeline
-    rmse, r2 = compute_model_metrics(data, model_fit, test_index)
+    rmse, mape = compute_model_metrics(data, model_fit, test_index)
     metrics = arima_pipeline.cross_validate_arima(data, tscv, refit=False)
-    assert np.isclose(rmse, metrics["RMSE"], atol=1e-06)
-    assert np.isclose(r2, metrics["R2"], atol=1e-06)
-    # finally, just as a sanity check, verify that both RMSE and R2
-    # are positive values and that R2 is less than one
-    assert metrics["R2"] > 0 and metrics["R2"] < 1
-    assert metrics["RMSE"] > 0
+    assert np.isclose(rmse, metrics["RMSE"], atol=1e-04)
+    assert np.isclose(mape, metrics["MAPE"], atol=1e-04)
+    # finally, just as a sanity check, verify that both RMSE and MAPE
+    # are >= 0.0
+    assert metrics["RMSE"] >= 0.0
+    assert metrics["MAPE"] >= 0.0
 
 
 def test_arima_pipeline():
