@@ -9,6 +9,17 @@ on:
 jobs:
   pytest-arima:
     runs-on: ubuntu-latest
+    env:
+      CROP_SQL_TESTHOST: "localhost"
+      CROP_SQL_TESTUSER: "postgres"
+      CROP_SQL_TESTPASS: "postgres"
+      CROP_SQL_TESTDBNAME: "test_db"
+      CROP_SQL_TESTPORT: "5432"
+      CROP_STARK_USERNAME: "testname"
+      CROP_STARK_PASS: "testpass"
+      CROP_30MHZ_TEST_T_RH_CHECKID: "testid"
+      CROP_30MHZ_APIKEY: "testkey"
+      CROP_OPENWEATHERMAP_APIKEY: "testkey"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
