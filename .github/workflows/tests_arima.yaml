@@ -1,4 +1,4 @@
-name: "Unit tests"
+name: "Unit tests ARIMA"
 
 on:
   push:
@@ -9,17 +9,6 @@ on:
 jobs:
   pytest-arima:
     runs-on: ubuntu-latest
-    env:
-      CROP_SQL_TESTHOST: "localhost"
-      CROP_SQL_TESTUSER: "postgres"
-      CROP_SQL_TESTPASS: "postgres"
-      CROP_SQL_TESTDBNAME: "test_db"
-      CROP_SQL_TESTPORT: "5432"
-      CROP_STARK_USERNAME: "testname"
-      CROP_STARK_PASS: "testpass"
-      CROP_30MHZ_TEST_T_RH_CHECKID: "testid"
-      CROP_30MHZ_APIKEY: "testkey"
-      CROP_OPENWEATHERMAP_APIKEY: "testkey"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -27,13 +16,6 @@ jobs:
         with:
           python-version: 3.8
           architecture: x64
-      - name: Set up PostgreSQL database
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql version: '11'
-          postgresql db: cropdb
-          postgresql user: postgres
-          postgresql password: postgres
       - run: git submodule update --init --recursive
       - name: Set up environment
         run: pip install .
@@ -41,4 +23,4 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
           cd models/arima_python
-          pytest -vv
+          pytest -vv tests/test_clean_data.py tests/test_prepare_data.py tests/test_arima_pipeline.py
