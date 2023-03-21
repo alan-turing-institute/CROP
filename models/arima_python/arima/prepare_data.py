@@ -194,38 +194,38 @@ def prepare_data(
     """
     # obtain the standardized timestamp.
     # note that both `env_data` and `energy_data` are indexed by the same timestamps.
-    timestamp_standardized = standardize_timestamp(energy_data.index[-1])
+    keys_env_data = list(env_data.keys())
+    timestamp_standardized = standardize_timestamp(env_data[keys_env_data[0]].index[-1])
     # keep only the observations whose timestamp is smaller or equal to the
     # standardized timestamp
-    keys_env_data = list(env_data.keys())
     for key in keys_env_data:
         env_data[key].drop(
             env_data[key][env_data[key].index > timestamp_standardized].index,
             inplace=True,
         )
-    energy_data.drop(
-        energy_data[energy_data.index > timestamp_standardized].index,
-        inplace=True,
-    )
-
-    # compute the total hourly energy consumption, given the sampling frequency
-    # of the `utc_energy_data` table
-    freq_energy_data = data_config["freq_energy_data"]
-    # parse string into datetime object
-    freq_energy_data = datetime.strptime(freq_energy_data, "%Hh%Mm%Ss")
-    # calculate total time between samples in seconds
-    freq_energy_data = timedelta(
-        hours=freq_energy_data.hour,
-        minutes=freq_energy_data.minute,
-        seconds=freq_energy_data.second,
-    )
-    freq_energy_data = freq_energy_data.total_seconds()
-    # now calculate the total hourly consumption, which in the original
-    # R code only affected the `EnergyCP` column of `energy_data`
-    hourly_consumption_factor = (
-        constants["secs_per_min"] * constants["mins_per_hr"] / freq_energy_data
-    )
-    energy_data["EnergyCP"] = energy_data["EnergyCP"] * hourly_consumption_factor
+    if not energy_data.empty:
+        energy_data.drop(
+            energy_data[energy_data.index > timestamp_standardized].index,
+            inplace=True,
+        )
+        # compute the total hourly energy consumption, given the sampling frequency
+        # of the `utc_energy_data` table
+        freq_energy_data = data_config["freq_energy_data"]
+        # parse string into datetime object
+        freq_energy_data = datetime.strptime(freq_energy_data, "%Hh%Mm%Ss")
+        # calculate total time between samples in seconds
+        freq_energy_data = timedelta(
+            hours=freq_energy_data.hour,
+            minutes=freq_energy_data.minute,
+            seconds=freq_energy_data.second,
+        )
+        freq_energy_data = freq_energy_data.total_seconds()
+        # now calculate the total hourly consumption, which in the original
+        # R code only affected the `EnergyCP` column of `energy_data`
+        hourly_consumption_factor = (
+            constants["secs_per_min"] * constants["mins_per_hr"] / freq_energy_data
+        )
+        energy_data["EnergyCP"] = energy_data["EnergyCP"] * hourly_consumption_factor
 
     # if there are any missing values in the `temperature` time series of `env_data`
     # or the `EnergyCP` time series of `energy_data`, replace them with typically
@@ -235,8 +235,9 @@ def prepare_data(
         temperature = env_data[key]["temperature"]
         if temperature.isna().any():
             env_data[key]["temperature"] = impute_missing_values(temperature)
-    energy = energy_data["EnergyCP"]
-    if energy.isna().any():
-        energy_data["EnergyCP"] = impute_missing_values(energy)
+    if not energy_data.empty:
+        energy = energy_data["EnergyCP"]
+        if energy.isna().any():
+            energy_data["EnergyCP"] = impute_missing_values(energy)
 
     return env_data, energy_data

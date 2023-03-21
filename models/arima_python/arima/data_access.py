@@ -155,4 +155,8 @@ def get_training_data(num_rows=None):
     energy_data = get_energy_data(
         delta_days=data_config["num_days_training"], num_rows=num_rows
     )
+    if energy_data.empty:
+        logger.warning(
+            "The energy data table is empty. Will not process energy data further."
+        )
     return env_data, energy_data

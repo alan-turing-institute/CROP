@@ -318,15 +318,16 @@ def clean_data(env_data, energy_data):
             "The 'window' setting in config.ini has been set to something different than 3."
         )
     env_data, time_vector = clean_env_data(env_data)
-    energy_data = clean_energy_data(energy_data)
-    # perform a left merge of "energy_data" with "time_vector",
-    # so that only timestamps contained in "time_vector" are
-    # retained
-    energy_data = pd.merge(
-        time_vector,
-        energy_data,
-        how="left",
-    )
+    if not energy_data.empty:
+        energy_data = clean_energy_data(energy_data)
+        # perform a left merge of "energy_data" with "time_vector",
+        # so that only timestamps contained in "time_vector" are
+        # retained
+        energy_data = pd.merge(
+            time_vector,
+            energy_data,
+            how="left",
+        )
     # set the timestamp column of the dataframes to index
     keys = list(env_data.keys())
     for key in keys:
