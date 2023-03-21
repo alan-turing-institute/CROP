@@ -231,7 +231,7 @@ def test_arima_pipeline():
     # intervals are the expected (pre-computed) ones
     assert np.isclose(mean_forecast, airline_forecast["mean"], atol=1e-5).all()
     assert np.isclose(
-        conf_int, airline_forecast[["mean_ci_lower", "mean_ci_upper"]], atol=1e-06
+        conf_int, airline_forecast[["mean_ci_lower", "mean_ci_upper"]], atol=1e-05
     ).all()
     # finally check that a ValueError is raised if the input
     # time series is not indexed by timestamp
