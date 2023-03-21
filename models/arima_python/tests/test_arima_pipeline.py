@@ -229,7 +229,7 @@ def test_arima_pipeline():
     mean_forecast, conf_int = arima_pipeline.arima_pipeline(train_data)[:2]
     # assert that the mean forecast and the confidence
     # intervals are the expected (pre-computed) ones
-    assert np.isclose(mean_forecast, airline_forecast["mean"], atol=1e-06).all()
+    assert np.isclose(mean_forecast, airline_forecast["mean"]).all()
     assert np.isclose(
         conf_int, airline_forecast[["mean_ci_lower", "mean_ci_upper"]], atol=1e-06
     ).all()
