@@ -18,7 +18,7 @@ def main() -> None:
     coloredlogs.install(level="INFO")
 
     # fetch training data from the database
-    env_data, energy_data = get_training_data(num_rows=30000)
+    env_data, energy_data = get_training_data(num_rows=40000)
 
     # save the raw training data to disk
     with open("dump/env_raw.pkl", "wb") as handle:
@@ -51,6 +51,9 @@ def main() -> None:
     # loop through every sensor
     for sensor in sensor_names:
         temperature = env_data[sensor]["temperature"]
+        # save 10% of the data for testing
+        n_samples = len(temperature)
+        temperature = temperature.iloc[: int(0.9 * n_samples)]
         mean_forecast, conf_int, metrics = arima_pipeline(temperature)
         forecast_results[sensor]["mean_forecast"] = mean_forecast
         forecast_results[sensor]["conf_int"] = conf_int
