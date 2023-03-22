@@ -87,6 +87,14 @@ def break_up_timestamp(data: pd.DataFrame, days_interval: int) -> pd.DataFrame:
     return data
 
 
+def missing_values_stats(data: pd.Series) -> float:
+    """
+    Return percentage of missing observations in the input
+    time series.
+    """
+    return data.isna().sum() / len(data) * 100
+
+
 def impute_missing_values(data: pd.Series) -> pd.Series:
     """
     Replace missing values in a time series with "typically observed"
@@ -115,6 +123,9 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
             "The input time series must be a pandas Series indexed by timestamp."
         )
         raise ValueError
+    logger.info("Replacing missing observations in " + data.name + " time series.")
+    stats = missing_values_stats(data)
+    logger.info("Percentage of missing observations: {0: .2f} %".format(stats))
     index_name = data.index.name  # get the index name - should be `timestamp`
     data = data.to_frame()  # first convert Series to DataFrame
     days_interval = arima_config["days_interval"]
@@ -156,6 +167,14 @@ def impute_missing_values(data: pd.Series) -> pd.Series:
     data.set_index(index_name, inplace=True)
     data.sort_index(ascending=True, inplace=True)
     data = data.squeeze()  # convert DataFrame back to Series
+    if data.isna().any():
+        logger.warning("Could not replace all missing observations.")
+        stats = missing_values_stats(data)
+        logger.info(
+            "Percentage of remaining missing observations: {0: .2f} %".format(stats)
+        )
+    else:
+        logger.info("Successfully removed all missing observations.")
     return data
 
 
@@ -192,6 +211,15 @@ def prepare_data(
             successive observations and the `freq_energy_data` parameter in
             config.ini.
     """
+    logger.info("Preparing the data to feed to ARIMA model...")
+    if arima_config["days_interval"] != 30:
+        logger.warning(
+            "The `days_interval` parameter in config.ini has been set to something different than 30."
+        )
+    if not arima_config["weekly_seasonality"]:
+        logger.warning(
+            "The `weekly_seasonality` parameter in config.ini has been set to False."
+        )
     # obtain the standardized timestamp.
     # note that both `env_data` and `energy_data` are indexed by the same timestamps.
     keys_env_data = list(env_data.keys())
@@ -220,6 +248,13 @@ def prepare_data(
             seconds=freq_energy_data.second,
         )
         freq_energy_data = freq_energy_data.total_seconds()
+        if (
+            freq_energy_data
+            != constants["secs_per_min"] * constants["mins_per_hr"] * 0.5
+        ):
+            logger.warning(
+                "The 'freq_energy_data' setting in config.ini has been set to something different than half an hour."
+            )
         # now calculate the total hourly consumption, which in the original
         # R code only affected the `EnergyCP` column of `energy_data`
         hourly_consumption_factor = (
@@ -239,5 +274,6 @@ def prepare_data(
         energy = energy_data["EnergyCP"]
         if energy.isna().any():
             energy_data["EnergyCP"] = impute_missing_values(energy)
+    logger.info("Done preparing the data. Ready to feed to ARIMA model.")
 
     return env_data, energy_data
