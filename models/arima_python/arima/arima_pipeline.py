@@ -84,9 +84,13 @@ def forecast_arima(
             by timestamp.
         conf_int: the lower and upper bounds of the confidence
             intervals of the forecasts. A pandas Dataframe, indexed
-            by timestamp.
+            by timestamp. Specify the confidence level through parameter
+            `alpha` in config.ini.
     """
-    forecast = model_fit.get_forecast(steps=forecast_timestamp).summary_frame()
+    alpha = arima_config["alpha"]
+    forecast = model_fit.get_forecast(steps=forecast_timestamp).summary_frame(
+        alpha=alpha
+    )
     mean_forecast = forecast["mean"]  # forecast mean
     conf_int = forecast[
         ["mean_ci_lower", "mean_ci_upper"]

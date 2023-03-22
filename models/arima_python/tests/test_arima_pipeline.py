@@ -22,9 +22,11 @@ airline_forecast = dataset[
 arima_order = (2, 1, 0)
 seasonal_order = (1, 1, 0, 12)
 trend = []
+alpha = 0.05
 arima_pipeline.arima_config["arima_order"] = arima_order
 arima_pipeline.arima_config["seasonal_order"] = seasonal_order
 arima_pipeline.arima_config["trend"] = trend
+arima_pipeline.arima_config["alpha"] = alpha
 
 
 def set_hours_forecast(start_timestamp, end_timestamp):
