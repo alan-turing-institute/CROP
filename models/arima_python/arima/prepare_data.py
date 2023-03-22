@@ -1,5 +1,5 @@
 from .config import config
-from datetime import datetime, timedelta
+import datetime
 import pandas as pd
 import logging
 from typing import Tuple
@@ -11,7 +11,7 @@ data_config = config(section="data")
 arima_config = config(section="arima")
 
 
-def standardize_timestamp(timestamp: datetime) -> datetime:
+def standardize_timestamp(timestamp: datetime.datetime) -> datetime.datetime:
     """
     Standardize the input timestamp according to the
     time at which the farm daily cycle starts.
@@ -39,20 +39,28 @@ def standardize_timestamp(timestamp: datetime) -> datetime:
         "farm_cycle_start"
     ]  # time at which the farm cycle starts
     # parse string into a datetime object
-    farm_cycle_start = datetime.strptime(farm_cycle_start, "%Hh%Mm%Ss")
-    farm_cycle_start = datetime.combine(timestamp.date(), farm_cycle_start.time())
+    farm_cycle_start = datetime.datetime.strptime(farm_cycle_start, "%Hh%Mm%Ss")
+    if farm_cycle_start.time() != datetime.time(hour=16, minute=0, second=0):
+        logger.warning(
+            "The `farm_cycle_start` parameter in config.ini has been set to something different than 4 PM."
+        )
+    farm_cycle_start = datetime.datetime.combine(
+        timestamp.date(), farm_cycle_start.time()
+    )
 
     if timestamp >= farm_cycle_start:
         timestamp = farm_cycle_start
     elif timestamp <= (
-        farm_cycle_start - timedelta(hours=constants["hrs_per_day"] / 2)
+        farm_cycle_start - datetime.timedelta(hours=constants["hrs_per_day"] / 2)
     ):
-        timestamp = datetime.combine(
-            (timestamp - timedelta(days=1)).date(),
+        timestamp = datetime.datetime.combine(
+            (timestamp - datetime.timedelta(days=1)).date(),
             farm_cycle_start.time(),
         )
     else:
-        timestamp = farm_cycle_start - timedelta(hours=constants["hrs_per_day"] / 2)
+        timestamp = farm_cycle_start - datetime.timedelta(
+            hours=constants["hrs_per_day"] / 2
+        )
     return timestamp
 
 
@@ -82,7 +90,7 @@ def break_up_timestamp(data: pd.DataFrame, days_interval: int) -> pd.DataFrame:
     # now create the pseudo-season, based on the specified interval
     delta_time = timestamps - timestamps[0]
     delta_time = delta_time.to_pytimedelta()
-    interval = timedelta(days=days_interval)
+    interval = datetime.timedelta(days=days_interval)
     data["pseudo_season"] = delta_time // interval  # floor division
     return data
 
@@ -240,9 +248,9 @@ def prepare_data(
         # of the `utc_energy_data` table
         freq_energy_data = data_config["freq_energy_data"]
         # parse string into datetime object
-        freq_energy_data = datetime.strptime(freq_energy_data, "%Hh%Mm%Ss")
+        freq_energy_data = datetime.datetime.strptime(freq_energy_data, "%Hh%Mm%Ss")
         # calculate total time between samples in seconds
-        freq_energy_data = timedelta(
+        freq_energy_data = datetime.timedelta(
             hours=freq_energy_data.hour,
             minutes=freq_energy_data.minute,
             seconds=freq_energy_data.second,
