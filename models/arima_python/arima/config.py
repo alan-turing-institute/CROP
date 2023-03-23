@@ -15,7 +15,6 @@ def config(
     ),
     section="postgresql",
 ):
-
     # check that configuration file exists
     if not os.path.isfile(filename):
         raise Exception(f"File {filename} does not exist")

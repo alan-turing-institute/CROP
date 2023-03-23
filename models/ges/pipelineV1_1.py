@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 from pathlib import Path
 
-from cropcore.model_data_access import(
+from cropcore.model_data_access import (
     insert_model_run,
     insert_model_product,
     insert_model_predictions,

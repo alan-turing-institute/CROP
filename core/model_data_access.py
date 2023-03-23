@@ -34,9 +34,10 @@ logger = logging.getLogger(__name__)
 
 # currently unused
 path_conf = ges_config(section="paths")
-data_dir_ges = Path(path_conf["data_dir"]) 
+data_dir_ges = Path(path_conf["data_dir"])
 
 # ges ---------------------------------------------------------------------
+
 
 def print_rows_head(rows, numrows=0):
     logging.info("Printing:{0} of {1}".format(numrows, len(rows)))
@@ -226,6 +227,7 @@ def insert_model_predictions(predictions=None, session=None):
 
 # arima -----------------------------------------------------------------------
 
+
 def remove_time_zone(dataframe: pd.DataFrame):
     """
     Remove timezone information from datetime columns.
@@ -241,7 +243,9 @@ def remove_time_zone(dataframe: pd.DataFrame):
             dataframe[column] = pd.to_datetime(dataframe[column]).dt.tz_localize(None)
 
 
-def get_training_data(config_sections=None, delta_days=None, num_rows=None, session=None):
+def get_training_data(
+    config_sections=None, delta_days=None, num_rows=None, session=None
+):
     """Fetch data from one or more tables for training of the ARIMA model. Each output DataFrame
     can also be the result of joining two tables, as specified in the config.ini file.
 
@@ -270,19 +274,19 @@ def get_training_data(config_sections=None, delta_days=None, num_rows=None, sess
             "The 'num_days_training' setting in config.ini has been set to something different than 200."
         )
 
-    # get one table per section in the config.ini file. 
+    # get one table per section in the config.ini file.
     # each table can be produced by joining two tables, as specified in the config file.
     data_tables = []
     for section in config_sections:
         config_params = arima_config(section=section)
-        
         # check that table class specified in config file is imported
         table_class_name = config_params["table_class"]
         if table_class_name not in globals():
-            raise ImportError(f"Table class '{table_class_name}' not found. Make sure it's imported.")
+            raise ImportError(
+                f"Table class '{table_class_name}' not found. Make sure it's imported."
+            )
         # get table class based on name
         table_class = globals()[table_class_name]
-        
         columns = []
         for col in config_params["columns"].split(","):
             try:
@@ -293,27 +297,23 @@ def get_training_data(config_sections=None, delta_days=None, num_rows=None, sess
                     join_class = globals()[config_params["join_class"]]
                     columns.append(getattr(join_class, col))
                 else:
-                    raise AttributeError(f"Attribute '{col}' not found in '{table_class}' or '{join_class}'")
-        
+                    raise AttributeError(
+                        f"Attribute '{col}' not found in '{table_class}' or '{join_class}'"
+                    )
+
         if not session:
             session = get_sqlalchemy_session()
         date_to = datetime.datetime.now()
         delta = datetime.timedelta(days=num_days_training)
         data_from = date_to - delta
 
-        query = (session
-                    .query(*columns)
-                    .filter(table_class.timestamp > data_from)
-                )
+        query = session.query(*columns).filter(table_class.timestamp > data_from)
 
         if "join_class" in config_params and "join_condition" in config_params:
             join_condition = eval(config_params["join_condition"])
             query = query.join(join_class, join_condition)
 
-        query = (query
-                    .order_by(asc(table_class.timestamp))
-                    .limit(num_rows)
-                )
+        query = query.order_by(asc(table_class.timestamp)).limit(num_rows)
 
         data = pd.read_sql(query.statement, query.session.bind)
         remove_time_zone(data)
