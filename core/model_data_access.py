@@ -269,7 +269,12 @@ def get_training_data(
         num_days_training = arima_config(section="data")["num_days_training"]
     else:
         num_days_training = delta_days
-    if num_days_training != 200:
+    if num_days_training > 365:
+        logger.error(
+            "The 'num_days_training' setting in config.ini cannot be set to a value greater than 365."
+        )
+        raise ValueError
+    elif num_days_training != 200:
         logger.warning(
             "The 'num_days_training' setting in config.ini has been set to something different than 200."
         )

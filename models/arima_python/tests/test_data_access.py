@@ -4,7 +4,6 @@ from ..arima.arima_utils import get_sqlalchemy_session
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.model_data_access import (
     get_training_data,
-    arima_config,
 )
 import pytest
 import warnings
@@ -95,9 +94,9 @@ def test_get_training_data():
 
 def test_num_days_training():
     """
-    Test that a ValueError is raised if the `num_days_training`
-    parameter in config.ini is set to a value greater than 365.
+    Test that a ValueError is raised if the number of days
+    into the past for which to retrieve training data is
+    greater than 365.
     """
     with pytest.raises(ValueError):
-        arima_config(section="data")["num_days_training"] = 366
-        get_training_data(num_rows=50)
+        get_training_data(delta_days=366, num_rows=50)
