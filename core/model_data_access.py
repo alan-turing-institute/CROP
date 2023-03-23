@@ -1,28 +1,42 @@
-import sys
-import logging
-from pathlib import Path
-from sqlalchemy import desc, asc, exc
+"""
+Combined data access module for GES and ARIMA models
+"""
 
+import logging
+import sys
 import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from .config import config
+from sqlalchemy import desc, asc, exc, func
+
+from models.arima_python.arima.config import config as arima_config
+from models.ges.ges.config import config as ges_config
+from models.ges.ges.ges_utils import get_sqlalchemy_session
 
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.structure import (
+    # arima
+    SensorClass,
+    ReadingsAranetTRHClass,
+    ReadingsEnergyClass,
+    # ges
     ReadingsWeatherClass,
     WeatherForecastsClass,
-    ReadingsAranetTRHClass,
     ModelRunClass,
     ModelProductClass,
     ModelValueClass,
 )
 from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
-from .ges_utils import get_sqlalchemy_session
 
-path_conf = config(section="paths")
-data_dir = Path(path_conf["data_dir"])
+logger = logging.getLogger(__name__)
+
+# currently unused
+path_conf = ges_config(section="paths")
+data_dir_ges = Path(path_conf["data_dir"])
+
+# ges ---------------------------------------------------------------------
 
 
 def print_rows_head(rows, numrows=0):
@@ -54,7 +68,7 @@ def get_days_weather(num_days=2, num_rows=5, session=None):
         .order_by(asc(ReadingsWeatherClass.timestamp))
         .limit(num_rows)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     return result
 
@@ -83,7 +97,7 @@ def get_days_weather_forecast(num_days=2, session=None):
         )
         .distinct(WeatherForecastsClass.timestamp)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     # drop the time_created (the last element) from each row
     return [r[:3] for r in result]
@@ -107,7 +121,7 @@ def get_days_humidity_temperature(
         .filter(ReadingsAranetTRHClass.timestamp > date_from)
         .limit(num_rows)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     return result
 
@@ -130,7 +144,7 @@ def get_datapoint_humidity(sensor_id=27, num_rows=1, session=None):
         .order_by(desc(ReadingsAranetTRHClass.timestamp))
         .limit(num_rows)
     )
-    result = session.execute(query).fetchall()
+    result = session.execute(query.statement).fetchall()
     session_close(session)
     return result
 
@@ -209,3 +223,106 @@ def insert_model_predictions(predictions=None, session=None):
     session.close()
     print(f"Inserted {num_rows_inserted} value predictions")
     return num_rows_inserted
+
+
+# arima -----------------------------------------------------------------------
+
+
+def remove_time_zone(dataframe: pd.DataFrame):
+    """
+    Remove timezone information from datetime columns.
+    Note that all timestamps in the SQL database should be UTC.
+
+    Parameters:
+        dataframe: pandas DataFrame
+    """
+    new_dataframe = dataframe.select_dtypes("datetimetz")
+    if not new_dataframe.empty:
+        colnames = new_dataframe.columns.to_list()
+        for column in colnames:
+            dataframe[column] = pd.to_datetime(dataframe[column]).dt.tz_localize(None)
+
+
+def get_training_data(
+    config_sections=None, delta_days=None, num_rows=None, session=None
+):
+    """Fetch data from one or more tables for training of the ARIMA model. Each output DataFrame
+    can also be the result of joining two tables, as specified in the config.ini file.
+
+    Args:
+        config_sections (list of strings): A list of section names in the config.ini file corresponding to the tables
+                                          and columns to fetch data from. Example: ["table1", "table2"].
+                                          If None, the default is ["env_data", "energy_data"].
+        delta_days (int): Number of days in the past from which to retrieve data. Defaults to None.
+        num_rows (int, optional): Number of rows to limit the data to. Defaults to None.
+        session (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        tuple: A tuple of pandas DataFrames, each corresponding to the data fetched from one of the specified tables.
+            The DataFrames are sorted by the timestamp column.
+    """
+    if config_sections is None:
+        config_sections = ["env_data", "energy_data"]
+
+    # get number of training days
+    if delta_days is None:
+        num_days_training = arima_config(section="data")["num_days_training"]
+    else:
+        num_days_training = delta_days
+    if num_days_training != 200:
+        logger.warning(
+            "The 'num_days_training' setting in config.ini has been set to something different than 200."
+        )
+
+    # get one table per section in the config.ini file.
+    # each table can be produced by joining two tables, as specified in the config file.
+    data_tables = []
+    for section in config_sections:
+        config_params = arima_config(section=section)
+        # check that table class specified in config file is imported
+        table_class_name = config_params["table_class"]
+        if table_class_name not in globals():
+            raise ImportError(
+                f"Table class '{table_class_name}' not found. Make sure it's imported."
+            )
+        # get table class based on name
+        table_class = globals()[table_class_name]
+        columns = []
+        for col in config_params["columns"].split(","):
+            try:
+                columns.append(getattr(table_class, col))
+            # if column not in table class, try to find it in the join class
+            except AttributeError:
+                if "join_class" in config_params:
+                    join_class = globals()[config_params["join_class"]]
+                    columns.append(getattr(join_class, col))
+                else:
+                    raise AttributeError(
+                        f"Attribute '{col}' not found in '{table_class}' or '{join_class}'"
+                    )
+
+        if not session:
+            session = get_sqlalchemy_session()
+        date_to = datetime.datetime.now()
+        delta = datetime.timedelta(days=num_days_training)
+        data_from = date_to - delta
+
+        query = session.query(*columns).filter(table_class.timestamp > data_from)
+
+        if "join_class" in config_params and "join_condition" in config_params:
+            join_condition = eval(config_params["join_condition"])
+            query = query.join(join_class, join_condition)
+
+        query = query.order_by(asc(table_class.timestamp)).limit(num_rows)
+
+        data = pd.read_sql(query.statement, query.session.bind)
+        remove_time_zone(data)
+
+        logger.info(f"{section} data - head/tail:")
+        logger.info(data.head(5))
+        logger.info(data.tail(5))
+
+        session_close(session)
+        data_tables.append(data)
+
+    return tuple(data_tables)

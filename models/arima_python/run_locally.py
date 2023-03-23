@@ -1,5 +1,5 @@
 def main() -> None:
-    from arima.data_access import get_training_data
+    from cropcore.model_data_access import get_training_data
     from arima.clean_data import clean_data
     from arima.prepare_data import prepare_data
     from arima.arima_pipeline import arima_pipeline

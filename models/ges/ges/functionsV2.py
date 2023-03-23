@@ -25,7 +25,7 @@ from scipy.integrate import solve_ivp
 from pathlib import Path
 
 from inversion import *
-from .dataAccess import get_days_weather
+from cropcore.model_data_access import get_days_weather
 from .config import config
 
 path_conf = config(section="paths")
