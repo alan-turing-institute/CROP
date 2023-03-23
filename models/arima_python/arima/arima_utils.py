@@ -11,6 +11,7 @@ if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
 else:
     from .config import config
 
+
 def get_sqlalchemy_session(connection_string=None, dbname=None):
     """
     For other functions in this module, if no session is provided as an argument,

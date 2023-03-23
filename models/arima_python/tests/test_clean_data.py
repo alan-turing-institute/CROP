@@ -8,8 +8,8 @@ env_raw = pd.read_pickle(
 energy_raw = pd.read_pickle("tests/data/utc_energy_raw.pkl")  # energy data
 
 # import the processed data - this is the baseline we compare against
-env_clean = pd.read_pickle("tests/data/aranet_trh_processed.pkl")
-energy_clean = pd.read_pickle("tests/data/utc_energy_processed.pkl")
+env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
+energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
 keys_clean = list(env_clean.keys())
 
 # column names TRH data should contain
@@ -24,7 +24,7 @@ colnames_energy = list(energy_clean.columns)
 # via the config file, so here we are simply overwriting them.
 clean_data.sensors_list = keys_clean
 clean_data.processing_params["mins_from_the_hour"] = 15
-clean_data.processing_params["time_delta"] = "1H"
+clean_data.processing_params["time_delta"] = "1h0m0s"
 clean_data.processing_params["window"] = 3
 
 # now call the function to process the raw data
