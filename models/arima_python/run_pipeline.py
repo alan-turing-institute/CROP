@@ -2,6 +2,7 @@ from cropcore.model_data_access import get_training_data
 from arima.clean_data import clean_data
 from arima.prepare_data import prepare_data
 from arima.arima_pipeline import arima_pipeline
+from arima.arima_utils import get_sqlalchemy_session, get_model_id
 import logging, coloredlogs
 import pandas as pd
 import sys
@@ -27,7 +28,8 @@ def run_pipeline() -> None:
     # note that in this implementation, energy data is not used at all
     sensor_names = list(env_data.keys())
 
-    # model_id = get_model_id(name="arima")
+    session = get_sqlalchemy_session()
+    model_id = get_model_id()
 
     def process_output(time_series: pd.Series, product_id):
         prediction_parameters = []
