@@ -40,7 +40,7 @@ def run_pipeline() -> None:
     sensor_names = list(env_data.keys())
 
     session = get_sqlalchemy_session()
-    model_id = get_model_id()
+    model_id = get_model_id(session=session)
 
     def process_output(time_series: pd.Series, product_id):
         prediction_parameters = []
@@ -55,15 +55,22 @@ def run_pipeline() -> None:
     ]
     # loop through every sensor
     for sensor in sensor_names:
-        sensor_id = get_sensor_id(sensor_name=sensor)
+        sensor_id = get_sensor_id(sensor_name=sensor, session=session)
         temperature = env_data[sensor]["temperature"]
         mean_forecast, conf_int, metrics = arima_pipeline(temperature)
         session.begin()
         try:
-            run_id = insert_model_run(sensor_id, model_id, datetime.now())
+            run_id = insert_model_run(
+                sensor_id=sensor_id,
+                model_id=model_id,
+                time_forecast=datetime.now(),
+                session=session,
+            )
             for measure_name in measure_names:
-                measure_id = get_measure_id(measure_name)
-                product_id = insert_model_product(run_id, measure_id)
+                measure_id = get_measure_id(measure_name=measure_name, session=session)
+                product_id = insert_model_product(
+                    run_id=run_id, measure_id=measure_id, session=session
+                )
                 print(f"Run ID: {run_id}")
                 print(f"Model ID: {model_id}")
                 print(f"Product ID: {product_id}")
@@ -75,7 +82,7 @@ def run_pipeline() -> None:
                     result = process_output(conf_int["mean_ci_lower"], product_id)
                 elif "Upper" in measure_name:
                     result = process_output(conf_int["mean_ci_upper"], product_id)
-                insert_model_predictions(result)
+                insert_model_predictions(predictions=result, session=session)
                 session.commit()
                 session.close()
         except:
