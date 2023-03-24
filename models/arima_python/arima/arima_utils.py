@@ -34,8 +34,10 @@ def get_measure_id(measure_name, session=None):
             & (ModelScenarioClass.scenario_type == "BAU")
         )
     )
-    measure_id = session.execute(query).fetchfirst()[0]
-    return measure_id
+    result = session.execute(query).fetchone()
+    if result:
+        result[0]
+    return None
 
 
 def get_sensor_id(sensor_name, session=None):
@@ -43,8 +45,10 @@ def get_sensor_id(sensor_name, session=None):
     if session is None:
         session = get_sqlalchemy_session()
     query = session.query(SensorClass.id).filter(SensorClass.name == sensor_name)
-    sensor_id = session.execute(query).fetchfirst()[0]
-    return sensor_id
+    result = session.execute(query).fetchone()
+    if result:
+        result[0]
+    return None
 
 
 def get_sqlalchemy_session(connection_string=None, dbname=None):
