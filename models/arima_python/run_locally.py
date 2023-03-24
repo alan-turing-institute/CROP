@@ -21,27 +21,27 @@ def main() -> None:
     env_data, energy_data = get_training_data(num_rows=40000)
 
     # save the raw training data to disk
-    with open("dump/env_raw.pkl", "wb") as handle:
+    with open("models/arima_python/dump/env_raw.pkl", "wb") as handle:
         pickle.dump(env_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open("dump/energy_raw.pkl", "wb") as handle:
+    with open("models/arima_python/dump/energy_raw.pkl", "wb") as handle:
         pickle.dump(energy_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # clean the training data
     env_data, energy_data = clean_data(env_data, energy_data)
 
     # save the clean data to disk
-    with open("dump/env_clean.pkl", "wb") as handle:
+    with open("models/arima_python/dump/env_clean.pkl", "wb") as handle:
         pickle.dump(env_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open("dump/energy_clean.pkl", "wb") as handle:
+    with open("models/arima_python/dump/energy_clean.pkl", "wb") as handle:
         pickle.dump(energy_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # prepare the clean data for the ARIMA model
     env_data, energy_data = prepare_data(env_data, energy_data)
 
     # save the prepared data to disk
-    with open("dump/env_prepared.pkl", "wb") as handle:
+    with open("models/arima_python/dump/env_prepared.pkl", "wb") as handle:
         pickle.dump(env_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open("dump/energy_prepared.pkl", "wb") as handle:
+    with open("models/arima_python/dump/energy_prepared.pkl", "wb") as handle:
         pickle.dump(energy_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # run the ARIMA pipeline for every temperature sensor
@@ -60,7 +60,7 @@ def main() -> None:
         forecast_results[sensor]["metrics"] = metrics
 
     # save the forecast results to disk
-    with open("dump/temperature_forecast.pkl", "wb") as handle:
+    with open("models/arima_python/dump/temperature_forecast.pkl", "wb") as handle:
         pickle.dump(forecast_results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
