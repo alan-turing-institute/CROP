@@ -36,7 +36,7 @@ def get_measure_id(measure_name, session=None):
     )
     result = session.execute(query).fetchone()
     if result:
-        result[0]
+        return result[0]
     return None
 
 
@@ -47,7 +47,7 @@ def get_sensor_id(sensor_name, session=None):
     query = session.query(SensorClass.id).filter(SensorClass.name == sensor_name)
     result = session.execute(query).fetchone()
     if result:
-        result[0]
+        return result[0]
     return None
 
 
