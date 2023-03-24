@@ -4,12 +4,41 @@ from pathlib import Path
 
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from cropcore.structure import ModelMeasureClass, ModelScenarioClass, SensorClass
+
 
 # Relative import doesn't work if we are in same dir as this module
 if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
     from config import config
 else:
     from .config import config
+
+
+def get_measure_id(measure_name, session=None):
+    """Get the database ID of a measure of a given name, assuming the BAU scenario."""
+    if session is None:
+        session = get_sqlalchemy_session()
+    query = (
+        session.query(ModelMeasureClass.id)
+        .join(
+            ModelScenarioClass, ModelScenarioClass.id == ModelMeasureClass.scenario_id
+        )
+        .filter(
+            (ModelMeasureClass.measure_name == measure_name)
+            & (ModelScenarioClass.scenario_type == "BAU")
+        )
+    )
+    measure_id = session.execute(query).fetchfirst()[0]
+    return measure_id
+
+
+def get_sensor_id(sensor_name, session=None):
+    """Get the database ID of a sensor of a given name."""
+    if session is None:
+        session = get_sqlalchemy_session()
+    query = session.query(SensorClass.id).filter(SensorClass.name == sensor_name)
+    sensor_id = session.execute(query).fetchfirst()[0]
+    return sensor_id
 
 
 def get_sqlalchemy_session(connection_string=None, dbname=None):
