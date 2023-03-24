@@ -12,8 +12,6 @@ import pandas as pd
 from sqlalchemy import desc, asc, exc, func
 
 from models.arima_python.arima.config import config as arima_config
-from models.ges.ges.config import config as ges_config
-from models.ges.ges.ges_utils import get_sqlalchemy_session
 
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.structure import (
@@ -32,9 +30,20 @@ from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
 
 logger = logging.getLogger(__name__)
 
-# currently unused
-path_conf = ges_config(section="paths")
-data_dir_ges = Path(path_conf["data_dir"])
+
+def get_sqlalchemy_session(connection_string=None, dbname=None):
+    """
+    For other functions in this module, if no session is provided as an argument,
+    they will call this to get a session using default connection string.
+    """
+    if not connection_string:
+        connection_string = SQL_CONNECTION_STRING
+    if not dbname:
+        dbname = SQL_DBNAME
+    status, log, engine = connect_db(connection_string, dbname)
+    session = session_open(engine)
+    return session
+
 
 # ges ---------------------------------------------------------------------
 
@@ -246,20 +255,24 @@ def remove_time_zone(dataframe: pd.DataFrame):
 def get_training_data(
     config_sections=None, delta_days=None, num_rows=None, session=None
 ):
-    """Fetch data from one or more tables for training of the ARIMA model. Each output DataFrame
-    can also be the result of joining two tables, as specified in the config.ini file.
+    """Fetch data from one or more tables for training of the ARIMA model.
+
+    Each output DataFrame can also be the result of joining two tables, as specified in
+    the config.ini file.
 
     Args:
-        config_sections (list of strings): A list of section names in the config.ini file corresponding to the tables
-                                          and columns to fetch data from. Example: ["table1", "table2"].
-                                          If None, the default is ["env_data", "energy_data"].
-        delta_days (int): Number of days in the past from which to retrieve data. Defaults to None.
+        config_sections (list of strings): A list of section names in the config.ini
+            file corresponding to the tables and columns to fetch data from. Example:
+            ["table1", "table2"]. If None, the default is ["env_data", "energy_data"].
+        delta_days (int): Number of days in the past from which to retrieve data.
+            Defaults to None.
         num_rows (int, optional): Number of rows to limit the data to. Defaults to None.
         session (_type_, optional): _description_. Defaults to None.
 
     Returns:
-        tuple: A tuple of pandas DataFrames, each corresponding to the data fetched from one of the specified tables.
-            The DataFrames are sorted by the timestamp column.
+        tuple: A tuple of pandas DataFrames, each corresponding to the data fetched from
+            one of the specified tables. The DataFrames are sorted by the timestamp
+            column.
     """
     if config_sections is None:
         config_sections = ["env_data", "energy_data"]
@@ -271,12 +284,14 @@ def get_training_data(
         num_days_training = delta_days
     if num_days_training > 365:
         logger.error(
-            "The 'num_days_training' setting in config.ini cannot be set to a value greater than 365."
+            "The 'num_days_training' setting in config.ini cannot be set to a "
+            "value greater than 365."
         )
         raise ValueError
     elif num_days_training != 200:
         logger.warning(
-            "The 'num_days_training' setting in config.ini has been set to something different than 200."
+            "The 'num_days_training' setting in config.ini has been set to something "
+            "different than 200."
         )
 
     # get one table per section in the config.ini file.
@@ -303,7 +318,8 @@ def get_training_data(
                     columns.append(getattr(join_class, col))
                 else:
                     raise AttributeError(
-                        f"Attribute '{col}' not found in '{table_class}' or '{join_class}'"
+                        f"Attribute '{col}' not found in '{table_class}' or "
+                        f"'{join_class}'"
                     )
 
         if not session:

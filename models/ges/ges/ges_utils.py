@@ -4,7 +4,7 @@ from pathlib import Path
 
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
-
+from cropcore.model_data_access import get_sqlalchemy_session
 from cropcore.structure import (
     ModelClass,
     ModelMeasureClass,
@@ -17,20 +17,6 @@ if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
     from config import config
 else:
     from .config import config
-
-
-def get_sqlalchemy_session(connection_string=None, dbname=None):
-    """
-    For other functions in this module, if no session is provided as an argument,
-    they will call this to get a session using default connection string.
-    """
-    if not connection_string:
-        connection_string = SQL_CONNECTION_STRING
-    if not dbname:
-        dbname = SQL_DBNAME
-    status, log, engine = connect_db(connection_string, dbname)
-    session = session_open(engine)
-    return session
 
 
 def get_ges_model_id(model_name="Greenhouse Energy Simulation (GES)", session=None):
@@ -106,9 +92,7 @@ def get_bau_scenario_id(model_name="Greenhouse Energy Simulation (GES)", session
     print(f"Getting BAU scenario ID for model {model_name}")
     if not session:
         session = get_sqlalchemy_session()
-    query = session.query(
-        ModelScenarioClass.id,
-    ).filter(
+    query = session.query(ModelScenarioClass.id,).filter(
         ModelScenarioClass.scenario_type == ScenarioType.BAU,
         ModelScenarioClass.model_id == ModelClass.id,
         ModelClass.model_name == model_name,

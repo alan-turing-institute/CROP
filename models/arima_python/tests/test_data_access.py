@@ -1,10 +1,5 @@
-from ..arima.arima_utils import get_sqlalchemy_session
-
-# from models.ges.ges.ges_utils import get_sqlalchemy_session
 from cropcore.db import connect_db, session_open, session_close
-from cropcore.model_data_access import (
-    get_training_data,
-)
+from cropcore.model_data_access import get_training_data, get_sqlalchemy_session
 import pytest
 import warnings
 

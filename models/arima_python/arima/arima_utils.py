@@ -4,7 +4,7 @@ from pathlib import Path
 
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
-
+from cropcore.model_data_access import get_sqlalchemy_session
 from cropcore.structure import (
     ModelClass,
     ModelMeasureClass,
@@ -49,20 +49,6 @@ def get_sensor_id(sensor_name, session=None):
     if result:
         return result[0]
     return None
-
-
-def get_sqlalchemy_session(connection_string=None, dbname=None):
-    """
-    For other functions in this module, if no session is provided as an argument,
-    they will call this to get a session using default connection string.
-    """
-    if not connection_string:
-        connection_string = SQL_CONNECTION_STRING
-    if not dbname:
-        dbname = SQL_DBNAME
-    status, log, engine = connect_db(connection_string, dbname)
-    session = session_open(engine)
-    return session
 
 
 def get_model_id(model_name="arima", session=None):

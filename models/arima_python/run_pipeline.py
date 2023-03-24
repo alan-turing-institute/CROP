@@ -1,5 +1,6 @@
 from cropcore.model_data_access import (
     get_training_data,
+    get_sqlalchemy_session,
     insert_model_run,
     insert_model_product,
     insert_model_predictions,
@@ -8,7 +9,6 @@ from arima.clean_data import clean_data
 from arima.prepare_data import prepare_data
 from arima.arima_pipeline import arima_pipeline
 from arima.arima_utils import (
-    get_sqlalchemy_session,
     get_model_id,
     get_measure_id,
     get_sensor_id,

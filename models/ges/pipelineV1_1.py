@@ -7,6 +7,7 @@ from cropcore.model_data_access import (
     insert_model_run,
     insert_model_product,
     insert_model_predictions,
+    get_sqlalchemy_session,
 )
 
 # relative or non-relative imports, depending on where we run from :-/
@@ -17,7 +18,6 @@ if os.getcwd() == os.path.dirname(os.path.realpath(__file__)):
         get_ges_model_id,
         get_scenarios,
         create_measures_dicts,
-        get_sqlalchemy_session,
     )
 else:
     from .TestScenarioV1_1 import runScenarios, FILEPATH_WEATHER
@@ -26,7 +26,6 @@ else:
         get_ges_model_id,
         get_scenarios,
         create_measures_dicts,
-        get_sqlalchemy_session,
     )
 
 path_conf = config(section="paths")
