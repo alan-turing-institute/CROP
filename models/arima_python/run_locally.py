@@ -18,7 +18,7 @@ def main() -> None:
     coloredlogs.install(level="INFO")
 
     # fetch training data from the database
-    env_data, energy_data = get_training_data(num_rows=40000)
+    env_data, energy_data = get_training_data(num_rows=40000, arima_config=config)
 
     # save the raw training data to disk
     with open("models/arima_python/dump/env_raw.pkl", "wb") as handle:

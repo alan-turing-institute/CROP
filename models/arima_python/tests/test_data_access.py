@@ -1,3 +1,4 @@
+from arima.config import config
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.model_data_access import get_training_data, get_sqlalchemy_session
 import pytest
@@ -23,7 +24,9 @@ def test_get_training_data():
     # fetch 50 rows of training data
     num_rows = 50
     env_data, energy_data = get_training_data(
-        num_rows=num_rows, config_sections=["env_data", "energy_data"]
+        num_rows=num_rows,
+        config_sections=["env_data", "energy_data"],
+        arima_config=config,
     )
     # check that the dataframes have the correct size
     num_cols = 8
@@ -94,4 +97,4 @@ def test_num_days_training():
     greater than 365.
     """
     with pytest.raises(ValueError):
-        get_training_data(delta_days=366, num_rows=50)
+        get_training_data(delta_days=366, num_rows=50, arima_config=config)

@@ -11,8 +11,6 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import desc, asc, exc, func
 
-from models.arima_python.arima.config import config as arima_config
-
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.structure import (
     # arima
@@ -253,7 +251,11 @@ def remove_time_zone(dataframe: pd.DataFrame):
 
 
 def get_training_data(
-    config_sections=None, delta_days=None, num_rows=None, session=None
+    config_sections=None,
+    delta_days=None,
+    num_rows=None,
+    session=None,
+    arima_config=None,
 ):
     """Fetch data from one or more tables for training of the ARIMA model.
 
@@ -268,6 +270,8 @@ def get_training_data(
             Defaults to None.
         num_rows (int, optional): Number of rows to limit the data to. Defaults to None.
         session (_type_, optional): _description_. Defaults to None.
+        arima_config: A function that can be called to return various sections of the
+            Arima config.
 
     Returns:
         tuple: A tuple of pandas DataFrames, each corresponding to the data fetched from

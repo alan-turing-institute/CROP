@@ -13,6 +13,7 @@ from arima.arima_utils import (
     get_measure_id,
     get_sensor_id,
 )
+from arima.config import config
 import logging, coloredlogs
 import pandas as pd
 import sys
@@ -27,7 +28,7 @@ def run_pipeline() -> None:
     coloredlogs.install(level="INFO")
 
     # fetch training data from the database
-    env_data, energy_data = get_training_data(num_rows=40000)
+    env_data, energy_data = get_training_data(num_rows=40000, arima_config=config)
 
     # clean the training data
     env_data, energy_data = clean_data(env_data, energy_data)
