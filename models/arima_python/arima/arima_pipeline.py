@@ -284,8 +284,11 @@ def arima_pipeline(
     model_fit = fit_arima(data)
     logger.info("Done fitting the model.")
     forecast_timestamp = get_forecast_timestamp(data)
+    logger.info("Computing forecast...")
     logger.info(
-        "Computing forecast...End of forecast timestamp: {}".format(forecast_timestamp)
+        "Start of forecast timestamp: {0}. End of forecast timestamp: {1}".format(
+            data.index[-1], forecast_timestamp
+        )
     )
     mean_forecast, conf_int = forecast_arima(model_fit, forecast_timestamp)
     logger.info("Done forecasting.")

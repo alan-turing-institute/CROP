@@ -326,6 +326,8 @@ def get_training_data(
         logger.info(f"{section} data - head/tail:")
         logger.info(data.head(5))
         logger.info(data.tail(5))
+        if data.empty:
+            logger.warning(f"{section} DataFrame is empty.")
 
         session_close(session)
         data_tables.append(data)
