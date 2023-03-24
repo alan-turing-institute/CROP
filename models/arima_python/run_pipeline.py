@@ -27,7 +27,7 @@ def run_pipeline() -> None:
     coloredlogs.install(level="INFO")
 
     # fetch training data from the database
-    env_data, energy_data = get_training_data(num_rows=1000)
+    env_data, energy_data = get_training_data(num_rows=40000)
 
     # clean the training data
     env_data, energy_data = clean_data(env_data, energy_data)
@@ -53,12 +53,13 @@ def run_pipeline() -> None:
         "Lower Bound Temperature (Degree Celcius)",
         "Upper Bound Temperature (Degree Celcius)",
     ]
+    session.commit()
     # loop through every sensor
     for sensor in sensor_names:
+        session.begin()
         sensor_id = get_sensor_id(sensor_name=sensor, session=session)
         temperature = env_data[sensor]["temperature"]
         mean_forecast, conf_int, metrics = arima_pipeline(temperature)
-        session.begin()
         try:
             run_id = insert_model_run(
                 sensor_id=sensor_id,
@@ -71,11 +72,6 @@ def run_pipeline() -> None:
                 product_id = insert_model_product(
                     run_id=run_id, measure_id=measure_id, session=session
                 )
-                print(f"Run ID: {run_id}")
-                print(f"Model ID: {model_id}")
-                print(f"Product ID: {product_id}")
-                print(f"Sensor ID: {sensor_id}")
-                print(f"Measure ID: {measure_id}")
                 if "Mean" in measure_name:
                     result = process_output(mean_forecast, product_id)
                 elif "Lower" in measure_name:
