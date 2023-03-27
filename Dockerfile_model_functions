@@ -10,8 +10,7 @@ RUN apt-get update \
         cmake \
         git \
         wget \
-        unzip \
-    && rm -rf /var/lib/apt/lists/*
+        unzip
 
 # Install requirements
 RUN pip install --upgrade pip
