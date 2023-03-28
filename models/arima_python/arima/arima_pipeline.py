@@ -1,4 +1,3 @@
-from arima.config import config
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from datetime import timedelta
 from sklearn.model_selection import TimeSeriesSplit
@@ -8,6 +7,12 @@ from copy import deepcopy
 import pandas as pd
 import logging
 from typing import Tuple, Union
+
+try:
+    from arima.config import config
+except(ModuleNotFoundError):
+    from models.arima_python.arima.config import config
+
 
 logger = logging.getLogger(__name__)
 

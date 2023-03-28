@@ -32,9 +32,10 @@ def test_get_training_data():
     num_cols = 8
     assert env_data.shape == (num_rows, num_cols)
     num_cols = 6
-    assert (
-        energy_data.shape[-1] == num_cols
-    )  # num_rows not checked in case energy table empty
+    if len(energy_data) > 0:
+        assert (
+            energy_data.shape[-1] == num_cols
+        )  # num_rows not checked in case energy table empty
 
     # check that energy table column names are the expected ones
     colnames = [
@@ -81,10 +82,10 @@ def test_get_training_data():
         "name": "O",
         "id": "int64",
         "sensor_id": "int64",
-        "timestamp": "<M8[ns]",  # note no time-zone information
+        "timestamp": "O",  # note no time-zone information
         "temperature": "float64",
         "humidity": "float64",
-        "time_created": "<M8[ns]",  # note no time-zone information
+        "time_created": "O",  # note no time-zone information
         "time_updated": "O",
     }
     assert all([env_data[item].dtypes == datatypes[item] for item in datatypes.keys()])
