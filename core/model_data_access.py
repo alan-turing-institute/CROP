@@ -345,12 +345,14 @@ def get_training_data(
         query = query.order_by(asc(table_class.timestamp)).limit(num_rows)
         result = session.execute(query.statement).fetchall()
         data = pd.DataFrame(query_result_to_array(result))
-        remove_time_zone(data)
+        if not data.empty:
+            data["timestamp"] = pd.to_datetime(data["timestamp"])
+            remove_time_zone(data)
 
-        logger.info(f"{section} data - head/tail:")
-        logger.info(data.head(5))
-        logger.info(data.tail(5))
-        if data.empty:
+            logger.info(f"{section} data - head/tail:")
+            logger.info(data.head(5))
+            logger.info(data.tail(5))
+        else:
             logger.warning(f"{section} DataFrame is empty.")
 
         session_close(session)

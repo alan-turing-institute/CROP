@@ -332,6 +332,7 @@ def clean_data(env_data, energy_data):
     keys = list(env_data.keys())
     for key in keys:
         env_data[key].set_index("timestamp", inplace=True)
-    energy_data.set_index("timestamp", inplace=True)
+    if not energy_data.empty:
+        energy_data.set_index("timestamp", inplace=True)
 
     return env_data, energy_data

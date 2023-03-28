@@ -82,7 +82,7 @@ def test_get_training_data():
         "name": "O",
         "id": "int64",
         "sensor_id": "int64",
-        "timestamp": "O",  # note no time-zone information
+        "timestamp": "<M8[ns]",  # note no time-zone information
         "temperature": "float64",
         "humidity": "float64",
         "time_created": "O",  # note no time-zone information
