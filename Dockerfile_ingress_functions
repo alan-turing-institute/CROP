@@ -5,6 +5,10 @@ FROM mcr.microsoft.com/azure-functions/python:3.0-python3.8
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
+# Hack to workaround problem with missing debian source
+RUN cat /etc/apt/sources.list | grep -v jessie > /etc/apt/sources.list.new
+RUN mv /etc/apt/sources.list.new /etc/apt/sources.list
+
 # 0. Install essential packages
 RUN apt-get update \
     && apt-get install -y \
