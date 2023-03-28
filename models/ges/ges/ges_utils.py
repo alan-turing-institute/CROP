@@ -92,7 +92,9 @@ def get_bau_scenario_id(model_name="Greenhouse Energy Simulation (GES)", session
     print(f"Getting BAU scenario ID for model {model_name}")
     if not session:
         session = get_sqlalchemy_session()
-    query = session.query(ModelScenarioClass.id,).filter(
+    query = session.query(
+        ModelScenarioClass.id,
+    ).filter(
         ModelScenarioClass.scenario_type == ScenarioType.BAU,
         ModelScenarioClass.model_id == ModelClass.id,
         ModelClass.model_name == model_name,
