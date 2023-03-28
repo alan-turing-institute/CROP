@@ -1,9 +1,13 @@
-import arima.prepare_data as prepare_data
+import models.arima_python.arima.prepare_data as prepare_data
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 from copy import deepcopy
 from typing import Tuple
+from pathlib import Path
+
+# data
+data_path = Path(__file__).parent / "data/Models/ARIMA"
 
 prepare_data.arima_config["farm_cycle_start"] = "16h0m0s"
 
@@ -70,21 +74,21 @@ def test_impute_missing_values():
     prepare_data.arima_config["days_interval"] = 30
     # when weekly seasonality is considered
     prepare_data.arima_config["weekly_seasonality"] = True
-    csv_path = "tests/data/test_impute_missing_values_weekly_seasonality.csv"
+    csv_path = data_path / "test_impute_missing_values_weekly_seasonality.csv"
     temperature, temperature_expected = return_temperatures(csv_path)
     temperature_impute_missing = prepare_data.impute_missing_values(temperature)
     assert np.isclose(temperature_expected, temperature_impute_missing).all()
     # when weekly seasonality is not considered
     prepare_data.arima_config["weekly_seasonality"] = False
-    csv_path = "tests/data/test_impute_missing_values_no_weekly_seasonality.csv"
+    csv_path = data_path / "test_impute_missing_values_no_weekly_seasonality.csv"
     temperature, temperature_expected = return_temperatures(csv_path)
     temperature_impute_missing = prepare_data.impute_missing_values(temperature)
     assert np.isclose(temperature_expected, temperature_impute_missing).all()
 
 
 # import the data processed with `clean_data.clean_data`
-env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
-energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
+env_clean = pd.read_pickle(data_path / "aranet_trh_clean.pkl")
+energy_clean = pd.read_pickle(data_path / "utc_energy_clean.pkl")
 keys_env_clean = list(env_clean.keys())
 # artificially include a missing value in the `temperature`
 # column of one of the DataFrames in `env_clean`, to test that it is
