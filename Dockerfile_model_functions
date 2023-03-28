@@ -13,8 +13,7 @@ RUN apt update \
         cmake \
         git \
         wget \
-        unzip \
-    && rm -rf /var/lib/apt/lists/*
+        unzip
 
 # Install requirements
 RUN pip install --upgrade pip
@@ -26,7 +25,7 @@ COPY core /home/site/wwwroot/core
 COPY setup.py /home/site/wwwroot/setup.py
 COPY requirements.txt /home/site/wwwroot/requirements.txt
 RUN cd /home/site/wwwroot; pip install .; cd -;
-COPY models/host.json /home/site/wwwroot
+COPY models/host.json /home/site/wwwroot/host.json
 
 # source code for GES and Arima models
 COPY models/ges/. /home/site/wwwroot
