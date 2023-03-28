@@ -252,7 +252,8 @@ def clean_energy_data(energy_data: pd.DataFrame):
         energy_data.timestamp.dt.floor("h"),
     )
 
-    # group the data by "timestamp_hour_floor" and apply the following
+
+
     # function to compute the mean or take the first row entry (because it
     # corresponds to the MA for the full hour for time-ordered data).
     def f(x):
