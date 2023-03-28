@@ -4,17 +4,8 @@ from cropcore.model_data_access import get_training_data, get_sqlalchemy_session
 import pytest
 import warnings
 
-
-def test_connection():
-    """
-    Test PostgreSQL connection
-    """
-    conn = get_sqlalchemy_session()
-    assert conn is not None
-    session_close(conn)
-
-
-def test_get_training_data():
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_get_training_data(session):
     """
     Test that the format of the training data fetched
     from the DB is correct.
@@ -27,6 +18,7 @@ def test_get_training_data():
         num_rows=num_rows,
         config_sections=["env_data", "energy_data"],
         arima_config=config,
+        session=session
     )
     # check that the dataframes have the correct size
     num_cols = 8
@@ -90,12 +82,17 @@ def test_get_training_data():
     }
     assert all([env_data[item].dtypes == datatypes[item] for item in datatypes.keys()])
 
-
-def test_num_days_training():
+@pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
+def test_num_days_training(session):
     """
     Test that a ValueError is raised if the number of days
     into the past for which to retrieve training data is
     greater than 365.
     """
     with pytest.raises(ValueError):
-        get_training_data(delta_days=366, num_rows=50, arima_config=config)
+        get_training_data(
+            delta_days=366,
+            num_rows=50,
+            arima_config=config,
+            session=session
+        )
