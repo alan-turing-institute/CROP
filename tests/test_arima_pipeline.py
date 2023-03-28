@@ -1,15 +1,19 @@
 import pandas as pd
-import arima.arima_pipeline as arima_pipeline
+import models.arima_python.arima.arima_pipeline as arima_pipeline
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import numpy as np
 import pytest
+from pathlib import Path
+
+# data
+data_path = Path(__file__).parent / "data/Models/ARIMA"
 
 # import the pickle file used for ARIMA code testing
-# the pickle file contains a dictionary - see tests/data/README.md for details
-dataset = pd.read_pickle("tests/data/airline_dataset_arima.pkl")
+# the pickle file contains a dictionary - see data_path / README.md for details
+dataset = pd.read_pickle(data_path  / "airline_dataset_arima.pkl")
 airline_dataset = dataset["dataset"]  # this is the full airline dataset
 train_index = dataset["train_index"]  # indices of train data (70%)
 test_index = dataset["test_index"]  # indices of test data (30%)
