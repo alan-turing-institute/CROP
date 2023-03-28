@@ -1,15 +1,19 @@
 import pandas as pd
-import arima.clean_data as clean_data
+import models.arima_python.arima.clean_data as clean_data
+from pathlib import Path
+
+# path to the data folder
+data_path = Path(__file__).parent / "data/Models/ARIMA"
 
 # import the sample raw (un-processed) data
 env_raw = pd.read_pickle(
-    "tests/data/aranet_trh_raw.pkl"
+    data_path / "aranet_trh_raw.pkl"
 )  # temperature/rel humidity (TRH) data
-energy_raw = pd.read_pickle("tests/data/utc_energy_raw.pkl")  # energy data
+energy_raw = pd.read_pickle(data_path / "utc_energy_raw.pkl")  # energy data
 
 # import the processed data - this is the baseline we compare against
-env_clean = pd.read_pickle("tests/data/aranet_trh_clean.pkl")
-energy_clean = pd.read_pickle("tests/data/utc_energy_clean.pkl")
+env_clean = pd.read_pickle(data_path / "aranet_trh_clean.pkl")
+energy_clean = pd.read_pickle(data_path / "utc_energy_clean.pkl")
 keys_clean = list(env_clean.keys())
 
 # column names TRH data should contain

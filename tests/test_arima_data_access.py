@@ -1,4 +1,4 @@
-from arima.config import config
+from models.arima_python.arima.config import config
 from cropcore.db import connect_db, session_open, session_close
 from cropcore.model_data_access import get_training_data, get_sqlalchemy_session
 import pytest
