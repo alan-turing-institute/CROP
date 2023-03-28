@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "functions": [ "ges_func" ],
+  "functions": ["arima_func", "ges_func"],
   "functionTimeout": "06:00:00",
   "logging": {
     "applicationInsights": {

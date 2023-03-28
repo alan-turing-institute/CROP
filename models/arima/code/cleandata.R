@@ -24,9 +24,13 @@ decimal_hour <- function(my_timestamp){
 hourly_av_sensor <- function(trh, sensor_index,my_time){
 
   # subset the data set for the sensor of choice
+  # select only the row entries that correspond to the sensor of choice
   trh_sub<- subset(trh, name== sensor_index)
 
   # Find the mean temp and RH for this new HourPM
+  # Note that there is a bug here regarding the averaging of timestamps
+  # close to midnight. Check GitHub issue:
+  # https://github.com/alan-turing-institute/CROP/issues/398
   trh_ph <- plyr::ddply(trh_sub, .(DatePM,HourPM),
                   summarise,
                   Temperature=mean(temperature, na.rm = T),
@@ -39,15 +43,24 @@ hourly_av_sensor <- function(trh, sensor_index,my_time){
   trh_ph <- delete.na(trh_ph,1)
 
   # calculate a second hourly average where averaging over the entire hour rather than between xxh45-xxh15.
+  # note that this actually is NOT used
   trh_ph2 <- plyr::ddply(trh_sub, .(Date,Hour),
                    summarise,
                    Temp_hourav=mean(temperature, na.rm = T),
                    Humid_hourav = mean(humidity, na.rm = T))
   trh_ph2$Timestamp <- as.POSIXct(paste(trh_ph2$Date, trh_ph2$Hour),tz="UTC",format="%Y-%m-%d %H")
+  # A left join in R is a merge operation between two data frames
+  # where the merge returns all of the rows from one table (the left side)
+  # and any matching rows from the second table. A left join in R will NOT
+  # return values of the second table which do not already exist in the first table.
+  # by: A character vector of variables to join by.
+  # If NULL, the default, will perform a natural join, using all variables in common
+  # across x and y
   trh_ph<- dplyr::left_join(trh_ph,trh_ph2,by=c("Timestamp") )
 
   trh_ph$FarmTimestamp <- trh_ph$Timestamp
 
+  # note that Temp_hourav and Humid_hourav not returned
   trh_ph_all <- dplyr::left_join(my_time, trh_ph[c("FarmTimestamp","Timestamp",
                                             "Temperature","Humidity")])
 
@@ -67,6 +80,8 @@ cleanEnvData = function() {
   trh$HourDec <- decimal_hour(trh$Timestamp2)
 
   # Create new hour column which encompasses 15 min before and after the hour (PM stands for plus minus)
+  # The code below creates an additional column where any time 15 min before or after the hour
+  # is given the value of the rounded hour. Times outside this range are assigned NA
   trh$HourPM <- ifelse(abs(trh$Hour-trh$HourDec)<=0.25 ,trh$Hour,NA)
   trh$HourPM <- ifelse(abs(trh$Hour+1-trh$HourDec)<=0.25,trh$Hour+1,trh$HourPM)
   # add special case for midnight!
@@ -76,12 +91,16 @@ cleanEnvData = function() {
   trh$Date <- as.Date(trh$Timestamp2)
   trh$DatePM <- trh$Date
   #trh$DatePM <- as.Date(ifelse(trh$HourPM>=23.5, trh$Date + 1 ,trh$Date), origin = "1970-01-01")
+  # this bit of code below is not very clear...
+  # what seems to be happening is that the date is kept only for hours where HourPM is not NA
   trh$DatePM <- lubridate::as_date(ifelse(trh$HourPM>=23.5, trh$Date + 1, trh$Date), origin = "1970-01-01")
-
+  # this takes the date and the hour and makes a UTC-formatted timestamp
   trh$Timestamp <- as.POSIXct(paste(trh$Date, trh$Hour),tz="UTC",format="%Y-%m-%d %H")
 
   # select the time duration over which you want to find new hourly averages
-  my_time <- data.frame(FarmTimestamp = seq(from = min(trh$Timestamp)+3600,
+  # the bit of code below creates a list with a column named "FarmTimestamp"
+  # over the specified range and with the specified delta
+  my_time <- data.frame(FarmTimestamp = seq(from = min(trh$Timestamp)+3600, # TODO: why are we adding 3600 seconds?
                                             to = max(trh$Timestamp),
                                             by = "1 hour"))
 
@@ -92,7 +111,7 @@ cleanEnvData = function() {
   # Identify each unique sensor
   sensor_names_from_database <- unique(trh$name)
   sensor_names = c()
-  SENSOR_ID = list("FARM_T/RH_16B1"=18, "Farm_T/RH_16B2"=27, "Farm_T/RH_16B4"=23)
+  SENSOR_ID = list("Farm_T/RH_16B1"=18, "Farm_T/RH_16B2"=27, "Farm_T/RH_16B4"=23)
   for (n in sensor_names_from_database)
   {
     #print (n)
@@ -136,8 +155,11 @@ cleanEnergyData = function() {
   ## Clean energy data -----------------------
   ecp <- energy_raw
 
+  # Note that while in the dcast below the mean for "electricity_consumption" across a given
+  # timestamp for each "sensor_id" is taken, there is only one value for each sensor_id for a
+  # given timestamp. Therefore the mean may be ommitted in the dcast.
   ecpp <- reshape2::dcast(energy_raw, Timestamp2  ~sensor_id,value.var = "electricity_consumption", mean)
-  names(ecpp) <- c("Timestamp2","EnergyCC","EnergyCP")
+  names(ecpp) <- c("Timestamp2","EnergyCC","EnergyCP") # TODO: what do "EnergyCC" and "EnergyCP" stand for?
 
   ecpp$Hour <- hour(ecpp$Timestamp2)
   ecpp$HourDec <- decimal_hour(ecpp$Timestamp2)

@@ -25,7 +25,7 @@ from .parameters import f_heat, f_light, P_al, P_ambient_al, P_dh
 from .parameters import c_v, msd_v, d_v, AF_g, LAI, dsat
 from scipy.integrate import solve_ivp
 from .config import config
-from .dataAccess import get_days_weather, get_days_weather_forecast
+from cropcore.model_data_access import get_days_weather, get_days_weather_forecast
 
 # import will be different depending on where we run from
 try:

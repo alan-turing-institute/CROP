@@ -2,9 +2,9 @@ name: "Unit tests"
 
 on:
   push:
-    branches: [main, develop, test-actions]
+    branches: [main, develop, test-actions, rewrite-arima-python]
   pull_request:
-    branches: [main, develop, test-actions]
+    branches: [main, develop, test-actions, rewrite-arima-python]
   workflow_dispatch:
 
 jobs:

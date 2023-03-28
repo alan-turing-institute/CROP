@@ -6,7 +6,7 @@ Created on Mon Jun 14 09:32:23 2021
 """
 import os
 from ges.functionsV2 import derivatives, priorPPF, sat_conc
-from ges.dataAccess import (
+from cropcore.model_data_access import (
     get_days_weather,
     get_days_weather_forecast,
     get_days_humidity_temperature,
