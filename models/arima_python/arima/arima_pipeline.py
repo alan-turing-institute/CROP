@@ -1,4 +1,4 @@
-from arima.config import config
+from models.arima_python.arima.config import config
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from datetime import timedelta
 from sklearn.model_selection import TimeSeriesSplit
