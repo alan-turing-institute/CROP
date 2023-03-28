@@ -13,7 +13,7 @@ data_path = Path(__file__).parent / "data/Models/ARIMA"
 
 # import the pickle file used for ARIMA code testing
 # the pickle file contains a dictionary - see data_path / README.md for details
-dataset = pd.read_pickle(data_path  / "airline_dataset_arima.pkl")
+dataset = pd.read_pickle(data_path / "airline_dataset_arima.pkl")
 airline_dataset = dataset["dataset"]  # this is the full airline dataset
 train_index = dataset["train_index"]  # indices of train data (70%)
 test_index = dataset["test_index"]  # indices of test data (30%)
