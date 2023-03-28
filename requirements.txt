@@ -45,3 +45,5 @@ pulumi-azure-native>=1.14.0,<2.0.0
 pulumi-azure>=5.35.0
 
 statsmodels==0.13.5
+
+coloredlogs==15.0.1
