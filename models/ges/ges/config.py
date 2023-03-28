@@ -8,7 +8,7 @@ from configparser import ConfigParser
 
 def config(
     filename=os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "..", "config.ini"
+        os.path.dirname(os.path.realpath(__file__)), "..", "config_ges.ini"
     ),
     section="postgresql",
 ):

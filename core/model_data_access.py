@@ -25,6 +25,7 @@ from cropcore.structure import (
     ModelValueClass,
 )
 from cropcore.constants import SQL_CONNECTION_STRING, SQL_DBNAME
+from cropcore.utils import query_result_to_array
 
 logger = logging.getLogger(__name__)
 
@@ -330,17 +331,20 @@ def get_training_data(
             session = get_sqlalchemy_session()
         date_to = datetime.datetime.now()
         delta = datetime.timedelta(days=num_days_training)
-        data_from = date_to - delta
-
-        query = session.query(*columns).filter(table_class.timestamp > data_from)
-
+        date_from = date_to - delta
+        print(f"Training data from {date_from} to {date_to}")
+        query = (
+            session.query(*columns)
+            .filter(table_class.timestamp > date_from)
+            .filter(table_class.timestamp < date_to)
+        )
         if "join_class" in config_params and "join_condition" in config_params:
             join_condition = eval(config_params["join_condition"])
             query = query.join(join_class, join_condition)
 
         query = query.order_by(asc(table_class.timestamp)).limit(num_rows)
-
-        data = pd.read_sql(query.statement, query.session.bind)
+        result = session.execute(query.statement).fetchall()
+        data = pd.DataFrame(query_result_to_array(result))
         remove_time_zone(data)
 
         logger.info(f"{section} data - head/tail:")
