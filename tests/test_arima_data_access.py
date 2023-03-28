@@ -3,6 +3,9 @@ from cropcore.db import connect_db, session_open, session_close
 from cropcore.model_data_access import get_training_data, get_sqlalchemy_session
 import pytest
 import warnings
+from .conftest import check_for_docker
+
+DOCKER_RUNNING = check_for_docker()
 
 @pytest.mark.skipif(not DOCKER_RUNNING, reason="requires docker")
 def test_get_training_data(session):
