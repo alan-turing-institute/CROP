@@ -10,7 +10,7 @@ from typing import Tuple, Union
 
 try:
     from arima.config import config
-except(ModuleNotFoundError):
+except ModuleNotFoundError:
     from models.arima_python.arima.config import config
 
 
