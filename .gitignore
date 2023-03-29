@@ -29,6 +29,7 @@ CROP.pyproj.user
 /versioning/Data_model/test_model/mlruns/
 /versioning/Data_model/test_model/static/data/
 *.csv
+!*weekly_seasonality.csv
 *.tgz
 *.tar.gz
 /versioning/Data_model/models/static/data
@@ -162,3 +163,13 @@ node_modules
 *~
 
 *.pyc
+
+# R
+.Rprofile
+renv.lock
+renv/
+
+# Data dump for testing ARIMA Python
+models/arima_python/dump
+# no matter where it is
+**/dump/

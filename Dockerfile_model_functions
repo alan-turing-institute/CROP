@@ -1,17 +1,20 @@
-FROM mcr.microsoft.com/azure-functions/python:3.0-python3.8
+FROM mcr.microsoft.com/azure-functions/python:4-python3.9
 
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
+# Hack to workaround problem with missing debian source
+RUN cat /etc/apt/sources.list | grep -v jessie > /etc/apt/sources.list.new
+RUN mv /etc/apt/sources.list.new /etc/apt/sources.list
+
 # Install essential packages
-RUN apt-get update \
-    && apt-get install -y \
+RUN apt update \
+    && apt install -y \
         build-essential \
         cmake \
         git \
         wget \
-        unzip \
-    && rm -rf /var/lib/apt/lists/*
+        unzip
 
 # Install requirements
 RUN pip install --upgrade pip
@@ -23,4 +26,8 @@ COPY core /home/site/wwwroot/core
 COPY setup.py /home/site/wwwroot/setup.py
 COPY requirements.txt /home/site/wwwroot/requirements.txt
 RUN cd /home/site/wwwroot; pip install .; cd -;
+COPY models/host.json /home/site/wwwroot/host.json
+
+# source code for GES and Arima models
 COPY models/ges/. /home/site/wwwroot
+COPY models/arima_python/. /home/site/wwwroot
