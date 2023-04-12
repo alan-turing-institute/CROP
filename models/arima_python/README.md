@@ -36,3 +36,10 @@ The *ARIMA model* Python modules are:
  2. `arima.clean_data`: employed to clean up the data fetched from the data base before further processing.
  3. `arima.prepare_data`: used to pre-process the cleaned data before feeding it to the model.
  4. `arima.arima_pipeline`: this is the main module, which contains functions for model fitting and forecasting, as well as functions for model evaluation such as time-series cross-validation.
+
+The script `run_locally.py` can be employed to run the *ARIMA model* locally in your machine.
+Just run:
+```bash
+python run_locally.py
+```
+in your terminal.
