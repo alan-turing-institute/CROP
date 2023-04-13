@@ -116,8 +116,6 @@ The repository root also has three Docker files:
 * `Dockerfile_webappbase` is a container that installs some of the dependencies needed by the webapp.
 It's separated from `webapp` to improve build times, and shouldn't need to be rebuilt except in rare circumstances.
 
-Note that even though the GES model also runs as an Azure function app, it has no Dockerfile. This is because it is deployed directly from the Github Action.
-
 Some of the subfolders have their own READMEs. See them for more details of each part.
 
 ### Development credits
@@ -137,6 +135,11 @@ The Azure services for the webapp and the ingress functions listen to updates on
 
 The `main` and `develop` branches are deployed to production and testing versions of the platform, respectively. The former is relatively stable, the latter may be broken in the course of development.
 
+### Scripted deployment
+
+A complete set of infrastructure for a CROP deployment on Microsoft Azure cloud can bet setup using Pulumi.  
+For instructions on how to do this, see [here](infrastructure/README.md)
+
 ## Developer instructions/running locally
 
 When developing the code for the CROP platform, it may be useful/necessary to run the webapp locally.  To do this:
@@ -154,7 +157,7 @@ If you found a bug or need support, please submit an issue [here](https://github
 
 ## How to contribute
 
-We welcome contributions! If you are willing to propose new features or have bug fixes to contribute, please submit a pull request [here](https://github.com/alan-turing-institute/CROP/pulls).
+We welcome contributions! If you are willing to propose new features or have bug fixes to contribute, please submit a pull request [here](https://github.com/alan-turing-institute/CROP/pulls) if you have permissions, or fork the repository, make your changes, and submit a pull request from your fork.
 
 <hr/>
 
