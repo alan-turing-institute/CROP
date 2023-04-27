@@ -111,6 +111,7 @@ def get_days_humidity_temperature(
         )
         .filter(ReadingsAranetTRHClass.sensor_id == sensor_id)
         .filter(ReadingsAranetTRHClass.timestamp > date_from)
+        .filter(ReadingsAranetTRHClass.timestamp < date_to)
         .limit(num_rows)
     )
     result = session.execute(query).fetchall()

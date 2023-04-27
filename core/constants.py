@@ -34,7 +34,7 @@ def make_conn_string(sql_engine, sql_user, sql_password, sql_host, sql_port):
     )
 
 # FOR AIUK, define time from which to get data
-DAYS_AGO = int(os.environ["CROP_DAYS_AGO"]) if "CROP_DAYS_AGO" in os.environ else 365
+DAYS_AGO = int(os.environ["CROP_DAYS_AGO"]) if "CROP_DAYS_AGO" in os.environ else 180
 CONST_NOWTIME = str(datetime.datetime.now() - datetime.timedelta(days=DAYS_AGO))
 
 # Sensor Type Names
